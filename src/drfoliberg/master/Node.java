@@ -8,11 +8,11 @@ public class Node {
 
 	private InetAddress nodeAddress;
 	private int nodePort;
-	private int status;
+	private Status status;
 
 	public Node(InetAddress nodeAddresse, int nodePort) {
 		this.nodeAddress = nodeAddresse;
-		this.status = Status.NOT_CONECTED;
+		this.status = Status.NOT_CONNECTED;
 		this.nodePort = nodePort;
 	}
 
@@ -36,11 +36,11 @@ public class Node {
 		this.nodeAddress = nodeAddress;
 	}
 
-	public int getStatus() {
+	public Status getStatus() {
 		return status;
 	}
 
-	public void setStatus(int status) {
+	public void setStatus(Status status) {
 		this.status = status;
 	}
 

@@ -42,7 +42,7 @@ public class Master extends Thread {
 			if (o instanceof Message) {
 				Message m = (Message) o;
 				switch (m.getCode()) {
-				case ClusterProtocol.BYE:
+				case BYE:
 					System.out.println("MASTER: node removed!");
 					removeNode(n.getNodeAddress(), n.getNodePort());
 					s.close();

@@ -34,13 +34,13 @@ public class DispatcherMaster extends Thread{
 			if (o instanceof Message) {
 				Message m = (Message) o;
 				switch (m.getCode()) {
-				case ClusterProtocol.TASK_REFUSED:
+				case TASK_REFUSED:
 					System.out.println("MASTER DISPATCH: node seems to have refused the work!");
 					out.writeObject(new Message(ClusterProtocol.BYE));
 					out.flush();
 					s.close();
 					break;
-				case ClusterProtocol.TASK_ACCEPTED:
+				case TASK_ACCEPTED:
 					System.out.println("MASTER DISPACTH: received that node accepted the task !");
 					node.setStatus(Status.WORKING);
 					out.writeObject(new Message(ClusterProtocol.BYE));

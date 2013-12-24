@@ -14,7 +14,7 @@ import drfoliberg.task.Task;
 
 public class Worker extends Thread {
 
-	private int status;
+	private Status status;
 	private InetAddress masterIpAddress;
 	private String workerName;
 	private int masterPort;
@@ -44,7 +44,7 @@ public class Worker extends Thread {
 		if (o instanceof Message) {
 			Message m = (Message) o;
 			switch (m.getCode()) {
-			case ClusterProtocol.BYE:
+			case BYE:
 				socket.close();
 				break;
 			default:
@@ -68,10 +68,10 @@ public class Worker extends Thread {
 		}
 	}
 
-	public synchronized void updateStatus(int statusCode) {
+	public synchronized void updateStatus(Status statusCode) {
 		System.out.println("WORKER: changing status to " + statusCode);
 		this.status = statusCode;
-		if (statusCode == Status.NOT_CONECTED) {
+		if (statusCode == Status.NOT_CONNECTED) {
 			ContactMaster contact = new ContactMaster(this);
 			contact.start();
 		}
@@ -89,7 +89,7 @@ public class Worker extends Thread {
 		return masterPort;
 	}
 
-	public synchronized int getStatus() {
+	public synchronized Status getStatus() {
 		return this.status;
 	}
 
@@ -98,7 +98,7 @@ public class Worker extends Thread {
 	}
 
 	public void run() {
-		updateStatus(Status.NOT_CONECTED);
+		updateStatus(Status.NOT_CONNECTED);
 		workerListener.start();
 	}
 

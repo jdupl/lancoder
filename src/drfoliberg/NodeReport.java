@@ -4,7 +4,7 @@ import drfoliberg.worker.Worker;
 
 public class NodeReport {
 
-	private int status;
+	private Status status;
 	private String name;
 	private int listenPort;
 
@@ -14,7 +14,7 @@ public class NodeReport {
 		this.name = n.getName();
 	}
 
-	public int getStatus() {
+	public Status getStatus() {
 		return status;
 	}
 

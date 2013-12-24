@@ -32,7 +32,7 @@ public class HandleMaster extends Thread {
 				if (request instanceof Message) {
 					switch (((Message) request).getCode()) {
 
-					case ClusterProtocol.CONNECT_ME:
+					case CONNECT_ME:
 						boolean added = master.addNode(s.getInetAddress(), s.getPort());
 						if (added) {
 							out.writeObject(new Message(ClusterProtocol.STATUS_REPORT));
@@ -45,7 +45,7 @@ public class HandleMaster extends Thread {
 						}
 						break;
 
-					case ClusterProtocol.TASK_REPORT:
+					case TASK_REPORT:
 						System.out.println("MASTER HANDLE: received a task report from worker ! Task seems to be done");
 						// TODO alert master that task is now done or canceled
 						// (according to the report)
@@ -53,7 +53,7 @@ public class HandleMaster extends Thread {
 						close = true;
 						s.close();
 						break;
-					case ClusterProtocol.BYE:
+					case BYE:
 						close = true;
 						s.close();
 						break;

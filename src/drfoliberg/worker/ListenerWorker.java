@@ -36,14 +36,14 @@ public class ListenerWorker extends Thread {
 
 					switch (m.getCode()) {
 
-					case ClusterProtocol.DISCONNECT_ME:
+					case DISCONNECT_ME:
 						System.out.println("WORKER LISTENER: master wants me to disconnect !");
 						out.writeObject(new Message(ClusterProtocol.BYE));
 						out.flush();
 						s.close();
-						worker.updateStatus(Status.NOT_CONECTED);
+						worker.updateStatus(Status.NOT_CONNECTED);
 						break;
-					case ClusterProtocol.TASK_REQUEST:
+					case TASK_REQUEST:
 						System.out.println("WORKER LISTENER: received task from master");
 						worker.startWork(m.getTask());
 						System.out.println("WORKER LISTENER: sending to master the status of the task");
@@ -54,7 +54,7 @@ public class ListenerWorker extends Thread {
 						}
 						break;
 
-					case ClusterProtocol.BYE:
+					case BYE:
 						s.close();
 						break;
 					default:
