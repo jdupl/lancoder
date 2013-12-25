@@ -6,32 +6,89 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 
-import drfoliberg.Status;
-import drfoliberg.network.ClusterProtocol;
-import drfoliberg.network.Message;
-import drfoliberg.task.Task;
+import drfoliberg.common.Status;
+import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.network.Message;
+import drfoliberg.common.task.Job;
+import drfoliberg.common.task.Task;
+import drfoliberg.master.listeners.INodeListener;
+import drfoliberg.master.listeners.ITaskListener;
 
-public class Master extends Thread {
+public class Master extends Thread implements INodeListener, ITaskListener {
 
-	ListenerMaster listener;
+	MasterServer listener;
 
 	private ArrayList<Node> nodes;
+	public ArrayList<Job> jobs;
+
+	private HashMap<Task, Job> processingTasks;
 
 	public Master() {
 		this.nodes = new ArrayList<Node>();
-		listener = new ListenerMaster(this);
+		this.jobs = new ArrayList<Job>();
+		this.processingTasks = new HashMap<>();
+		listener = new MasterServer(this);
 		listener.start();
+	}
+
+	public synchronized boolean addJob(Job j) {
+		boolean success = this.jobs.add(j);
+		if (!success) {
+			return false;
+		}
+		updateNodesWork();
+		return success;
+	}
+
+	private Task getNextTask() {
+		for (Job j : jobs) {
+			ArrayList<Task> tasks = j.getTasks();
+			for (Task task : tasks) {
+				if (task.getStatus() == Status.JOB_TODO) {
+					return task;
+				}
+			}
+		}
+		return null;
+	}
+
+	private Node getBestFreeNode() {
+		for (Node n : this.nodes) {
+			if (n.getStatus() == Status.FREE) {
+				return n;
+			}
+		}
+		return null;
+	}
+
+	private boolean updateNodesWork() {
+		System.out.println("UPDATING WORK");
+		Task nextTask = getNextTask();
+		if (nextTask == null) {
+			System.out.println("MASTER: No available work!");
+			return false;
+		}
+		Node node = getBestFreeNode();
+		if (node == null) {
+			System.out.println("MASTER: No available nodes!");
+			return false;
+		}
+		dispatch(nextTask, node);
+
+		return true;
 	}
 
 	public boolean dispatch(Task task, Node node) {
 		DispatcherMaster dispatcher = new DispatcherMaster(node, task);
 		dispatcher.start();
-		return false;
+		return true;
 	}
 
 	public boolean disconnectNode(Node n) {
 		try {
+			updateNodeTask(n, Status.JOB_TODO);
 			Socket s = new Socket(n.getNodeAddress(), n.getNodePort());
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 			out.flush();
@@ -43,8 +100,7 @@ public class Master extends Thread {
 				Message m = (Message) o;
 				switch (m.getCode()) {
 				case BYE:
-					System.out.println("MASTER: node removed!");
-					removeNode(n.getNodeAddress(), n.getNodePort());
+					removeNode(n);
 					s.close();
 					break;
 
@@ -62,21 +118,36 @@ public class Master extends Thread {
 		return false;
 	}
 
-	public boolean addNode(InetAddress address, int port) {
-		Node n = new Node(address, port);
+	public synchronized boolean addNode(Node n) {
+		// Node n = new Node(address, port, ("Worker" + this.nodes.size()));
 		if (nodes.contains(n)) {
 			System.out.println("MASTER: Could not add node!");
 			return false;
 		} else {
 			n.setStatus(Status.FREE);
 			nodes.add(n);
-			System.out.println("MASTER: Added new node to node list!");
+			System.out.println("MASTER: Added new node " + n.getName() + "to node list!");
+			updateNodesWork();
 			return true;
 		}
 	}
 
-	public boolean removeNode(InetAddress address, int port) {
-		Node n = new Node(address, port);
+	public synchronized ArrayList<Node> getNodes() {
+		return this.nodes;
+	}
+	
+	public boolean updateNodeTask(Node n, Status updateStatus) {
+		Task cancelledTask = n.getCurrentTask();
+		if (cancelledTask != null) {
+			System.out.println("Cancelling the task of the node " + n.getName());
+			processingTasks.get(cancelledTask).getTasks().get(cancelledTask.getTaskId()).setStatus(Status.JOB_TODO);
+			updateNodesWork();
+		}
+		return false;
+	}
+
+	public synchronized boolean removeNode(Node n) {
+		updateNodeTask(n, Status.JOB_TODO);
 		if (nodes.remove(n)) {
 			System.out.println("NODE REMOVED");
 			return true;
@@ -85,24 +156,36 @@ public class Master extends Thread {
 	}
 
 	public void run() {
-		while (true) {
-			// TODO move to node checker
-			try {
-				if (nodes.size() > 0) {
-					System.out.println("MASTER: checking if nodes are still alive");
-					for (Node n : nodes) {
-						System.out.println("checking node: " + n.getNodeAddress().toString());
-						//TODO check if node is alive (ask for status report)
-						//update the node list and task list
-					}
-				} else {
-					System.out.println("MASTER: no nodes to check!");
-				}
-				System.out.println("MASTER: checking back in 30 seconds");
-				sleep(30000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+
+	}
+
+	@Override
+	public void nodeAdded(Node n) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void nodeDisconnected(Node n) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void nodeRemoved(Node n) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void taskFinished(Task t) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void taskCancelled(Task t) {
+		// TODO Auto-generated method stub
+		
 	}
 }

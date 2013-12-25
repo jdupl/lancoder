@@ -1,4 +1,4 @@
-package drfoliberg;
+package drfoliberg.common;
 
 import drfoliberg.worker.Worker;
 

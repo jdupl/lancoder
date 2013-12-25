@@ -1,0 +1,70 @@
+package drfoliberg.master;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+
+import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.network.Message;
+
+public class NodeChecker extends Thread {
+
+	Master master;
+
+	public NodeChecker(Master master) {
+		this.master = master;
+	}
+
+	public void run() {
+		while (true) {
+			try {
+				if (master.getNodes().size() > 0) {
+					System.out.println("MASTER NODE CHECKER: checking if nodes are still alive");
+					for (Node n : master.getNodes()) {
+						System.out.println("MASTER NODE CHECKER: checking node: " + n.getNodeAddress().toString());
+						// TODO check if node is alive (ask for status report)
+						// update the node list and task list
+						try {
+							Socket s = new Socket(n.getNodeAddress(), n.getNodePort());
+							//a timeout of 5 seconds 
+							s.setSoTimeout(5000);
+							ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+							out.flush();
+							ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+							out.writeObject(new Message(ClusterProtocol.STATUS_REQUEST));
+							out.flush();
+							Object o = in.readObject();
+							if (o instanceof Message) {
+								Message m = (Message) o;
+								switch (m.getCode()) {
+								case STATUS_REPORT:
+									// read status report and update node if necesserary
+									// if node is working, update the task status
+									System.out.println("MASTER NODE CHECKER: node " + n.getName() + " sent valid status report");
+									break;
+
+								default:
+									break;
+								}
+							}
+						} catch (IOException e) {
+							// this node failed !
+							System.out.println("MASTER NODE CHECKER: node " + n.getName() + " failed ! Advising master!");
+							this.master.removeNode(n);
+						} catch (ClassNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				} else {
+					System.out.println("MASTER NODE CHECKER: no nodes to check!");
+				}
+				System.out.println("MASTER NODE CHECKER: checking back in 30 seconds");
+				sleep(30000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+}

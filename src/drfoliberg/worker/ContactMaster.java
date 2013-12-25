@@ -5,21 +5,23 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import drfoliberg.Status;
-import drfoliberg.network.ClusterProtocol;
-import drfoliberg.network.Message;
+import drfoliberg.common.Status;
+import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.network.Message;
+import drfoliberg.master.Node;
 
 public class ContactMaster extends Thread {
 
 	Worker worker;
-	
-	public ContactMaster(Worker worker){
+
+	public ContactMaster(Worker worker) {
 		this.worker = worker;
 	}
-	
+
 	public boolean contactMaster() {
 		boolean success = false;
-		System.out.println("WORKER CONTACT: trying to contact master server at " + worker.getMasterIpAddress().toString());
+		System.out.println("WORKER CONTACT: trying to contact master server at "
+				+ worker.getMasterIpAddress().toString());
 		Socket socket = null;
 		try {
 			socket = new Socket(worker.getMasterIpAddress(), 1337);
@@ -27,8 +29,8 @@ public class ContactMaster extends Thread {
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-
-			out.writeObject(new Message(ClusterProtocol.CONNECT_ME));
+			Node n = new Node(worker.getWorkerIp(), worker.getListenPort(), worker.getWorkerName());
+			out.writeObject(new Message(n));
 			out.flush();
 			Object o = in.readObject();
 			if (o instanceof Message) {
@@ -49,9 +51,9 @@ public class ContactMaster extends Thread {
 		}
 		return success;
 	}
-	
-	public void run(){
-		//while (worker.getStatus() == Status.NOT_CONECTED) {
+
+	public void run() {
+		// while (worker.getStatus() == Status.NOT_CONECTED) {
 		boolean success = false;
 		while (!success) {
 			success = contactMaster();

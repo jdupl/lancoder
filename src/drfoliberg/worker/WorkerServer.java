@@ -6,15 +6,15 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import drfoliberg.Status;
-import drfoliberg.network.ClusterProtocol;
-import drfoliberg.network.Message;
+import drfoliberg.common.Status;
+import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.network.Message;
 
-public class ListenerWorker extends Thread {
+public class WorkerServer extends Thread {
 
 	private Worker worker;
 
-	public ListenerWorker(Worker w) {
+	public WorkerServer(Worker w) {
 		this.worker = w;
 	}
 

@@ -1,8 +1,9 @@
-package drfoliberg.network;
+package drfoliberg.common.network;
 
 import java.io.Serializable;
 
-import drfoliberg.task.Task;
+import drfoliberg.common.task.Task;
+import drfoliberg.master.Node;
 
 public class Message implements Serializable {
 
@@ -10,6 +11,7 @@ public class Message implements Serializable {
 
 	private ClusterProtocol code;
 	private Task task;
+	private Node node;
 
 	public Message(ClusterProtocol code) {
 		this.code = code;
@@ -20,6 +22,11 @@ public class Message implements Serializable {
 		this.task = t;
 	}
 
+	public Message(Node n) {
+		this.code = ClusterProtocol.CONNECT_ME;
+		this.node = n;
+	}
+
 	public ClusterProtocol getCode() {
 		return code;
 	}
@@ -28,4 +35,7 @@ public class Message implements Serializable {
 		return task;
 	}
 
+	public Node getNode() {
+		return node;
+	}
 }

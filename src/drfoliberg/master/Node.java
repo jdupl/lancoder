@@ -1,19 +1,26 @@
 package drfoliberg.master;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 
-import drfoliberg.Status;
+import drfoliberg.common.Status;
+import drfoliberg.common.task.Task;
 
-public class Node {
+public class Node implements Serializable {
 
+	private static final long serialVersionUID = 3450445684775221368L;
 	private InetAddress nodeAddress;
 	private int nodePort;
 	private Status status;
+	private String name;
 
-	public Node(InetAddress nodeAddresse, int nodePort) {
+	private Task currentTask;
+
+	public Node(InetAddress nodeAddresse, int nodePort, String name) {
 		this.nodeAddress = nodeAddresse;
 		this.status = Status.NOT_CONNECTED;
 		this.nodePort = nodePort;
+		this.name = name;
 	}
 
 	public boolean equals(Object o) {
@@ -50,6 +57,22 @@ public class Node {
 
 	public void setNodePort(int nodePort) {
 		this.nodePort = nodePort;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Task getCurrentTask() {
+		return currentTask;
+	}
+
+	public void setCurrentTask(Task currentTask) {
+		this.currentTask = currentTask;
 	}
 
 }

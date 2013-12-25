@@ -3,11 +3,11 @@ package drfoliberg.master;
 import java.io.IOException;
 import java.net.ServerSocket;
 
-public class ListenerMaster extends Thread {
+public class MasterServer extends Thread {
 
 	private Master master;
 
-	public ListenerMaster(Master master) {
+	public MasterServer(Master master) {
 		this.master = master;
 	}
 

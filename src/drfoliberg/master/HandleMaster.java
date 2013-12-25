@@ -5,8 +5,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import drfoliberg.network.ClusterProtocol;
-import drfoliberg.network.Message;
+import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.network.Message;
 
 public class HandleMaster extends Thread {
 
@@ -33,7 +33,8 @@ public class HandleMaster extends Thread {
 					switch (((Message) request).getCode()) {
 
 					case CONNECT_ME:
-						boolean added = master.addNode(s.getInetAddress(), s.getPort());
+						Node n = ((Message) request).getNode();
+						boolean added = master.addNode(n);
 						if (added) {
 							out.writeObject(new Message(ClusterProtocol.STATUS_REPORT));
 							out.flush();

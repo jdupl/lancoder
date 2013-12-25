@@ -1,4 +1,4 @@
-package drfoliberg.task;
+package drfoliberg.common.task;
 
 public class Pass {
 

@@ -5,10 +5,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import drfoliberg.Status;
-import drfoliberg.network.ClusterProtocol;
-import drfoliberg.network.Message;
-import drfoliberg.task.Task;
+import drfoliberg.common.Status;
+import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.network.Message;
+import drfoliberg.common.task.Task;
 
 public class DispatcherMaster extends Thread{
 
@@ -22,11 +22,11 @@ public class DispatcherMaster extends Thread{
 	
 	public void run(){
 		try {
-			Socket s = new Socket(node.getNodeAddress(), 1338);
+			Socket s = new Socket(node.getNodeAddress(), node.getNodePort());
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-			System.out.println("MASTER DISPATCH: Sending work to node");
+			System.out.println("MASTER DISPATCH: Sending work to node " + node.getName());
 			out.writeObject(new Message(task));
 			out.flush();
 			System.out.println("MASTER DISPATCH: Waiting for node response");

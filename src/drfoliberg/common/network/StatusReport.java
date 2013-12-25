@@ -1,6 +1,6 @@
-package drfoliberg.network;
+package drfoliberg.common.network;
 
-import drfoliberg.NodeReport;
+import drfoliberg.common.NodeReport;
 
 public class StatusReport extends Message{
 	

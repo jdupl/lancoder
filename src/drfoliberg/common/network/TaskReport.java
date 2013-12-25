@@ -1,4 +1,4 @@
-package drfoliberg.network;
+package drfoliberg.common.network;
 
 public class TaskReport extends Message{
 

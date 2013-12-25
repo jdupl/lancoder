@@ -7,27 +7,32 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import drfoliberg.Status;
-import drfoliberg.network.ClusterProtocol;
-import drfoliberg.network.Message;
-import drfoliberg.task.Task;
+import drfoliberg.common.Status;
+import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.network.Message;
+import drfoliberg.common.task.Task;
 
 public class Worker extends Thread {
 
 	private Status status;
+	private InetAddress workerIp;
 	private InetAddress masterIpAddress;
 	private String workerName;
 	private int masterPort;
 	private int listenPort;
 
-	public ListenerWorker workerListener;
+	public WorkerServer workerListener;
 
 	public Worker(String name, InetAddress masterIpAddress, int masterPort, int listenPort) {
 		this.workerName = name;
 		this.masterPort = masterPort;
 		this.listenPort = listenPort;
 		this.masterIpAddress = masterIpAddress;
-		this.workerListener = new ListenerWorker(this);
+		this.workerListener = new WorkerServer(this);
+		try {
+			this.workerIp = InetAddress.getLocalHost();
+		} catch (UnknownHostException e) {
+		}
 		System.out.println("WORKER: Worker " + name + " initialized, not connected to a master server!");
 	}
 
@@ -100,6 +105,10 @@ public class Worker extends Thread {
 	public void run() {
 		updateStatus(Status.NOT_CONNECTED);
 		workerListener.start();
+	}
+
+	public InetAddress getWorkerIp() {
+		return workerIp;
 	}
 
 }

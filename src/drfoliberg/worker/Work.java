@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import drfoliberg.task.Task;
+import drfoliberg.common.task.Task;
 
 public class Work extends Thread {
 
