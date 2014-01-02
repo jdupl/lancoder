@@ -5,10 +5,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import drfoliberg.common.Node;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
-import drfoliberg.master.Node;
+import drfoliberg.common.network.UNID;
 
 public class ContactMaster extends Thread {
 
@@ -37,8 +38,10 @@ public class ContactMaster extends Thread {
 				Message response = (Message) o;
 				if (response.getCode() == ClusterProtocol.BYE) {
 					socket.close();
-				} else if (response.getCode() == ClusterProtocol.STATUS_REPORT) {
+				} else if (response.getCode() == ClusterProtocol.NEW_UNID) {
 					success = true;
+					UNID unid = (UNID) response;
+					this.worker.setUnid(unid.getUnid());
 					out.writeObject(new Message(ClusterProtocol.BYE));
 					out.flush();
 					socket.close();
@@ -68,6 +71,5 @@ public class ContactMaster extends Thread {
 				}
 			}
 		}
-		System.out.println("WORKER CONTACT: closing this thread !");
 	}
 }

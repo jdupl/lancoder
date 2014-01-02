@@ -5,8 +5,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import drfoliberg.common.Node;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
+import drfoliberg.common.network.UNID;
+import drfoliberg.common.network.StatusReport;
+import drfoliberg.common.network.TaskReport;
 
 public class HandleMaster extends Thread {
 
@@ -36,7 +40,10 @@ public class HandleMaster extends Thread {
 						Node n = ((Message) request).getNode();
 						boolean added = master.addNode(n);
 						if (added) {
-							out.writeObject(new Message(ClusterProtocol.STATUS_REPORT));
+							//send UNID to the node
+							//System.out.println("MASTER HANDLE: added new node " + n.getName() + " with unid: "+ n.getUnid());
+							System.out.println("MASTER HANDLE: Sending unid to node");
+							out.writeObject(new UNID(n.getUnid()));
 							out.flush();
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BYE));
@@ -47,13 +54,23 @@ public class HandleMaster extends Thread {
 						break;
 
 					case TASK_REPORT:
-						System.out.println("MASTER HANDLE: received a task report from worker ! Task seems to be done");
-						// TODO alert master that task is now done or canceled
-						// (according to the report)
+						if(request instanceof TaskReport) {
+							System.out.println("MASTER HANDLE: received a task report from worker.");
+							TaskReport report = (TaskReport) request;
+							this.master.readTaskReport(report);
+						}else{
+							System.out.println("MASTER HANDLE: received an INVALID task report from worker !");
+						}
 						out.writeObject(new Message(ClusterProtocol.BYE));
 						close = true;
 						s.close();
 						break;
+					case STATUS_REPORT:
+						if(request instanceof StatusReport) {
+							System.out.println("MASTER HANDLE: node updates it's status!");
+							StatusReport report = (StatusReport) request;
+							master.readStatusReport(report);
+						}
 					case BYE:
 						close = true;
 						s.close();

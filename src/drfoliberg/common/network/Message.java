@@ -2,19 +2,23 @@ package drfoliberg.common.network;
 
 import java.io.Serializable;
 
+import drfoliberg.common.Node;
 import drfoliberg.common.task.Task;
-import drfoliberg.master.Node;
 
 public class Message implements Serializable {
 
 	private static final long serialVersionUID = -483657531000641905L;
 
-	private ClusterProtocol code;
+	protected ClusterProtocol code;
 	private Task task;
-	private Node node;
+	protected Node node;
 
 	public Message(ClusterProtocol code) {
 		this.code = code;
+	}
+
+	public Message(String nuid) {
+
 	}
 
 	public Message(Task t) {
@@ -37,5 +41,9 @@ public class Message implements Serializable {
 
 	public Node getNode() {
 		return node;
+	}
+
+	public void setNode(Node n) {
+		this.node = n;
 	}
 }

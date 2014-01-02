@@ -3,34 +3,52 @@ package drfoliberg.master;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
 import java.net.Socket;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import drfoliberg.common.Node;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
+import drfoliberg.common.network.StatusReport;
+import drfoliberg.common.network.TaskReport;
 import drfoliberg.common.task.Job;
 import drfoliberg.common.task.Task;
+import drfoliberg.master.listeners.IMasterListener;
 import drfoliberg.master.listeners.INodeListener;
 import drfoliberg.master.listeners.ITaskListener;
 
-public class Master extends Thread implements INodeListener, ITaskListener {
+public class Master extends Thread implements INodeListener, ITaskListener,
+		IMasterListener {
 
 	MasterServer listener;
+	NodeChecker nodeChecker;
 
 	private ArrayList<Node> nodes;
 	public ArrayList<Job> jobs;
-
-	private HashMap<Task, Job> processingTasks;
+	private HashMap<String, Node> nodesByUNID;
 
 	public Master() {
 		this.nodes = new ArrayList<Node>();
 		this.jobs = new ArrayList<Job>();
-		this.processingTasks = new HashMap<>();
-		listener = new MasterServer(this);
-		listener.start();
+		this.nodesByUNID = new HashMap<>();
+		this.listener = new MasterServer(this);
+		this.listener.start();
+		this.nodeChecker = new NodeChecker(this);
+		this.nodeChecker.start();
+	}
+
+	public synchronized Node identifySender(String nodeId) {
+		Node n = this.nodesByUNID.get(nodeId);
+		if (n == null) {
+			System.out.println("WARNING could not FIND NODE " + nodeId
+					+ " Size of nodesByUNID: " + nodesByUNID.size()
+					+ " Size of nodes arraylist:" + nodes.size());
+		}
+		return n;
 	}
 
 	public synchronized boolean addJob(Job j) {
@@ -63,8 +81,7 @@ public class Master extends Thread implements INodeListener, ITaskListener {
 		return null;
 	}
 
-	private boolean updateNodesWork() {
-		System.out.println("UPDATING WORK");
+	private synchronized boolean updateNodesWork() {
 		Task nextTask = getNextTask();
 		if (nextTask == null) {
 			System.out.println("MASTER: No available work!");
@@ -76,17 +93,16 @@ public class Master extends Thread implements INodeListener, ITaskListener {
 			return false;
 		}
 		dispatch(nextTask, node);
-
 		return true;
 	}
 
-	public boolean dispatch(Task task, Node node) {
-		DispatcherMaster dispatcher = new DispatcherMaster(node, task);
+	public synchronized boolean dispatch(Task task, Node node) {
+		DispatcherMaster dispatcher = new DispatcherMaster(node, task, this);
 		dispatcher.start();
 		return true;
 	}
 
-	public boolean disconnectNode(Node n) {
+	public synchronized boolean disconnectNode(Node n) {
 		try {
 			updateNodeTask(n, Status.JOB_TODO);
 			Socket s = new Socket(n.getNodeAddress(), n.getNodePort());
@@ -118,15 +134,39 @@ public class Master extends Thread implements INodeListener, ITaskListener {
 		return false;
 	}
 
+	private synchronized String getNewUNID(Node n) {
+		System.out.println("MASTER: generating a nuid for node " + n.getName());
+		long ms = System.currentTimeMillis();
+		String input = ms + n.getName();
+		MessageDigest md = null;
+		try {
+			md = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		byte[] byteArray = md.digest(input.getBytes());
+		String result = "";
+		for (int i = 0; i < byteArray.length; i++) {
+			result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16)
+					.substring(1);
+		}
+		System.out.println("MASTER: generated " + result + " for node "
+				+ n.getName());
+		return result;
+	}
+
 	public synchronized boolean addNode(Node n) {
-		// Node n = new Node(address, port, ("Worker" + this.nodes.size()));
 		if (nodes.contains(n)) {
 			System.out.println("MASTER: Could not add node!");
 			return false;
 		} else {
-			n.setStatus(Status.FREE);
+			n.setStatus(Status.NOT_CONNECTED);
+			String unid = getNewUNID(n);
+			n.setUnid(unid);
 			nodes.add(n);
-			System.out.println("MASTER: Added new node " + n.getName() + "to node list!");
+			nodesByUNID.put(n.getUnid(), n);
+			System.out.println("MASTER: Added node " + n.getName()
+					+ " with unid: " + n.getUnid());
 			updateNodesWork();
 			return true;
 		}
@@ -135,19 +175,69 @@ public class Master extends Thread implements INodeListener, ITaskListener {
 	public synchronized ArrayList<Node> getNodes() {
 		return this.nodes;
 	}
-	
-	public boolean updateNodeTask(Node n, Status updateStatus) {
-		Task cancelledTask = n.getCurrentTask();
-		if (cancelledTask != null) {
-			System.out.println("Cancelling the task of the node " + n.getName());
-			processingTasks.get(cancelledTask).getTasks().get(cancelledTask.getTaskId()).setStatus(Status.JOB_TODO);
+
+	public synchronized boolean updateNodeTask(Node n, Status updateStatus) {
+		Task task = n.getCurrentTask();
+
+		if (task != null) {
+			System.out.println("MASTER: the task "
+					+ n.getCurrentTask().getTaskId() + " is now "
+					+ updateStatus);
+			// task.setStatus(updateStatus);
+			if (updateStatus == Status.JOB_COMPLETED) {
+				n.getCurrentTask().setStatus(Status.JOB_COMPLETED);
+				// n.setStatus(Status.FREE);
+				n.setCurrentTask(null);
+			} else {
+				// TODO
+			}
 			updateNodesWork();
+		} else {
+			System.out.println("MASTER: no task was found for node "
+					+ n.getName());
 		}
 		return false;
 	}
 
+	public synchronized void readStatusReport(StatusReport report) {
+		Status s = report.getNode().getStatus();
+		Node sender = identifySender(report.getNode().getUnid());
+		sender.setStatus(s);
+		updateNodesWork();
+	}
+
+	public synchronized boolean readTaskReport(TaskReport report) {
+
+		double progress = report.getProgress();
+		// find node
+		report.getJobId();
+		report.getTaskId();
+		Node sender = null;
+		for (Node n : this.nodes) {
+			if (n.getCurrentTask() != null
+					&& n.getCurrentTask().getJobId() == report.getJobId()) {
+				sender = n;
+				break;
+			}
+		}
+		if (sender == null) {
+			System.out.println("MASTER: Could not find task in the node list!");
+			return false;
+		}
+		System.out
+				.println("MASTER: Updating the task "
+						+ sender.getCurrentTask().getTaskId() + " to "
+						+ progress + "%");
+		sender.getCurrentTask().setProgress(progress);
+		if (progress == 100) {
+			updateNodeTask(sender, Status.JOB_COMPLETED);
+		}
+		return true;
+	}
+
 	public synchronized boolean removeNode(Node n) {
 		updateNodeTask(n, Status.JOB_TODO);
+		this.nodesByUNID.remove(n);
 		if (nodes.remove(n)) {
 			System.out.println("NODE REMOVED");
 			return true;
@@ -156,36 +246,42 @@ public class Master extends Thread implements INodeListener, ITaskListener {
 	}
 
 	public void run() {
-
+		// TODO read configuration from previous run
 	}
 
 	@Override
 	public void nodeAdded(Node n) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void nodeDisconnected(Node n) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void nodeRemoved(Node n) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void taskFinished(Task t) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void taskCancelled(Task t) {
 		// TODO Auto-generated method stub
-		
+
+	}
+
+	@Override
+	public void workUpdated() {
+		// TODO Auto-generated method stub
+
 	}
 }

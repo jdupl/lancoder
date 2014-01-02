@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import drfoliberg.common.Node;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
 
@@ -17,6 +18,7 @@ public class NodeChecker extends Thread {
 	}
 
 	public void run() {
+		System.out.println("Starting node checker service!");
 		while (true) {
 			try {
 				if (master.getNodes().size() > 0) {
@@ -25,8 +27,9 @@ public class NodeChecker extends Thread {
 						System.out.println("MASTER NODE CHECKER: checking node: " + n.getNodeAddress().toString());
 						// TODO check if node is alive (ask for status report)
 						// update the node list and task list
+						Socket s =null;
 						try {
-							Socket s = new Socket(n.getNodeAddress(), n.getNodePort());
+							s = new Socket(n.getNodeAddress(), n.getNodePort());
 							//a timeout of 5 seconds 
 							s.setSoTimeout(5000);
 							ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
@@ -39,15 +42,18 @@ public class NodeChecker extends Thread {
 								Message m = (Message) o;
 								switch (m.getCode()) {
 								case STATUS_REPORT:
-									// read status report and update node if necesserary
+									// read status report and update node if necessary
 									// if node is working, update the task status
-									System.out.println("MASTER NODE CHECKER: node " + n.getName() + " sent valid status report");
+									System.out.println("MASTER NODE CHECKER: node " + n.getName() + " is still alive and sent valid status report");
+									//TODO read report and update the progress
 									break;
 
 								default:
+									
 									break;
 								}
 							}
+							s.close();
 						} catch (IOException e) {
 							// this node failed !
 							System.out.println("MASTER NODE CHECKER: node " + n.getName() + " failed ! Advising master!");

@@ -1,9 +1,8 @@
-package drfoliberg.master;
+package drfoliberg.common;
 
 import java.io.Serializable;
 import java.net.InetAddress;
 
-import drfoliberg.common.Status;
 import drfoliberg.common.task.Task;
 
 public class Node implements Serializable {
@@ -13,6 +12,7 @@ public class Node implements Serializable {
 	private int nodePort;
 	private Status status;
 	private String name;
+	private String unid;
 
 	private Task currentTask;
 
@@ -75,4 +75,11 @@ public class Node implements Serializable {
 		this.currentTask = currentTask;
 	}
 
+	public String getUnid() {
+		return unid;
+	}
+
+	public void setUnid(String nodeIdentifier) {
+		this.unid = nodeIdentifier;
+	}
 }

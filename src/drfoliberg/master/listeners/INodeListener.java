@@ -1,8 +1,10 @@
 package drfoliberg.master.listeners;
 
-import drfoliberg.master.Node;
+import java.util.EventListener;
 
-public interface INodeListener {
+import drfoliberg.common.Node;
+
+public interface INodeListener extends EventListener {
 
 	void nodeAdded(Node n);
 	void nodeDisconnected(Node n);

@@ -3,7 +3,7 @@ package drfoliberg.common.network;
 public enum ClusterProtocol {
 
 	BYE, //
-	STATUS_REQUEST, STATUS_REPORT, //status
+	STATUS_REQUEST, STATUS_REPORT, NEW_UNID, //status
 	CONNECT_ME, DISCONNECT_ME, TASK_REQUEST, TASK_REPORT, TASK_REFUSED, TASK_ACCEPTED, //task
 	BAD_REQUEST, BAD_MASTER, BAD_NODE //errors
 

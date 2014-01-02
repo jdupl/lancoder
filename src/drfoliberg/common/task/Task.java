@@ -11,6 +11,7 @@ public class Task implements Serializable {
 	protected int taskId;
 	protected String jobId;
 	protected Status status;
+	protected double progress;
 
 	public Task(int taskId, String fileLocation) {
 		this.taskId = taskId;
@@ -40,5 +41,13 @@ public class Task implements Serializable {
 
 	public void setStatus(Status status) {
 		this.status = status;
+	}
+
+	public double getProgress() {
+		return progress;
+	}
+
+	public void setProgress(double progress) {
+		this.progress = progress;
 	}
 }
