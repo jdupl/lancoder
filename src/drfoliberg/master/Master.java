@@ -21,8 +21,7 @@ import drfoliberg.master.listeners.IMasterListener;
 import drfoliberg.master.listeners.INodeListener;
 import drfoliberg.master.listeners.ITaskListener;
 
-public class Master extends Thread implements INodeListener, ITaskListener,
-		IMasterListener {
+public class Master extends Thread implements INodeListener, ITaskListener, IMasterListener {
 
 	MasterServer listener;
 	NodeChecker nodeChecker;
@@ -36,16 +35,14 @@ public class Master extends Thread implements INodeListener, ITaskListener,
 		this.jobs = new ArrayList<Job>();
 		this.nodesByUNID = new HashMap<>();
 		this.listener = new MasterServer(this);
-		this.listener.start();
 		this.nodeChecker = new NodeChecker(this);
-		this.nodeChecker.start();
+		
 	}
 
 	public synchronized Node identifySender(String nodeId) {
 		Node n = this.nodesByUNID.get(nodeId);
 		if (n == null) {
-			System.out.println("WARNING could not FIND NODE " + nodeId
-					+ " Size of nodesByUNID: " + nodesByUNID.size()
+			System.out.println("WARNING could not FIND NODE " + nodeId + " Size of nodesByUNID: " + nodesByUNID.size()
 					+ " Size of nodes arraylist:" + nodes.size());
 		}
 		return n;
@@ -102,6 +99,25 @@ public class Master extends Thread implements INodeListener, ITaskListener,
 		return true;
 	}
 
+	public void nodeShutdown(Node n) {
+		Node sender = identifySender(n.getUnid());
+		if (sender != null) {
+			
+			// Cancel node's task status if any
+			Task toCancel = null;
+			toCancel = sender.getCurrentTask();
+			if (toCancel != null) {
+				updateNodeTask(sender, Status.JOB_TODO);
+			}
+
+			// Update node status
+			removeNode(sender);
+
+		} else {
+			System.err.println("Could not mark node as disconnected as it was not found");
+		}
+	}
+
 	public synchronized boolean disconnectNode(Node n) {
 		try {
 			updateNodeTask(n, Status.JOB_TODO);
@@ -147,11 +163,9 @@ public class Master extends Thread implements INodeListener, ITaskListener,
 		byte[] byteArray = md.digest(input.getBytes());
 		String result = "";
 		for (int i = 0; i < byteArray.length; i++) {
-			result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16)
-					.substring(1);
+			result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
 		}
-		System.out.println("MASTER: generated " + result + " for node "
-				+ n.getName());
+		System.out.println("MASTER: generated " + result + " for node " + n.getName());
 		return result;
 	}
 
@@ -165,8 +179,7 @@ public class Master extends Thread implements INodeListener, ITaskListener,
 			n.setUnid(unid);
 			nodes.add(n);
 			nodesByUNID.put(n.getUnid(), n);
-			System.out.println("MASTER: Added node " + n.getName()
-					+ " with unid: " + n.getUnid());
+			System.out.println("MASTER: Added node " + n.getName() + " with unid: " + n.getUnid());
 			updateNodesWork();
 			return true;
 		}
@@ -180,21 +193,18 @@ public class Master extends Thread implements INodeListener, ITaskListener,
 		Task task = n.getCurrentTask();
 
 		if (task != null) {
-			System.out.println("MASTER: the task "
-					+ n.getCurrentTask().getTaskId() + " is now "
-					+ updateStatus);
-			// task.setStatus(updateStatus);
+			System.out.println("MASTER: the task " + n.getCurrentTask().getTaskId() + " is now " + updateStatus);
+			task.setStatus(updateStatus);
 			if (updateStatus == Status.JOB_COMPLETED) {
 				n.getCurrentTask().setStatus(Status.JOB_COMPLETED);
-				// n.setStatus(Status.FREE);
+				// n.setStatus(Status.FREE); Node now updates it's own status and sends back to master
 				n.setCurrentTask(null);
 			} else {
 				// TODO
 			}
 			updateNodesWork();
 		} else {
-			System.out.println("MASTER: no task was found for node "
-					+ n.getName());
+			System.out.println("MASTER: no task was found for node " + n.getName());
 		}
 		return false;
 	}
@@ -214,8 +224,7 @@ public class Master extends Thread implements INodeListener, ITaskListener,
 		report.getTaskId();
 		Node sender = null;
 		for (Node n : this.nodes) {
-			if (n.getCurrentTask() != null
-					&& n.getCurrentTask().getJobId() == report.getJobId()) {
+			if (n.getCurrentTask() != null && n.getCurrentTask().getJobId() == report.getJobId()) {
 				sender = n;
 				break;
 			}
@@ -225,9 +234,7 @@ public class Master extends Thread implements INodeListener, ITaskListener,
 			return false;
 		}
 		System.out
-				.println("MASTER: Updating the task "
-						+ sender.getCurrentTask().getTaskId() + " to "
-						+ progress + "%");
+				.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
 		sender.getCurrentTask().setProgress(progress);
 		if (progress == 100) {
 			updateNodeTask(sender, Status.JOB_COMPLETED);
@@ -236,7 +243,7 @@ public class Master extends Thread implements INodeListener, ITaskListener,
 	}
 
 	public synchronized boolean removeNode(Node n) {
-		updateNodeTask(n, Status.JOB_TODO);
+		//updateNodeTask(n, Status.JOB_TODO);
 		this.nodesByUNID.remove(n);
 		if (nodes.remove(n)) {
 			System.out.println("NODE REMOVED");
@@ -246,7 +253,11 @@ public class Master extends Thread implements INodeListener, ITaskListener,
 	}
 
 	public void run() {
-		// TODO read configuration from previous run
+		// TODO read configuration from previous run and start services
+		
+		//start services
+		this.listener.start();
+		this.nodeChecker.start();
 	}
 
 	@Override

@@ -4,10 +4,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import drfoliberg.common.Node;
 import drfoliberg.common.task.Job;
 import drfoliberg.common.task.JobType;
-import drfoliberg.common.task.Task;
 import drfoliberg.master.Master;
 import drfoliberg.worker.Worker;
 
@@ -36,6 +34,7 @@ public class Simulation extends Thread {
 			sleep(5000);
 			System.out.println("SIM: Starting master now");
 			Master m = new Master();
+			m.start();
 
 			// m.start();
 			// System.out.println("SIM: Forcing master to disconnect his worker in 2 seconds");
@@ -57,6 +56,8 @@ public class Simulation extends Thread {
 			Worker worker3 = new Worker("worker3", masterIp, 1337, 1340);
 			worker3.start();
 			System.out.println("SIM: simulation completed !");
+			sleep(1000);
+			worker3.shutdown();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {

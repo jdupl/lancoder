@@ -30,20 +30,19 @@ public class HandleMaster extends Thread {
 			out = new ObjectOutputStream(s.getOutputStream());
 			out.flush();
 			in = new ObjectInputStream(s.getInputStream());
-
+			Node sender = null;
 			while (!close) {
 				Object request = in.readObject();
 				if (request instanceof Message) {
 					switch (((Message) request).getCode()) {
 
 					case CONNECT_ME:
-						Node n = ((Message) request).getNode();
-						boolean added = master.addNode(n);
+						sender = ((Message) request).getNode();
+						boolean added = master.addNode(sender);
 						if (added) {
-							//send UNID to the node
-							//System.out.println("MASTER HANDLE: added new node " + n.getName() + " with unid: "+ n.getUnid());
+							// send UNID to the node
 							System.out.println("MASTER HANDLE: Sending unid to node");
-							out.writeObject(new UNID(n.getUnid()));
+							out.writeObject(new UNID(sender.getUnid()));
 							out.flush();
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BYE));
@@ -52,13 +51,22 @@ public class HandleMaster extends Thread {
 							s.close();
 						}
 						break;
+					case DISCONNECT_ME:
+						sender = ((Message) request).getNode();
+						//this.master.disconnectNode(sender);
+						this.master.nodeShutdown(sender);
+						out.writeObject(new Message(ClusterProtocol.BYE));
+						out.flush();
+						close = true;
+						s.close();
+						break;
 
 					case TASK_REPORT:
-						if(request instanceof TaskReport) {
+						if (request instanceof TaskReport) {
 							System.out.println("MASTER HANDLE: received a task report from worker.");
 							TaskReport report = (TaskReport) request;
 							this.master.readTaskReport(report);
-						}else{
+						} else {
 							System.out.println("MASTER HANDLE: received an INVALID task report from worker !");
 						}
 						out.writeObject(new Message(ClusterProtocol.BYE));
@@ -66,7 +74,7 @@ public class HandleMaster extends Thread {
 						s.close();
 						break;
 					case STATUS_REPORT:
-						if(request instanceof StatusReport) {
+						if (request instanceof StatusReport) {
 							System.out.println("MASTER HANDLE: node updates it's status!");
 							StatusReport report = (StatusReport) request;
 							master.readStatusReport(report);

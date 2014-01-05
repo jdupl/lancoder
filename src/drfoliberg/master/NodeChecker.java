@@ -25,12 +25,11 @@ public class NodeChecker extends Thread {
 					System.out.println("MASTER NODE CHECKER: checking if nodes are still alive");
 					for (Node n : master.getNodes()) {
 						System.out.println("MASTER NODE CHECKER: checking node: " + n.getNodeAddress().toString());
-						// TODO check if node is alive (ask for status report)
 						// update the node list and task list
-						Socket s =null;
+						Socket s = null;
 						try {
 							s = new Socket(n.getNodeAddress(), n.getNodePort());
-							//a timeout of 5 seconds 
+							// a timeout of 5 seconds
 							s.setSoTimeout(5000);
 							ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 							out.flush();
@@ -42,21 +41,25 @@ public class NodeChecker extends Thread {
 								Message m = (Message) o;
 								switch (m.getCode()) {
 								case STATUS_REPORT:
-									// read status report and update node if necessary
-									// if node is working, update the task status
-									System.out.println("MASTER NODE CHECKER: node " + n.getName() + " is still alive and sent valid status report");
-									//TODO read report and update the progress
+									// read status report and update node if
+									// necessary
+									// if node is working, update the task
+									// status
+									System.out.println("MASTER NODE CHECKER: node " + n.getName()
+											+ " is still alive and sent valid status report");
+									// TODO read report and update the progress
 									break;
 
 								default:
-									
+
 									break;
 								}
 							}
 							s.close();
 						} catch (IOException e) {
 							// this node failed !
-							System.out.println("MASTER NODE CHECKER: node " + n.getName() + " failed ! Advising master!");
+							System.out.println("MASTER NODE CHECKER: node " + n.getName()
+									+ " failed ! Advising master!");
 							this.master.removeNode(n);
 						} catch (ClassNotFoundException e) {
 							// TODO Auto-generated catch block

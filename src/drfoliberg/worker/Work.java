@@ -20,12 +20,13 @@ public class Work extends Thread {
 	public void run() {
 		try {
 			System.out.println("WORKER WORK THREAD: Executing a task!");
-			sleep(10000);
+			sleep(30000);
 			System.out.println("WORKER WORK THREAD: Done! Calling back the worker");
 			callback.taskDone(task, masterIp);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+//			e.printStackTrace();
+			System.out.println("Work was interrupted!");
 		}
 	}
 

@@ -3,6 +3,7 @@ package drfoliberg.master;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 
 import drfoliberg.common.Node;
@@ -16,12 +17,12 @@ public class DispatcherMaster extends Thread {
 	Node node;
 	Task task;
 	Master master;
-	
+
 	public DispatcherMaster(Node node, Task task, Master master) {
 		this.node = node;
 		this.task = task;
 	}
-	
+
 	public void run() {
 		try {
 			Socket s = new Socket(node.getNodeAddress(), node.getNodePort());
@@ -54,9 +55,13 @@ public class DispatcherMaster extends Thread {
 					System.out.println("MASTER DISPATCH: received invalid request");
 					break;
 				}
-			}else{
+			} else {
 				System.out.println("MASTER DISPATCH: received invalid message!!");
 			}
+		} catch (ConnectException e) {
+			// TODO: handle node not listening ?
+			System.out.println("MASTER HANDLE: could not send packet to worker! WORKER IS OFFLINE");
+
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -65,5 +70,5 @@ public class DispatcherMaster extends Thread {
 			e.printStackTrace();
 		}
 	}
-	
+
 }

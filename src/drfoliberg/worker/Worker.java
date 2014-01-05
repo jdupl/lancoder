@@ -22,11 +22,11 @@ public class Worker extends Thread {
 	private int masterPort;
 	private int listenPort;
 	private Node node;
+	private Work workThread;
 
 	public WorkerServer workerListener;
 
-	public Worker(String name, InetAddress masterIpAddress, int masterPort,
-			int listenPort) {
+	public Worker(String name, InetAddress masterIpAddress, int masterPort, int listenPort) {
 		this.node = new Node(getWorkerIp(), listenPort, name);
 		this.masterPort = masterPort;
 		this.listenPort = listenPort;
@@ -42,6 +42,49 @@ public class Worker extends Thread {
 		print("initialized not connected to a master server");
 	}
 
+	public void shutdown() {
+		print("shutting down");
+		workerListener.shutdown();
+		Socket socket = null;
+		try {
+			socket = new Socket(masterIpAddress, masterPort);
+
+			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+			out.flush();
+			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+			Message message = new Message(ClusterProtocol.DISCONNECT_ME);
+			message.setNode(this.node);
+			out.writeObject(message);
+			out.flush();
+			Object o = in.readObject();
+			if (o instanceof Message) {
+				Message m = (Message) o;
+				switch (m.getCode()) {
+				case BYE:
+					socket.close();
+					break;
+				default:
+					socket.close();
+					print("something odd happedned");
+					break;
+				}
+			} else {
+				print("received invalid message!");
+			}
+			socket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// TODO halt work thread too!
+		print("stopping work thread");
+		this.workThread.interrupt();
+		this.interrupt();
+	}
+
 	public void print(String s) {
 		System.out.println((getWorkerName().toUpperCase()) + ": " + s);
 	}
@@ -53,13 +96,12 @@ public class Worker extends Thread {
 
 	public void startWork(Task t) {
 		if (this.getStatus() != Status.FREE) {
-			print("cannot accept work as i'm not free. Current status: "
-					+ this.getStatus());
+			print("cannot accept work as i'm not free. Current status: " + this.getStatus());
 		} else {
 			this.node.setCurrentTask(t);
 			updateStatus(Status.WORKING);
-			Work w = new Work(this, t, masterIpAddress);
-			w.start();
+			this.workThread = new Work(this, t, masterIpAddress);
+			this.workThread.start();
 		}
 	}
 
@@ -69,11 +111,9 @@ public class Worker extends Thread {
 		try {
 			socket = new Socket(masterIpAddress, masterPort);
 
-			ObjectOutputStream out = new ObjectOutputStream(
-					socket.getOutputStream());
+			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			out.flush();
-			ObjectInputStream in = new ObjectInputStream(
-					socket.getInputStream());
+			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 			TaskReport report = new TaskReport();
 			report.setNode(this.node);
 			report.setProgress(progress);
@@ -118,11 +158,9 @@ public class Worker extends Thread {
 			try {
 				socket = new Socket(getMasterIpAddress(), 1337);
 
-				ObjectOutputStream out = new ObjectOutputStream(
-						socket.getOutputStream());
+				ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 				out.flush();
-				ObjectInputStream in = new ObjectInputStream(
-						socket.getInputStream());
+				ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 				StatusReport report = new StatusReport(this.node);
 				report.setNode(this.node);
 				out.writeObject(report);
@@ -138,8 +176,7 @@ public class Worker extends Thread {
 						socket.close();
 					}
 				} else {
-					System.out
-							.println("WORKER CONTACT: Could not read what master sent !");
+					System.out.println("WORKER CONTACT: Could not read what master sent !");
 				}
 			} catch (IOException e) {
 			} catch (ClassNotFoundException e) {
