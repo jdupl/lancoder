@@ -10,6 +10,8 @@ import java.net.Socket;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
+import drfoliberg.common.network.StatusReport;
+import drfoliberg.common.network.TaskReport;
 
 public class WorkerServer extends Thread {
 
@@ -64,8 +66,19 @@ public class WorkerServer extends Thread {
 							} else {
 								out.writeObject(new Message(ClusterProtocol.TASK_REFUSED));
 							}
+							out.flush();
 							break;
-
+						case STATUS_REQUEST:
+							StatusReport report = null;
+							if (this.worker.getNode().getCurrentTask() != null) {
+								TaskReport taskReport = new TaskReport();
+								taskReport.setProgress(this.worker.getNode().getCurrentTask().getProgress());
+								report = new StatusReport(this.worker.getNode(), taskReport);
+							} else {
+								report = new StatusReport(this.worker.getNode());
+							}
+							out.writeObject(report);
+							out.flush();
 						case BYE:
 							s.close();
 							break;

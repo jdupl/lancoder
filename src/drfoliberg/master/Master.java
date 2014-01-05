@@ -36,7 +36,7 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 		this.nodesByUNID = new HashMap<>();
 		this.listener = new MasterServer(this);
 		this.nodeChecker = new NodeChecker(this);
-		
+
 	}
 
 	public synchronized Node identifySender(String nodeId) {
@@ -102,7 +102,7 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 	public void nodeShutdown(Node n) {
 		Node sender = identifySender(n.getUnid());
 		if (sender != null) {
-			
+
 			// Cancel node's task status if any
 			Task toCancel = null;
 			toCancel = sender.getCurrentTask();
@@ -197,7 +197,8 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 			task.setStatus(updateStatus);
 			if (updateStatus == Status.JOB_COMPLETED) {
 				n.getCurrentTask().setStatus(Status.JOB_COMPLETED);
-				// n.setStatus(Status.FREE); Node now updates it's own status and sends back to master
+				// n.setStatus(Status.FREE); Node now updates it's own status
+				// and sends back to master
 				n.setCurrentTask(null);
 			} else {
 				// TODO
@@ -243,7 +244,7 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 	}
 
 	public synchronized boolean removeNode(Node n) {
-		//updateNodeTask(n, Status.JOB_TODO);
+		// updateNodeTask(n, Status.JOB_TODO);
 		this.nodesByUNID.remove(n);
 		if (nodes.remove(n)) {
 			System.out.println("NODE REMOVED");
@@ -254,8 +255,8 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 
 	public void run() {
 		// TODO read configuration from previous run and start services
-		
-		//start services
+
+		// start services
 		this.listener.start();
 		this.nodeChecker.start();
 	}

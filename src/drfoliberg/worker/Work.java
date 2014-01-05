@@ -20,7 +20,20 @@ public class Work extends Thread {
 	public void run() {
 		try {
 			System.out.println("WORKER WORK THREAD: Executing a task!");
-			sleep(30000);
+			sleep(5000);
+			this.task.setProgress(10);
+			sleep(5000);
+			this.task.setProgress(20);
+			sleep(5000);
+			this.task.setProgress(30);
+			sleep(5000);
+			this.task.setProgress(40);
+			sleep(5000);
+			this.task.setProgress(50);
+			sleep(5000);
+			this.task.setProgress(80);
+			sleep(5000);
+			this.task.setProgress(90);
 			System.out.println("WORKER WORK THREAD: Done! Calling back the worker");
 			callback.taskDone(task, masterIp);
 		} catch (InterruptedException e) {

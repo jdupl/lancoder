@@ -8,6 +8,7 @@ import java.net.Socket;
 import drfoliberg.common.Node;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
+import drfoliberg.common.network.StatusReport;
 
 public class NodeChecker extends Thread {
 
@@ -41,17 +42,22 @@ public class NodeChecker extends Thread {
 								Message m = (Message) o;
 								switch (m.getCode()) {
 								case STATUS_REPORT:
-									// read status report and update node if
-									// necessary
-									// if node is working, update the task
-									// status
-									System.out.println("MASTER NODE CHECKER: node " + n.getName()
-											+ " is still alive and sent valid status report");
+									// read status report and update node if necessary
+									// if node is working, update the task status
 									// TODO read report and update the progress
+									if (m instanceof StatusReport) {
+										System.out.println("MASTER NODE CHECKER: node " + n.getName()
+												+ " is still alive and sent valid status report");
+										StatusReport statusReport = ((StatusReport) m);
+										this.master.readStatusReport(statusReport);
+										this.master.readTaskReport(statusReport.getTaskReport());
+									} else {
+										System.err.println("Could not read valid StatusReport from node " + n.getName());
+									}
 									break;
 
 								default:
-
+									System.err.println("Unexpected message code " + m.getCode() + " from node " + n.getName());
 									break;
 								}
 							}

@@ -185,6 +185,10 @@ public class Worker extends Thread {
 
 	}
 
+	public Node getNode() {
+		return this.node;
+	}
+
 	public int getListenPort() {
 		return listenPort;
 	}
