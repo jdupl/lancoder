@@ -39,6 +39,11 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 
 	}
 
+	/**
+	 * Returns a node object from a node id 
+	 * @param nodeId The node ID to get
+	 * @return The node object or null if not found
+	 */
 	public synchronized Node identifySender(String nodeId) {
 		Node n = this.nodesByUNID.get(nodeId);
 		if (n == null) {
@@ -78,7 +83,12 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 		return null;
 	}
 
+	/**
+	 * Checks if any task and nodes are available and dispatch until possible.
+	 * @return true if any work was dispatched
+	 */
 	private synchronized boolean updateNodesWork() {
+		// TODO loop to send more tasks (not just once)
 		Task nextTask = getNextTask();
 		if (nextTask == null) {
 			System.out.println("MASTER: No available work!");
@@ -99,6 +109,10 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 		return true;
 	}
 
+	/**
+	 * Handles a node's request to be disconnected.  
+	 * @param n The sender of the request (node to disconnect)
+	 */
 	public void nodeShutdown(Node n) {
 		Node sender = identifySender(n.getUnid());
 		if (sender != null) {
@@ -118,8 +132,15 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 		}
 	}
 
+	/**
+	 * Sends a disconnect request to a node, removes the node from the node list and 
+	 * updates the task of the node if it had any.
+	 * @param n The node to remove
+	 * @return
+	 */
 	public synchronized boolean disconnectNode(Node n) {
 		try {
+			//TODO only update work is worker as a task
 			updateNodeTask(n, Status.JOB_TODO);
 			Socket s = new Socket(n.getNodeAddress(), n.getNodePort());
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
@@ -169,11 +190,19 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 		return result;
 	}
 
+	/**
+	 * Adds a node to the node list. Updates task-work to assign work is any available.
+	 * Assigns a new ID to the node if it's non-existent.
+	 * The node will be picked up by the node checker automatically. 
+	 * @param n The node to be added
+	 * @return if the node could be added
+	 */
 	public synchronized boolean addNode(Node n) {
 		if (nodes.contains(n)) {
 			System.out.println("MASTER: Could not add node!");
 			return false;
 		} else {
+			//TODO don't assign new id if the node already has one !
 			n.setStatus(Status.NOT_CONNECTED);
 			String unid = getNewUNID(n);
 			n.setUnid(unid);
@@ -210,32 +239,48 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 		return false;
 	}
 
-	public synchronized void readStatusReport(StatusReport report) {
+	/**
+	 * Reads a status report of a node and updates the status of the node.
+	 * @param report The report to be read
+	 * @return true if update could be sent, false otherwise
+	 */
+	public synchronized boolean readStatusReport(StatusReport report) {
 		Status s = report.getNode().getStatus();
 		Node sender = identifySender(report.getNode().getUnid());
 		sender.setStatus(s);
 		updateNodesWork();
+		// TODO: get real return value of the update
+		return true;
 	}
 
+	/**
+	 * Reads a task report and launches an update of the task status and progress
+	 * @param report The report to be read
+	 * @return Return true if update could be sent, false otherwise
+	 */
 	public synchronized boolean readTaskReport(TaskReport report) {
 
 		double progress = report.getProgress();
 		// find node
 		report.getJobId();
 		report.getTaskId();
-		Node sender = null;
-		for (Node n : this.nodes) {
-			if (n.getCurrentTask() != null && n.getCurrentTask().getJobId() == report.getJobId()) {
-				sender = n;
-				break;
-			}
-		}
+		String nodeId = report.getNode().getUnid();
+		Node sender = identifySender(nodeId);
+		
+//		for (Node n : this.nodes) {
+//
+//			if (n.getCurrentTask() != null && n.getCurrentTask().getJobId() == report.getJobId()) {
+//				sender = n;
+//				break;
+//			}
+//		}
 		if (sender == null) {
 			System.out.println("MASTER: Could not find task in the node list!");
 			return false;
 		}
-		System.out
-				.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
+		// check task-node association 
+		
+		System.out.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
 		sender.getCurrentTask().setProgress(progress);
 		if (progress == 100) {
 			updateNodeTask(sender, Status.JOB_COMPLETED);
