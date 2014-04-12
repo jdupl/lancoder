@@ -17,11 +17,8 @@ import drfoliberg.common.network.StatusReport;
 import drfoliberg.common.network.TaskReport;
 import drfoliberg.common.task.Job;
 import drfoliberg.common.task.Task;
-import drfoliberg.master.listeners.IMasterListener;
-import drfoliberg.master.listeners.INodeListener;
-import drfoliberg.master.listeners.ITaskListener;
 
-public class Master implements INodeListener, ITaskListener, IMasterListener, Runnable {
+public class Master implements Runnable {
 
 	MasterServer listener;
 	NodeChecker nodeChecker;
@@ -311,39 +308,4 @@ public class Master implements INodeListener, ITaskListener, IMasterListener, Ru
 		nodecheckerThread.start();
 	}
 
-	@Override
-	public void nodeAdded(Node n) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void nodeDisconnected(Node n) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void nodeRemoved(Node n) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void taskFinished(Task t) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void taskCancelled(Task t) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void workUpdated() {
-		// TODO Auto-generated method stub
-
-	}
 }
