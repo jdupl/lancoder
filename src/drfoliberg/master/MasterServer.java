@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 
-public class MasterServer extends Thread {
+public class MasterServer implements Runnable {
 
 	private Master master;
 
@@ -16,11 +16,15 @@ public class MasterServer extends Thread {
 		try {
 			boolean close = false;
 			ServerSocket server = new ServerSocket(1337);
+			// TODO set timeout to interrupt listening on socket from time to time
 			while (!close) {
 				try {
-					new HandleMaster(server.accept(), master).start();
+					HandleMaster handle = new HandleMaster(server.accept(), master);
+					Thread t = new Thread(handle);
+					t.start();
 				} catch (InterruptedIOException e) {
 					// thread was interrupted by master (master is shutting down)
+					//TODO add condition where interruption occurred by timeout (to check closed state)
 					close = true;
 				}
 			}

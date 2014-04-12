@@ -10,7 +10,7 @@ import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
 import drfoliberg.common.network.StatusReport;
 
-public class NodeChecker extends Thread {
+public class NodeChecker implements Runnable {
 
 	Master master;
 
@@ -76,7 +76,9 @@ public class NodeChecker extends Thread {
 					System.out.println("MASTER NODE CHECKER: no nodes to check!");
 				}
 				System.out.println("MASTER NODE CHECKER: checking back in 30 seconds");
-				sleep(30000);
+				// TODO check for better way to sleep / handle interrupt
+				Thread.currentThread();
+				Thread.sleep(30000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

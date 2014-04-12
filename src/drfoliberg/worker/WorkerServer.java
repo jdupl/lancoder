@@ -13,7 +13,7 @@ import drfoliberg.common.network.Message;
 import drfoliberg.common.network.StatusReport;
 import drfoliberg.common.network.TaskReport;
 
-public class WorkerServer extends Thread {
+public class WorkerServer implements Runnable {
 
 	private Worker worker;
 	private boolean close;

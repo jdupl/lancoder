@@ -15,7 +15,7 @@ import drfoliberg.common.network.StatusReport;
 import drfoliberg.common.network.TaskReport;
 import drfoliberg.common.task.Task;
 
-public class Worker extends Thread {
+public class Worker implements Runnable {
 
 	private InetAddress workerIp;
 	private InetAddress masterIpAddress;
@@ -82,7 +82,7 @@ public class Worker extends Thread {
 		// TODO halt work thread too!
 		print("stopping work thread");
 		this.workThread.interrupt();
-		this.interrupt();
+		Thread.currentThread().interrupt();
 	}
 
 	public void print(String s) {
@@ -152,7 +152,8 @@ public class Worker extends Thread {
 		this.node.setStatus(statusCode);
 		if (statusCode == Status.NOT_CONNECTED) {
 			ContactMaster contact = new ContactMaster(this);
-			contact.start();
+			Thread mastercontactThread = new Thread(contact);
+			mastercontactThread.start();
 		} else {
 			Socket socket = null;
 			try {
@@ -211,7 +212,8 @@ public class Worker extends Thread {
 
 	public void run() {
 		updateStatus(Status.NOT_CONNECTED);
-		workerListener.start();
+		Thread listerThread = new Thread(workerListener);
+		listerThread.start();
 	}
 
 	public InetAddress getWorkerIp() {

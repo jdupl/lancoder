@@ -11,7 +11,7 @@ import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
 import drfoliberg.common.network.UNID;
 
-public class ContactMaster extends Thread {
+public class ContactMaster implements Runnable {
 
 	Worker worker;
 
@@ -66,7 +66,9 @@ public class ContactMaster extends Thread {
 			} else {
 				System.out.println("WORKER CONTACT: could not reach the master server. Trying again in 5 seconds.");
 				try {
-					sleep(5000);
+					// TODO check for better way to sleep / handle interrupt
+					Thread.currentThread();
+					Thread.sleep(5000);
 				} catch (InterruptedException e) {
 				}
 			}

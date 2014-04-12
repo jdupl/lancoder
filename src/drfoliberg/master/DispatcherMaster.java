@@ -12,7 +12,7 @@ import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
 import drfoliberg.common.task.Task;
 
-public class DispatcherMaster extends Thread {
+public class DispatcherMaster implements Runnable {
 
 	Node node;
 	Task task;

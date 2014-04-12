@@ -21,7 +21,7 @@ import drfoliberg.master.listeners.IMasterListener;
 import drfoliberg.master.listeners.INodeListener;
 import drfoliberg.master.listeners.ITaskListener;
 
-public class Master extends Thread implements INodeListener, ITaskListener, IMasterListener {
+public class Master implements INodeListener, ITaskListener, IMasterListener, Runnable {
 
 	MasterServer listener;
 	NodeChecker nodeChecker;
@@ -105,7 +105,8 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 
 	public synchronized boolean dispatch(Task task, Node node) {
 		DispatcherMaster dispatcher = new DispatcherMaster(node, task, this);
-		dispatcher.start();
+		Thread t = new Thread(dispatcher);
+		t.start();
 		return true;
 	}
 
@@ -302,8 +303,10 @@ public class Master extends Thread implements INodeListener, ITaskListener, IMas
 		// TODO read configuration from previous run and start services
 
 		// start services
-		this.listener.start();
-		this.nodeChecker.start();
+		Thread listenerThread = new Thread(listener);
+		listenerThread.start();
+		Thread nodecheckerThread = new Thread(nodeChecker);
+		nodecheckerThread.start();
 	}
 
 	@Override

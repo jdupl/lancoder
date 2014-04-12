@@ -12,7 +12,7 @@ import drfoliberg.common.network.UNID;
 import drfoliberg.common.network.StatusReport;
 import drfoliberg.common.network.TaskReport;
 
-public class HandleMaster extends Thread {
+public class HandleMaster implements Runnable {
 
 	ObjectInputStream in;
 	ObjectOutputStream out;
