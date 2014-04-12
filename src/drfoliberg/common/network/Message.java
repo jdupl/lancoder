@@ -2,48 +2,46 @@ package drfoliberg.common.network;
 
 import java.io.Serializable;
 
-import drfoliberg.common.Node;
-import drfoliberg.common.task.Task;
-
 public class Message implements Serializable {
 
 	private static final long serialVersionUID = -483657531000641905L;
 
 	protected ClusterProtocol code;
-	private Task task;
-	protected Node node;
+	protected String unid;
 
+	/**
+	 * Generic Message object. Uses code to send generic commands as closing
+	 * connection, update required etc.
+	 * 
+	 * @param code
+	 *            The Message code used in the ClusterProtocol
+	 * @param unid
+	 *            The worker id
+	 */
+	public Message(ClusterProtocol code, String unid) {
+		this.code = code;
+		this.unid = unid;
+	}
+
+	/**
+	 * Generic message object without unid
+	 * 
+	 * @param code
+	 */
 	public Message(ClusterProtocol code) {
 		this.code = code;
-	}
-
-	public Message(String nuid) {
-
-	}
-
-	public Message(Task t) {
-		this.code = ClusterProtocol.TASK_REQUEST;
-		this.task = t;
-	}
-
-	public Message(Node n) {
-		this.code = ClusterProtocol.CONNECT_ME;
-		this.node = n;
+		this.unid = "";
 	}
 
 	public ClusterProtocol getCode() {
 		return code;
 	}
 
-	public Task getTask() {
-		return task;
+	public String getUnid() {
+		return unid;
 	}
 
-	public Node getNode() {
-		return node;
-	}
-
-	public void setNode(Node n) {
-		this.node = n;
+	public void setUnid(String unid) {
+		this.unid = unid;
 	}
 }

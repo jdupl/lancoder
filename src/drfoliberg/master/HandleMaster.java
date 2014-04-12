@@ -3,12 +3,15 @@ package drfoliberg.master;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import drfoliberg.common.Node;
+import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.network.ConnectMessage;
 import drfoliberg.common.network.Message;
-import drfoliberg.common.network.UNID;
 import drfoliberg.common.network.StatusReport;
 import drfoliberg.common.network.TaskReport;
 
@@ -22,6 +25,12 @@ public class HandleMaster implements Runnable {
 	public HandleMaster(Socket s, Master master) {
 		this.master = master;
 		this.s = s;
+	}
+	
+	private InetAddress getAddressFromSocket(Socket s) {
+		InetAddress ad = ((InetSocketAddress) s.getRemoteSocketAddress())
+				.getAddress();
+		return ad;
 	}
 
 	public void run() {
@@ -37,28 +46,37 @@ public class HandleMaster implements Runnable {
 					switch (((Message) request).getCode()) {
 
 					case CONNECT_ME:
-						sender = ((Message) request).getNode();
-						boolean added = master.addNode(sender);
-						if (added) {
-							// send UNID to the node
-							System.out.println("MASTER HANDLE: Sending unid to node");
-							out.writeObject(new UNID(sender.getUnid()));
-							out.flush();
-						} else {
+						if(!(request instanceof ConnectMessage)) {
+							//TODO handle error
+							break;
+						}
+						ConnectMessage cm = (ConnectMessage) request;
+						if (cm.status == Status.FREE) {
+							// add node to list
+							sender = new Node(getAddressFromSocket(s), cm.localPort, cm.name);
+							sender.setUnid(cm.getUnid());
+							boolean added = master.addNode(sender);
+							if (added) {
+								// send UNID to the node
+								cm.setUnid(sender.getUnid());
+								System.out.println("MASTER HANDLE: Sending unid to node");
+								out.writeObject(cm);
+								out.flush();
+							} else {
+								out.writeObject(new Message(ClusterProtocol.BYE));
+								out.flush();
+								close = true;
+								s.close();
+							}
+						} else if (cm.status == Status.NOT_CONNECTED) {
+							// the node want to disconnect
+							
+							this.master.nodeShutdown(cm.getUnid());
 							out.writeObject(new Message(ClusterProtocol.BYE));
 							out.flush();
 							close = true;
 							s.close();
 						}
-						break;
-					case DISCONNECT_ME:
-						sender = ((Message) request).getNode();
-						//this.master.disconnectNode(sender);
-						this.master.nodeShutdown(sender);
-						out.writeObject(new Message(ClusterProtocol.BYE));
-						out.flush();
-						close = true;
-						s.close();
 						break;
 
 					case TASK_REPORT:
@@ -75,7 +93,6 @@ public class HandleMaster implements Runnable {
 						break;
 					case STATUS_REPORT:
 						if (request instanceof StatusReport) {
-							System.out.println("MASTER HANDLE: node updates it's status!");
 							StatusReport report = (StatusReport) request;
 							master.readStatusReport(report);
 						}

@@ -10,6 +10,7 @@ import drfoliberg.common.Node;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
+import drfoliberg.common.network.TaskRequestMessage;
 import drfoliberg.common.task.Task;
 
 public class DispatcherMaster implements Runnable {
@@ -30,7 +31,7 @@ public class DispatcherMaster implements Runnable {
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
 			System.out.println("MASTER DISPATCH: Sending work " + task.getTaskId() + " to node " + node.getName());
-			out.writeObject(new Message(task));
+			out.writeObject(new TaskRequestMessage(task));
 			out.flush();
 			Object o = in.readObject();
 			if (o instanceof Message) {

@@ -5,11 +5,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import drfoliberg.common.Node;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.network.ConnectMessage;
 import drfoliberg.common.network.Message;
-import drfoliberg.common.network.UNID;
 
 public class ContactMaster implements Runnable {
 
@@ -30,18 +29,20 @@ public class ContactMaster implements Runnable {
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-			Node n = new Node(worker.getWorkerIp(), worker.getListenPort(), worker.getWorkerName());
-			out.writeObject(new Message(n));
+			//Node n = new Node(worker.getWorkerIp(), worker.getListenPort(), worker.getWorkerName());
+			//out.writeObject(new Message(n));
+			ConnectMessage m = new ConnectMessage(worker.config.getUniqueID(), worker.config.getListenPort(),worker.config.getName(),Status.FREE);
+			out.writeObject(m);
 			out.flush();
 			Object o = in.readObject();
 			if (o instanceof Message) {
 				Message response = (Message) o;
 				if (response.getCode() == ClusterProtocol.BYE) {
 					socket.close();
-				} else if (response.getCode() == ClusterProtocol.NEW_UNID) {
+				} else if (response.getCode() == ClusterProtocol.CONNECT_ME) {
 					success = true;
-					UNID unid = (UNID) response;
-					this.worker.setUnid(unid.getUnid());
+					// get unid from response
+					this.worker.setUnid(response.getUnid());
 					out.writeObject(new Message(ClusterProtocol.BYE));
 					out.flush();
 					socket.close();

@@ -3,6 +3,7 @@ package drfoliberg.master;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 
 public class MasterServer implements Runnable {
 
@@ -19,7 +20,9 @@ public class MasterServer implements Runnable {
 			// TODO set timeout to interrupt listening on socket from time to time
 			while (!close) {
 				try {
-					HandleMaster handle = new HandleMaster(server.accept(), master);
+					Socket clientSocket = server.accept();
+					HandleMaster handle = new HandleMaster(clientSocket, master);
+					
 					Thread t = new Thread(handle);
 					t.start();
 				} catch (InterruptedIOException e) {

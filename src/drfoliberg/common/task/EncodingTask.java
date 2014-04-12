@@ -6,7 +6,7 @@ public class EncodingTask extends Task {
 
 	private long startTime;
 	private long endTime;
-	private Pass passes;
+//	private Pass passes;
 
 	public EncodingTask(int taskId, String fileLocation) {
 		super(taskId, fileLocation);

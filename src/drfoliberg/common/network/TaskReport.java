@@ -7,12 +7,12 @@ public class TaskReport extends Message {
 	private double progress;
 	private int taskId;
 	private String jobId;
-	private long timeElapsed;
-	private long timeEstimated;
-	private double fps;
+//	private long timeElapsed;
+//	private long timeEstimated;
+//	private double fps;
 
 	public TaskReport() {
-		super(ClusterProtocol.TASK_REPORT);
+		super(ClusterProtocol.TASK_REPORT,"");
 	}
 
 	public double getProgress() {

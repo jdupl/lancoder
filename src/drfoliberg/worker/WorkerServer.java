@@ -12,6 +12,7 @@ import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
 import drfoliberg.common.network.StatusReport;
 import drfoliberg.common.network.TaskReport;
+import drfoliberg.common.network.TaskRequestMessage;
 
 public class WorkerServer implements Runnable {
 
@@ -59,23 +60,34 @@ public class WorkerServer implements Runnable {
 							break;
 						case TASK_REQUEST:
 							print("received task from master");
-							worker.startWork(m.getTask());
-							print("sending to master the status of the task");
-							if (worker.getStatus() == Status.WORKING) {
-								out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));
-							} else {
+							if(!(m instanceof TaskRequestMessage)) {
 								out.writeObject(new Message(ClusterProtocol.TASK_REFUSED));
+								out.flush();
+								break;
 							}
+							TaskRequestMessage tqm = (TaskRequestMessage) m;
+							worker.startWork(tqm.task);
+							
+							//TODO the following code must be replaced
+							// when worker's status is updated
+//							print("sending to master the status of the task");
+//							if (worker.getStatus() == Status.WORKING) {
+//								out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));
+//							} else {
+//								out.writeObject(new Message(ClusterProtocol.TASK_REFUSED));
+//							}
 							out.flush();
 							break;
 						case STATUS_REQUEST:
 							StatusReport report = null;
-							if (this.worker.getNode().getCurrentTask() != null) {
+							if (this.worker.getCurrentTask() != null) {
 								TaskReport taskReport = new TaskReport();
-								taskReport.setProgress(this.worker.getNode().getCurrentTask().getProgress());
-								report = new StatusReport(this.worker.getNode(), taskReport);
+								taskReport.setProgress(this.worker.getCurrentTask().getProgress());
+//								report = new StatusReport(this.worker.getNode(), taskReport);
+								//report = new StatusReport(null, taskReport); //TODO fix this
 							} else {
-								report = new StatusReport(this.worker.getNode());
+//								report = new StatusReport(this.worker.getNode());
+								//report = new StatusReport(null);
 							}
 							out.writeObject(report);
 							out.flush();

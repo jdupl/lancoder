@@ -52,7 +52,7 @@ public class Master implements INodeListener, ITaskListener, IMasterListener, Ru
 		}
 		return n;
 	}
-
+	
 	public synchronized boolean addJob(Job j) {
 		boolean success = this.jobs.add(j);
 		if (!success) {
@@ -114,8 +114,8 @@ public class Master implements INodeListener, ITaskListener, IMasterListener, Ru
 	 * Handles a node's request to be disconnected.  
 	 * @param n The sender of the request (node to disconnect)
 	 */
-	public void nodeShutdown(Node n) {
-		Node sender = identifySender(n.getUnid());
+	public void nodeShutdown(String unid) {
+		Node sender = identifySender(unid);
 		if (sender != null) {
 
 			// Cancel node's task status if any
@@ -141,7 +141,7 @@ public class Master implements INodeListener, ITaskListener, IMasterListener, Ru
 	 */
 	public synchronized boolean disconnectNode(Node n) {
 		try {
-			//TODO only update work is worker as a task
+			//TODO only update work if worker has a task
 			updateNodeTask(n, Status.JOB_TODO);
 			Socket s = new Socket(n.getNodeAddress(), n.getNodePort());
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
@@ -199,7 +199,7 @@ public class Master implements INodeListener, ITaskListener, IMasterListener, Ru
 	 * @return if the node could be added
 	 */
 	public synchronized boolean addNode(Node n) {
-		if (nodes.contains(n)) {
+		if (n.getUnid() != "" && nodes.contains(n)) {
 			System.out.println("MASTER: Could not add node!");
 			return false;
 		} else {
@@ -246,8 +246,10 @@ public class Master implements INodeListener, ITaskListener, IMasterListener, Ru
 	 * @return true if update could be sent, false otherwise
 	 */
 	public synchronized boolean readStatusReport(StatusReport report) {
-		Status s = report.getNode().getStatus();
-		Node sender = identifySender(report.getNode().getUnid());
+		Status s = report.status;
+		String unid = report.getUnid();
+		Node sender = identifySender(unid);
+		System.out.println("node "+ sender.getName()+ " is updating it's status from " +sender.getStatus() + " to " + report.status);
 		sender.setStatus(s);
 		updateNodesWork();
 		// TODO: get real return value of the update
@@ -261,31 +263,31 @@ public class Master implements INodeListener, ITaskListener, IMasterListener, Ru
 	 */
 	public synchronized boolean readTaskReport(TaskReport report) {
 
-		double progress = report.getProgress();
-		// find node
-		report.getJobId();
-		report.getTaskId();
-		String nodeId = report.getNode().getUnid();
-		Node sender = identifySender(nodeId);
-		
-//		for (Node n : this.nodes) {
-//
-//			if (n.getCurrentTask() != null && n.getCurrentTask().getJobId() == report.getJobId()) {
-//				sender = n;
-//				break;
-//			}
+//		double progress = report.getProgress();
+//		// find node
+//		report.getJobId();
+//		report.getTaskId();
+//		String nodeId = report.getNode().getUnid();
+//		Node sender = identifySender(nodeId);
+//		
+////		for (Node n : this.nodes) {
+////
+////			if (n.getCurrentTask() != null && n.getCurrentTask().getJobId() == report.getJobId()) {
+////				sender = n;
+////				break;
+////			}
+////		}
+//		if (sender == null) {
+//			System.out.println("MASTER: Could not find task in the node list!");
+//			return false;
 //		}
-		if (sender == null) {
-			System.out.println("MASTER: Could not find task in the node list!");
-			return false;
-		}
-		// check task-node association 
-		
-		System.out.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
-		sender.getCurrentTask().setProgress(progress);
-		if (progress == 100) {
-			updateNodeTask(sender, Status.JOB_COMPLETED);
-		}
+//		// check task-node association 
+//		
+//		System.out.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
+//		sender.getCurrentTask().setProgress(progress);
+//		if (progress == 100) {
+//			updateNodeTask(sender, Status.JOB_COMPLETED);
+//		}
 		return true;
 	}
 
