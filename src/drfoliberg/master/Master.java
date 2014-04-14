@@ -261,16 +261,23 @@ public class Master implements Runnable {
 
 	/**
 	 * Reads a status report of a node and updates the status of the node.
-	 * @param report The report to be read
+	 * 
+	 * @param report
+	 *            The report to be read
 	 * @return true if update could be sent, false otherwise
 	 */
 	public synchronized boolean readStatusReport(StatusReport report) {
 		Status s = report.status;
 		String unid = report.getUnid();
 		Node sender = identifySender(unid);
-		System.out.println("node "+ sender.getName()+ " is updating it's status from " +sender.getStatus() + " to " + report.status);
-		sender.setStatus(s);
-		updateNodesWork();
+		// only update if status is changed
+		if (sender.getStatus() != report.status) {
+			System.out.println("node " + sender.getName()
+					+ " is updating it's status from " + sender.getStatus()
+					+ " to " + report.status);
+			sender.setStatus(s);
+			updateNodesWork();
+		}
 		// TODO: get real return value of the update
 		return true;
 	}
