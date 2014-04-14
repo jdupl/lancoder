@@ -22,6 +22,17 @@ public class Node implements Serializable {
 		this.nodePort = nodePort;
 		this.name = name;
 	}
+	
+	
+
+	@Override
+	public String toString() {
+		return "Node [nodeAddress=" + nodeAddress + ", nodePort=" + nodePort
+				+ ", status=" + status + ", name=" + name + ", unid=" + unid
+				+ ", currentTask=" + currentTask + "]";
+	}
+
+
 
 	public boolean equals(Object o) {
 		boolean equals = false;

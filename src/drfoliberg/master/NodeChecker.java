@@ -44,7 +44,6 @@ public class NodeChecker implements Runnable {
 								case STATUS_REPORT:
 									// read status report and update node if necessary
 									// if node is working, update the task status
-									// TODO read report and update the progress
 									if (m instanceof StatusReport) {
 										System.out.println("MASTER NODE CHECKER: node " + n.getName()
 												+ " is still alive and sent valid status report");

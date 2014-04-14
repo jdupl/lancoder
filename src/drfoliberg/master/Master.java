@@ -18,10 +18,15 @@ import drfoliberg.common.network.TaskReport;
 import drfoliberg.common.task.Job;
 import drfoliberg.common.task.Task;
 
+/**
+ * TODO implement a clean shutdown method (saving current config and such)
+ */
 public class Master implements Runnable {
 
 	MasterServer listener;
 	NodeChecker nodeChecker;
+	
+	public static final String ALGORITHM = "SHA-256";
 
 	private ArrayList<Node> nodes;
 	public ArrayList<Job> jobs;
@@ -31,25 +36,30 @@ public class Master implements Runnable {
 		this.nodes = new ArrayList<Node>();
 		this.jobs = new ArrayList<Job>();
 		this.nodesByUNID = new HashMap<>();
+        // TODO refactor these to observers/events patterns
 		this.listener = new MasterServer(this);
 		this.nodeChecker = new NodeChecker(this);
 
 	}
 
 	/**
-	 * Returns a node object from a node id 
-	 * @param nodeId The node ID to get
+	 * Returns a node object from a node id
+	 * 
+	 * @param nodeId
+	 *            The node ID to get
 	 * @return The node object or null if not found
 	 */
 	public synchronized Node identifySender(String nodeId) {
 		Node n = this.nodesByUNID.get(nodeId);
 		if (n == null) {
-			System.out.println("WARNING could not FIND NODE " + nodeId + " Size of nodesByUNID: " + nodesByUNID.size()
-					+ " Size of nodes arraylist:" + nodes.size());
+			System.out.printf("WARNING could not FIND NODE %s\n"
+					+ "Size of nodesByUNID: %d\n"
+					+ "Size of nodes arraylist:%d\n",
+					nodeId, nodesByUNID.size(), nodes.size());
 		}
 		return n;
 	}
-	
+
 	public synchronized boolean addJob(Job j) {
 		boolean success = this.jobs.add(j);
 		if (!success) {
@@ -71,6 +81,11 @@ public class Master implements Runnable {
 		return null;
 	}
 
+	/**
+	 * This should look for available online and free nodes.
+	 * TODO The node order should be intelligent. Fastest node should be selected.
+	 * @return pointer to the node object
+	 */
 	private Node getBestFreeNode() {
 		for (Node n : this.nodes) {
 			if (n.getStatus() == Status.FREE) {
@@ -98,7 +113,7 @@ public class Master implements Runnable {
 		}
 		dispatch(nextTask, node);
 		return true;
-	}
+	}	
 
 	public synchronized boolean dispatch(Task task, Node node) {
 		DispatcherMaster dispatcher = new DispatcherMaster(node, task, this);
@@ -109,7 +124,7 @@ public class Master implements Runnable {
 
 	/**
 	 * Handles a node's request to be disconnected.  
-	 * @param n The sender of the request (node to disconnect)
+	 * @param unid The sender of the request (node to disconnect)
 	 */
 	public void nodeShutdown(String unid) {
 		Node sender = identifySender(unid);
@@ -170,17 +185,22 @@ public class Master implements Runnable {
 	}
 
 	private synchronized String getNewUNID(Node n) {
+		String result = "";
 		System.out.println("MASTER: generating a nuid for node " + n.getName());
 		long ms = System.currentTimeMillis();
 		String input = ms + n.getName();
 		MessageDigest md = null;
 		try {
-			md = MessageDigest.getInstance("SHA-1");
+			md = MessageDigest.getInstance(ALGORITHM);
 		} catch (NoSuchAlgorithmException e) {
+			// print and handle exception
+			// if a null string is given back to the client, it won't connect
 			e.printStackTrace();
+			System.out.println("MASTER: could not get an instance of " + ALGORITHM + " to produce a UNID\nThis is bad.");
+			return "";
 		}
 		byte[] byteArray = md.digest(input.getBytes());
-		String result = "";
+		result = "";
 		for (int i = 0; i < byteArray.length; i++) {
 			result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
 		}
@@ -189,28 +209,30 @@ public class Master implements Runnable {
 	}
 
 	/**
-	 * Adds a node to the node list. Updates task-work to assign work is any available.
+	 * Adds a node to the node list.
 	 * Assigns a new ID to the node if it's non-existent.
-	 * The node will be picked up by the node checker automatically. 
+	 * The node will be picked up by the node checker automatically if work is available.
 	 * @param n The node to be added
 	 * @return if the node could be added
 	 */
-	public synchronized boolean addNode(Node n) {
-		if (n.getUnid() != "" && nodes.contains(n)) {
-			System.out.println("MASTER: Could not add node!");
-			return false;
-		} else {
-			//TODO don't assign new id if the node already has one !
-			n.setStatus(Status.NOT_CONNECTED);
-			String unid = getNewUNID(n);
-			n.setUnid(unid);
-			nodes.add(n);
-			nodesByUNID.put(n.getUnid(), n);
-			System.out.println("MASTER: Added node " + n.getName() + " with unid: " + n.getUnid());
-			updateNodesWork();
-			return true;
-		}
-	}
+    public synchronized boolean addNode(Node n) {
+        // Is this a new node ?
+        if (n.getUnid().equals("")) {
+            n.setUnid(getNewUNID(n));
+        }
+        if (nodes.contains(n)) {
+            System.out.println("MASTER: Could not add node!");
+            // TODO handle node with same unid reconnecting
+            return false;
+        } else {
+            n.setStatus(Status.NOT_CONNECTED);
+            nodes.add(n);
+            nodesByUNID.put(n.getUnid(), n);
+            System.out.println("MASTER: Added node " + n.getName() + " with unid: " + n.getUnid());
+            updateNodesWork();
+            return true;
+        }
+    }
 
 	public synchronized ArrayList<Node> getNodes() {
 		return this.nodes;
@@ -253,43 +275,52 @@ public class Master implements Runnable {
 		return true;
 	}
 
-	/**
-	 * Reads a task report and launches an update of the task status and progress
-	 * @param report The report to be read
-	 * @return Return true if update could be sent, false otherwise
-	 */
-	public synchronized boolean readTaskReport(TaskReport report) {
+    /**
+     * Reads a task report and launches an update of the task status and progress
+     *
+     * @param report The report to be read
+     * @return Return true if update could be sent, false otherwise
+     */
+    public synchronized boolean readTaskReport(TaskReport report) {
 
-//		double progress = report.getProgress();
-//		// find node
-//		report.getJobId();
-//		report.getTaskId();
-//		String nodeId = report.getNode().getUnid();
-//		Node sender = identifySender(nodeId);
-//		
-////		for (Node n : this.nodes) {
-////
-////			if (n.getCurrentTask() != null && n.getCurrentTask().getJobId() == report.getJobId()) {
-////				sender = n;
-////				break;
-////			}
-////		}
-//		if (sender == null) {
-//			System.out.println("MASTER: Could not find task in the node list!");
-//			return false;
-//		}
-//		// check task-node association 
-//		
-//		System.out.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
-//		sender.getCurrentTask().setProgress(progress);
-//		if (progress == 100) {
-//			updateNodeTask(sender, Status.JOB_COMPLETED);
-//		}
-		return true;
-	}
+        double progress = report.getProgress();
+        // find node
+        String nodeId = report.getUnid();
+        Node sender = identifySender(nodeId);
+
+        if (sender == null) {
+            System.err.println("MASTER: Could not find task in the node list!");
+            return false;
+        }
+        
+        Task nodeTask = sender.getCurrentTask();
+        
+        if (nodeTask == null) {
+            System.err.printf("MASTER: Node %s has no task! \n",sender.getName());
+            return false;
+        }
+
+        // check task-node association
+        if (!nodeTask.getJobId().equals(report.getJobId()) || nodeTask.getTaskId() != report.getTaskId()) {
+            System.err.printf("MASTER: Bad task update from node %s." +
+                            " Expected task: %d, job: %s." +
+                            " Got task: %d, job: %s", sender.getUnid(), nodeTask.getTaskId(),
+                    nodeTask.getJobId(), report.getTaskId(), report.getJobId()
+            );
+            return false;
+        }
+
+        System.out.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
+        sender.getCurrentTask().setProgress(progress);
+        if (progress == 100) {
+            updateNodeTask(sender, Status.JOB_COMPLETED);
+        }
+        return true;
+    }
 
 	public synchronized boolean removeNode(Node n) {
 		// updateNodeTask(n, Status.JOB_TODO);
+        // TODO don't remove the node from the array list. Give it an offline status
 		this.nodesByUNID.remove(n);
 		if (nodes.remove(n)) {
 			System.out.println("NODE REMOVED");
@@ -304,8 +335,8 @@ public class Master implements Runnable {
 		// start services
 		Thread listenerThread = new Thread(listener);
 		listenerThread.start();
-		Thread nodecheckerThread = new Thread(nodeChecker);
-		nodecheckerThread.start();
+		Thread nodeCheckerThread = new Thread(nodeChecker);
+		nodeCheckerThread.start();
 	}
 
 }

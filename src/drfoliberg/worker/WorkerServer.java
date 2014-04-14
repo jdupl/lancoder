@@ -66,30 +66,26 @@ public class WorkerServer implements Runnable {
 								break;
 							}
 							TaskRequestMessage tqm = (TaskRequestMessage) m;
-							worker.startWork(tqm.task);
-							
-							//TODO the following code must be replaced
-							// when worker's status is updated
-//							print("sending to master the status of the task");
-//							if (worker.getStatus() == Status.WORKING) {
-//								out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));
-//							} else {
-//								out.writeObject(new Message(ClusterProtocol.TASK_REFUSED));
-//							}
+
+							if (worker.startWork(tqm.task)) {
+								out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));
+							} else {
+								out.writeObject(new Message(ClusterProtocol.TASK_REFUSED));
+							}
 							out.flush();
 							break;
 						case STATUS_REQUEST:
+                            // if worker has no task, add null task report
 							StatusReport report = null;
+                            TaskReport taskReport = null;
 							if (this.worker.getCurrentTask() != null) {
-								TaskReport taskReport = new TaskReport();
+								taskReport = new TaskReport(worker.config.getUniqueID());
 								taskReport.setProgress(this.worker.getCurrentTask().getProgress());
-//								report = new StatusReport(this.worker.getNode(), taskReport);
-								//report = new StatusReport(null, taskReport); //TODO fix this
-							} else {
-//								report = new StatusReport(this.worker.getNode());
-								//report = new StatusReport(null);
+                                taskReport.setJobId(worker.getCurrentTask().getJobId());
+                                taskReport.setTaskId(worker.getCurrentTask().getTaskId());
 							}
-							out.writeObject(report);
+                            report = new StatusReport(worker.getStatus(),worker.config.getUniqueID(),taskReport);
+                            out.writeObject(report);
 							out.flush();
 						case BYE:
 							s.close();

@@ -13,7 +13,6 @@ import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.ConnectMessage;
 import drfoliberg.common.network.Message;
 import drfoliberg.common.network.StatusReport;
-import drfoliberg.common.network.TaskReport;
 
 public class HandleMaster implements Runnable {
 
@@ -70,7 +69,6 @@ public class HandleMaster implements Runnable {
 							}
 						} else if (cm.status == Status.NOT_CONNECTED) {
 							// the node want to disconnect
-							
 							this.master.nodeShutdown(cm.getUnid());
 							out.writeObject(new Message(ClusterProtocol.BYE));
 							out.flush();
@@ -79,22 +77,25 @@ public class HandleMaster implements Runnable {
 						}
 						break;
 
-					case TASK_REPORT:
-						if (request instanceof TaskReport) {
-							System.out.println("MASTER HANDLE: received a task report from worker.");
-							TaskReport report = (TaskReport) request;
-							this.master.readTaskReport(report);
-						} else {
-							System.out.println("MASTER HANDLE: received an INVALID task report from worker !");
-						}
-						out.writeObject(new Message(ClusterProtocol.BYE));
-						close = true;
-						s.close();
-						break;
+//					case TASK_REPORT:
+//						if (request instanceof TaskReport) {
+//							System.out.println("MASTER HANDLE: received a task report from worker.");
+//							TaskReport report = (TaskReport) request;
+//							this.master.readTaskReport(report);
+//						} else {
+//							System.out.println("MASTER HANDLE: received an INVALID task report from worker !");
+//						}
+//						out.writeObject(new Message(ClusterProtocol.BYE));
+//						close = true;
+//						s.close();
+//						break;
 					case STATUS_REPORT:
 						if (request instanceof StatusReport) {
 							StatusReport report = (StatusReport) request;
 							master.readStatusReport(report);
+                            if(report.getTaskReport() != null){
+                                master.readTaskReport(report.getTaskReport());
+                            }
 						}
 					case BYE:
 						close = true;

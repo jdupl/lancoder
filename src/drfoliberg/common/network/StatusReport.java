@@ -37,4 +37,7 @@ public class StatusReport extends Message {
 		return taskReport;
 	}
 
+    public void setTaskReport(TaskReport taskReport) {
+        this.taskReport = taskReport;
+    }
 }

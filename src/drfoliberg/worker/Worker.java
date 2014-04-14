@@ -55,7 +55,7 @@ public class Worker implements Runnable {
 					break;
 				default:
 					socket.close();
-					print("something odd happenned");
+					print("something odd happened");
 					break;
 				}
 			} else {
@@ -84,14 +84,16 @@ public class Worker implements Runnable {
 		this.updateStatus(Status.FREE);
 	}
 
-	public void startWork(Task t) {
+	public boolean startWork(Task t) {
 		if (this.getStatus() != Status.FREE) {
 			print("cannot accept work as i'm not free. Current status: " + this.getStatus());
+			return false;
 		} else {
 			this.currentTask = t;
 			updateStatus(Status.WORKING);
 			this.workThread = new Work(this, t, config.getMasterIpAddress());
 			this.workThread.start();
+			return true;
 		}
 	}
 

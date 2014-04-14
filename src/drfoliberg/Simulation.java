@@ -12,7 +12,8 @@ import drfoliberg.worker.Worker;
 public class Simulation extends Thread {
 
 	/**
-	 * This simulation runs so we have a client-server in the same console.
+	 * This simulation runs to instantiate multiple clients and a master server under the same console.
+     * We can also access each instance and trigger events.
 	 * 
 	 */
 	public Simulation() throws IOException {
@@ -27,8 +28,7 @@ public class Simulation extends Thread {
 			Worker worker1 = new Worker("worker1", masterIp, 1337, 1338);
 			Thread w1Thread = new Thread(worker1);
 			w1Thread.start();
-			System.out
-					.println("SIM: Faking that master is not up... waiting 5 seconds to start master.");
+			System.out.println("SIM: Faking that master is not up... waiting 5 seconds to start master.");
 			sleep(5000);
 			System.out.println("SIM: Starting master now");
 			
@@ -93,7 +93,7 @@ public class Simulation extends Thread {
 	}
 
 	public void run() {
-//		basicSimulation();
-		fullSimulation();
+		basicSimulation();
+//		fullSimulation();
 	}
 }

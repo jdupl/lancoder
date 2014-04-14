@@ -1,5 +1,7 @@
 package drfoliberg.common.task;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 /**
@@ -45,9 +47,23 @@ public class Job {
 		long currentMs = 0;
 		int taskNo = 0;
 		long remaining = lengthOfJob;
+		try {
+			MessageDigest md = MessageDigest.getInstance("SHA-256");			
+			byte[] byteArray = md.digest((sourceFile + jobName + System.currentTimeMillis()).getBytes());
+			String result = "";
+			for (int i = 0; i < byteArray.length; i++) {
+				result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
+			}
+			this.jobId = result;
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			// even if the algorithm is not available, don't crash
+			this.jobId = String.valueOf(System.currentTimeMillis());
+		}
 
 		while (remaining > 0) {
 			EncodingTask t = new EncodingTask(taskNo++, sourceFile);
+			t.setJobId(jobId);
 			t.setStartTime(currentMs);
 			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.10) {
 				System.out.println("next task will be too short, adding the ms to the current task");
