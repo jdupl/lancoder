@@ -11,6 +11,7 @@ import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.ConnectMessage;
 import drfoliberg.common.network.Message;
 import drfoliberg.common.network.StatusReport;
+import drfoliberg.common.network.TaskReport;
 import drfoliberg.common.task.Task;
 
 public class Worker implements Runnable {
@@ -63,10 +64,8 @@ public class Worker implements Runnable {
 			}
 			socket.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		// TODO halt work thread too!
@@ -80,7 +79,7 @@ public class Worker implements Runnable {
 	}
 
 	public void taskDone(Task task, InetAddress masterIp) {
-		this.updateCurrentTaskStatus(100);
+		this.getCurrentTask().setProgress(100);
 		this.updateStatus(Status.FREE);
 	}
 
@@ -90,56 +89,40 @@ public class Worker implements Runnable {
 			return false;
 		} else {
 			this.currentTask = t;
-			updateStatus(Status.WORKING);
 			this.workThread = new Work(this, t, config.getMasterIpAddress());
 			this.workThread.start();
 			return true;
 		}
 	}
+	
+	/**
+	 * Get a status report of the worker.
+	 * 
+	 * @return the StatusReport object
+	 */
+	public StatusReport getStatusReport() {
+		return new StatusReport(getStatus(), config.getUniqueID(), getTaskReport());
+	}
 
-	public synchronized void updateCurrentTaskStatus(double progress) {
-//		print("updating task's progress to " + progress + "%");
-//		Socket socket;
-//		try {
-//			socket = new Socket(config.getMasterIpAddress(), config.getMasterPort());
-//
-//			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-//			out.flush();
-//			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-//			TaskReport report = new TaskReport();
-//			report.setNode(this.node);
-//			report.setProgress(progress);
-//			// TODO protect from null pointer
-//			report.setJobId(this.node.getCurrentTask().getJobId());
-//			report.setTaskId(this.node.getCurrentTask().getTaskId());
-//			out.writeObject(report);
-//			out.flush();
-//			Object o = in.readObject();
-//			if (o instanceof Message) {
-//				Message m = (Message) o;
-//				switch (m.getCode()) {
-//				case BYE:
-//					socket.close();
-//					break;
-//				default:
-//					socket.close();
-//					print("something odd happedned");
-//					break;
-//				}
-//			} else {
-//				print("received invalid message!");
-//			}
-//			socket.close();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (ClassNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+	/**
+	 * Get a task report of the current task.
+	 * 
+	 * @return null if no current task
+	 */
+	public TaskReport getTaskReport() {
+		// if worker has no task, return null report
+		TaskReport taskReport = null;
+		if (getCurrentTask() != null) {
+			taskReport = new TaskReport(config.getUniqueID());
+			taskReport.setProgress(getCurrentTask().getProgress());
+			taskReport.setJobId(getCurrentTask().getJobId());
+			taskReport.setTaskId(getCurrentTask().getTaskId());
+		}
+		return taskReport;
 	}
 
 	public synchronized void updateStatus(Status statusCode) {
+		// TODO move this
 		print("changing worker status to " + statusCode);
 		this.status = statusCode;
 		if (statusCode == Status.NOT_CONNECTED) {
@@ -147,34 +130,37 @@ public class Worker implements Runnable {
 			Thread mastercontactThread = new Thread(contact);
 			mastercontactThread.start();
 		} else {
+			// notify the master server of this worker new status
 			Socket socket = null;
 			try {
-				socket = new Socket(getMasterIpAddress(), 1337);
-
+				// Init the socket to master
+				socket = new Socket(getMasterIpAddress(), config.getMasterPort());
 				ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 				out.flush();
 				ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-				StatusReport report = new StatusReport(this.status, config.getUniqueID());
-				out.writeObject(report);
+				
+				// send report in socket
+				out.writeObject(getStatusReport());
 				out.flush();
 				Object o = in.readObject();
 				if (o instanceof Message) {
 					Message response = (Message) o;
 					if (response.getCode() == ClusterProtocol.BYE) {
-						socket.close();
+						// ?
 					} else if (response.getCode() == ClusterProtocol.NEW_UNID) {
-						out.writeObject(new Message(ClusterProtocol.BYE,config.getUniqueID()));
+						out.writeObject(new Message(ClusterProtocol.BYE, config.getUniqueID()));
 						out.flush();
-						socket.close();
 					}
 				} else {
 					System.out.println("WORKER CONTACT: Could not read what master sent !");
 				}
+				socket.close();
 			} catch (IOException e) {
+				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
 			}
 		}
-
 	}
 
 	public int getListenPort() {
@@ -189,7 +175,7 @@ public class Worker implements Runnable {
 		return config.getMasterPort();
 	}
 
-	public synchronized Status getStatus() {
+	public Status getStatus() {
 		return this.status;
 	}
 

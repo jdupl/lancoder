@@ -37,7 +37,7 @@ public class Simulation extends Thread {
 			masterThread.start();
 			
 			sleep(5000);
-			Job j = new Job("testname", "My.Movie.mkv", JobType.BITRATE_2_PASS_JOB, 5 * 60 * 1000, 120 * 60 * 1000 + 11548);
+			Job j = new Job("testname", "My.Movie.mkv", JobType.BITRATE_2_PASS_JOB, 1, 3);
 			System.out.println("SIM: adding a job to master's queue !");
 			m.addJob(j);
 			

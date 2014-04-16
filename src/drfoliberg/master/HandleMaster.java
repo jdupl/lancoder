@@ -92,11 +92,16 @@ public class HandleMaster implements Runnable {
 					case STATUS_REPORT:
 						if (request instanceof StatusReport) {
 							StatusReport report = (StatusReport) request;
+							if (report.getTaskReport() != null) {
+								master.readTaskReport(report.getTaskReport());
+							}
 							master.readStatusReport(report);
-                            if(report.getTaskReport() != null){
-                                master.readTaskReport(report.getTaskReport());
-                            }
 						}
+						out.writeObject(new Message(ClusterProtocol.BYE));
+						out.flush();
+						close = true;
+						s.close();
+						break;
 					case BYE:
 						close = true;
 						s.close();

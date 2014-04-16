@@ -39,7 +39,6 @@ public class Master implements Runnable {
         // TODO refactor these to observers/events patterns
 		this.listener = new MasterServer(this);
 		this.nodeChecker = new NodeChecker(this);
-
 	}
 
 	/**

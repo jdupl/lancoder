@@ -83,6 +83,13 @@ public class Node implements Serializable {
 	}
 
 	public void setCurrentTask(Task currentTask) {
+		if (currentTask == null) {
+			System.out.printf("MASTER: %s now has NO TASK\n", name);
+		} else {
+			System.out.printf("MASTER: %s now has task id %d\n", name,
+					currentTask.getTaskId());
+		}
+
 		this.currentTask = currentTask;
 	}
 

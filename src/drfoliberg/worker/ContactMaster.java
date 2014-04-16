@@ -57,7 +57,6 @@ public class ContactMaster implements Runnable {
 	}
 
 	public void run() {
-		// while (worker.getStatus() == Status.NOT_CONECTED) {
 		boolean success = false;
 		while (!success) {
 			success = contactMaster();
@@ -71,6 +70,7 @@ public class ContactMaster implements Runnable {
 					Thread.currentThread();
 					Thread.sleep(5000);
 				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
 		}

@@ -38,22 +38,20 @@ public class DispatcherMaster implements Runnable {
 				Message m = (Message) o;
 				switch (m.getCode()) {
 				case TASK_REFUSED:
-					out.writeObject(new Message(ClusterProtocol.BYE));
-					out.flush();
+					System.err.println("MASTER DISPATCH: node refused task");
 					s.close();
 					break;
 				case TASK_ACCEPTED:
+					System.err.println("MASTER DISPATCH: node accepted task");
 					node.setCurrentTask(task);
 					task.setStatus(Status.JOB_COMPUTING);
-					out.writeObject(new Message(ClusterProtocol.BYE));
-					out.flush();
 					s.close();
 					break;
 				default:
 					out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
 					out.flush();
 					s.close();
-					System.out.println("MASTER DISPATCH: received invalid request");
+					System.err.println("MASTER DISPATCH: received invalid request");
 					break;
 				}
 			} else {

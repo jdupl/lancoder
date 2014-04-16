@@ -47,8 +47,8 @@ public class NodeChecker implements Runnable {
 										System.out.println("MASTER NODE CHECKER: node " + n.getName()
 												+ " is still alive and sent valid status report");
 										StatusReport statusReport = ((StatusReport) m);
-										this.master.readStatusReport(statusReport);
 										this.master.readTaskReport(statusReport.getTaskReport());
+										this.master.readStatusReport(statusReport);
 									} else {
 										System.err.println("Could not read valid StatusReport from node " + n.getName());
 									}
@@ -62,6 +62,7 @@ public class NodeChecker implements Runnable {
 							s.close();
 						} catch (IOException e) {
 							// this node failed !
+							e.printStackTrace();
 							System.out.println("MASTER NODE CHECKER: node " + n.getName()
 									+ " failed ! Advising master!");
 							this.master.removeNode(n);

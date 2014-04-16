@@ -10,8 +10,6 @@ import java.net.Socket;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.Message;
-import drfoliberg.common.network.StatusReport;
-import drfoliberg.common.network.TaskReport;
 import drfoliberg.common.network.TaskRequestMessage;
 
 public class WorkerServer implements Runnable {
@@ -39,7 +37,6 @@ public class WorkerServer implements Runnable {
 			while (!close) {
 				try {
 					Socket s = server.accept();
-
 					ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 					out.flush();
 					ObjectInputStream in = new ObjectInputStream(s.getInputStream());
@@ -60,38 +57,36 @@ public class WorkerServer implements Runnable {
 							break;
 						case TASK_REQUEST:
 							print("received task from master");
-							if(!(m instanceof TaskRequestMessage)) {
+							if (!(m instanceof TaskRequestMessage)) {
 								out.writeObject(new Message(ClusterProtocol.TASK_REFUSED));
 								out.flush();
-								break;
-							}
-							TaskRequestMessage tqm = (TaskRequestMessage) m;
-
-							if (worker.startWork(tqm.task)) {
-								out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));
 							} else {
-								out.writeObject(new Message(ClusterProtocol.TASK_REFUSED));
+								TaskRequestMessage tqm = (TaskRequestMessage) m;
+								if (worker.startWork(tqm.task)) {
+									out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));
+									out.flush();
+									worker.updateStatus(Status.WORKING);
+								} else {
+									out.writeObject(new Message(ClusterProtocol.TASK_REFUSED));
+									out.flush();
+								}
 							}
-							out.flush();
+							s.close();
+
 							break;
 						case STATUS_REQUEST:
-                            // if worker has no task, add null task report
-							StatusReport report = null;
-                            TaskReport taskReport = null;
-							if (this.worker.getCurrentTask() != null) {
-								taskReport = new TaskReport(worker.config.getUniqueID());
-								taskReport.setProgress(this.worker.getCurrentTask().getProgress());
-                                taskReport.setJobId(worker.getCurrentTask().getJobId());
-                                taskReport.setTaskId(worker.getCurrentTask().getTaskId());
-							}
-                            report = new StatusReport(worker.getStatus(),worker.config.getUniqueID(),taskReport);
-                            out.writeObject(report);
+                            out.writeObject(this.worker.getStatusReport());
 							out.flush();
+							s.close();
+							break;
 						case BYE:
+							System.err.println("WORKER is closing socket");
 							s.close();
 							break;
 						default:
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
+							out.flush();
+							s.close();
 							break;
 						}
 					} else {
