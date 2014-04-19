@@ -2,7 +2,7 @@ package drfoliberg.common.network;
 
 import drfoliberg.common.task.Task;
 
-public class TaskRequestMessage extends Message {
+public class TaskRequestMessage extends AuthMessage {
 
 	private static final long serialVersionUID = -994042578899999534L;
 

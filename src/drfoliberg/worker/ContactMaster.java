@@ -9,6 +9,7 @@ import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.ConnectMessage;
 import drfoliberg.common.network.Message;
+import drfoliberg.common.network.AuthMessage;
 
 public class ContactMaster implements Runnable {
 
@@ -35,8 +36,8 @@ public class ContactMaster implements Runnable {
 			out.writeObject(m);
 			out.flush();
 			Object o = in.readObject();
-			if (o instanceof Message) {
-				Message response = (Message) o;
+			if (o instanceof AuthMessage) {
+				AuthMessage response = (AuthMessage) o;
 				if (response.getCode() == ClusterProtocol.BYE) {
 					socket.close();
 				} else if (response.getCode() == ClusterProtocol.CONNECT_ME) {

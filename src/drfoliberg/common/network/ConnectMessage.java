@@ -2,7 +2,7 @@ package drfoliberg.common.network;
 
 import drfoliberg.common.Status;
 
-public class ConnectMessage extends Message {
+public class ConnectMessage extends AuthMessage {
 
 	private static final long serialVersionUID = 831513295350691753L;
 

@@ -2,7 +2,7 @@ package drfoliberg.common.network;
 
 import drfoliberg.common.Status;
 
-public class StatusReport extends Message {
+public class StatusReport extends AuthMessage {
 
 	private static final long serialVersionUID = -844534455490561432L;
 	private long loadAverage;

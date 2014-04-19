@@ -148,7 +148,7 @@ public class Worker implements Runnable {
 					if (response.getCode() == ClusterProtocol.BYE) {
 						// ?
 					} else if (response.getCode() == ClusterProtocol.NEW_UNID) {
-						out.writeObject(new Message(ClusterProtocol.BYE, config.getUniqueID()));
+						out.writeObject(new Message(ClusterProtocol.BYE));
 						out.flush();
 					}
 				} else {

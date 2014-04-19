@@ -1,6 +1,6 @@
 package drfoliberg.common.network;
 
-public class TaskReport extends Message {
+public class TaskReport extends AuthMessage {
 
     private static final long serialVersionUID = -2146895423858055901L;
 
