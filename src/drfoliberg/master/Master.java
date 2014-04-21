@@ -12,6 +12,7 @@ import java.util.HashMap;
 import drfoliberg.common.Node;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.network.CrashReport;
 import drfoliberg.common.network.Message;
 import drfoliberg.common.network.StatusReport;
 import drfoliberg.common.network.TaskReport;
@@ -237,19 +238,19 @@ public class Master implements Runnable {
 		return this.nodes;
 	}
 
-	public synchronized boolean updateNodeTask(Node n, Status updateStatus) {
+	public boolean updateNodeTask(Node n, Status updateStatus) {
 		Task task = n.getCurrentTask();
-
+		// TODO clean logic here
 		if (task != null) {
 			System.out.println("MASTER: the task " + n.getCurrentTask().getTaskId() + " is now " + updateStatus);
 			task.setStatus(updateStatus);
 			if (updateStatus == Status.JOB_COMPLETED) {
 				n.getCurrentTask().setStatus(Status.JOB_COMPLETED);
-				// n.setStatus(Status.FREE); Node now updates it's own status
-				// and sends back to master
 				n.setCurrentTask(null);
-			} else {
-				// TODO
+			} else if(updateStatus == Status.JOB_CANCELED) {
+				task.setProgress(0);
+				task.setStatus(Status.JOB_TODO);
+				n.setCurrentTask(null);
 			}
 			updateNodesWork();
 		} else {
@@ -321,8 +322,21 @@ public class Master implements Runnable {
         if (progress == 100) {
             updateNodeTask(sender, Status.JOB_COMPLETED);
         }
-        return true;
-    }
+		return true;
+	}
+
+	public void readCrashReport(CrashReport report) {
+		// TODO handle crash report
+		Node node = identifySender(report.getUnid());
+		if (report.getCause().isFatal()) {
+			System.err.printf("Node '%s' fatally crashed.\n", node.getName());
+		} else {
+			System.out.printf("Node %s crashed but not fatally.\n",
+					node.getName());
+		}
+		updateNodeTask(node, Status.JOB_CANCELED);
+	}
+    
 
 	public synchronized boolean removeNode(Node n) {
 		// updateNodeTask(n, Status.JOB_TODO);

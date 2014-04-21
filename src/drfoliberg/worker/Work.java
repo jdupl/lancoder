@@ -8,6 +8,10 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import drfoliberg.common.Status;
+import drfoliberg.common.network.Cause;
+import drfoliberg.common.network.CrashReport;
+import drfoliberg.common.network.exceptions.MissingFfmpegException;
 import drfoliberg.common.task.Task;
 
 public class Work extends Thread {
@@ -41,11 +45,18 @@ public class Work extends Thread {
 				}
 			}
 			// TODO Get parameters from the task and bind parameters to process
-			Process process = Runtime
-					.getRuntime()
-					.exec("ffmpeg -i "
-							+ "/home/justin/encoding/input.mkv -c:v libx264 -b:v 1000k "
-							+ "-strict -2 /home/justin/encoding/output.mkv");
+
+			Process process = null;
+			try {
+				process = Runtime.getRuntime().exec("ffmpeg -i "
+								+ "/home/justin/encoding/input.mkv -c:v "
+								+ "libx264 -b:v 1000k "
+								+ "-strict -2 "
+								+ "/home/justin/encoding/output.mkv");
+			} catch (IOException e) {
+				// Send crash report
+				throw new MissingFfmpegException();
+			}
 
 			// Read from ffmpeg stderr to get progress
 			InputStream stderr = process.getErrorStream();
@@ -72,7 +83,15 @@ public class Work extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Work was interrupted!");
+		} catch (MissingFfmpegException e) {
 			// TODO send crash report
+			CrashReport report = new CrashReport(callback.config.getUniqueID(),
+					new Cause(e, "", true), callback.getStatusReport());
+
+			report.send(callback.getMasterIpAddress(), callback.getMasterPort());
+			// update status
+			callback.updateStatus(Status.JOB_CANCELED);
+			callback.updateStatus(Status.FREE);
 		}
 	}
 

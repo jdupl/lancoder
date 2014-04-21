@@ -1,7 +1,11 @@
 package drfoliberg.common.network;
 
-public class Cause {
+import java.io.Serializable;
+
+public class Cause implements Serializable {
 	
+	private static final long serialVersionUID = -7163211797091581825L;
+
 	/**
 	 * The exception that occurred.
 	 * null if none
