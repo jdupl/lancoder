@@ -72,6 +72,7 @@ public class Work extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Work was interrupted!");
+			// TODO send crash report
 		}
 	}
 

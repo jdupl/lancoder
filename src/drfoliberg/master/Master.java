@@ -148,7 +148,7 @@ public class Master implements Runnable {
 	 * Sends a disconnect request to a node, removes the node from the node list and 
 	 * updates the task of the node if it had any.
 	 * @param n The node to remove
-	 * @return
+	 * @return Successfully found and removed the node
 	 */
 	public synchronized boolean disconnectNode(Node n) {
 		try {
