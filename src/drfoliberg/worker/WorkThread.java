@@ -15,13 +15,13 @@ import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.task.Task;
 
-public class Work extends Thread {
+public class WorkThread extends Thread {
 
 	private InetAddress masterIp;
 	private Task task;
 	private Worker callback;
 
-	public Work(Worker w, Task t, InetAddress masterIp) {
+	public WorkThread(Worker w, Task t, InetAddress masterIp) {
 		this.masterIp = masterIp;
 		task = t;
 		callback = w;
