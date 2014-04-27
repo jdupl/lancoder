@@ -25,6 +25,7 @@ public class Work extends Thread {
 		this.masterIp = masterIp;
 		task = t;
 		callback = w;
+		callback.setCurrentTaskStatus(new CurrentTaskStatus(t.getEstimatedFrameCount()));
 	}
 
 	@Override
@@ -35,11 +36,9 @@ public class Work extends Thread {
 			System.out.println("WORKER WORK THREAD: Executing a task!");
 			File f = new File("/home/justin/encoding/output.mkv");
 			if (f.exists()) {
-				System.err.printf("File %s exists ! deleting file...\n",
-						f.getAbsoluteFile());
+				System.err.printf("File %s exists ! deleting file...\n", f.getAbsoluteFile());
 				if (!f.delete()) {
-					System.err.printf("Could not delete file %s ",
-							f.getAbsoluteFile());
+					System.err.printf("Could not delete file %s ", f.getAbsoluteFile());
 					throw new IOException();
 				} else {
 					System.err.println("Success deleting file");
@@ -49,10 +48,8 @@ public class Work extends Thread {
 
 			Process process = null;
 			try {
-				process = Runtime.getRuntime().exec("avconv -i "
-								+ "/home/justin/encoding/input.mkv -c:v "
-								+ "libx264 -b:v 1000k "
-								+ "-strict -2 "
+				process = Runtime.getRuntime().exec(
+						"avconv -i " + "/home/justin/encoding/input.mkv -c:v " + "libx264 -b:v 1000k " + "-strict -2 "
 								+ "/home/justin/encoding/output.mkv");
 			} catch (IOException e) {
 				// Send crash report
@@ -70,13 +67,20 @@ public class Work extends Thread {
 			while (s.hasNext()) {
 				// TODO better scanning (avoid regexing the same line multiple times if result)
 				line = s.nextLine();
+
 				Matcher m = currentFramePattern.matcher(line);
 				if (m.find()) {
-					System.err.printf("frame: %s \n", m.group(1));
+					long currentFrame = Long.parseLong(m.group(1));
+					callback.getCurrentTaskStatus().setFramesDone(currentFrame);
+
+					System.err.printf("frame: %d out of %d (%f%%) \n", currentFrame, task.getEstimatedFrameCount(),
+							callback.getCurrentTaskStatus().getProgress());
 				}
 				m = fpsPattern.matcher(line);
 				if (m.find()) {
-					System.err.printf("fps: %s \n", m.group(1));
+					float fps = Float.parseFloat(m.group(1));
+					callback.getCurrentTaskStatus().setFps(fps);
+					System.err.printf("fps: %s \n", fps);
 				}
 				m = missingDecoder.matcher(line);
 				if (m.find()) {
@@ -93,8 +97,8 @@ public class Work extends Thread {
 			System.out.println("Work was interrupted!");
 		} catch (MissingFfmpegException e) {
 			// TODO send crash report
-			CrashReport report = new CrashReport(callback.config.getUniqueID(),
-					new Cause(e, "", true), callback.getStatusReport());
+			CrashReport report = new CrashReport(callback.config.getUniqueID(), new Cause(e, "", true),
+					callback.getStatusReport());
 
 			callback.sendCrashReport(report);
 			// update status

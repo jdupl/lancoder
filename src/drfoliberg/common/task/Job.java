@@ -81,7 +81,8 @@ public class Job {
 				remaining -= lengthOfTasks;
 				currentMs += lengthOfTasks;
 			}
-
+			long ms = t.getEndTime() - t.getStartTime();
+			t.setEstimatedFrames((long) (ms / 1000 * frameRate));
 			this.tasks.add(t);
 		}
 		System.out.println("Job was divided into " + this.tasks.size() + " tasks!");

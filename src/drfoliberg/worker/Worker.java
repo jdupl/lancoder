@@ -20,6 +20,7 @@ public class Worker implements Runnable {
 	private Work workThread;
 	private Task currentTask;
 	private Status status;
+	private CurrentTaskStatus currentTaskStatus;
 
 	public WorkerServer workerListener;
 
@@ -42,9 +43,10 @@ public class Worker implements Runnable {
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-			
+
 			// Send a connect message with a status indicating disconnection
-			Message message = new ConnectMessage(config.getUniqueID(), config.getListenPort(), config.getName(), Status.NOT_CONNECTED);
+			Message message = new ConnectMessage(config.getUniqueID(), config.getListenPort(), config.getName(),
+					Status.NOT_CONNECTED);
 			out.writeObject(message);
 			out.flush();
 			Object o = in.readObject();
@@ -95,7 +97,7 @@ public class Worker implements Runnable {
 			return true;
 		}
 	}
-	
+
 	/**
 	 * Get a status report of the worker.
 	 * 
@@ -115,7 +117,7 @@ public class Worker implements Runnable {
 		TaskReport taskReport = null;
 		if (getCurrentTask() != null) {
 			taskReport = new TaskReport(config.getUniqueID());
-			taskReport.setProgress(getCurrentTask().getProgress());
+			taskReport.setProgress(currentTaskStatus.getProgress());
 			taskReport.setJobId(getCurrentTask().getJobId());
 			taskReport.setTaskId(getCurrentTask().getTaskId());
 		}
@@ -149,7 +151,7 @@ public class Worker implements Runnable {
 			break;
 		}
 	}
-	
+
 	public synchronized boolean sendCrashReport(CrashReport report) {
 		try {
 			System.err.println("Sending crash report");
@@ -163,7 +165,7 @@ public class Worker implements Runnable {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
+		}
 
 		return true;
 	}
@@ -174,11 +176,9 @@ public class Worker implements Runnable {
 		try {
 			// Init the socket to master
 			socket = new Socket(getMasterIpAddress(), config.getMasterPort());
-			ObjectOutputStream out = new ObjectOutputStream(
-					socket.getOutputStream());
+			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			out.flush();
-			ObjectInputStream in = new ObjectInputStream(
-					socket.getInputStream());
+			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
 			// send report in socket
 			out.writeObject(getStatusReport());
@@ -192,12 +192,10 @@ public class Worker implements Runnable {
 					// master is closing the socket
 					break;
 				default:
-					System.err.println("WORKER:"
-							+ " Master sent unexpected message response");
+					System.err.println("WORKER:" + " Master sent unexpected message response");
 				}
 			} else {
-				System.err.println("WORKER CONTACT:"
-						+ " Could not read what master sent !");
+				System.err.println("WORKER CONTACT:" + " Could not read what master sent !");
 			}
 			socket.close();
 		} catch (IOException e) {
@@ -251,5 +249,14 @@ public class Worker implements Runnable {
 
 	public Task getCurrentTask() {
 		return this.currentTask;
+	}
+
+	public synchronized CurrentTaskStatus getCurrentTaskStatus() {
+		return currentTaskStatus;
+	}
+
+	public synchronized void setCurrentTaskStatus(
+			CurrentTaskStatus currentTaskStatus) {
+		this.currentTaskStatus = currentTaskStatus;
 	}
 }

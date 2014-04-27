@@ -12,11 +12,20 @@ public class Task implements Serializable {
 	protected String jobId;
 	protected Status status;
 	protected double progress;
+	protected long estimatedFramesCount;
 
 	public Task(int taskId, String fileLocation) {
 		this.taskId = taskId;
 		this.fileLocation = fileLocation;
 		this.status = Status.JOB_TODO;
+	}
+
+	public long getEstimatedFrameCount() {
+		return estimatedFramesCount;
+	}
+
+	public void setEstimatedFrames(long estimatedFrames) {
+		this.estimatedFramesCount = estimatedFrames;
 	}
 
 	public int getTaskId() {
