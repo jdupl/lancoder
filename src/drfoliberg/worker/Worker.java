@@ -17,7 +17,7 @@ import drfoliberg.common.task.Task;
 public class Worker implements Runnable {
 
 	Config config;
-	private Work workThread;
+	private WorkThread workThread;
 	private Task currentTask;
 	private Status status;
 	private CurrentTaskStatus currentTaskStatus;
@@ -92,7 +92,7 @@ public class Worker implements Runnable {
 			return false;
 		} else {
 			this.currentTask = t;
-			this.workThread = new Work(this, t, config.getMasterIpAddress());
+			this.workThread = new WorkThread(this, t, config.getMasterIpAddress());
 			this.workThread.start();
 			return true;
 		}
