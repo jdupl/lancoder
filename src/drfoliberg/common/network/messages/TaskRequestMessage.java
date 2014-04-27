@@ -1,13 +1,13 @@
 package drfoliberg.common.network.messages;
 
 import drfoliberg.common.network.ClusterProtocol;
-import drfoliberg.common.task.Task;
+import drfoliberg.common.task.EncodingTask;
 
 public class TaskRequestMessage extends Message {
 
 	private static final long serialVersionUID = -994042578899999534L;
 
-	public Task task;
+	public EncodingTask task;
 
 	/**
 	 * Sent from master to workers
@@ -15,7 +15,7 @@ public class TaskRequestMessage extends Message {
 	 * @param task
 	 *            The task to request to the worker
 	 */
-	public TaskRequestMessage(Task task) {
+	public TaskRequestMessage(EncodingTask task) {
 		super(ClusterProtocol.TASK_REQUEST);
 		this.task = task;
 	}

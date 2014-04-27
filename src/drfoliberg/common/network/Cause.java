@@ -25,6 +25,7 @@ public class Cause implements Serializable {
 	public Cause(Exception exception, String message, boolean fatal) {
 		this.exception = exception;
 		this.message = message;
+		this.fatal = fatal;
 	}
 
 	public Exception getException() {

@@ -11,15 +11,15 @@ import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.TaskRequestMessage;
-import drfoliberg.common.task.Task;
+import drfoliberg.common.task.EncodingTask;
 
 public class DispatcherMaster implements Runnable {
 
 	Node node;
-	Task task;
+	EncodingTask task;
 	Master master;
 
-	public DispatcherMaster(Node node, Task task, Master master) {
+	public DispatcherMaster(Node node, EncodingTask task, Master master) {
 		this.node = node;
 		this.task = task;
 	}

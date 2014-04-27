@@ -12,6 +12,7 @@ import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
 import drfoliberg.common.network.messages.TaskReport;
+import drfoliberg.common.task.EncodingTask;
 import drfoliberg.common.task.Task;
 
 public class Worker implements Runnable {
@@ -86,7 +87,7 @@ public class Worker implements Runnable {
 		this.currentTask = null;
 	}
 
-	public synchronized boolean startWork(Task t) {
+	public synchronized boolean startWork(EncodingTask t) {
 		if (this.getStatus() != Status.FREE) {
 			print("cannot accept work as i'm not free. Current status: " + this.getStatus());
 			return false;

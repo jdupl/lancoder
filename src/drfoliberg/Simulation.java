@@ -29,7 +29,7 @@ public class Simulation extends Thread {
 			Master m = new Master();
 			Thread masterThread = new Thread(m);
 			masterThread.start();
-			Job j = new Job("testname", "/home/justin/encoding/input.mkv", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5 );
+			Job j = new Job("testname", "/home/justin/encoding/input.mkv", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 1 );
 			System.out.println("SIM: adding a job to master's queue !");
 			m.addJob(j);
 			masterIp = InetAddress.getByName("127.0.0.1");

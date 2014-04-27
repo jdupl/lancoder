@@ -13,26 +13,54 @@ import drfoliberg.common.exceptions.MissingDecoderException;
 import drfoliberg.common.exceptions.MissingFfmpegException;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.messages.CrashReport;
-import drfoliberg.common.task.Task;
+import drfoliberg.common.task.EncodingTask;
 
 public class WorkThread extends Thread {
 
 	private InetAddress masterIp;
-	private Task task;
+	private EncodingTask task;
 	private Worker callback;
 
-	public WorkThread(Worker w, Task t, InetAddress masterIp) {
+	public WorkThread(Worker w, EncodingTask t, InetAddress masterIp) {
 		this.masterIp = masterIp;
 		task = t;
 		callback = w;
 		callback.setCurrentTaskStatus(new CurrentTaskStatus(t.getEstimatedFrameCount()));
 	}
 
+	/**
+	 * Convert ms count to hh:mm:ss.xxx format
+	 * 
+	 * @param ms
+	 *            The ms count to counvert
+	 * @return The string in the right format for ffmpeg/libav
+	 */
+	private String getDurationString(long ms) {
+
+		int hours = (int) (ms / (3600 * 1000));
+		int remaining = (int) (ms - hours * 3600 * 1000);
+
+		int minutes = (int) (remaining / (60 * 1000));
+		remaining -= minutes * 60 * 1000;
+
+		int seconds = remaining / 1000;
+
+		int decimals = remaining % 1000;
+
+		return String.format("%d:%d:%d.%d", hours, minutes, seconds, decimals);
+	}
+
 	@Override
 	public void run() {
 		try {
+			// use start and duration for legacy support 
+			long durationMs = task.getEndTime() - task.getStartTime();
+			String startTimeStr = getDurationString(task.getStartTime());
+			String durationStr = getDurationString(durationMs);
+			
 			// ffmpeg -i ~/encoding/input.mkv -c:v libx264 -b:v 1000k -strict -2
 			// ~/encoding/output.mkv
+			
 			System.out.println("WORKER WORK THREAD: Executing a task!");
 			File f = new File("/home/justin/encoding/output.mkv");
 			if (f.exists()) {
@@ -48,9 +76,11 @@ public class WorkThread extends Thread {
 
 			Process process = null;
 			try {
+				// TODO Protect from spaces in paths
+				String processStr = "avconv -i %s -c:v %s -b:v %s -strict -2 -ss %s -t %s %s";
 				process = Runtime.getRuntime().exec(
-						"avconv -i " + "/home/justin/encoding/input.mkv -c:v " + "libx264 -b:v 1000k " + "-strict -2 "
-								+ "/home/justin/encoding/output.mkv");
+						String.format(processStr, "/home/justin/encoding/input.mkv", "libx264", "1000k", startTimeStr,
+								durationStr, "/home/justin/encoding/output.mkv"));
 			} catch (IOException e) {
 				// Send crash report
 				throw new MissingFfmpegException();

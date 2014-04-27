@@ -6,10 +6,20 @@ public class EncodingTask extends Task {
 
 	private long startTime;
 	private long endTime;
-//	private Pass passes;
+	private long estimatedFramesCount;
+
+	// private Pass passes;
 
 	public EncodingTask(int taskId, String fileLocation) {
 		super(taskId, fileLocation);
+	}
+
+	public long getEstimatedFrameCount() {
+		return estimatedFramesCount;
+	}
+
+	public void setEstimatedFrames(long estimatedFrames) {
+		this.estimatedFramesCount = estimatedFrames;
 	}
 
 	public long getStartTime() {

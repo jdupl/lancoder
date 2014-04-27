@@ -16,6 +16,7 @@ import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
 import drfoliberg.common.network.messages.TaskReport;
+import drfoliberg.common.task.EncodingTask;
 import drfoliberg.common.task.Job;
 import drfoliberg.common.task.Task;
 
@@ -69,10 +70,10 @@ public class Master implements Runnable {
 		return success;
 	}
 
-	private Task getNextTask() {
+	private EncodingTask getNextTask() {
 		for (Job j : jobs) {
-			ArrayList<Task> tasks = j.getTasks();
-			for (Task task : tasks) {
+			ArrayList<EncodingTask> tasks = j.getTasks();
+			for (EncodingTask task : tasks) {
 				if (task.getStatus() == Status.JOB_TODO) {
 					return task;
 				}
@@ -101,7 +102,7 @@ public class Master implements Runnable {
 	 */
 	private synchronized boolean updateNodesWork() {
 		// TODO loop to send more tasks (not just once)
-		Task nextTask = getNextTask();
+		EncodingTask nextTask = getNextTask();
 		if (nextTask == null) {
 			System.out.println("MASTER: No available work!");
 			return false;
@@ -115,7 +116,7 @@ public class Master implements Runnable {
 		return true;
 	}	
 
-	public boolean dispatch(Task task, Node node) {
+	public boolean dispatch(EncodingTask task, Node node) {
 		DispatcherMaster dispatcher = new DispatcherMaster(node, task, this);
 		Thread t = new Thread(dispatcher);
 		t.start();

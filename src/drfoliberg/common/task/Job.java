@@ -15,7 +15,7 @@ import drfoliberg.common.FFMpegProber;
  * 
  */
 public class Job {
-	private ArrayList<Task> tasks;
+	private ArrayList<EncodingTask> tasks;
 	private String jobId;
 	private String jobName;
 	private String sourceFile;
@@ -112,11 +112,11 @@ public class Job {
 		this.lengthOfJob = lengthOfJob;
 	}
 
-	public ArrayList<Task> getTasks() {
+	public ArrayList<EncodingTask> getTasks() {
 		return tasks;
 	}
 
-	public void setTasks(ArrayList<Task> tasks) {
+	public void setTasks(ArrayList<EncodingTask> tasks) {
 		this.tasks = tasks;
 	}
 
