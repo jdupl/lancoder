@@ -4,6 +4,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
+import drfoliberg.common.FFMpegProber;
+
 /**
  * A job is the whole process of taking the source file, spliting it if
  * necessary, encoding it and merge back all tracks. Tasks will be dispatched to
@@ -21,29 +23,34 @@ public class Job {
 	private ArrayList<Task> processedTasks;
 	private int lengthOfTasks;
 	private long lengthOfJob;
+	private long frameCount;
+	private float frameRate;
 
 	/**
 	 * 
 	 * @param jobName
 	 *            The job name
 	 * @param sourceFile
-	 *            The source file to encode
+	 *            The source file to encode relative to the shared directory
 	 * @param jobType
 	 *            The type of bitrate control
 	 * @param lengthOfTasks
 	 *            The length of the tasks in ms that will be sent to worker (0 =
 	 *            infinite)
-	 * @param lengthOfJob
-	 *            The length in ms of the job
 	 */
-	public Job(String jobName, String sourceFile, JobType jobType, int lengthOfTasks, long lengthOfJob) {
+	public Job(String jobName, String sourceFile, JobType jobType, int lengthOfTasks) {
 		this.sourceFile = sourceFile;
 		this.jobName = jobName;
 		this.tasks = new ArrayList<>();
 		this.jobType = jobType;
 		this.processedTasks = new ArrayList<>();
-		this.lengthOfJob = lengthOfJob;
 		this.lengthOfTasks = lengthOfTasks;
+
+		// get fps and ms duration from prober
+		this.lengthOfJob = (long) (FFMpegProber.getSecondsDuration(sourceFile) * 1000);
+		this.frameRate = FFMpegProber.getFrameRate(sourceFile);
+		this.frameCount = (long) (lengthOfJob / 1000 * frameRate);
+
 		long currentMs = 0;
 		int taskNo = 0;
 		long remaining = lengthOfJob;
@@ -78,6 +85,14 @@ public class Job {
 			this.tasks.add(t);
 		}
 		System.out.println("Job was divided into " + this.tasks.size() + " tasks!");
+	}
+
+	public long getFrameCount() {
+		return frameCount;
+	}
+
+	public float getFrameRate() {
+		return frameRate;
 	}
 
 	public int getLengthOfTasks() {

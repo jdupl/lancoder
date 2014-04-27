@@ -29,7 +29,7 @@ public class Simulation extends Thread {
 			Master m = new Master();
 			Thread masterThread = new Thread(m);
 			masterThread.start();
-			Job j = new Job("testname", "My.Movie.mkv", JobType.BITRATE_2_PASS_JOB, 1, 3);
+			Job j = new Job("testname", "/home/justin/encoding/input.mkv", JobType.BITRATE_2_PASS_JOB, 1);
 			System.out.println("SIM: adding a job to master's queue !");
 			m.addJob(j);
 			sleep(500);
@@ -38,8 +38,6 @@ public class Simulation extends Thread {
 			Worker worker1 = new Worker("worker1", masterIp, 1337, 1338);
 			Thread w1Thread = new Thread(worker1);
 			w1Thread.start();
-
-
 			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
@@ -54,7 +52,7 @@ public class Simulation extends Thread {
 		try {
 			masterIp = InetAddress.getByName("127.0.0.1");
 			System.out.println("SIM: Creating a job");
-			Job j = new Job("testname", "My.Movie.mkv", JobType.BITRATE_2_PASS_JOB, 5 * 60 * 1000, 120 * 60 * 1000 + 11548);
+			Job j = new Job("testname", "My.Movie.mkv", JobType.BITRATE_2_PASS_JOB, 5 * 60 * 1000);
 			System.out.println("SIM: Creating first worker now,");
 			Worker worker1 = new Worker("worker1", masterIp, 1337, 1338);
 			Thread w1Thread = new Thread(worker1);
