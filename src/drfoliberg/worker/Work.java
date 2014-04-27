@@ -9,10 +9,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import drfoliberg.common.Status;
+import drfoliberg.common.exceptions.MissingDecoderException;
+import drfoliberg.common.exceptions.MissingFfmpegException;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.CrashReport;
-import drfoliberg.common.network.exceptions.MissingDecoderException;
-import drfoliberg.common.network.exceptions.MissingFfmpegException;
 import drfoliberg.common.task.Task;
 
 public class Work extends Thread {
