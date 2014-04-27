@@ -1,6 +1,8 @@
-package drfoliberg.common.network;
+package drfoliberg.common.network.messages;
 
 import java.io.Serializable;
+
+import drfoliberg.common.network.ClusterProtocol;
 
 public class Message implements Serializable {
 

@@ -1,6 +1,7 @@
-package drfoliberg.common.network;
+package drfoliberg.common.network.messages;
 
 import drfoliberg.common.Status;
+import drfoliberg.common.network.ClusterProtocol;
 
 public class StatusReport extends AuthMessage {
 

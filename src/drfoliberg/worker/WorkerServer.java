@@ -9,8 +9,8 @@ import java.net.Socket;
 
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
-import drfoliberg.common.network.Message;
-import drfoliberg.common.network.TaskRequestMessage;
+import drfoliberg.common.network.messages.Message;
+import drfoliberg.common.network.messages.TaskRequestMessage;
 
 public class WorkerServer implements Runnable {
 

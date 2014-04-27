@@ -1,10 +1,7 @@
-package drfoliberg.common.network;
+package drfoliberg.common.network.messages;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import java.net.Socket;
+import drfoliberg.common.network.Cause;
+import drfoliberg.common.network.ClusterProtocol;
 
 public class CrashReport extends AuthMessage {
 

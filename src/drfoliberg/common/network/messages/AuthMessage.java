@@ -1,4 +1,6 @@
-package drfoliberg.common.network;
+package drfoliberg.common.network.messages;
+
+import drfoliberg.common.network.ClusterProtocol;
 
 /**
  * Extends Message to require unid. Master server directly knows which node sent

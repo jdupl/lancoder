@@ -1,5 +1,6 @@
-package drfoliberg.common.network;
+package drfoliberg.common.network.messages;
 
+import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.task.Task;
 
 public class TaskRequestMessage extends Message {

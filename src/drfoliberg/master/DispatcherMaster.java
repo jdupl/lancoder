@@ -9,8 +9,8 @@ import java.net.Socket;
 import drfoliberg.common.Node;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
-import drfoliberg.common.network.Message;
-import drfoliberg.common.network.TaskRequestMessage;
+import drfoliberg.common.network.messages.Message;
+import drfoliberg.common.network.messages.TaskRequestMessage;
 import drfoliberg.common.task.Task;
 
 public class DispatcherMaster implements Runnable {

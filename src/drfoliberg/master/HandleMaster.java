@@ -10,10 +10,10 @@ import java.net.Socket;
 import drfoliberg.common.Node;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
-import drfoliberg.common.network.ConnectMessage;
-import drfoliberg.common.network.CrashReport;
-import drfoliberg.common.network.Message;
-import drfoliberg.common.network.StatusReport;
+import drfoliberg.common.network.messages.ConnectMessage;
+import drfoliberg.common.network.messages.CrashReport;
+import drfoliberg.common.network.messages.Message;
+import drfoliberg.common.network.messages.StatusReport;
 
 public class HandleMaster implements Runnable {
 

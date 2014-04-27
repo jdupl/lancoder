@@ -12,7 +12,7 @@ import drfoliberg.common.Status;
 import drfoliberg.common.exceptions.MissingDecoderException;
 import drfoliberg.common.exceptions.MissingFfmpegException;
 import drfoliberg.common.network.Cause;
-import drfoliberg.common.network.CrashReport;
+import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.task.Task;
 
 public class Work extends Thread {
@@ -80,6 +80,7 @@ public class Work extends Thread {
 				}
 				m = missingDecoder.matcher(line);
 				if (m.find()) {
+					s.close();
 					System.err.println("Missing decoder !");
 					throw new MissingDecoderException();
 				}

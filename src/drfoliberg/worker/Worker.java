@@ -7,12 +7,11 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 import drfoliberg.common.Status;
-import drfoliberg.common.network.ClusterProtocol;
-import drfoliberg.common.network.ConnectMessage;
-import drfoliberg.common.network.CrashReport;
-import drfoliberg.common.network.Message;
-import drfoliberg.common.network.StatusReport;
-import drfoliberg.common.network.TaskReport;
+import drfoliberg.common.network.messages.ConnectMessage;
+import drfoliberg.common.network.messages.CrashReport;
+import drfoliberg.common.network.messages.Message;
+import drfoliberg.common.network.messages.StatusReport;
+import drfoliberg.common.network.messages.TaskReport;
 import drfoliberg.common.task.Task;
 
 public class Worker implements Runnable {
