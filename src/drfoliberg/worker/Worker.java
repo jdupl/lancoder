@@ -9,6 +9,7 @@ import java.net.Socket;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.ConnectMessage;
+import drfoliberg.common.network.CrashReport;
 import drfoliberg.common.network.Message;
 import drfoliberg.common.network.StatusReport;
 import drfoliberg.common.network.TaskReport;
@@ -81,9 +82,10 @@ public class Worker implements Runnable {
 	public void taskDone(Task task, InetAddress masterIp) {
 		this.getCurrentTask().setProgress(100);
 		this.updateStatus(Status.FREE);
+		this.currentTask = null;
 	}
 
-	public boolean startWork(Task t) {
+	public synchronized boolean startWork(Task t) {
 		if (this.getStatus() != Status.FREE) {
 			print("cannot accept work as i'm not free. Current status: " + this.getStatus());
 			return false;
@@ -125,42 +127,96 @@ public class Worker implements Runnable {
 		// TODO move this
 		print("changing worker status to " + statusCode);
 		this.status = statusCode;
-		if (statusCode == Status.NOT_CONNECTED) {
+
+		switch (statusCode) {
+		case FREE:
+		case WORKING:
+		case PAUSED:
+			notifyMasterStatusChange(statusCode);
+			break;
+		case NOT_CONNECTED:
+			// start thread to try to contact master
 			ContactMaster contact = new ContactMaster(this);
 			Thread mastercontactThread = new Thread(contact);
 			mastercontactThread.start();
-		} else {
-			// notify the master server of this worker new status
-			Socket socket = null;
-			try {
-				// Init the socket to master
-				socket = new Socket(getMasterIpAddress(), config.getMasterPort());
-				ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-				out.flush();
-				ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-				
-				// send report in socket
-				out.writeObject(getStatusReport());
-				out.flush();
-				Object o = in.readObject();
-				if (o instanceof Message) {
-					Message response = (Message) o;
-					if (response.getCode() == ClusterProtocol.BYE) {
-						// ?
-					} else if (response.getCode() == ClusterProtocol.NEW_UNID) {
-						out.writeObject(new Message(ClusterProtocol.BYE));
-						out.flush();
-					}
-				} else {
-					System.out.println("WORKER CONTACT: Could not read what master sent !");
+			break;
+		case CRASHED:
+			// cancel current work
+			this.currentTask = null;
+			break;
+		default:
+			System.err.println("WORKER: Unhandlded status code while"
+					+ " updating status");
+			break;
+		}
+	}
+	
+	public synchronized boolean sendCrashReport(CrashReport report) {
+		try {
+			System.err.println("Sending crash report");
+			Socket s = new Socket(config.getMasterIpAddress(), config.getMasterPort());
+			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+			out.flush();
+			out.writeObject(report);
+			out.flush();
+			s.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+
+		return true;
+	}
+
+	public boolean notifyMasterStatusChange(Status status) {
+		Socket socket = null;
+		boolean success = true;
+		try {
+			// Init the socket to master
+			socket = new Socket(getMasterIpAddress(), config.getMasterPort());
+			ObjectOutputStream out = new ObjectOutputStream(
+					socket.getOutputStream());
+			out.flush();
+			ObjectInputStream in = new ObjectInputStream(
+					socket.getInputStream());
+
+			// send report in socket
+			out.writeObject(getStatusReport());
+			out.flush();
+			Object o = in.readObject();
+			// check if master sent node new UNID
+			if (o instanceof Message) {
+				Message response = (Message) o;
+				switch (response.getCode()) {
+				case BYE:
+					// master is closing the socket
+					break;
+				default:
+					System.err.println("WORKER:"
+							+ " Master sent unexpected message response");
 				}
-				socket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+			} else {
+				System.err.println("WORKER CONTACT:"
+						+ " Could not read what master sent !");
+			}
+			socket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			success = false;
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			success = false;
+		} finally {
+			if (socket != null) {
+				try {
+					socket.close();
+				} catch (IOException e) {
+					// pls java
+				}
 			}
 		}
+		return success;
 	}
 
 	public int getListenPort() {

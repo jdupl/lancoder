@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.CrashReport;
+import drfoliberg.common.network.exceptions.MissingDecoderException;
 import drfoliberg.common.network.exceptions.MissingFfmpegException;
 import drfoliberg.common.task.Task;
 
@@ -48,7 +49,7 @@ public class Work extends Thread {
 
 			Process process = null;
 			try {
-				process = Runtime.getRuntime().exec("ffmpeg -i "
+				process = Runtime.getRuntime().exec("avconv -i "
 								+ "/home/justin/encoding/input.mkv -c:v "
 								+ "libx264 -b:v 1000k "
 								+ "-strict -2 "
@@ -65,7 +66,9 @@ public class Work extends Thread {
 
 			Pattern currentFramePattern = Pattern.compile("frame=\\s*([0-9]*)");
 			Pattern fpsPattern = Pattern.compile("fps=\\s*([0-9]*)");
+			Pattern missingDecoder = Pattern.compile("Error while opening encoder for output stream");
 			while (s.hasNext()) {
+				// TODO better scanning (avoid regexing the same line multiple times if result)
 				line = s.nextLine();
 				Matcher m = currentFramePattern.matcher(line);
 				if (m.find()) {
@@ -75,10 +78,14 @@ public class Work extends Thread {
 				if (m.find()) {
 					System.err.printf("fps: %s \n", m.group(1));
 				}
+				m = missingDecoder.matcher(line);
+				if (m.find()) {
+					System.err.println("Missing decoder !");
+					throw new MissingDecoderException();
+				}
 			}
 			System.out.println("Scanner closed");
 			s.close();
-
 			callback.taskDone(task, masterIp);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -88,10 +95,12 @@ public class Work extends Thread {
 			CrashReport report = new CrashReport(callback.config.getUniqueID(),
 					new Cause(e, "", true), callback.getStatusReport());
 
-			report.send(callback.getMasterIpAddress(), callback.getMasterPort());
+			callback.sendCrashReport(report);
 			// update status
-			callback.updateStatus(Status.JOB_CANCELED);
-			callback.updateStatus(Status.FREE);
+			callback.updateStatus(Status.CRASHED);
+		} catch (MissingDecoderException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 

@@ -45,22 +45,4 @@ public class CrashReport extends AuthMessage {
 		this.statusReport = statusReport;
 	}
 
-	public boolean send(InetAddress masterAddress, int masterPort) {
-		try {
-			System.err.println("Sending crash report");
-			Socket s = new Socket(masterAddress, masterPort);
-			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-			out.flush();
-			out.writeObject(this);
-			out.flush();
-			s.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-
-		return true;
-	}
-
 }

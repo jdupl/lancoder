@@ -23,23 +23,23 @@ public class Simulation extends Thread {
 	public void basicSimulation() {
 		InetAddress masterIp;
 		try {
-			masterIp = InetAddress.getByName("127.0.0.1");
-			System.out.println("SIM: Creating first worker now,");
-			Worker worker1 = new Worker("worker1", masterIp, 1337, 1338);
-			Thread w1Thread = new Thread(worker1);
-			w1Thread.start();
-			System.out.println("SIM: Faking that master is not up... waiting 5 seconds to start master.");
-			sleep(5000);
+			
 			System.out.println("SIM: Starting master now");
 			
 			Master m = new Master();
 			Thread masterThread = new Thread(m);
 			masterThread.start();
-			
-			sleep(5000);
 			Job j = new Job("testname", "My.Movie.mkv", JobType.BITRATE_2_PASS_JOB, 1, 3);
 			System.out.println("SIM: adding a job to master's queue !");
 			m.addJob(j);
+			sleep(500);
+			masterIp = InetAddress.getByName("127.0.0.1");
+			System.out.println("SIM: Creating first worker now,");
+			Worker worker1 = new Worker("worker1", masterIp, 1337, 1338);
+			Thread w1Thread = new Thread(worker1);
+			w1Thread.start();
+
+
 			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();

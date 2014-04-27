@@ -60,7 +60,7 @@ public class Master implements Runnable {
 		return n;
 	}
 
-	public synchronized boolean addJob(Job j) {
+	public boolean addJob(Job j) {
 		boolean success = this.jobs.add(j);
 		if (!success) {
 			return false;
@@ -115,7 +115,7 @@ public class Master implements Runnable {
 		return true;
 	}	
 
-	public synchronized boolean dispatch(Task task, Node node) {
+	public boolean dispatch(Task task, Node node) {
 		DispatcherMaster dispatcher = new DispatcherMaster(node, task, this);
 		Thread t = new Thread(dispatcher);
 		t.start();
@@ -151,7 +151,7 @@ public class Master implements Runnable {
 	 * @param n The node to remove
 	 * @return Successfully found and removed the node
 	 */
-	public synchronized boolean disconnectNode(Node n) {
+	public boolean disconnectNode(Node n) {
 		try {
 			//TODO only update work if worker has a task
 			updateNodeTask(n, Status.JOB_TODO);
@@ -169,7 +169,6 @@ public class Master implements Runnable {
 					removeNode(n);
 					s.close();
 					break;
-
 				default:
 					break;
 				}
@@ -184,7 +183,7 @@ public class Master implements Runnable {
 		return false;
 	}
 
-	private synchronized String getNewUNID(Node n) {
+	private String getNewUNID(Node n) {
 		String result = "";
 		System.out.println("MASTER: generating a nuid for node " + n.getName());
 		long ms = System.currentTimeMillis();
@@ -215,7 +214,7 @@ public class Master implements Runnable {
 	 * @param n The node to be added
 	 * @return if the node could be added
 	 */
-    public synchronized boolean addNode(Node n) {
+    public boolean addNode(Node n) {
         // Is this a new node ?
         if (n.getUnid().equals("")) {
             n.setUnid(getNewUNID(n));
@@ -234,7 +233,7 @@ public class Master implements Runnable {
         }
     }
 
-	public synchronized ArrayList<Node> getNodes() {
+	public ArrayList<Node> getNodes() {
 		return this.nodes;
 	}
 
@@ -254,7 +253,7 @@ public class Master implements Runnable {
 			}
 			updateNodesWork();
 		} else {
-			System.out.println("MASTER: no task was found for node " + n.getName());
+			System.err.println("MASTER: no task was found for node " + n.getName());
 		}
 		return false;
 	}
@@ -266,7 +265,7 @@ public class Master implements Runnable {
 	 *            The report to be read
 	 * @return true if update could be sent, false otherwise
 	 */
-	public synchronized boolean readStatusReport(StatusReport report) {
+	public boolean readStatusReport(StatusReport report) {
 		Status s = report.status;
 		String unid = report.getUnid();
 		Node sender = identifySender(unid);
@@ -288,7 +287,7 @@ public class Master implements Runnable {
      * @param report The report to be read
      * @return Return true if update could be sent, false otherwise
      */
-    public synchronized boolean readTaskReport(TaskReport report) {
+    public boolean readTaskReport(TaskReport report) {
 
         double progress = report.getProgress();
         // find node
@@ -326,7 +325,11 @@ public class Master implements Runnable {
 	}
 
 	public void readCrashReport(CrashReport report) {
-		// TODO handle crash report
+		// TODO handle non fatal crashes (worker side first)
+		// after a non-fatal crash, master should try X times to reassign tasks
+		// from same job. After a fatal crash, leave the node connected but do
+		// not assign anything to the node.
+		// This way, node can reconnected if fatal crash is fixed.
 		Node node = identifySender(report.getUnid());
 		if (report.getCause().isFatal()) {
 			System.err.printf("Node '%s' fatally crashed.\n", node.getName());
@@ -336,7 +339,6 @@ public class Master implements Runnable {
 		}
 		updateNodeTask(node, Status.JOB_CANCELED);
 	}
-    
 
 	public synchronized boolean removeNode(Node n) {
 		// updateNodeTask(n, Status.JOB_TODO);

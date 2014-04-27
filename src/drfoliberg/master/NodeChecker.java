@@ -47,7 +47,9 @@ public class NodeChecker implements Runnable {
 										System.out.println("MASTER NODE CHECKER: node " + n.getName()
 												+ " is still alive and sent valid status report");
 										StatusReport statusReport = ((StatusReport) m);
-										this.master.readTaskReport(statusReport.getTaskReport());
+										if(statusReport.getTaskReport() != null){
+											this.master.readTaskReport(statusReport.getTaskReport());
+										}
 										this.master.readStatusReport(statusReport);
 									} else {
 										System.err.println("Could not read valid StatusReport from node " + n.getName());
