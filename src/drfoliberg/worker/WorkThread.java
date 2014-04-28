@@ -53,16 +53,18 @@ public class WorkThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			// use start and duration for legacy support 
+			// use start and duration for legacy support
 			long durationMs = task.getEndTime() - task.getStartTime();
 			String startTimeStr = getDurationString(task.getStartTime());
 			String durationStr = getDurationString(durationMs);
-			
+
+			String outputFile = String.format("/home/justin/encoding/output-part_%d.mkv", task.getTaskId());
+
 			// ffmpeg -i ~/encoding/input.mkv -c:v libx264 -b:v 1000k -strict -2
 			// ~/encoding/output.mkv
-			
+
 			System.out.println("WORKER WORK THREAD: Executing a task!");
-			File f = new File("/home/justin/encoding/output.mkv");
+			File f = new File(outputFile);
 			if (f.exists()) {
 				System.err.printf("File %s exists ! deleting file...\n", f.getAbsoluteFile());
 				if (!f.delete()) {
@@ -72,15 +74,17 @@ public class WorkThread extends Thread {
 					System.err.println("Success deleting file");
 				}
 			}
-			// TODO Get parameters from the task and bind parameters to process
 
+			// Get parameters from the task and bind parameters to process
 			Process process = null;
+
 			try {
 				// TODO Protect from spaces in paths
-				String processStr = "avconv -i %s -c:v %s -b:v %s -strict -2 -ss %s -t %s %s";
-				process = Runtime.getRuntime().exec(
-						String.format(processStr, "/home/justin/encoding/input.mkv", "libx264", "1000k", startTimeStr,
-								durationStr, "/home/justin/encoding/output.mkv"));
+				String processStr = String.format(
+						"ffmpeg -ss %s -t %s -i %s -force_key_frames 0 -an -c:v %s -b:v %s %s", startTimeStr,
+						durationStr, "/home/justin/encoding/input.mkv", "libx264", "1000k", outputFile);
+				System.out.println(processStr);
+				process = Runtime.getRuntime().exec(processStr);
 			} catch (IOException e) {
 				// Send crash report
 				throw new MissingFfmpegException();
@@ -119,7 +123,6 @@ public class WorkThread extends Thread {
 					throw new MissingDecoderException();
 				}
 			}
-			System.out.println("Scanner closed");
 			s.close();
 			callback.taskDone(task, masterIp);
 		} catch (IOException e) {
@@ -129,7 +132,6 @@ public class WorkThread extends Thread {
 			// TODO send crash report
 			CrashReport report = new CrashReport(callback.config.getUniqueID(), new Cause(e, "", true),
 					callback.getStatusReport());
-
 			callback.sendCrashReport(report);
 			// update status
 			callback.updateStatus(Status.CRASHED);

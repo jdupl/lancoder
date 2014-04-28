@@ -19,17 +19,16 @@ public class FFMpegProber {
 		Process process = null;
 		boolean found = false;
 		try {
-			process = Runtime.getRuntime().exec("avprobe " + filename);
+			process = Runtime.getRuntime().exec("ffprobe " + filename);
 		} catch (IOException e) {
 			return -1;
 		}
 
-		// Read from ffmpeg stderr to get progress
 		InputStream stderr = process.getErrorStream();
 		Scanner s = new Scanner(stderr);
 		String line = "";
 
-		// Duration: 01:24:20.51,
+		// Format is like "Duration: 01:24:20.51"
 		Pattern durationPattern = Pattern.compile("Duration:"
 				+ "\\s*([0-9]{2}):([0-9]{2}):([0-9]{2}\\.[0-9]{2})");
 
@@ -48,7 +47,6 @@ public class FFMpegProber {
 				totalSeconds += seconds;
 			}
 		}
-		System.out.println("Scanner closed");
 		s.close();
 		return totalSeconds;
 	}
@@ -64,18 +62,16 @@ public class FFMpegProber {
 		boolean found = false;
 		Process process = null;
 		try {
-			process = Runtime.getRuntime().exec("avprobe " + filename);
+			process = Runtime.getRuntime().exec("ffprobe " + filename);
 		} catch (IOException e) {
 			return -1;
 		}
 
-		// Read from ffmpeg stderr to get progress
 		InputStream stderr = process.getErrorStream();
 		Scanner s = new Scanner(stderr);
 		String line = "";
 
-		// 23.98 fps
-		// 25 fps
+		// Format is like "23.98" fps or "25 fps"
 		Pattern fpsPattern = Pattern.compile("([0-9]+\\.?[0-9]+)\\s*fps");
 
 		float fps = -1;
@@ -88,7 +84,6 @@ public class FFMpegProber {
 				found = true;
 			}
 		}
-		System.out.println("Scanner closed");
 		s.close();
 		return fps;
 	}
