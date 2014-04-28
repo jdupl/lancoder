@@ -7,9 +7,8 @@ import java.util.ArrayList;
 import drfoliberg.common.FFMpegProber;
 
 /**
- * A job is the whole process of taking the source file, spliting it if
- * necessary, encoding it and merge back all tracks. Tasks will be dispatched to
- * nodes by the master.
+ * A job is the whole process of taking the source file, spliting it if necessary, encoding it and merge back all
+ * tracks. Tasks will be dispatched to nodes by the master.
  * 
  * @author justin
  * 
@@ -23,7 +22,7 @@ public class Job {
 	private ArrayList<Task> processedTasks;
 	private int lengthOfTasks;
 	private long lengthOfJob;
-	private long frameCount;
+	private int frameCount;
 	private float frameRate;
 
 	/**
@@ -35,8 +34,7 @@ public class Job {
 	 * @param jobType
 	 *            The type of bitrate control
 	 * @param lengthOfTasks
-	 *            The length of the tasks in ms that will be sent to worker (0 =
-	 *            infinite)
+	 *            The length of the tasks in ms that will be sent to worker (0 = infinite)
 	 */
 	public Job(String jobName, String sourceFile, JobType jobType, int lengthOfTasks) {
 		this.sourceFile = sourceFile;
@@ -49,13 +47,13 @@ public class Job {
 		// get fps and ms duration from prober
 		this.lengthOfJob = (long) (FFMpegProber.getSecondsDuration(sourceFile) * 1000);
 		this.frameRate = FFMpegProber.getFrameRate(sourceFile);
-		this.frameCount = (long) (lengthOfJob / 1000 * frameRate);
+		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 
 		long currentMs = 0;
 		int taskNo = 0;
 		long remaining = lengthOfJob;
 		try {
-			MessageDigest md = MessageDigest.getInstance("SHA-256");			
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
 			byte[] byteArray = md.digest((sourceFile + jobName + System.currentTimeMillis()).getBytes());
 			String result = "";
 			for (int i = 0; i < byteArray.length; i++) {
@@ -82,7 +80,8 @@ public class Job {
 				currentMs += lengthOfTasks;
 			}
 			long ms = t.getEndTime() - t.getStartTime();
-			t.setEstimatedFrames((long) (ms / 1000 * frameRate));
+			t.setEstimatedFrames((long) Math.floor((ms / 1000 * frameRate)));
+
 			this.tasks.add(t);
 		}
 		System.out.println("Job was divided into " + this.tasks.size() + " tasks!");

@@ -1,5 +1,6 @@
 package drfoliberg.worker;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -17,6 +18,8 @@ import drfoliberg.common.task.Task;
 
 public class Worker implements Runnable {
 
+	final static String CONFIG_PATH = "config.json";
+
 	Config config;
 	private WorkThread workThread;
 	private Task currentTask;
@@ -26,11 +29,18 @@ public class Worker implements Runnable {
 	public WorkerServer workerListener;
 
 	public Worker(String name, InetAddress masterIpAddress, int masterPort, int listenPort) {
-		this.config = new Config(masterIpAddress, masterPort, listenPort,"",name);
+		this.config = new Config(masterIpAddress, masterPort, listenPort, "", name);
 		this.workerListener = new WorkerServer(this);
+		Config newConfig = config.load(new File(CONFIG_PATH));
+		if (newConfig != null) {
+			System.err.println("Loaded config from disk !");
+			this.config = newConfig;
+		} else {
+			this.config.dump(new File(CONFIG_PATH));
+		}
 		print("initialized not connected to a master server");
 	}
-	
+
 	public Worker(Config config) {
 		this.config = config;
 	}
