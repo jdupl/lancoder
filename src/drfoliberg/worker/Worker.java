@@ -18,9 +18,9 @@ import drfoliberg.common.task.Task;
 
 public class Worker implements Runnable {
 
-	final static String CONFIG_PATH = "config.json";
+	final static String WORKER_CONFIG_PATH = "worker_config.json";
 
-	Config config;
+	WorkerConfig config;
 	private WorkThread workThread;
 	private Task currentTask;
 	private Status status;
@@ -29,19 +29,19 @@ public class Worker implements Runnable {
 	public WorkerServer workerListener;
 
 	public Worker(String name, InetAddress masterIpAddress, int masterPort, int listenPort) {
-		this.config = new Config(masterIpAddress, masterPort, listenPort, "", name);
+		this.config = new WorkerConfig(masterIpAddress, masterPort, listenPort, "", name);
 		this.workerListener = new WorkerServer(this);
-		Config newConfig = config.load(new File(CONFIG_PATH));
+		WorkerConfig newConfig = config.load(new File(WORKER_CONFIG_PATH));
 		if (newConfig != null) {
 			System.err.println("Loaded config from disk !");
 			this.config = newConfig;
 		} else {
-			this.config.dump(new File(CONFIG_PATH));
+			this.config.dump(new File(WORKER_CONFIG_PATH));
 		}
 		print("initialized not connected to a master server");
 	}
 
-	public Worker(Config config) {
+	public Worker(WorkerConfig config) {
 		this.config = config;
 	}
 

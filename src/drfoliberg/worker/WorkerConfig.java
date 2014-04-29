@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 
 import com.google.gson.Gson;
 
-public class Config {
+public class WorkerConfig {
 
 	private InetAddress masterIpAddress;
 	private int masterPort;
@@ -21,7 +21,7 @@ public class Config {
 	private String tempEncodingFolder;
 	private String finalEncodingFolder;
 
-	public Config(InetAddress masterIpAddress, int masterPort, int listenPort, String uniqueID, String name) {
+	public WorkerConfig(InetAddress masterIpAddress, int masterPort, int listenPort, String uniqueID, String name) {
 		this.masterIpAddress = masterIpAddress;
 		this.masterPort = masterPort;
 		this.listenPort = listenPort;
@@ -47,15 +47,15 @@ public class Config {
 		return true;
 	}
 
-	public Config load(File f) {
-		Config config = null;
+	public WorkerConfig load(File f) {
+		WorkerConfig config = null;
 		if (!f.exists()) {
 			return null;
 		}
 		try {
 			byte[] b = Files.readAllBytes(Paths.get(f.getAbsolutePath()));
 			Gson gson = new Gson();
-			config = gson.fromJson(new String(b, "UTF-8"), Config.class);
+			config = gson.fromJson(new String(b, "UTF-8"), WorkerConfig.class);
 		} catch (IOException e) {
 			// TODO handle errors
 			e.printStackTrace();
@@ -101,7 +101,7 @@ public class Config {
 
 	public void setUniqueID(String uniqueID) {
 		this.uniqueID = uniqueID;
-		this.dump(new File(Worker.CONFIG_PATH));
+		this.dump(new File(Worker.WORKER_CONFIG_PATH));
 	}
 
 	public InetAddress getMasterIpAddress() {
