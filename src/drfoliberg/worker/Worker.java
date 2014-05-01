@@ -1,6 +1,5 @@
 package drfoliberg.worker;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -29,14 +28,13 @@ public class Worker implements Runnable {
 	public WorkerServer workerListener;
 
 	public Worker(String name, InetAddress masterIpAddress, int masterPort, int listenPort) {
-		this.config = new WorkerConfig(masterIpAddress, masterPort, listenPort, "", name);
 		this.workerListener = new WorkerServer(this);
-		WorkerConfig newConfig = config.load(new File(WORKER_CONFIG_PATH));
-		if (newConfig != null) {
+		config = WorkerConfig.load();
+		if (config != null) {
 			System.err.println("Loaded config from disk !");
-			this.config = newConfig;
 		} else {
-			this.config.dump(new File(WORKER_CONFIG_PATH));
+			// this saves default configuration to disk
+			this.config = WorkerConfig.generate();
 		}
 		print("initialized not connected to a master server");
 	}
@@ -172,6 +170,7 @@ public class Worker implements Runnable {
 			out.flush();
 			out.writeObject(report);
 			out.flush();
+			in.close();
 			s.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

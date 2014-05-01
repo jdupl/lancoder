@@ -14,7 +14,7 @@ public class Node implements Serializable {
 	private String name;
 	private String unid;
 
-	private Task currentTask;
+	private transient Task currentTask;
 
 	public Node(InetAddress nodeAddresse, int nodePort, String name) {
 		this.nodeAddress = nodeAddresse;

@@ -4,7 +4,9 @@
 .settings
 bin
 doc
-config.json
+
+# Config Files #
+*.json
 
 # Package Files #
 *.jar
