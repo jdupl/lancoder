@@ -1,6 +1,5 @@
 package drfoliberg;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -16,9 +15,6 @@ public class Simulation extends Thread {
      * We can also access each instance and trigger events.
 	 * 
 	 */
-	public Simulation() throws IOException {
-
-	}
 	
 	public void basicSimulation() {
 		InetAddress masterIp;
@@ -29,7 +25,8 @@ public class Simulation extends Thread {
 			Master m = new Master();
 			Thread masterThread = new Thread(m);
 			masterThread.start();
-			Job j = new Job("testname", "/home/justin/encoding/input.mkv", JobType.BITRATE_2_PASS_JOB, 1000 * 30 * 1 );
+			Job j = new Job("testname", "/home/justin/encoding/input.mkv",
+					JobType.BITRATE_2_PASS_JOB, 1000 * 30 * 1 );
 			System.out.println("SIM: adding a job to master's queue !");
 			m.addJob(j);
 			masterIp = InetAddress.getByName("127.0.0.1");

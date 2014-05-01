@@ -1,16 +1,27 @@
 package drfoliberg.worker;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.google.gson.Gson;
 
-public class WorkerConfig {
+public class WorkerConfig implements Serializable {
+
+	private static final long serialVersionUID = 4279318303054715575L;
+
+	private static final String WORKER_CONFIG_PATH = "worker_config.json";
+
+	private static final transient int DEFAULT_MASTER_PORT = 1337;
+	private static final int DEFAULT_LISTEN_PORT = 1338;
+	private static final InetAddress DEFAULT_MASTER_IP = InetAddress.getLoopbackAddress();
+	private static final String DEFAULT_ENCODE_DIRECTORY = "encodes";
+	private static final String DEFAULT_TEMP_DIRECTORY = "/tmp";
+	private static final String DEFAULT_UNID = "";
+	private static final String DEFAULT_NAME = "";
+	private static final String DEFAULT_ABSOLUTE_PATH = "~";
 
 	private InetAddress masterIpAddress;
 	private int masterPort;
@@ -21,43 +32,64 @@ public class WorkerConfig {
 	private String tempEncodingFolder;
 	private String finalEncodingFolder;
 
-	public WorkerConfig(InetAddress masterIpAddress, int masterPort, int listenPort, String uniqueID, String name) {
-		this.masterIpAddress = masterIpAddress;
-		this.masterPort = masterPort;
-		this.listenPort = listenPort;
-		this.uniqueID = uniqueID;
-		this.name = name;
+	public WorkerConfig() {
+		this.masterIpAddress = DEFAULT_MASTER_IP;
+		this.masterPort = DEFAULT_MASTER_PORT;
+		this.listenPort = DEFAULT_LISTEN_PORT;
+		this.uniqueID = DEFAULT_UNID;
+		this.name = DEFAULT_NAME;
+		this.absoluteSharedFolder = DEFAULT_ABSOLUTE_PATH;
+		this.tempEncodingFolder = DEFAULT_TEMP_DIRECTORY;
+		this.finalEncodingFolder = DEFAULT_ENCODE_DIRECTORY;
 	}
 
-	public synchronized boolean dump(File f) {
+	/**
+	 * Generate default config and save to disk.
+	 * 
+	 * @return The default config
+	 */
+	public static WorkerConfig generate() {
+		WorkerConfig conf = new WorkerConfig();
+		conf.dump();
+		return conf;
+	}
+
+	/**
+	 * Serializes current config to disk as JSON object.
+	 * 
+	 * @return True if could write config to disk. Otherwise, return false.
+	 */
+	public synchronized boolean dump() {
 		Gson gson = new Gson();
 		String s = gson.toJson(this);
-		FileOutputStream fos;
+
 		try {
-			fos = new FileOutputStream(f);
-			fos.write(s.getBytes("UTF-8"));
-			fos.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			Files.write(Paths.get(WORKER_CONFIG_PATH), s.getBytes("UTF-8"));
 		} catch (IOException e) {
+			// print stack and return false
 			e.printStackTrace();
+			return false;
 		}
-		// TODO handle errors
 
 		return true;
 	}
 
-	public WorkerConfig load(File f) {
+	/**
+	 * Loads json config (editable by user) from disk
+	 * 
+	 * @return The config or null if no file was readable
+	 */
+	public static WorkerConfig load() {
 		WorkerConfig config = null;
-		if (!f.exists()) {
+		if (!Files.exists(Paths.get(WORKER_CONFIG_PATH))) {
 			return null;
 		}
 		try {
-			byte[] b = Files.readAllBytes(Paths.get(f.getAbsolutePath()));
+			byte[] b = Files.readAllBytes(Paths.get(WORKER_CONFIG_PATH));
 			Gson gson = new Gson();
 			config = gson.fromJson(new String(b, "UTF-8"), WorkerConfig.class);
 		} catch (IOException e) {
-			// TODO handle errors
+			// print stack and return null
 			e.printStackTrace();
 		}
 		return config;
@@ -101,7 +133,7 @@ public class WorkerConfig {
 
 	public void setUniqueID(String uniqueID) {
 		this.uniqueID = uniqueID;
-		this.dump(new File(Worker.WORKER_CONFIG_PATH));
+		this.dump();
 	}
 
 	public InetAddress getMasterIpAddress() {

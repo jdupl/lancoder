@@ -25,20 +25,23 @@ import drfoliberg.common.task.Task;
  */
 public class Master implements Runnable {
 
-	MasterServer listener;
-	NodeChecker nodeChecker;
-	
 	public static final String ALGORITHM = "SHA-256";
-
+	
+	private MasterServer listener;
+	private NodeChecker nodeChecker;
+	private volatile HashMap<String, Node> nodesByUNID; // @deprecated remove next commit
+	
+	private MasterConfig config;
 	private ArrayList<Node> nodes;
 	public ArrayList<Job> jobs;
-	private HashMap<String, Node> nodesByUNID;
 
 	public Master() {
 		this.nodes = new ArrayList<Node>();
 		this.jobs = new ArrayList<Job>();
+		config = MasterConfig.load();
+		
 		this.nodesByUNID = new HashMap<>();
-        // TODO refactor these to observers/events patterns
+		// TODO refactor these to observers/events patterns
 		this.listener = new MasterServer(this);
 		this.nodeChecker = new NodeChecker(this);
 	}
@@ -67,6 +70,7 @@ public class Master implements Runnable {
 			return false;
 		}
 		updateNodesWork();
+		config.dump();
 		return success;
 	}
 
@@ -113,6 +117,7 @@ public class Master implements Runnable {
 			return false;
 		}
 		dispatch(nextTask, node);
+		config.dump();
 		return true;
 	}	
 
