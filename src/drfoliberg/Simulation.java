@@ -20,7 +20,11 @@ public class Simulation extends Thread {
 
 	}
 	
-	public void basicSimulation() {
+	/**
+	 * Attempts to encode a file locally with a single worker thread.
+	 * @param filepath Path of the video file to encode
+	 */
+	public void basicSimulation(String filepath) {
 		InetAddress masterIp;
 		try {
 			
@@ -29,7 +33,7 @@ public class Simulation extends Thread {
 			Master m = new Master();
 			Thread masterThread = new Thread(m);
 			masterThread.start();
-			Job j = new Job("testname", "/home/justin/encoding/input.mkv", JobType.BITRATE_2_PASS_JOB, 1000 * 30 * 1 );
+			Job j = new Job("testname", filepath, JobType.BITRATE_2_PASS_JOB, 1000 * 30 * 1 );
 			System.out.println("SIM: adding a job to master's queue !");
 			m.addJob(j);
 			masterIp = InetAddress.getByName("127.0.0.1");
@@ -43,12 +47,16 @@ public class Simulation extends Thread {
 		}
 	}
 	
-	public void fullSimulation(){
+	/**
+	 * Attempts to encode a file locally with multiple worker threads.
+	 * @param filepath Path of the video file to encode
+	 */
+	public void fullSimulation(String filepath){
 		InetAddress masterIp;
 		try {
 			masterIp = InetAddress.getByName("127.0.0.1");
 			System.out.println("SIM: Creating a job");
-			Job j = new Job("testname", "My.Movie.mkv", JobType.BITRATE_2_PASS_JOB, 5 * 60 * 1000);
+			Job j = new Job("testname", filepath, JobType.BITRATE_2_PASS_JOB, 5 * 60 * 1000);
 			System.out.println("SIM: Creating first worker now,");
 			Worker worker1 = new Worker("worker1", masterIp, 1337, 1338);
 			Thread w1Thread = new Thread(worker1);
@@ -86,8 +94,8 @@ public class Simulation extends Thread {
 		}
 	}
 
-	public void run() {
-		basicSimulation();
-//		fullSimulation();
+	public void run(String filepath) {
+		basicSimulation(filepath);
+//		fullSimulation(filepath);
 	}
 }
