@@ -28,11 +28,6 @@ public enum ClusterProtocol {
 	CRASH_REPORT,
 
 	/**
-	 * A task report from node to master (behavior deprecated ?)
-	 */
-	TASK_REPORT,
-
-	/**
 	 * Connection request of node. TODO refactor this to 'connect_request'
 	 */
 	CONNECT_ME,

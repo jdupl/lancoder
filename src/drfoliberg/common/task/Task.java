@@ -3,7 +3,6 @@ package drfoliberg.common.task;
 import java.io.Serializable;
 
 import drfoliberg.common.Status;
-import drfoliberg.common.network.messages.TaskReport;
 
 public class Task implements Serializable {
 

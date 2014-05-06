@@ -16,10 +16,10 @@ import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
-import drfoliberg.common.network.messages.TaskReport;
 import drfoliberg.common.task.EncodingTask;
 import drfoliberg.common.task.Job;
 import drfoliberg.common.task.Task;
+import drfoliberg.common.task.TaskReport;
 import drfoliberg.master.api.ApiServer;
 
 /**

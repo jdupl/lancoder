@@ -11,9 +11,9 @@ import drfoliberg.common.network.messages.ConnectMessage;
 import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
-import drfoliberg.common.network.messages.TaskReport;
 import drfoliberg.common.task.EncodingTask;
 import drfoliberg.common.task.Task;
+import drfoliberg.common.task.TaskReport;
 
 public class Worker implements Runnable {
 
@@ -132,7 +132,7 @@ public class Worker implements Runnable {
 			taskReport.setTaskId(getCurrentTask().getTaskId());
 			taskReport.setFps(currentTaskStatus.getFps());
 			taskReport.setTimeElapsed(System.currentTimeMillis() - currentTaskStatus.getStartedOn());
-			taskReport.setTimeRemaining(currentTaskStatus.getETA());
+			taskReport.setTimeEstimated(currentTaskStatus.getETA());
 		}
 		return taskReport;
 	}

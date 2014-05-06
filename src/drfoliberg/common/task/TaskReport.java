@@ -1,8 +1,9 @@
-package drfoliberg.common.network.messages;
+package drfoliberg.common.task;
 
-import drfoliberg.common.network.ClusterProtocol;
+import java.io.Serializable;
 
-public class TaskReport extends AuthMessage {
+
+public class TaskReport implements Serializable {
 
 	private static final long serialVersionUID = -2146895423858055901L;
 
@@ -12,9 +13,18 @@ public class TaskReport extends AuthMessage {
 	private long timeElapsed;
 	private long timeEstimated;
 	private double fps;
+	private String unid;
 
 	public TaskReport(String unid) {
-		super(ClusterProtocol.TASK_REPORT, unid);
+		this.unid = unid;
+	}
+
+	public String getUnid() {
+		return unid;
+	}
+
+	public void setUnid(String unid) {
+		this.unid = unid;
 	}
 
 	public long getTimeElapsed() {
@@ -29,7 +39,7 @@ public class TaskReport extends AuthMessage {
 		return timeEstimated;
 	}
 
-	public void setTimeRemaining(long timeEstimated) {
+	public void setTimeEstimated(long timeEstimated) {
 		this.timeEstimated = timeEstimated;
 	}
 
