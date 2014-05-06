@@ -14,7 +14,7 @@ public class Node implements Serializable {
 	private String name;
 	private String unid;
 
-	private transient Task currentTask;
+	private Task currentTask;
 
 	public Node(InetAddress nodeAddresse, int nodePort, String name) {
 		this.nodeAddress = nodeAddresse;
@@ -22,17 +22,12 @@ public class Node implements Serializable {
 		this.nodePort = nodePort;
 		this.name = name;
 	}
-	
-	
 
 	@Override
 	public String toString() {
-		return "Node [nodeAddress=" + nodeAddress + ", nodePort=" + nodePort
-				+ ", status=" + status + ", name=" + name + ", unid=" + unid
-				+ ", currentTask=" + currentTask + "]";
+		return "Node [nodeAddress=" + nodeAddress + ", nodePort=" + nodePort + ", status=" + status + ", name=" + name
+				+ ", unid=" + unid + ", currentTask=" + currentTask + "]";
 	}
-
-
 
 	public boolean equals(Object o) {
 		boolean equals = false;
@@ -86,8 +81,7 @@ public class Node implements Serializable {
 		if (currentTask == null) {
 			System.out.printf("MASTER: %s now has NO TASK\n", name);
 		} else {
-			System.out.printf("MASTER: %s now has task id %d\n", name,
-					currentTask.getTaskId());
+			System.out.printf("MASTER: %s now has task id %d\n", name, currentTask.getTaskId());
 		}
 
 		this.currentTask = currentTask;

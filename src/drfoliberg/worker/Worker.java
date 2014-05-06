@@ -103,6 +103,7 @@ public class Worker implements Runnable {
 			this.currentTask = t;
 			this.workThread = new WorkThread(this, t, config.getMasterIpAddress());
 			this.workThread.start();
+			currentTaskStatus.setStartedOn(System.currentTimeMillis());
 			return true;
 		}
 	}
@@ -129,6 +130,9 @@ public class Worker implements Runnable {
 			taskReport.setProgress(currentTaskStatus.getProgress());
 			taskReport.setJobId(getCurrentTask().getJobId());
 			taskReport.setTaskId(getCurrentTask().getTaskId());
+			taskReport.setFps(currentTaskStatus.getFps());
+			taskReport.setTimeElapsed(System.currentTimeMillis() - currentTaskStatus.getStartedOn());
+			taskReport.setTimeRemaining(currentTaskStatus.getETA());
 		}
 		return taskReport;
 	}

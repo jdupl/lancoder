@@ -3,6 +3,7 @@ package drfoliberg.worker;
 public class CurrentTaskStatus {
 
 	private boolean active;
+	private long startedOn;
 	private long framesDone;
 	private float fps;
 	private long framesTotal;
@@ -11,24 +12,37 @@ public class CurrentTaskStatus {
 		this.framesTotal = framesTotal;
 	}
 
-	public synchronized float getProgress() {
+	public float getProgress() {
 		float percentToComplete = ((float) framesDone / framesTotal) * 100;
 		return percentToComplete;
 	}
 
-	public synchronized long getFramesDone() {
+	public long getETA() {
+		long elapsedMs = System.currentTimeMillis() - startedOn;
+		return (long) (elapsedMs / (getProgress() / 100));
+	}
+
+	public long getStartedOn() {
+		return startedOn;
+	}
+
+	public void setStartedOn(long startedOn) {
+		this.startedOn = startedOn;
+	}
+
+	public long getFramesDone() {
 		return framesDone;
 	}
 
-	public synchronized void setFramesDone(long framesDone) {
+	public void setFramesDone(long framesDone) {
 		this.framesDone = framesDone;
 	}
 
-	public synchronized float getFps() {
+	public float getFps() {
 		return fps;
 	}
 
-	public synchronized void setFps(float fps) {
+	public void setFps(float fps) {
 		this.fps = fps;
 	}
 

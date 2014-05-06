@@ -20,6 +20,7 @@ import drfoliberg.common.network.messages.TaskReport;
 import drfoliberg.common.task.EncodingTask;
 import drfoliberg.common.task.Job;
 import drfoliberg.common.task.Task;
+import drfoliberg.master.api.ApiServer;
 
 /**
  * TODO implement a clean shutdown method (saving current config and such)
@@ -30,11 +31,12 @@ public class Master implements Runnable {
 
 	private MasterServer listener;
 	private NodeChecker nodeChecker;
-	private volatile HashMap<String, Node> nodes;
+	private HashMap<String, Node> nodes;
 
 	private MasterConfig config;
-	// private ArrayList<Node> nodes;
-	public ArrayList<Job> jobs;
+	public ArrayList<Job> jobs; // change to private after tests
+	
+	private ApiServer apiServer;
 
 	public Master() {
 		nodes = new HashMap<String, Node>();
@@ -44,6 +46,8 @@ public class Master implements Runnable {
 		// TODO refactor these to observers/events patterns
 		listener = new MasterServer(this);
 		nodeChecker = new NodeChecker(this);
+		// api server to serve/get information from users
+		apiServer = new ApiServer(this);
 	}
 
 	/**
@@ -333,6 +337,7 @@ public class Master implements Runnable {
 		System.out
 				.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
 		sender.getCurrentTask().setProgress(progress);
+		sender.getCurrentTask().setTaskReport(report);
 		if (progress == 100) {
 			updateNodeTask(sender, Status.JOB_COMPLETED);
 		}
@@ -370,6 +375,8 @@ public class Master implements Runnable {
 		listenerThread.start();
 		Thread nodeCheckerThread = new Thread(nodeChecker);
 		nodeCheckerThread.start();
+		Thread apiThread = new Thread(apiServer);
+		apiThread.start();
 	}
 
 }

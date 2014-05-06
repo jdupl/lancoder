@@ -72,7 +72,6 @@ public class WorkerServer implements Runnable {
 								}
 							}
 							s.close();
-
 							break;
 						case STATUS_REQUEST:
                             out.writeObject(this.worker.getStatusReport());

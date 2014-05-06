@@ -27,7 +27,6 @@ public class MasterServer implements Runnable {
 					t.start();
 				} catch (InterruptedIOException e) {
 					// thread was interrupted by master (master is shutting down)
-					//TODO add condition where interruption occurred by timeout (to check closed state)
 					close = true;
 				}
 			}

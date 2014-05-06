@@ -28,8 +28,7 @@ public class HandleMaster implements Runnable {
 	}
 
 	private InetAddress getAddressFromSocket(Socket s) {
-		InetAddress ad = ((InetSocketAddress) s.getRemoteSocketAddress())
-				.getAddress();
+		InetAddress ad = ((InetSocketAddress) s.getRemoteSocketAddress()).getAddress();
 		return ad;
 	}
 
@@ -52,15 +51,13 @@ public class HandleMaster implements Runnable {
 						ConnectMessage cm = (ConnectMessage) request;
 						if (cm.status == Status.FREE) {
 							// add node to list
-							sender = new Node(getAddressFromSocket(s),
-									cm.localPort, cm.name);
+							sender = new Node(getAddressFromSocket(s), cm.localPort, cm.name);
 							sender.setUnid(cm.getUnid());
 							boolean added = master.addNode(sender);
 							if (added) {
 								// send UNID to the node
 								cm.setUnid(sender.getUnid());
-								System.out
-										.println("MASTER HANDLE: Sending unid to node");
+								System.out.println("MASTER HANDLE: Sending unid to node");
 								out.writeObject(cm);
 								out.flush();
 							} else {

@@ -3,6 +3,7 @@ package drfoliberg.common.task;
 import java.io.Serializable;
 
 import drfoliberg.common.Status;
+import drfoliberg.common.network.messages.TaskReport;
 
 public class Task implements Serializable {
 
@@ -12,11 +13,20 @@ public class Task implements Serializable {
 	protected String jobId;
 	protected Status status;
 	protected double progress;
-	
+	protected TaskReport taskReport;
+
 	public Task(int taskId, String fileLocation) {
 		this.taskId = taskId;
 		this.fileLocation = fileLocation;
 		this.status = Status.JOB_TODO;
+	}
+
+	public TaskReport getTaskReport() {
+		return taskReport;
+	}
+
+	public void setTaskReport(TaskReport taskReport) {
+		this.taskReport = taskReport;
 	}
 
 	public int getTaskId() {

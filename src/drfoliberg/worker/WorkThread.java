@@ -26,13 +26,14 @@ public class WorkThread extends Thread {
 		task = t;
 		callback = w;
 		callback.setCurrentTaskStatus(new CurrentTaskStatus(t.getEstimatedFrameCount()));
+		callback.getCurrentTaskStatus().setStartedOn(System.currentTimeMillis());
 	}
 
 	/**
 	 * Convert ms count to hh:mm:ss.xxx format
 	 * 
 	 * @param ms
-	 *            The ms count to counvert
+	 *            The ms count to convert
 	 * @return The string in the right format for ffmpeg/libav
 	 */
 	private String getDurationString(long ms) {
@@ -59,9 +60,6 @@ public class WorkThread extends Thread {
 			String durationStr = getDurationString(durationMs);
 
 			String outputFile = String.format("/home/justin/encoding/output-part_%d.mkv", task.getTaskId());
-
-			// ffmpeg -i ~/encoding/input.mkv -c:v libx264 -b:v 1000k -strict -2
-			// ~/encoding/output.mkv
 
 			System.out.println("WORKER WORK THREAD: Executing a task!");
 			File f = new File(outputFile);
