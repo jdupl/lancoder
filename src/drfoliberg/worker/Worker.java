@@ -11,7 +11,6 @@ import drfoliberg.common.network.messages.ConnectMessage;
 import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
-import drfoliberg.common.task.EncodingTask;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.TaskReport;
 
@@ -90,12 +89,13 @@ public class Worker implements Runnable {
 	}
 
 	public void taskDone(Task task, InetAddress masterIp) {
-		this.getCurrentTask().setProgress(100);
+		this.currentTask.setStatus(Status.JOB_COMPLETED);
+		this.currentTask.setProgress(100);
 		this.updateStatus(Status.FREE);
 		this.currentTask = null;
 	}
 
-	public synchronized boolean startWork(EncodingTask t) {
+	public synchronized boolean startWork(Task t) {
 		if (this.getStatus() != Status.FREE) {
 			print("cannot accept work as i'm not free. Current status: " + this.getStatus());
 			return false;
@@ -104,6 +104,7 @@ public class Worker implements Runnable {
 			this.workThread = new WorkThread(this, t, config.getMasterIpAddress());
 			this.workThread.start();
 			currentTaskStatus.setStartedOn(System.currentTimeMillis());
+			currentTask.setStatus(Status.JOB_COMPUTING);
 			return true;
 		}
 	}
@@ -126,13 +127,14 @@ public class Worker implements Runnable {
 		// if worker has no task, return null report
 		TaskReport taskReport = null;
 		if (getCurrentTask() != null) {
-			taskReport = new TaskReport(config.getUniqueID());
-			taskReport.setProgress(currentTaskStatus.getProgress());
-			taskReport.setJobId(getCurrentTask().getJobId());
-			taskReport.setTaskId(getCurrentTask().getTaskId());
-			taskReport.setFps(currentTaskStatus.getFps());
-			taskReport.setTimeElapsed(System.currentTimeMillis() - currentTaskStatus.getStartedOn());
-			taskReport.setTimeEstimated(currentTaskStatus.getETA());
+			taskReport = new TaskReport(config.getUniqueID(), this.currentTask);
+			Task t = taskReport.getTask();
+			t.setProgress(currentTaskStatus.getProgress());
+			t.setJobId(getCurrentTask().getJobId());
+			t.setTaskId(getCurrentTask().getTaskId());
+			t.setFps(currentTaskStatus.getFps());
+			t.setTimeElapsed(System.currentTimeMillis() - currentTaskStatus.getStartedOn());
+			t.setTimeEstimated(currentTaskStatus.getETA());
 		}
 		return taskReport;
 	}

@@ -1,4 +1,4 @@
-package drfoliberg.common.task;
+package drfoliberg.common.job;
 
 public enum JobType {
 

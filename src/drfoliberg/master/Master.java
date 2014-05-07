@@ -12,12 +12,11 @@ import java.util.Map.Entry;
 
 import drfoliberg.common.Node;
 import drfoliberg.common.Status;
+import drfoliberg.common.job.Job;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
-import drfoliberg.common.task.EncodingTask;
-import drfoliberg.common.task.Job;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.TaskReport;
 import drfoliberg.master.api.ApiServer;
@@ -76,10 +75,10 @@ public class Master implements Runnable {
 		return success;
 	}
 
-	private EncodingTask getNextTask() {
+	private Task getNextTask() {
 		for (Job j : jobs) {
-			ArrayList<EncodingTask> tasks = j.getTasks();
-			for (EncodingTask task : tasks) {
+			ArrayList<Task> tasks = j.getTasks();
+			for (Task task : tasks) {
 				if (task.getStatus() == Status.JOB_TODO) {
 					return task;
 				}
@@ -111,7 +110,7 @@ public class Master implements Runnable {
 	 */
 	private synchronized boolean updateNodesWork() {
 		// TODO loop to send more tasks (not just once)
-		EncodingTask nextTask = getNextTask();
+		Task nextTask = getNextTask();
 		if (nextTask == null) {
 			System.out.println("MASTER: No available work!");
 			return false;
@@ -126,7 +125,7 @@ public class Master implements Runnable {
 		return true;
 	}
 
-	public boolean dispatch(EncodingTask task, Node node) {
+	public boolean dispatch(Task task, Node node) {
 		DispatcherMaster dispatcher = new DispatcherMaster(node, task, this);
 		Thread t = new Thread(dispatcher);
 		t.start();
@@ -306,7 +305,7 @@ public class Master implements Runnable {
 	 */
 	public boolean readTaskReport(TaskReport report) {
 
-		double progress = report.getProgress();
+		float progress = report.getTask().getProgress();
 		// find node
 		String nodeId = report.getUnid();
 		Node sender = identifySender(nodeId);
@@ -324,18 +323,20 @@ public class Master implements Runnable {
 		}
 
 		// check task-node association
-		if (!nodeTask.getJobId().equals(report.getJobId()) || nodeTask.getTaskId() != report.getTaskId()) {
+		if (!nodeTask.getJobId().equals(report.getTask().getJobId()) || nodeTask.getTaskId() != report.getTask().getTaskId()) {
 			System.err.printf("MASTER: Bad task update from node %s." + " Expected task: %d, job: %s."
 					+ " Got task: %d, job: %s", sender.getUnid(), nodeTask.getTaskId(), nodeTask.getJobId(),
-					report.getTaskId(), report.getJobId());
+					report.getTask().getTaskId(), report.getTask().getJobId());
 			return false;
 		}
 
 		System.out
 				.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
 		sender.getCurrentTask().setProgress(progress);
-		sender.getCurrentTask().setTaskReport(report);
-		if (progress == 100) {
+		
+		sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
+		
+		if(sender.getCurrentTask().getStatus() == Status.JOB_COMPLETED){
 			updateNodeTask(sender, Status.JOB_COMPLETED);
 		}
 		return true;

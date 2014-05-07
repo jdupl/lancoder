@@ -3,8 +3,8 @@ package drfoliberg;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import drfoliberg.common.task.Job;
-import drfoliberg.common.task.JobType;
+import drfoliberg.common.job.Job;
+import drfoliberg.common.job.JobType;
 import drfoliberg.master.Master;
 import drfoliberg.worker.Worker;
 

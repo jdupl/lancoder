@@ -1,10 +1,11 @@
-package drfoliberg.common.task;
+package drfoliberg.common.job;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 import drfoliberg.common.FFMpegProber;
+import drfoliberg.common.task.Task;
 
 /**
  * A job is the whole process of taking the source file, spliting it if necessary, encoding it and merge back all
@@ -14,7 +15,7 @@ import drfoliberg.common.FFMpegProber;
  * 
  */
 public class Job {
-	private ArrayList<EncodingTask> tasks;
+	private ArrayList<Task> tasks;
 	private String jobId;
 	private String jobName;
 	private String sourceFile;
@@ -67,7 +68,7 @@ public class Job {
 		}
 
 		while (remaining > 0) {
-			EncodingTask t = new EncodingTask(taskNo++, sourceFile);
+			Task t = new Task(taskNo++, sourceFile);
 			t.setJobId(jobId);
 			t.setStartTime(currentMs);
 			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.10) {
@@ -80,7 +81,7 @@ public class Job {
 				currentMs += lengthOfTasks;
 			}
 			long ms = t.getEndTime() - t.getStartTime();
-			t.setEstimatedFrames((long) Math.floor((ms / 1000 * frameRate)));
+			t.setEstimatedFramesCount((long) Math.floor((ms / 1000 * frameRate)));
 
 			this.tasks.add(t);
 		}
@@ -111,11 +112,11 @@ public class Job {
 		this.lengthOfJob = lengthOfJob;
 	}
 
-	public ArrayList<EncodingTask> getTasks() {
+	public ArrayList<Task> getTasks() {
 		return tasks;
 	}
 
-	public void setTasks(ArrayList<EncodingTask> tasks) {
+	public void setTasks(ArrayList<Task> tasks) {
 		this.tasks = tasks;
 	}
 

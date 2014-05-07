@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import com.google.gson.Gson;
 
 import drfoliberg.common.Node;
-import drfoliberg.common.task.Job;
+import drfoliberg.common.job.Job;
 
 public class MasterConfig {
 

@@ -13,19 +13,19 @@ import drfoliberg.common.exceptions.MissingDecoderException;
 import drfoliberg.common.exceptions.MissingFfmpegException;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.messages.CrashReport;
-import drfoliberg.common.task.EncodingTask;
+import drfoliberg.common.task.Task;
 
 public class WorkThread extends Thread {
 
 	private InetAddress masterIp;
-	private EncodingTask task;
+	private Task task;
 	private Worker callback;
 
-	public WorkThread(Worker w, EncodingTask t, InetAddress masterIp) {
+	public WorkThread(Worker w, Task t, InetAddress masterIp) {
 		this.masterIp = masterIp;
 		task = t;
 		callback = w;
-		callback.setCurrentTaskStatus(new CurrentTaskStatus(t.getEstimatedFrameCount()));
+		callback.setCurrentTaskStatus(new CurrentTaskStatus(t.getEstimatedFramesCount()));
 		callback.getCurrentTaskStatus().setStartedOn(System.currentTimeMillis());
 	}
 
@@ -105,7 +105,7 @@ public class WorkThread extends Thread {
 					long currentFrame = Long.parseLong(m.group(1));
 					callback.getCurrentTaskStatus().setFramesDone(currentFrame);
 
-					System.err.printf("frame: %d out of %d (%f%%) \n", currentFrame, task.getEstimatedFrameCount(),
+					System.err.printf("frame: %d out of %d (%f%%) \n", currentFrame, task.getEstimatedFramesCount(),
 							callback.getCurrentTaskStatus().getProgress());
 				}
 				m = fpsPattern.matcher(line);

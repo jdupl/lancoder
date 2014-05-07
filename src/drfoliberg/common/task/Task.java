@@ -6,57 +6,112 @@ import drfoliberg.common.Status;
 
 public class Task implements Serializable {
 
-	private static final long serialVersionUID = 7435087680360843645L;
-	protected String fileLocation;
-	protected int taskId;
-	protected String jobId;
-	protected Status status;
-	protected double progress;
-	protected TaskReport taskReport;
+	private static final long serialVersionUID = -8705492902098705162L;
+	protected TaskInfo taskInfo;
+	protected TaskStatus taskStatus;
 
-	public Task(int taskId, String fileLocation) {
-		this.taskId = taskId;
-		this.fileLocation = fileLocation;
-		this.status = Status.JOB_TODO;
+	public Task(int taskId, String sourceFile) {
+		// TODO Auto-generated constructor stub
+		taskInfo = new TaskInfo();
+		taskInfo.setFileLocation(sourceFile);
+		taskInfo.setTaskId(taskId);
+		taskStatus = new TaskStatus();
 	}
 
-	public TaskReport getTaskReport() {
-		return taskReport;
+	public void setTaskStatus(TaskStatus taskStatus) {
+		this.taskStatus = taskStatus;
 	}
 
-	public void setTaskReport(TaskReport taskReport) {
-		this.taskReport = taskReport;
+	public TaskStatus getTaskStatus() {
+		return taskStatus;
 	}
 
-	public int getTaskId() {
-		return taskId;
+	public float getProgress() {
+		return taskStatus.getProgress();
 	}
 
-	public void setTaskId(int taskId) {
-		this.taskId = taskId;
+	public void setProgress(float progress) {
+		taskStatus.setProgress(progress);
 	}
 
-	public String getJobId() {
-		return jobId;
+	public long getTimeElapsed() {
+		return taskStatus.getTimeElapsed();
 	}
 
-	public void setJobId(String jobId) {
-		this.jobId = jobId;
+	public void setTimeElapsed(long timeElapsed) {
+		taskStatus.setTimeElapsed(timeElapsed);
+	}
+
+	public long getTimeEstimated() {
+		return taskStatus.getTimeEstimated();
+	}
+
+	public void setTimeEstimated(long timeEstimated) {
+		taskStatus.setTimeEstimated(timeEstimated);
+	}
+
+	public double getFps() {
+		return taskStatus.getFps();
+	}
+
+	public void setFps(double fps) {
+		taskStatus.setFps(fps);
 	}
 
 	public Status getStatus() {
-		return status;
+		return taskStatus.getStatus();
 	}
 
 	public void setStatus(Status status) {
-		this.status = status;
+		taskStatus.setStatus(status);
 	}
 
-	public double getProgress() {
-		return progress;
+	public String getFileLocation() {
+		return taskInfo.getFileLocation();
 	}
 
-	public void setProgress(double progress) {
-		this.progress = progress;
+	public void setFileLocation(String fileLocation) {
+		taskInfo.setFileLocation(fileLocation);
 	}
+
+	public int getTaskId() {
+		return taskInfo.getTaskId();
+	}
+
+	public void setTaskId(int taskId) {
+		taskInfo.setTaskId(taskId);
+	}
+
+	public String getJobId() {
+		return taskInfo.getJobId();
+	}
+
+	public void setJobId(String jobId) {
+		taskInfo.setJobId(jobId);
+	}
+
+	public long getStartTime() {
+		return taskInfo.getStartTime();
+	}
+
+	public void setStartTime(long startTime) {
+		taskInfo.setStartTime(startTime);
+	}
+
+	public long getEndTime() {
+		return taskInfo.getEndTime();
+	}
+
+	public void setEndTime(long endTime) {
+		taskInfo.setEndTime(endTime);
+	}
+
+	public long getEstimatedFramesCount() {
+		return taskInfo.getEstimatedFramesCount();
+	}
+
+	public void setEstimatedFramesCount(long estimatedFramesCount) {
+		taskInfo.setEstimatedFramesCount(estimatedFramesCount);
+	}
+
 }
