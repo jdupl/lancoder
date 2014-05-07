@@ -35,7 +35,7 @@ public class Master implements Runnable {
 
 	private MasterConfig config;
 	public ArrayList<Job> jobs; // change to private after tests
-	
+
 	private ApiServer apiServer;
 
 	public Master() {
@@ -133,29 +133,29 @@ public class Master implements Runnable {
 		return true;
 	}
 
-	/**
-	 * Handles a node's request to be disconnected.
-	 * 
-	 * @param unid
-	 *            The sender of the request (node to disconnect)
-	 */
-	public void nodeShutdown(String unid) {
-		Node sender = identifySender(unid);
-		if (sender != null) {
-
-			// Cancel node's task status if any
-			Task toCancel = null;
-			toCancel = sender.getCurrentTask();
-			if (toCancel != null) {
-				updateNodeTask(sender, Status.JOB_TODO);
-			}
-
-			// Update node status
-			removeNode(sender);
-
-		} else {
-			System.err.println("Could not mark node as disconnected as it was not found");
+	private String getNewUNID(Node n) {
+		String result = "";
+		System.out.println("MASTER: generating a nuid for node " + n.getName());
+		long ms = System.currentTimeMillis();
+		String input = ms + n.getName();
+		MessageDigest md = null;
+		try {
+			md = MessageDigest.getInstance(ALGORITHM);
+		} catch (NoSuchAlgorithmException e) {
+			// print and handle exception
+			// if a null string is given back to the client, it won't connect
+			e.printStackTrace();
+			System.out
+					.println("MASTER: could not get an instance of " + ALGORITHM + " to produce a UNID\nThis is bad.");
+			return "";
 		}
+		byte[] byteArray = md.digest(input.getBytes());
+		result = "";
+		for (int i = 0; i < byteArray.length; i++) {
+			result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
+		}
+		System.out.println("MASTER: generated " + result + " for node " + n.getName());
+		return result;
 	}
 
 	/**
@@ -198,31 +198,6 @@ public class Master implements Runnable {
 		return false;
 	}
 
-	private String getNewUNID(Node n) {
-		String result = "";
-		System.out.println("MASTER: generating a nuid for node " + n.getName());
-		long ms = System.currentTimeMillis();
-		String input = ms + n.getName();
-		MessageDigest md = null;
-		try {
-			md = MessageDigest.getInstance(ALGORITHM);
-		} catch (NoSuchAlgorithmException e) {
-			// print and handle exception
-			// if a null string is given back to the client, it won't connect
-			e.printStackTrace();
-			System.out
-					.println("MASTER: could not get an instance of " + ALGORITHM + " to produce a UNID\nThis is bad.");
-			return "";
-		}
-		byte[] byteArray = md.digest(input.getBytes());
-		result = "";
-		for (int i = 0; i < byteArray.length; i++) {
-			result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
-		}
-		System.out.println("MASTER: generated " + result + " for node " + n.getName());
-		return result;
-	}
-
 	/**
 	 * Adds a node to the node list. Assigns a new ID to the node if it's non-existent. The node will be picked up by
 	 * the node checker automatically if work is available.
@@ -255,6 +230,28 @@ public class Master implements Runnable {
 			nodes.add(e.getValue());
 		}
 		return nodes;
+	}
+
+	/**
+	 * Set disconnected status to node and cancel node's task
+	 * 
+	 * @param n
+	 *            The node to disconnect
+	 * @return
+	 */
+	public synchronized boolean removeNode(Node n) {
+		if (n != null) {
+			// Cancel node's task status if any
+			Task toCancel = null;
+			toCancel = n.getCurrentTask();
+			if (toCancel != null) {
+				updateNodeTask(n, Status.JOB_TODO);
+			}
+			n.setStatus(Status.NOT_CONNECTED);
+		} else {
+			System.err.println("Could not mark node as disconnected as it was not found");
+		}
+		return false;
 	}
 
 	public boolean updateNodeTask(Node n, Status updateStatus) {
@@ -357,16 +354,6 @@ public class Master implements Runnable {
 			System.out.printf("Node %s crashed but not fatally.\n", node.getName());
 		}
 		updateNodeTask(node, Status.JOB_CANCELED);
-	}
-
-	public synchronized boolean removeNode(Node n) {
-		// updateNodeTask(n, Status.JOB_TODO);
-		// TODO don't remove the node from the array list. Give it an offline status
-		if (nodes.remove(n.getUnid()) != null) {
-			System.out.println("NODE REMOVED");
-			return true;
-		}
-		return false;
 	}
 
 	public void run() {

@@ -67,7 +67,7 @@ public class HandleMaster implements Runnable {
 							}
 						} else if (cm.status == Status.NOT_CONNECTED) {
 							// the node want to disconnect
-							this.master.nodeShutdown(cm.getUnid());
+							this.master.removeNode(master.identifySender(cm.getUnid()));
 							out.writeObject(new Message(ClusterProtocol.BYE));
 							out.flush();
 							s.close();
