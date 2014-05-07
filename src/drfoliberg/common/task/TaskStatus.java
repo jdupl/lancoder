@@ -7,22 +7,31 @@ import drfoliberg.common.Status;
 public class TaskStatus implements Serializable {
 
 	private static final long serialVersionUID = 7437966237627538221L;
+	protected long timeStarted;
 	protected long timeElapsed;
 	protected long timeEstimated;
+	protected long framesCompleted;
 	protected double fps;
 	protected Status status;
-	protected float progress;
 
 	public TaskStatus() {
 		this.status = Status.JOB_TODO;
 	}
 
-	public float getProgress() {
-		return progress;
+	public long getTimeStarted() {
+		return timeStarted;
 	}
 
-	public void setProgress(float progress) {
-		this.progress = progress;
+	public void setTimeStarted(long timeStarted) {
+		this.timeStarted = timeStarted;
+	}
+
+	public long getFramesCompleted() {
+		return framesCompleted;
+	}
+
+	public void setFramesCompleted(long framesCompleted) {
+		this.framesCompleted = framesCompleted;
 	}
 
 	public long getTimeElapsed() {

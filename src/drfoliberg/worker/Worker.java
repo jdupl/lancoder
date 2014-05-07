@@ -22,7 +22,6 @@ public class Worker implements Runnable {
 	private WorkThread workThread;
 	private Task currentTask;
 	private Status status;
-	private CurrentTaskStatus currentTaskStatus;
 
 	public WorkerServer workerListener;
 
@@ -90,7 +89,6 @@ public class Worker implements Runnable {
 
 	public void taskDone(Task task, InetAddress masterIp) {
 		this.currentTask.setStatus(Status.JOB_COMPLETED);
-		this.currentTask.setProgress(100);
 		this.updateStatus(Status.FREE);
 		this.currentTask = null;
 	}
@@ -103,8 +101,6 @@ public class Worker implements Runnable {
 			this.currentTask = t;
 			this.workThread = new WorkThread(this, t, config.getMasterIpAddress());
 			this.workThread.start();
-			currentTaskStatus.setStartedOn(System.currentTimeMillis());
-			currentTask.setStatus(Status.JOB_COMPUTING);
 			return true;
 		}
 	}
@@ -126,15 +122,11 @@ public class Worker implements Runnable {
 	public TaskReport getTaskReport() {
 		// if worker has no task, return null report
 		TaskReport taskReport = null;
-		if (getCurrentTask() != null) {
+		if (currentTask != null) {
 			taskReport = new TaskReport(config.getUniqueID(), this.currentTask);
 			Task t = taskReport.getTask();
-			t.setProgress(currentTaskStatus.getProgress());
-			t.setJobId(getCurrentTask().getJobId());
-			t.setTaskId(getCurrentTask().getTaskId());
-			t.setFps(currentTaskStatus.getFps());
-			t.setTimeElapsed(System.currentTimeMillis() - currentTaskStatus.getStartedOn());
-			t.setTimeEstimated(currentTaskStatus.getETA());
+			t.setTimeElapsed(System.currentTimeMillis() - currentTask.getTimeStarted());
+			t.setTimeEstimated(currentTask.getETA());
 		}
 		return taskReport;
 	}
@@ -161,8 +153,7 @@ public class Worker implements Runnable {
 			this.currentTask = null;
 			break;
 		default:
-			System.err.println("WORKER: Unhandlded status code while"
-					+ " updating status");
+			System.err.println("WORKER: Unhandlded status code while" + " updating status");
 			break;
 		}
 	}
@@ -259,20 +250,11 @@ public class Worker implements Runnable {
 	}
 
 	public void setUnid(String unid) {
-		print("got id "+ unid + " from master");
+		print("got id " + unid + " from master");
 		this.config.setUniqueID(unid);
 	}
 
 	public Task getCurrentTask() {
 		return this.currentTask;
-	}
-
-	public synchronized CurrentTaskStatus getCurrentTaskStatus() {
-		return currentTaskStatus;
-	}
-
-	public synchronized void setCurrentTaskStatus(
-			CurrentTaskStatus currentTaskStatus) {
-		this.currentTaskStatus = currentTaskStatus;
 	}
 }

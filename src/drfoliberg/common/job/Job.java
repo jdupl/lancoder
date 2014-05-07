@@ -70,17 +70,16 @@ public class Job {
 		while (remaining > 0) {
 			Task t = new Task(taskNo++, sourceFile);
 			t.setJobId(jobId);
-			t.setStartTime(currentMs);
 			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.10) {
 				System.out.println("next task will be too short, adding the ms to the current task");
-				t.setEndTime(lengthOfJob);
+				t.setEncodingEndTime(lengthOfJob);
 				remaining = 0;
 			} else {
-				t.setEndTime(currentMs + lengthOfTasks);
+				t.setEncodingEndTime(currentMs + lengthOfTasks);
 				remaining -= lengthOfTasks;
 				currentMs += lengthOfTasks;
 			}
-			long ms = t.getEndTime() - t.getStartTime();
+			long ms = t.getEncodingEndTime() - t.getEncodingStartTime();
 			t.setEstimatedFramesCount((long) Math.floor((ms / 1000 * frameRate)));
 
 			this.tasks.add(t);

@@ -8,8 +8,8 @@ public class TaskInfo implements Serializable {
 	protected String fileLocation;
 	protected int taskId;
 	protected String jobId;
-	protected long startTime;
-	protected long endTime;
+	protected long encodingStartTime;
+	protected long encodingEndTime;
 	protected long estimatedFramesCount;
 
 	public String getFileLocation() {
@@ -36,20 +36,20 @@ public class TaskInfo implements Serializable {
 		this.jobId = jobId;
 	}
 
-	public long getStartTime() {
-		return startTime;
+	public long getEncodingStartTime() {
+		return encodingStartTime;
 	}
 
-	public void setStartTime(long startTime) {
-		this.startTime = startTime;
+	public void setEncodingStartTime(long encodingStartTime) {
+		this.encodingStartTime = encodingStartTime;
 	}
 
-	public long getEndTime() {
-		return endTime;
+	public long getEncodingEndTime() {
+		return encodingEndTime;
 	}
 
-	public void setEndTime(long endTime) {
-		this.endTime = endTime;
+	public void setEncodingEndTime(long encodingEndTime) {
+		this.encodingEndTime = encodingEndTime;
 	}
 
 	public long getEstimatedFramesCount() {

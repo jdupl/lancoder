@@ -263,8 +263,7 @@ public class Master implements Runnable {
 				n.getCurrentTask().setStatus(Status.JOB_COMPLETED);
 				n.setCurrentTask(null);
 			} else if (updateStatus == Status.JOB_CANCELED) {
-				task.setProgress(0);
-				task.setStatus(Status.JOB_TODO);
+				task.reset();
 				n.setCurrentTask(null);
 			}
 			updateNodesWork();
@@ -332,7 +331,7 @@ public class Master implements Runnable {
 
 		System.out
 				.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
-		sender.getCurrentTask().setProgress(progress);
+		//sender.getCurrentTask().setProgress(progress);
 		
 		sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
 		

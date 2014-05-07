@@ -25,8 +25,9 @@ public class WorkThread extends Thread {
 		this.masterIp = masterIp;
 		task = t;
 		callback = w;
-		callback.setCurrentTaskStatus(new CurrentTaskStatus(t.getEstimatedFramesCount()));
-		callback.getCurrentTaskStatus().setStartedOn(System.currentTimeMillis());
+		callback.getCurrentTask().start();
+		
+		//callback.setCurrentTaskStatus(new CurrentTaskStatus(t.getEstimatedFramesCount()));  is this necessary ? TODO 
 	}
 
 	/**
@@ -55,8 +56,8 @@ public class WorkThread extends Thread {
 	public void run() {
 		try {
 			// use start and duration for legacy support
-			long durationMs = task.getEndTime() - task.getStartTime();
-			String startTimeStr = getDurationString(task.getStartTime());
+			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
+			String startTimeStr = getDurationString(task.getEncodingStartTime());
 			String durationStr = getDurationString(durationMs);
 
 			String outputFile = String.format("/home/justin/encoding/output-part_%d.mkv", task.getTaskId());
@@ -103,15 +104,15 @@ public class WorkThread extends Thread {
 				Matcher m = currentFramePattern.matcher(line);
 				if (m.find()) {
 					long currentFrame = Long.parseLong(m.group(1));
-					callback.getCurrentTaskStatus().setFramesDone(currentFrame);
+					callback.getCurrentTask().setFramesCompleted(currentFrame);
 
 					System.err.printf("frame: %d out of %d (%f%%) \n", currentFrame, task.getEstimatedFramesCount(),
-							callback.getCurrentTaskStatus().getProgress());
+							callback.getCurrentTask().getProgress());
 				}
 				m = fpsPattern.matcher(line);
 				if (m.find()) {
 					float fps = Float.parseFloat(m.group(1));
-					callback.getCurrentTaskStatus().setFps(fps);
+					callback.getCurrentTask().setFps(fps);
 					System.err.printf("fps: %s \n", fps);
 				}
 				m = missingDecoder.matcher(line);

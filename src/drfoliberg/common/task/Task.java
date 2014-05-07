@@ -18,20 +18,40 @@ public class Task implements Serializable {
 		taskStatus = new TaskStatus();
 	}
 
+	public void reset() {
+		taskStatus.setFramesCompleted(0);
+		setStatus(Status.JOB_TODO);
+	}
+
+	public void start() {
+		setTimeStarted(System.currentTimeMillis());
+		setStatus(Status.JOB_COMPUTING);
+	}
+
+	public long getETA() {
+		long elapsedMs = System.currentTimeMillis() - getTimeStarted();
+		return (long) (elapsedMs / (getProgress() / 100));
+	}
+
+	public float getProgress() {
+		float percentToComplete = ((float) taskStatus.getFramesCompleted() / taskInfo.getEstimatedFramesCount()) * 100;
+		return percentToComplete;
+	}
+
+	public long getFramesCompleted() {
+		return taskStatus.getFramesCompleted();
+	}
+
+	public void setFramesCompleted(long framesCompleted) {
+		taskStatus.setFramesCompleted(framesCompleted);
+	}
+
 	public void setTaskStatus(TaskStatus taskStatus) {
 		this.taskStatus = taskStatus;
 	}
 
 	public TaskStatus getTaskStatus() {
 		return taskStatus;
-	}
-
-	public float getProgress() {
-		return taskStatus.getProgress();
-	}
-
-	public void setProgress(float progress) {
-		taskStatus.setProgress(progress);
 	}
 
 	public long getTimeElapsed() {
@@ -90,20 +110,20 @@ public class Task implements Serializable {
 		taskInfo.setJobId(jobId);
 	}
 
-	public long getStartTime() {
-		return taskInfo.getStartTime();
+	public long getEncodingStartTime() {
+		return taskInfo.getEncodingStartTime();
 	}
 
-	public void setStartTime(long startTime) {
-		taskInfo.setStartTime(startTime);
+	public void setEncodingStartTime(long encodingStartTime) {
+		taskInfo.setEncodingStartTime(encodingStartTime);
 	}
 
-	public long getEndTime() {
-		return taskInfo.getEndTime();
+	public long getEncodingEndTime() {
+		return taskInfo.getEncodingEndTime();
 	}
 
-	public void setEndTime(long endTime) {
-		taskInfo.setEndTime(endTime);
+	public void setEncodingEndTime(long encodingEndTime) {
+		taskInfo.setEncodingEndTime(encodingEndTime);
 	}
 
 	public long getEstimatedFramesCount() {
@@ -112,6 +132,14 @@ public class Task implements Serializable {
 
 	public void setEstimatedFramesCount(long estimatedFramesCount) {
 		taskInfo.setEstimatedFramesCount(estimatedFramesCount);
+	}
+
+	public long getTimeStarted() {
+		return taskStatus.getTimeStarted();
+	}
+
+	public void setTimeStarted(long timeStarted) {
+		taskStatus.setTimeStarted(timeStarted);
 	}
 
 }
