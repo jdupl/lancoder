@@ -7,12 +7,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class WorkerConfig implements Serializable {
 
 	private static final long serialVersionUID = 4279318303054715575L;
 
-	private static final String WORKER_CONFIG_PATH = "worker_config.json";
+	// private static final String WORKER_CONFIG_PATH = "worker_config.json";
 
 	private static final transient int DEFAULT_MASTER_PORT = 1337;
 	private static final int DEFAULT_LISTEN_PORT = 1338;
@@ -48,9 +49,9 @@ public class WorkerConfig implements Serializable {
 	 * 
 	 * @return The default config
 	 */
-	public static WorkerConfig generate() {
+	public static WorkerConfig generate(String configPath) {
 		WorkerConfig conf = new WorkerConfig();
-		conf.dump();
+		conf.dump(configPath);
 		return conf;
 	}
 
@@ -59,12 +60,12 @@ public class WorkerConfig implements Serializable {
 	 * 
 	 * @return True if could write config to disk. Otherwise, return false.
 	 */
-	public synchronized boolean dump() {
-		Gson gson = new Gson();
+	public synchronized boolean dump(String configPath) {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		String s = gson.toJson(this);
 
 		try {
-			Files.write(Paths.get(WORKER_CONFIG_PATH), s.getBytes("UTF-8"));
+			Files.write(Paths.get(configPath), s.getBytes("UTF-8"));
 		} catch (IOException e) {
 			// print stack and return false
 			e.printStackTrace();
@@ -79,13 +80,13 @@ public class WorkerConfig implements Serializable {
 	 * 
 	 * @return The config or null if no file was readable
 	 */
-	public static WorkerConfig load() {
+	public static WorkerConfig load(String configPath) {
 		WorkerConfig config = null;
-		if (!Files.exists(Paths.get(WORKER_CONFIG_PATH))) {
+		if (!Files.exists(Paths.get(configPath))) {
 			return null;
 		}
 		try {
-			byte[] b = Files.readAllBytes(Paths.get(WORKER_CONFIG_PATH));
+			byte[] b = Files.readAllBytes(Paths.get(configPath));
 			Gson gson = new Gson();
 			config = gson.fromJson(new String(b, "UTF-8"), WorkerConfig.class);
 		} catch (IOException e) {
@@ -133,7 +134,6 @@ public class WorkerConfig implements Serializable {
 
 	public void setUniqueID(String uniqueID) {
 		this.uniqueID = uniqueID;
-		this.dump();
 	}
 
 	public InetAddress getMasterIpAddress() {

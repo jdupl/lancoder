@@ -33,20 +33,22 @@ public class Master implements Runnable {
 	private ArrayList<Service> services;
 
 	private MasterConfig config;
+	private String configPath;
 	public ArrayList<Job> jobs; // change to private after tests
 
 	private ApiServer apiServer;
 
-	public Master() {
+	public Master(String configPath) {
 		services = new ArrayList<>();
 		nodes = new HashMap<String, Node>();
 		jobs = new ArrayList<Job>();
-		config = MasterConfig.load();
+		config = MasterConfig.load(configPath);
+		this.configPath = configPath;
 		if (config != null) {
 			System.err.println("Loaded config from disk !");
 		} else {
 			// this saves default configuration to disk
-			this.config = MasterConfig.generate();
+			this.config = MasterConfig.generate(configPath);
 		}
 		// TODO refactor these to observers/events patterns
 		nodeServer = new MasterNodeServer(this);
@@ -74,7 +76,7 @@ public class Master implements Runnable {
 				n.getCurrentTask().reset();
 			}
 		}
-		config.dump();
+		config.dump(configPath);
 	}
 
 	public MasterConfig getConfig() {
@@ -103,7 +105,7 @@ public class Master implements Runnable {
 			return false;
 		}
 		updateNodesWork();
-		config.dump();
+		config.dump(configPath);
 		return success;
 	}
 
@@ -153,7 +155,7 @@ public class Master implements Runnable {
 			return false;
 		}
 		dispatch(nextTask, node);
-		config.dump();
+		config.dump(configPath);
 		return true;
 	}
 

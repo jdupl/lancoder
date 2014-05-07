@@ -6,13 +6,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import drfoliberg.common.Node;
 import drfoliberg.common.job.Job;
 
 public class MasterConfig {
-
-	public static final String MASTER_CONFIG_PATH = "master_config.json";
 
 	/**
 	 * Defaults values of the config
@@ -46,9 +45,9 @@ public class MasterConfig {
 	 * 
 	 * @return The default config
 	 */
-	public static MasterConfig generate() {
+	public static MasterConfig generate(String configPath) {
 		MasterConfig conf = new MasterConfig();
-		conf.dump();
+		conf.dump(configPath);
 		return conf;
 	}
 
@@ -57,12 +56,12 @@ public class MasterConfig {
 	 * 
 	 * @return True if could write config to disk. Otherwise, return false.
 	 */
-	public synchronized boolean dump() {
-		Gson gson = new Gson();
+	public synchronized boolean dump(String configPath) {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		String s = gson.toJson(this);
 
 		try {
-			Files.write(Paths.get(MASTER_CONFIG_PATH), s.getBytes("UTF-8"));
+			Files.write(Paths.get(configPath), s.getBytes("UTF-8"));
 		} catch (IOException e) {
 			// print stack and return false
 			e.printStackTrace();
@@ -72,15 +71,15 @@ public class MasterConfig {
 		return true;
 	}
 
-	public synchronized static MasterConfig load() {
+	public synchronized static MasterConfig load(String configPath) {
 		MasterConfig config = null;
 		
-		if (!Files.exists(Paths.get(MASTER_CONFIG_PATH))) {
+		if (!Files.exists(Paths.get(configPath))) {
 			return null;
 		}
 		
 		try {
-			byte[] b = Files.readAllBytes(Paths.get(MASTER_CONFIG_PATH));
+			byte[] b = Files.readAllBytes(Paths.get(configPath));
 			Gson gson = new Gson();
 			config = gson.fromJson(new String(b, "UTF-8"), MasterConfig.class);
 		} catch (IOException e) {

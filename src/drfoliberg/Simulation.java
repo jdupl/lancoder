@@ -21,7 +21,7 @@ public class Simulation extends Thread {
 	 */
 	public void basicSimulation(String filepath) {
 		System.out.println("SIM: Starting master now");
-		Master m = new Master();
+		Master m = new Master(Main.MASTER_CONFIG_PATH);
 		Thread masterThread = new Thread(m);
 		masterThread.start();
 
@@ -30,14 +30,14 @@ public class Simulation extends Thread {
 		m.addJob(j);
 
 		System.out.println("SIM: Creating first worker now,");
-		Worker worker1 = new Worker();
+		Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
 		Thread w1Thread = new Thread(worker1);
 		w1Thread.start();
 	}
 
 	public void shutdownTest(String filepath) {
 		try {
-			Master m = new Master();
+			Master m = new Master(Main.MASTER_CONFIG_PATH);
 			Thread masterThread = new Thread(m);
 			masterThread.start();
 			sleep(5000);
@@ -45,7 +45,7 @@ public class Simulation extends Thread {
 			System.out.println("SIM: adding a job to master's queue !");
 			m.addJob(j);
 			System.out.println("SIM: Creating first worker now,");
-			Worker worker1 = new Worker();
+			Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
 			Thread w1Thread = new Thread(worker1);
 			w1Thread.start();
 			sleep(10000);
@@ -62,8 +62,7 @@ public class Simulation extends Thread {
 	}
 
 	public void run(String filepath) {
-		shutdownTest(filepath);
-		// basicSimulation(filepath);
-		// fullSimulation(filepath);
+		//shutdownTest(filepath);
+		basicSimulation(filepath);
 	}
 }

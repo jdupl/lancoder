@@ -18,27 +18,30 @@ import drfoliberg.common.task.TaskReport;
 
 public class Worker implements Runnable {
 
-	final static String WORKER_CONFIG_PATH = "worker_config.json";
-
 	WorkerConfig config;
-	private WorkThread workThread;
+	private String configPath;
+
 	private Task currentTask;
 	private Status status;
-	
+
 	private ArrayList<Service> services;
-
 	public WorkerServer workerListener;
+	private WorkThread workThread;
 
-	public Worker() {
+	public Worker(String configPath) {
+		this.configPath = configPath;
+
 		services = new ArrayList<>();
 		this.workerListener = new WorkerServer(this);
-		config = WorkerConfig.load();
+
+		config = WorkerConfig.load(configPath);
 		if (config != null) {
 			System.err.println("Loaded config from disk !");
 		} else {
 			// this saves default configuration to disk
-			this.config = WorkerConfig.generate();
+			this.config = WorkerConfig.generate(configPath);
 		}
+
 		services.add(workerListener);
 		print("initialized not connected to a master server");
 	}
@@ -50,9 +53,11 @@ public class Worker implements Runnable {
 	public void shutdown() {
 		int nbServices = services.size();
 		print("shutting down " + nbServices + " service(s).");
+
 		for (Service s : services) {
 			s.stop();
 		}
+
 		Socket socket = null;
 		try {
 			socket = new Socket(config.getMasterIpAddress(), config.getMasterPort());
@@ -86,6 +91,8 @@ public class Worker implements Runnable {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
+
+		config.dump(configPath);
 	}
 
 	public void print(String s) {
