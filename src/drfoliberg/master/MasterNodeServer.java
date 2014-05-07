@@ -1,9 +1,9 @@
 package drfoliberg.master;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 import drfoliberg.common.Service;
 
@@ -27,10 +27,7 @@ public class MasterNodeServer extends Service {
 					MasterHandle handle = new MasterHandle(clientSocket, master);
 					Thread t = new Thread(handle);
 					t.start();
-				} catch (InterruptedIOException e) {
-					System.err.println("TIMEOUT");
-					System.out.println(close);
-					// thread was interrupted by master (master is shutting down)
+				} catch (SocketTimeoutException e) {
 				}
 			}
 			// closing thread as master is shutting down

@@ -21,14 +21,13 @@ public class WorkThread extends Service {
 	private InetAddress masterIp;
 	private Task task;
 	private Worker callback;
+	Process process;
 
 	public WorkThread(Worker w, Task t, InetAddress masterIp) {
 		this.masterIp = masterIp;
 		task = t;
 		callback = w;
 		callback.getCurrentTask().start();
-		
-		//callback.setCurrentTaskStatus(new CurrentTaskStatus(t.getEstimatedFramesCount()));  is this necessary ? TODO 
 	}
 
 	/**
@@ -76,8 +75,6 @@ public class WorkThread extends Service {
 			}
 
 			// Get parameters from the task and bind parameters to process
-			Process process = null;
-
 			try {
 				// TODO Protect from spaces in paths
 				String processStr = String.format(
@@ -98,7 +95,7 @@ public class WorkThread extends Service {
 			Pattern currentFramePattern = Pattern.compile("frame=\\s*([0-9]*)");
 			Pattern fpsPattern = Pattern.compile("fps=\\s*([0-9]*)");
 			Pattern missingDecoder = Pattern.compile("Error while opening encoder for output stream");
-			while (s.hasNext()) {
+			while (s.hasNext() && !close) {
 				// TODO better scanning (avoid regexing the same line multiple times if result)
 				line = s.nextLine();
 
@@ -124,7 +121,15 @@ public class WorkThread extends Service {
 				}
 			}
 			s.close();
-			callback.taskDone(task, masterIp);
+
+			if (!close) {
+				// process exited normally
+				callback.taskDone(task, masterIp);
+			} else {
+				// work thread is being interrupted
+				process.destroy();
+			}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Work was interrupted!");

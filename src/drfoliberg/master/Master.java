@@ -21,7 +21,6 @@ import drfoliberg.common.network.messages.StatusReport;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.TaskReport;
 import drfoliberg.master.api.ApiServer;
-import drfoliberg.worker.WorkerConfig;
 
 public class Master implements Runnable {
 
@@ -62,12 +61,20 @@ public class Master implements Runnable {
 
 	public void shutdown() {
 		// TODO say goodbye to nodes
+		for (Node n : getOnlineNodes()) {
+			disconnectNode(n);
+		}
 
 		for (Service s : services) {
-			System.out.println("Stopping a service");
 			s.stop();
 		}
-		// TODO save config
+		// save config and make sure current tasks are reset
+		for (Node n : getNodes()) {
+			if (n.getCurrentTask() != null) {
+				n.getCurrentTask().reset();
+			}
+		}
+		config.dump();
 	}
 
 	public MasterConfig getConfig() {
@@ -192,8 +199,10 @@ public class Master implements Runnable {
 	 */
 	public boolean disconnectNode(Node n) {
 		try {
-			// TODO only update work if worker has a task
-			updateNodeTask(n, Status.JOB_TODO);
+			Task t = n.getCurrentTask();
+			if (t != null) {
+				t.reset();
+			}
 			Socket s = new Socket(n.getNodeAddress(), n.getNodePort());
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 			out.flush();
@@ -252,6 +261,17 @@ public class Master implements Runnable {
 		ArrayList<Node> nodes = new ArrayList<>();
 		for (Entry<String, Node> e : this.nodes.entrySet()) {
 			nodes.add(e.getValue());
+		}
+		return nodes;
+	}
+
+	public ArrayList<Node> getOnlineNodes() {
+		ArrayList<Node> nodes = new ArrayList<>();
+		for (Entry<String, Node> e : this.nodes.entrySet()) {
+			Node n = e.getValue();
+			if (n.getStatus() == Status.FREE || n.getStatus() == Status.WORKING) {
+				nodes.add(n);
+			}
 		}
 		return nodes;
 	}
@@ -390,7 +410,6 @@ public class Master implements Runnable {
 		nodeCheckerThread.start();
 		Thread apiThread = new Thread(apiServer);
 		apiThread.start();
-		listenerThread.interrupt();
 	}
 
 }

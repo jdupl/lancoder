@@ -29,7 +29,7 @@ public class Worker implements Runnable {
 
 	public WorkerServer workerListener;
 
-	public Worker(String name, InetAddress masterIpAddress, int masterPort, int listenPort) {
+	public Worker() {
 		services = new ArrayList<>();
 		this.workerListener = new WorkerServer(this);
 		config = WorkerConfig.load();
@@ -40,7 +40,6 @@ public class Worker implements Runnable {
 			this.config = WorkerConfig.generate();
 		}
 		services.add(workerListener);
-		services.add(workThread);
 		print("initialized not connected to a master server");
 	}
 
@@ -49,7 +48,8 @@ public class Worker implements Runnable {
 	}
 
 	public void shutdown() {
-		print("shutting down");
+		int nbServices = services.size();
+		print("shutting down " + nbServices + " service(s).");
 		for (Service s : services) {
 			s.stop();
 		}
@@ -96,6 +96,7 @@ public class Worker implements Runnable {
 		this.currentTask.setStatus(Status.JOB_COMPLETED);
 		this.updateStatus(Status.FREE);
 		this.currentTask = null;
+		services.remove(workThread);
 	}
 
 	public synchronized boolean startWork(Task t) {
@@ -107,6 +108,7 @@ public class Worker implements Runnable {
 			this.workThread = new WorkThread(this, t, config.getMasterIpAddress());
 			Thread wt = new Thread(workThread);
 			wt.start();
+			services.add(workThread);
 			return true;
 		}
 	}

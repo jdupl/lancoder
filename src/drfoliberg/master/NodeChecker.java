@@ -13,7 +13,7 @@ import drfoliberg.common.network.messages.StatusReport;
 
 public class NodeChecker extends Service {
 
-	private final static int MS_DELAY_BETWEEN_CHECKS = 5000; 
+	private final static int MS_DELAY_BETWEEN_CHECKS = 5000;
 	Master master;
 
 	public NodeChecker(Master master) {
@@ -26,7 +26,7 @@ public class NodeChecker extends Service {
 			return false;
 		}
 		System.out.println("MASTER NODE CHECKER: checking if nodes are still alive");
-		for (Node n : master.getNodes()) {
+		for (Node n : master.getOnlineNodes()) {
 			System.out.println("MASTER NODE CHECKER: checking node: " + n.getNodeAddress().toString());
 			// update the node list and task list
 			Socket s = null;
@@ -74,7 +74,6 @@ public class NodeChecker extends Service {
 				e.printStackTrace();
 			}
 		}
-
 		return true;
 	}
 
