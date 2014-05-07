@@ -17,7 +17,7 @@ public class ApiServer extends Service {
 
 	@Override
 	public void run() {
-		apiServer = new Server(8080);
+		apiServer = new Server(master.getConfig().getApiServerPort());
 		handler = new ApiHandler(master);
 		apiServer.setHandler(handler);
 		try {

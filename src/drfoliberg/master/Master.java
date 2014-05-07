@@ -21,6 +21,7 @@ import drfoliberg.common.network.messages.StatusReport;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.TaskReport;
 import drfoliberg.master.api.ApiServer;
+import drfoliberg.worker.WorkerConfig;
 
 public class Master implements Runnable {
 
@@ -42,7 +43,12 @@ public class Master implements Runnable {
 		nodes = new HashMap<String, Node>();
 		jobs = new ArrayList<Job>();
 		config = MasterConfig.load();
-
+		if (config != null) {
+			System.err.println("Loaded config from disk !");
+		} else {
+			// this saves default configuration to disk
+			this.config = MasterConfig.generate();
+		}
 		// TODO refactor these to observers/events patterns
 		nodeServer = new MasterNodeServer(this);
 		nodeChecker = new NodeChecker(this);
