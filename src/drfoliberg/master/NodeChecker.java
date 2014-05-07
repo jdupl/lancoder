@@ -6,12 +6,14 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import drfoliberg.common.Node;
+import drfoliberg.common.Service;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
 
-public class NodeChecker implements Runnable {
+public class NodeChecker extends Service {
 
+	private final static int MS_DELAY_BETWEEN_CHECKS = 5000; 
 	Master master;
 
 	public NodeChecker(Master master) {
@@ -65,7 +67,7 @@ public class NodeChecker implements Runnable {
 			} catch (IOException e) {
 				// this node failed !
 				e.printStackTrace();
-				System.out.println("MASTER NODE CHECKER: node " + n.getName() + " failed ! Advising master!");
+				System.out.println("NODE CHECKER: node " + n.getName() + " failed ! Advising master!");
 				this.master.removeNode(n);
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -76,19 +78,20 @@ public class NodeChecker implements Runnable {
 		return true;
 	}
 
+	@Override
 	public void run() {
 		System.out.println("Starting node checker service!");
-		while (true) {
+		while (!close) {
 			try {
 				checkNodes();
-				System.out.println("MASTER NODE CHECKER: checking back in 5 seconds");
+				System.out.println("NODE CHECKER: checking back in 5 seconds");
 				// TODO check for better way to sleep / handle interrupt
 				Thread.currentThread();
-				Thread.sleep(5000);
+				Thread.sleep(MS_DELAY_BETWEEN_CHECKS);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-
 		}
+		System.out.println("Closed node checker service!");
 	}
 }

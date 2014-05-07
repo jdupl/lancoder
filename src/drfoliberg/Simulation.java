@@ -30,7 +30,7 @@ public class Simulation extends Thread {
 			Thread masterThread = new Thread(m);
 			masterThread.start();
 
-			Job j = new Job("testname", filepath, JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5 );
+			Job j = new Job("testname", filepath, JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5);
 			System.out.println("SIM: adding a job to master's queue !");
 			m.addJob(j);
 			masterIp = InetAddress.getByName("127.0.0.1");
@@ -38,17 +38,19 @@ public class Simulation extends Thread {
 			Worker worker1 = new Worker("worker1", masterIp, 1337, 1338);
 			Thread w1Thread = new Thread(worker1);
 			w1Thread.start();
-			
+
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Attempts to encode a file locally with multiple worker threads.
-	 * @param filepath Path of the video file to encode
+	 * 
+	 * @param filepath
+	 *            Path of the video file to encode
 	 */
-	public void fullSimulation(String filepath){
+	public void fullSimulation(String filepath) {
 		InetAddress masterIp;
 		try {
 			masterIp = InetAddress.getByName("127.0.0.1");
@@ -89,8 +91,23 @@ public class Simulation extends Thread {
 		}
 	}
 
+	public void masterShutdownTest() {
+		try {
+			Master m = new Master();
+			Thread masterThread = new Thread(m);
+			masterThread.start();
+			sleep(5000);
+			System.out.println("SIM: closing master now !");
+			m.shutdown();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	public void run(String filepath) {
-		basicSimulation(filepath);
-//		fullSimulation(filepath);
+		masterShutdownTest();
+		//basicSimulation(filepath);
+		// fullSimulation(filepath);
 	}
 }

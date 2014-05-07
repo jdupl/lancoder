@@ -5,7 +5,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 
+import drfoliberg.common.Service;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.messages.ConnectMessage;
 import drfoliberg.common.network.messages.CrashReport;
@@ -22,10 +24,13 @@ public class Worker implements Runnable {
 	private WorkThread workThread;
 	private Task currentTask;
 	private Status status;
+	
+	private ArrayList<Service> services;
 
 	public WorkerServer workerListener;
 
 	public Worker(String name, InetAddress masterIpAddress, int masterPort, int listenPort) {
+		services = new ArrayList<>();
 		this.workerListener = new WorkerServer(this);
 		config = WorkerConfig.load();
 		if (config != null) {
@@ -34,6 +39,8 @@ public class Worker implements Runnable {
 			// this saves default configuration to disk
 			this.config = WorkerConfig.generate();
 		}
+		services.add(workerListener);
+		services.add(workThread);
 		print("initialized not connected to a master server");
 	}
 
@@ -43,7 +50,9 @@ public class Worker implements Runnable {
 
 	public void shutdown() {
 		print("shutting down");
-		workerListener.shutdown();
+		for (Service s : services) {
+			s.stop();
+		}
 		Socket socket = null;
 		try {
 			socket = new Socket(config.getMasterIpAddress(), config.getMasterPort());
@@ -77,10 +86,6 @@ public class Worker implements Runnable {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-		// TODO halt work thread too!
-		print("stopping work thread");
-		this.workThread.interrupt();
-		Thread.currentThread().interrupt();
 	}
 
 	public void print(String s) {
@@ -100,7 +105,8 @@ public class Worker implements Runnable {
 		} else {
 			this.currentTask = t;
 			this.workThread = new WorkThread(this, t, config.getMasterIpAddress());
-			this.workThread.start();
+			Thread wt = new Thread(workThread);
+			wt.start();
 			return true;
 		}
 	}

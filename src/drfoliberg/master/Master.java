@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import drfoliberg.common.Node;
+import drfoliberg.common.Service;
 import drfoliberg.common.Status;
 import drfoliberg.common.job.Job;
 import drfoliberg.common.network.ClusterProtocol;
@@ -21,16 +22,15 @@ import drfoliberg.common.task.Task;
 import drfoliberg.common.task.TaskReport;
 import drfoliberg.master.api.ApiServer;
 
-/**
- * TODO implement a clean shutdown method (saving current config and such)
- */
 public class Master implements Runnable {
 
 	public static final String ALGORITHM = "SHA-256";
 
-	private MasterServer listener;
+	private MasterNodeServer nodeServer;
 	private NodeChecker nodeChecker;
 	private HashMap<String, Node> nodes;
+
+	private ArrayList<Service> services;
 
 	private MasterConfig config;
 	public ArrayList<Job> jobs; // change to private after tests
@@ -38,15 +38,34 @@ public class Master implements Runnable {
 	private ApiServer apiServer;
 
 	public Master() {
+		services = new ArrayList<>();
 		nodes = new HashMap<String, Node>();
 		jobs = new ArrayList<Job>();
 		config = MasterConfig.load();
 
 		// TODO refactor these to observers/events patterns
-		listener = new MasterServer(this);
+		nodeServer = new MasterNodeServer(this);
 		nodeChecker = new NodeChecker(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
+
+		services.add(nodeChecker);
+		services.add(nodeServer);
+		services.add(apiServer);
+	}
+
+	public void shutdown() {
+		// TODO say goodbye to nodes
+
+		for (Service s : services) {
+			System.out.println("Stopping a service");
+			s.stop();
+		}
+		// TODO save config
+	}
+
+	public MasterConfig getConfig() {
+		return config;
 	}
 
 	/**
@@ -126,7 +145,7 @@ public class Master implements Runnable {
 	}
 
 	public boolean dispatch(Task task, Node node) {
-		DispatcherMaster dispatcher = new DispatcherMaster(node, task, this);
+		Dispatcher dispatcher = new Dispatcher(node, task, this);
 		Thread t = new Thread(dispatcher);
 		t.start();
 		return true;
@@ -322,20 +341,21 @@ public class Master implements Runnable {
 		}
 
 		// check task-node association
-		if (!nodeTask.getJobId().equals(report.getTask().getJobId()) || nodeTask.getTaskId() != report.getTask().getTaskId()) {
+		if (!nodeTask.getJobId().equals(report.getTask().getJobId())
+				|| nodeTask.getTaskId() != report.getTask().getTaskId()) {
 			System.err.printf("MASTER: Bad task update from node %s." + " Expected task: %d, job: %s."
-					+ " Got task: %d, job: %s", sender.getUnid(), nodeTask.getTaskId(), nodeTask.getJobId(),
-					report.getTask().getTaskId(), report.getTask().getJobId());
+					+ " Got task: %d, job: %s", sender.getUnid(), nodeTask.getTaskId(), nodeTask.getJobId(), report
+					.getTask().getTaskId(), report.getTask().getJobId());
 			return false;
 		}
 
 		System.out
 				.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
-		//sender.getCurrentTask().setProgress(progress);
-		
+		// sender.getCurrentTask().setProgress(progress);
+
 		sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
-		
-		if(sender.getCurrentTask().getStatus() == Status.JOB_COMPLETED){
+
+		if (sender.getCurrentTask().getStatus() == Status.JOB_COMPLETED) {
 			updateNodeTask(sender, Status.JOB_COMPLETED);
 		}
 		return true;
@@ -358,12 +378,13 @@ public class Master implements Runnable {
 
 	public void run() {
 		// start services
-		Thread listenerThread = new Thread(listener);
+		Thread listenerThread = new Thread(nodeServer);
 		listenerThread.start();
 		Thread nodeCheckerThread = new Thread(nodeChecker);
 		nodeCheckerThread.start();
 		Thread apiThread = new Thread(apiServer);
 		apiThread.start();
+		listenerThread.interrupt();
 	}
 
 }

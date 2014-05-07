@@ -15,14 +15,14 @@ import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
 
-public class HandleMaster implements Runnable {
+public class MasterHandle implements Runnable {
 
 	ObjectInputStream in;
 	ObjectOutputStream out;
 	Socket s;
 	Master master;
 
-	public HandleMaster(Socket s, Master master) {
+	public MasterHandle(Socket s, Master master) {
 		this.master = master;
 		this.s = s;
 	}

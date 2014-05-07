@@ -8,6 +8,7 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import drfoliberg.common.Service;
 import drfoliberg.common.Status;
 import drfoliberg.common.exceptions.MissingDecoderException;
 import drfoliberg.common.exceptions.MissingFfmpegException;
@@ -15,7 +16,7 @@ import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.task.Task;
 
-public class WorkThread extends Thread {
+public class WorkThread extends Service {
 
 	private InetAddress masterIp;
 	private Task task;

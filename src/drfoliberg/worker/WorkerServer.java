@@ -7,23 +7,18 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import drfoliberg.common.Service;
 import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.TaskRequestMessage;
 
-public class WorkerServer implements Runnable {
+public class WorkerServer extends Service {
 
 	private Worker worker;
-	private boolean close;
 
 	public WorkerServer(Worker w) {
 		this.worker = w;
-		close = false;
-	}
-
-	public void shutdown() {
-		this.close = true;
 	}
 
 	public void print(String s) {

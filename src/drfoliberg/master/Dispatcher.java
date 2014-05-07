@@ -13,13 +13,13 @@ import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.TaskRequestMessage;
 import drfoliberg.common.task.Task;
 
-public class DispatcherMaster implements Runnable {
+public class Dispatcher implements Runnable {
 
 	Node node;
 	Task task;
 	Master master;
 
-	public DispatcherMaster(Node node, Task task, Master master) {
+	public Dispatcher(Node node, Task task, Master master) {
 		this.node = node;
 		this.task = task;
 	}

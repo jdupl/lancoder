@@ -17,12 +17,14 @@ public class MasterConfig {
 	/**
 	 * Defaults values of the config
 	 */
-	private static final int DEFAULT_LISTEN_PORT = 1337;
+	private static final int DEFAULT_NODE_LISTEN_PORT = 1337;
+	private static final int DEFAULT_API_LISTEN_PORT = 8080;
 	private static final String DEFAULT_ENCODE_DESTINATION = "encodes";
 	// maybe change for winblows support
 	private static final String DEFAULT_ABSOLUTE_PATH = "~";
 
-	private int listenPort;
+	private int nodeServerPort;
+	private int apiServerPort;
 	private String absoluteSharedFolder;
 	private String finalEncodingFolder;
 
@@ -30,9 +32,10 @@ public class MasterConfig {
 	public ArrayList<Job> jobList;
 
 	public MasterConfig() {
-		listenPort = DEFAULT_LISTEN_PORT;
+		nodeServerPort = DEFAULT_NODE_LISTEN_PORT;
 		finalEncodingFolder = DEFAULT_ENCODE_DESTINATION;
 		absoluteSharedFolder = DEFAULT_ABSOLUTE_PATH;
+		apiServerPort = DEFAULT_API_LISTEN_PORT;
 
 		jobList = new ArrayList<Job>();
 		nodeList = new ArrayList<Node>();
@@ -119,12 +122,19 @@ public class MasterConfig {
 		this.finalEncodingFolder = finalEncodingFolder;
 	}
 
-	public int getListenPort() {
-		return listenPort;
+	public int getNodeServerPort() {
+		return nodeServerPort;
 	}
 
-	public void setListenPort(int listenPort) {
-		this.listenPort = listenPort;
+	public void setNodeServerPort(int nodeServerPort) {
+		this.nodeServerPort = nodeServerPort;
 	}
 
+	public int getApiServerPort() {
+		return apiServerPort;
+	}
+
+	public void setApiServerPort(int apiServerPort) {
+		this.apiServerPort = apiServerPort;
+	}
 }
