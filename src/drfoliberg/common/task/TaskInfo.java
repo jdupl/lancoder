@@ -5,19 +5,19 @@ import java.io.Serializable;
 public class TaskInfo implements Serializable {
 
 	private static final long serialVersionUID = -7347337372025478193L;
-	protected String fileLocation;
+	protected String sourceFile;
 	protected int taskId;
 	protected String jobId;
 	protected long encodingStartTime;
 	protected long encodingEndTime;
 	protected long estimatedFramesCount;
 
-	public String getFileLocation() {
-		return fileLocation;
+	public String getSourceFile() {
+		return sourceFile;
 	}
 
-	public void setFileLocation(String fileLocation) {
-		this.fileLocation = fileLocation;
+	public void setSourceFile(String sourceFile) {
+		this.sourceFile = sourceFile;
 	}
 
 	public int getTaskId() {

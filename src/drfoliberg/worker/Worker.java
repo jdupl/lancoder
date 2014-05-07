@@ -127,6 +127,7 @@ public class Worker implements Runnable {
 			Task t = taskReport.getTask();
 			t.setTimeElapsed(System.currentTimeMillis() - currentTask.getTimeStarted());
 			t.setTimeEstimated(currentTask.getETA());
+			t.setProgress(currentTask.getProgress());
 		}
 		return taskReport;
 	}

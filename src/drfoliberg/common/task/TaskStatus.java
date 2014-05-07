@@ -12,10 +12,22 @@ public class TaskStatus implements Serializable {
 	protected long timeEstimated;
 	protected long framesCompleted;
 	protected double fps;
+	/**
+	 * Progress is always calculated in Task object itself. We still need this field here for serialization.
+	 */
+	protected float progress;
 	protected Status status;
 
 	public TaskStatus() {
 		this.status = Status.JOB_TODO;
+	}
+
+	public float getProgress() {
+		return progress;
+	}
+
+	public void setProgress(float progress) {
+		this.progress = progress;
 	}
 
 	public long getTimeStarted() {

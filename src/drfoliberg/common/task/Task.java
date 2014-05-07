@@ -11,9 +11,8 @@ public class Task implements Serializable {
 	protected TaskStatus taskStatus;
 
 	public Task(int taskId, String sourceFile) {
-		// TODO Auto-generated constructor stub
 		taskInfo = new TaskInfo();
-		taskInfo.setFileLocation(sourceFile);
+		taskInfo.setSourceFile(sourceFile);
 		taskInfo.setTaskId(taskId);
 		taskStatus = new TaskStatus();
 	}
@@ -86,12 +85,12 @@ public class Task implements Serializable {
 		taskStatus.setStatus(status);
 	}
 
-	public String getFileLocation() {
-		return taskInfo.getFileLocation();
+	public String getSourceFile() {
+		return taskInfo.getSourceFile();
 	}
 
-	public void setFileLocation(String fileLocation) {
-		taskInfo.setFileLocation(fileLocation);
+	public void setSourceFile(String sourceFile) {
+		taskInfo.setSourceFile(sourceFile);
 	}
 
 	public int getTaskId() {
@@ -136,6 +135,10 @@ public class Task implements Serializable {
 
 	public long getTimeStarted() {
 		return taskStatus.getTimeStarted();
+	}
+
+	public void setProgress(float progress) {
+		taskStatus.setProgress(progress);
 	}
 
 	public void setTimeStarted(long timeStarted) {
