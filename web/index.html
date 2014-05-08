@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="lancoder">
+    <head>
+        <meta charset="UTF-8">
+        <title>LANcoder3000</title>
+        <link rel="stylesheet" href="static/css/custom.css">
+        <link rel="stylesheet" href="static/css/bootstrap.min.css">
+        <link rel="stylesheet" href="static/css/ng-grid.min.css">
+    </head>
+    <body>
+        <nav class="navbar navbar-default" ng-controller="HeaderController">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#/">LANcoder</a>
+                </div>
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li ng-class="{ active: isActive('/nodes')}"><a href="#/nodes">Nodes</a></li>
+                        <li ng-class="{ active: isActive('/jobs')}"><a href="#/jobs">Jobs</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            <div ng-view>
+            </div>
+        </div>
+        <script src="static/lib/jquery-2.1.0.min.js"></script>
+        <script src="static/lib/angular/angular.min.js"></script>
+        <script src="static/lib/angular/angular-route.min.js"></script>
+        <script src="static/lib/bootstrap.min.js"></script>
+        <script src="static/js/app.js"></script>
+        <script src="static/js/controllers.js"></script>
+    </body>
+</html>

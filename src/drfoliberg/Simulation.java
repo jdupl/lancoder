@@ -44,6 +44,11 @@ public class Simulation extends Thread {
 		Master m = new Master(Main.MASTER_CONFIG_PATH);
 		Thread masterThread = new Thread(m);
 		masterThread.start();
+		
+		System.out.println("SIM: Creating first worker now,");
+		Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
+		Thread w1Thread = new Thread(worker1);
+		w1Thread.start();
 	}
 
 	public void shutdownTest(String filepath) {
@@ -74,7 +79,7 @@ public class Simulation extends Thread {
 
 	public void run(String filepath) {
 		// shutdownTest(filepath);
-		//basicSimulation(filepath);
-		apiSimulation();
+		basicSimulation(filepath);
+		//apiSimulation();
 	}
 }

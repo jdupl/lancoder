@@ -22,7 +22,7 @@ public class ApiServer extends Service {
 	public void run() {
 		server = new Server(master.getConfig().getApiServerPort());
 
-		ContextHandler ctxStatic = new ContextHandler("/static");
+		ContextHandler ctxStatic = new ContextHandler("/");
 		ContextHandler ctxApi = new ContextHandler("/api");
 
 		// static resources handler
