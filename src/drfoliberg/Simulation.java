@@ -49,6 +49,13 @@ public class Simulation extends Thread {
 		Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
 		Thread w1Thread = new Thread(worker1);
 		w1Thread.start();
+		try {
+			sleep(5000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		worker1.shutdown();
 	}
 
 	public void shutdownTest(String filepath) {
@@ -79,7 +86,7 @@ public class Simulation extends Thread {
 
 	public void run(String filepath) {
 		// shutdownTest(filepath);
-		basicSimulation(filepath);
-		//apiSimulation();
+		// basicSimulation(filepath);
+		apiSimulation();
 	}
 }
