@@ -26,6 +26,7 @@ public class ApiHandler extends AbstractHandler {
 			throws IOException, ServletException {
 		System.err.println(target);
 		Gson gson = new Gson();
+		System.out.println(request.getMethod());
 		switch (target) {
 		case "/nodes":
 			response.setContentType("text/json;charset=utf-8");

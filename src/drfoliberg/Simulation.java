@@ -35,6 +35,17 @@ public class Simulation extends Thread {
 		w1Thread.start();
 	}
 
+	/**
+	 * Only start a master instance to test api methods
+	 * 
+	 */
+	public void apiSimulation() {
+		System.out.println("SIM: Starting master now");
+		Master m = new Master(Main.MASTER_CONFIG_PATH);
+		Thread masterThread = new Thread(m);
+		masterThread.start();
+	}
+
 	public void shutdownTest(String filepath) {
 		try {
 			Master m = new Master(Main.MASTER_CONFIG_PATH);
@@ -62,7 +73,8 @@ public class Simulation extends Thread {
 	}
 
 	public void run(String filepath) {
-		//shutdownTest(filepath);
-		basicSimulation(filepath);
+		// shutdownTest(filepath);
+		//basicSimulation(filepath);
+		apiSimulation();
 	}
 }
