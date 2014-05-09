@@ -2,7 +2,7 @@ package drfoliberg.common.task;
 
 import java.io.Serializable;
 
-import drfoliberg.common.Status;
+import drfoliberg.common.status.TaskState;
 
 public class TaskStatus implements Serializable {
 
@@ -16,10 +16,10 @@ public class TaskStatus implements Serializable {
 	 * Progress is always calculated in Task object itself. We still need this field here for serialization.
 	 */
 	protected float progress;
-	protected Status status;
+	protected TaskState status;
 
 	public TaskStatus() {
-		this.status = Status.JOB_TODO;
+		this.status = TaskState.TASK_TODO;
 	}
 
 	public float getProgress() {
@@ -70,11 +70,11 @@ public class TaskStatus implements Serializable {
 		this.fps = fps;
 	}
 
-	public Status getStatus() {
+	public TaskState getStatus() {
 		return status;
 	}
 
-	public void setStatus(Status status) {
+	public void setStatus(TaskState status) {
 		this.status = status;
 	}
 

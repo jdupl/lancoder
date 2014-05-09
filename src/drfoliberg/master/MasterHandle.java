@@ -8,12 +8,12 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import drfoliberg.common.Node;
-import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.ConnectMessage;
 import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
+import drfoliberg.common.status.NodeState;
 
 public class MasterHandle implements Runnable {
 
@@ -49,7 +49,7 @@ public class MasterHandle implements Runnable {
 							break;
 						}
 						ConnectMessage cm = (ConnectMessage) request;
-						if (cm.status == Status.FREE) {
+						if (cm.status == NodeState.FREE) {
 							// add node to list
 							sender = new Node(getAddressFromSocket(s), cm.localPort, cm.name);
 							sender.setUnid(cm.getUnid());
@@ -65,7 +65,7 @@ public class MasterHandle implements Runnable {
 								out.flush();
 								s.close();
 							}
-						} else if (cm.status == Status.NOT_CONNECTED) {
+						} else if (cm.status == NodeState.NOT_CONNECTED) {
 							// the node want to disconnect
 							this.master.removeNode(master.identifySender(cm.getUnid()));
 							out.writeObject(new Message(ClusterProtocol.BYE));

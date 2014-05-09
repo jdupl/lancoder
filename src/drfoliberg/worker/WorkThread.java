@@ -9,11 +9,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import drfoliberg.common.Service;
-import drfoliberg.common.Status;
 import drfoliberg.common.exceptions.MissingDecoderException;
 import drfoliberg.common.exceptions.MissingFfmpegException;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.messages.CrashReport;
+import drfoliberg.common.status.NodeState;
 import drfoliberg.common.task.Task;
 
 public class WorkThread extends Service {
@@ -139,7 +139,7 @@ public class WorkThread extends Service {
 					callback.getStatusReport());
 			callback.sendCrashReport(report);
 			// update status
-			callback.updateStatus(Status.CRASHED);
+			callback.updateStatus(NodeState.CRASHED);
 		} catch (MissingDecoderException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

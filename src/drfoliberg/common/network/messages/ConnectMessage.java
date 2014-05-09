@@ -1,7 +1,7 @@
 package drfoliberg.common.network.messages;
 
-import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.status.NodeState;
 
 public class ConnectMessage extends AuthMessage {
 
@@ -9,7 +9,7 @@ public class ConnectMessage extends AuthMessage {
 
 	public int localPort;
 	public String name;
-	public Status status;
+	public NodeState status;
 
 	/**
 	 * Message object sent from workers to master to connect. The same object is
@@ -28,7 +28,7 @@ public class ConnectMessage extends AuthMessage {
 	 *            the status (connect or disconnect)
 	 */
 	public ConnectMessage(String unid, int localPort, String name,
-			Status status) {
+			NodeState status) {
 		super(ClusterProtocol.CONNECT_ME, unid);
 		this.unid = unid;
 		this.localPort = localPort;

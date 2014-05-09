@@ -12,12 +12,13 @@ import java.util.Map.Entry;
 
 import drfoliberg.common.Node;
 import drfoliberg.common.Service;
-import drfoliberg.common.Status;
 import drfoliberg.common.job.Job;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
+import drfoliberg.common.status.NodeState;
+import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.TaskReport;
 import drfoliberg.master.api.ApiServer;
@@ -113,7 +114,7 @@ public class Master implements Runnable {
 		for (Job j : jobs) {
 			ArrayList<Task> tasks = j.getTasks();
 			for (Task task : tasks) {
-				if (task.getStatus() == Status.JOB_TODO) {
+				if (task.getStatus() == TaskState.TASK_TODO) {
 					return task;
 				}
 			}
@@ -130,7 +131,7 @@ public class Master implements Runnable {
 	private Node getBestFreeNode() {
 		for (Entry<String, Node> entry : nodes.entrySet()) {
 			Node n = entry.getValue();
-			if (n.getStatus() == Status.FREE) {
+			if (n.getStatus() == NodeState.FREE) {
 				return n;
 			}
 		}
@@ -251,7 +252,7 @@ public class Master implements Runnable {
 			// TODO handle node with same unid reconnecting -> offline status
 			return false;
 		} else {
-			n.setStatus(Status.NOT_CONNECTED);
+			n.setStatus(NodeState.NOT_CONNECTED);
 			nodes.put(n.getUnid(), n);
 			System.out.println("MASTER: Added node " + n.getName() + " with unid: " + n.getUnid());
 			updateNodesWork();
@@ -271,7 +272,7 @@ public class Master implements Runnable {
 		ArrayList<Node> nodes = new ArrayList<>();
 		for (Entry<String, Node> e : this.nodes.entrySet()) {
 			Node n = e.getValue();
-			if (n.getStatus() == Status.FREE || n.getStatus() == Status.WORKING) {
+			if (n.getStatus() == NodeState.FREE || n.getStatus() == NodeState.WORKING) {
 				nodes.add(n);
 			}
 		}
@@ -291,25 +292,25 @@ public class Master implements Runnable {
 			Task toCancel = null;
 			toCancel = n.getCurrentTask();
 			if (toCancel != null) {
-				updateNodeTask(n, Status.JOB_TODO);
+				updateNodeTask(n, TaskState.TASK_TODO);
 			}
-			n.setStatus(Status.NOT_CONNECTED);
+			n.setStatus(NodeState.NOT_CONNECTED);
 		} else {
 			System.err.println("Could not mark node as disconnected as it was not found");
 		}
 		return false;
 	}
 
-	public boolean updateNodeTask(Node n, Status updateStatus) {
+	public boolean updateNodeTask(Node n, TaskState updateStatus) {
 		Task task = n.getCurrentTask();
 		// TODO clean logic here
 		if (task != null) {
 			System.out.println("MASTER: the task " + n.getCurrentTask().getTaskId() + " is now " + updateStatus);
 			task.setStatus(updateStatus);
-			if (updateStatus == Status.JOB_COMPLETED) {
-				n.getCurrentTask().setStatus(Status.JOB_COMPLETED);
+			if (updateStatus == TaskState.TASK_COMPLETED) { 
 				n.setCurrentTask(null);
-			} else if (updateStatus == Status.JOB_CANCELED) {
+				// TODO implement task.complete() ?
+			} else if (updateStatus == TaskState.TASK_CANCELED) {
 				task.reset();
 				n.setCurrentTask(null);
 			}
@@ -328,7 +329,7 @@ public class Master implements Runnable {
 	 * @return true if update could be sent, false otherwise
 	 */
 	public boolean readStatusReport(StatusReport report) {
-		Status s = report.status;
+		NodeState s = report.status;
 		String unid = report.getUnid();
 		Node sender = identifySender(unid);
 		// only update if status is changed
@@ -383,8 +384,8 @@ public class Master implements Runnable {
 
 		sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
 
-		if (sender.getCurrentTask().getStatus() == Status.JOB_COMPLETED) {
-			updateNodeTask(sender, Status.JOB_COMPLETED);
+		if (sender.getCurrentTask().getStatus() == TaskState.TASK_COMPLETED) {
+			updateNodeTask(sender, TaskState.TASK_COMPLETED);
 		}
 		return true;
 	}
@@ -401,7 +402,7 @@ public class Master implements Runnable {
 		} else {
 			System.out.printf("Node %s crashed but not fatally.\n", node.getName());
 		}
-		updateNodeTask(node, Status.JOB_CANCELED);
+		updateNodeTask(node, TaskState.TASK_CANCELED);
 	}
 
 	public void run() {

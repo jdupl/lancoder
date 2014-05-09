@@ -3,6 +3,7 @@ package drfoliberg.common;
 import java.io.Serializable;
 import java.net.InetAddress;
 
+import drfoliberg.common.status.NodeState;
 import drfoliberg.common.task.Task;
 
 public class Node implements Serializable {
@@ -10,7 +11,7 @@ public class Node implements Serializable {
 	private static final long serialVersionUID = 3450445684775221368L;
 	private InetAddress nodeAddress;
 	private int nodePort;
-	private Status status;
+	private NodeState status;
 	private String name;
 	private String unid;
 
@@ -18,7 +19,7 @@ public class Node implements Serializable {
 
 	public Node(InetAddress nodeAddresse, int nodePort, String name) {
 		this.nodeAddress = nodeAddresse;
-		this.status = Status.NOT_CONNECTED;
+		this.status = NodeState.NOT_CONNECTED;
 		this.nodePort = nodePort;
 		this.name = name;
 	}
@@ -49,11 +50,11 @@ public class Node implements Serializable {
 		this.nodeAddress = nodeAddress;
 	}
 
-	public Status getStatus() {
+	public NodeState getStatus() {
 		return status;
 	}
 
-	public void setStatus(Status status) {
+	public void setStatus(NodeState status) {
 		this.status = status;
 	}
 

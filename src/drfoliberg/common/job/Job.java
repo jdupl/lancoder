@@ -5,6 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 import drfoliberg.common.FFMpegProber;
+import drfoliberg.common.status.NodeState;
 import drfoliberg.common.task.Task;
 
 /**
@@ -20,7 +21,7 @@ public class Job {
 	private String jobName;
 	private String sourceFile;
 	private JobType jobType;
-	private ArrayList<Task> processedTasks;
+	private NodeState jobStatus;
 	private int lengthOfTasks;
 	private long lengthOfJob;
 	private int frameCount;
@@ -42,7 +43,6 @@ public class Job {
 		this.jobName = jobName;
 		this.tasks = new ArrayList<>();
 		this.jobType = jobType;
-		this.processedTasks = new ArrayList<>();
 		this.lengthOfTasks = lengthOfTasks;
 
 		// get fps and ms duration from prober
@@ -149,14 +149,6 @@ public class Job {
 
 	public void setJobType(JobType jobType) {
 		this.jobType = jobType;
-	}
-
-	public ArrayList<Task> getProcessedTasks() {
-		return processedTasks;
-	}
-
-	public void setProcessedTasks(ArrayList<Task> processedTasks) {
-		this.processedTasks = processedTasks;
 	}
 
 }

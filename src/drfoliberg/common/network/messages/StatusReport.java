@@ -1,7 +1,7 @@
 package drfoliberg.common.network.messages;
 
-import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
+import drfoliberg.common.status.NodeState;
 import drfoliberg.common.task.TaskReport;
 
 public class StatusReport extends AuthMessage {
@@ -10,18 +10,18 @@ public class StatusReport extends AuthMessage {
 	private long loadAverage;
 	private TaskReport taskReport;
 	//public Node node;
-	public Status status;
+	public NodeState status;
 
 //	public StatusReport(Node n) {
 //		super(ClusterProtocol.STATUS_REPORT);
 //		this.node = n;
 //	}
-	public StatusReport(Status status, String unid) {
+	public StatusReport(NodeState status, String unid) {
 		super(ClusterProtocol.STATUS_REPORT, unid);
 		this.status = status;
 	}
 
-	public StatusReport(Status status, String unid, TaskReport taskReport) {
+	public StatusReport(NodeState status, String unid, TaskReport taskReport) {
 		super(ClusterProtocol.STATUS_REPORT, unid);
 		this.taskReport = taskReport;
 		this.status = status;

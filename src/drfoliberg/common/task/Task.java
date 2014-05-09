@@ -2,7 +2,7 @@ package drfoliberg.common.task;
 
 import java.io.Serializable;
 
-import drfoliberg.common.Status;
+import drfoliberg.common.status.TaskState;
 
 public class Task implements Serializable {
 
@@ -19,12 +19,12 @@ public class Task implements Serializable {
 
 	public void reset() {
 		taskStatus.setFramesCompleted(0);
-		setStatus(Status.JOB_TODO);
+		setStatus(TaskState.TASK_TODO);
 	}
 
 	public void start() {
 		setTimeStarted(System.currentTimeMillis());
-		setStatus(Status.JOB_COMPUTING);
+		setStatus(TaskState.TASK_COMPUTING);
 	}
 
 	public long getETA() {
@@ -77,11 +77,11 @@ public class Task implements Serializable {
 		taskStatus.setFps(fps);
 	}
 
-	public Status getStatus() {
+	public TaskState getStatus() {
 		return taskStatus.getStatus();
 	}
 
-	public void setStatus(Status status) {
+	public void setStatus(TaskState status) {
 		taskStatus.setStatus(status);
 	}
 

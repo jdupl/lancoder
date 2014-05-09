@@ -86,7 +86,7 @@ public class Simulation extends Thread {
 
 	public void run(String filepath) {
 		// shutdownTest(filepath);
-		// basicSimulation(filepath);
-		apiSimulation();
+		basicSimulation(filepath);
+		// apiSimulation();
 	}
 }

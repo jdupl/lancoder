@@ -8,11 +8,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import drfoliberg.common.Service;
-import drfoliberg.common.Status;
 import drfoliberg.common.network.messages.ConnectMessage;
 import drfoliberg.common.network.messages.CrashReport;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.StatusReport;
+import drfoliberg.common.status.NodeState;
+import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.TaskReport;
 
@@ -22,7 +23,7 @@ public class Worker implements Runnable {
 	private String configPath;
 
 	private Task currentTask;
-	private Status status;
+	private NodeState status;
 
 	private ArrayList<Service> services;
 	public WorkerServer workerListener;
@@ -67,7 +68,7 @@ public class Worker implements Runnable {
 
 			// Send a connect message with a status indicating disconnection
 			Message message = new ConnectMessage(config.getUniqueID(), config.getListenPort(), config.getName(),
-					Status.NOT_CONNECTED);
+					NodeState.NOT_CONNECTED);
 			out.writeObject(message);
 			out.flush();
 			Object o = in.readObject();
@@ -100,14 +101,14 @@ public class Worker implements Runnable {
 	}
 
 	public void taskDone(Task task, InetAddress masterIp) {
-		this.currentTask.setStatus(Status.JOB_COMPLETED);
-		this.updateStatus(Status.FREE);
+		this.currentTask.setStatus(TaskState.TASK_COMPLETED);
+		this.updateStatus(NodeState.FREE);
 		this.currentTask = null;
 		services.remove(workThread);
 	}
 
 	public synchronized boolean startWork(Task t) {
-		if (this.getStatus() != Status.FREE) {
+		if (this.getStatus() != NodeState.FREE) {
 			print("cannot accept work as i'm not free. Current status: " + this.getStatus());
 			return false;
 		} else {
@@ -147,7 +148,7 @@ public class Worker implements Runnable {
 		return taskReport;
 	}
 
-	public synchronized void updateStatus(Status statusCode) {
+	public synchronized void updateStatus(NodeState statusCode) {
 		// TODO move this
 		print("changing worker status to " + statusCode);
 		this.status = statusCode;
@@ -193,7 +194,7 @@ public class Worker implements Runnable {
 		return true;
 	}
 
-	public boolean notifyMasterStatusChange(Status status) {
+	public boolean notifyMasterStatusChange(NodeState status) {
 		Socket socket = null;
 		boolean success = true;
 		try {
@@ -251,7 +252,7 @@ public class Worker implements Runnable {
 		return config.getMasterPort();
 	}
 
-	public Status getStatus() {
+	public NodeState getStatus() {
 		return this.status;
 	}
 
@@ -260,7 +261,7 @@ public class Worker implements Runnable {
 	}
 
 	public void run() {
-		updateStatus(Status.NOT_CONNECTED);
+		updateStatus(NodeState.NOT_CONNECTED);
 		Thread listerThread = new Thread(workerListener);
 		listerThread.start();
 	}

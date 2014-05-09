@@ -8,10 +8,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import drfoliberg.common.Service;
-import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.TaskRequestMessage;
+import drfoliberg.common.status.NodeState;
 
 public class WorkerServer extends Service {
 
@@ -48,7 +48,7 @@ public class WorkerServer extends Service {
 							out.writeObject(new Message(ClusterProtocol.BYE));
 							out.flush();
 							s.close();
-							worker.updateStatus(Status.NOT_CONNECTED);
+							worker.updateStatus(NodeState.NOT_CONNECTED);
 							break;
 						case TASK_REQUEST:
 							print("received task from master");
@@ -60,7 +60,7 @@ public class WorkerServer extends Service {
 								if (worker.startWork(tqm.task)) {
 									out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));
 									out.flush();
-									worker.updateStatus(Status.WORKING);
+									worker.updateStatus(NodeState.WORKING);
 								} else {
 									out.writeObject(new Message(ClusterProtocol.TASK_REFUSED));
 									out.flush();

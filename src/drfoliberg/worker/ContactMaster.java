@@ -5,11 +5,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.AuthMessage;
 import drfoliberg.common.network.messages.ConnectMessage;
 import drfoliberg.common.network.messages.Message;
+import drfoliberg.common.status.NodeState;
 
 public class ContactMaster implements Runnable {
 
@@ -32,7 +32,7 @@ public class ContactMaster implements Runnable {
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 			//Node n = new Node(worker.getWorkerIp(), worker.getListenPort(), worker.getWorkerName());
 			//out.writeObject(new Message(n));
-			ConnectMessage m = new ConnectMessage(worker.config.getUniqueID(), worker.config.getListenPort(),worker.config.getName(),Status.FREE);
+			ConnectMessage m = new ConnectMessage(worker.config.getUniqueID(), worker.config.getListenPort(),worker.config.getName(),NodeState.FREE);
 			out.writeObject(m);
 			out.flush();
 			Object o = in.readObject();
@@ -62,7 +62,7 @@ public class ContactMaster implements Runnable {
 		while (!success) {
 			success = contactMaster();
 			if (success) {
-				worker.updateStatus(Status.FREE);
+				worker.updateStatus(NodeState.FREE);
 				System.out.println("WORKER CONTACT: success contacting master!");
 			} else {
 				System.out.println("WORKER CONTACT: could not reach the master server. Trying again in 5 seconds.");

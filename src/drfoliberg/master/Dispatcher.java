@@ -7,10 +7,10 @@ import java.net.ConnectException;
 import java.net.Socket;
 
 import drfoliberg.common.Node;
-import drfoliberg.common.Status;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.Message;
 import drfoliberg.common.network.messages.TaskRequestMessage;
+import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 
 public class Dispatcher implements Runnable {
@@ -44,7 +44,7 @@ public class Dispatcher implements Runnable {
 				case TASK_ACCEPTED:
 					System.err.println("MASTER DISPATCH: node accepted task");
 					node.setCurrentTask(task);
-					task.setStatus(Status.JOB_COMPUTING);
+					task.setStatus(TaskState.TASK_COMPUTING);
 					s.close();
 					break;
 				default:
