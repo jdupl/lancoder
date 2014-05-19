@@ -5,7 +5,7 @@
 angular.module('lancoder.controllers', []).
         controller('nodes', function($scope, $http, $timeout) {
 
-          var refresh = $scope.refresh = function() {
+          var refreshNodes = $scope.refreshNodes = function() {
             // Get nodes
             $http({method: 'GET', url: '/api/nodes'})
                     .success(function(data, status, headers, config) {
@@ -36,17 +36,69 @@ angular.module('lancoder.controllers', []).
               });
           };
 
-          $scope.intervalFunction = function() {
+          $scope.nodesAutoRefresh = function() {
             $timeout(function() {
-              $scope.refresh();
-              $scope.intervalFunction();
+              $scope.refreshNodes();
+              $scope.nodesAutoRefresh();
             }, 5000);
           };
-          refresh();
-          $scope.intervalFunction();
+          refreshNodes();
+          $scope.nodesAutoRefresh();
         })
-        .controller('jobs', function($scope) {
+        .controller('jobs', function($scope, $http, $timeout) {
+          var refreshJobs = $scope.refreshJobs = function() {
+            // Get jobs
+            $http({method: 'GET', url: '/api/jobs'})
+                    .success(function(data, status, headers, config) {
+                      for (var i = 0; i < data.length; i++) {
+                        switch (data[i].jobStatus) {
+                          case "JOB_COMPLETED":
+                            data[i].panel = "panel-success";
+                            break;
+                          case "JOB_CRASHED":
+                            data[i].panel = "panel-danger";
+                            break;
+                          case "JOB_COMPUTING":
+                            data[i].panel = "panel-primary";
+                            break;
+                          case "JOB_PAUSED":
+                            data[i].panel = "panel-warning";
+                            break;
+                          case "JOB_TODO":
+                            data[i].panel = "panel-info";
+                            break;
+                          default:
+                            data[i].panel = "panel-default";
+                        }
+                        data[i].completedTasks = 0;
+                        data[i].totalTasks = data[i].tasks.length;
+                        data[i].totalFps = 0;
+                        for (var j = 0; j < data[i].totalTasks; j++) {
+                            switch(data[i].tasks[j].taskStatus.status){
+                              case "TASK_COMPLETED":
+                                data[i].completedTasks++;
+                              break;
+                              case "TASK_COMPUTING":
+                                data[i].totalFps += data[i].tasks[j].taskStatus.fps;
+                                break;
+                            }
+                        }
+                      }
+                      $scope.jobs = data;
+                    }).error(function() {
+                        $scope.jobs = [];
+                        $scope.jobs.error = "Could not reach master server.";
+              });
+          };
 
+          $scope.jobsAutoRefresh = function() {
+            $timeout(function() {
+              $scope.refreshJobs();
+              $scope.jobsAutoRefresh();
+            }, 5000);
+          };
+          refreshJobs();
+          $scope.jobsAutoRefresh();
 
         }).controller('HeaderController', function($scope, $location) {
   $scope.isActive = function(viewLocation) {

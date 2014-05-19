@@ -26,7 +26,6 @@ public class ApiHandler extends AbstractHandler {
 			throws IOException, ServletException {
 		System.err.println(target);
 		Gson gson = new Gson();
-		System.out.println(request.getMethod());
 		switch (target) {
 		case "/nodes":
 			response.setContentType("text/json;charset=utf-8");
@@ -38,7 +37,7 @@ public class ApiHandler extends AbstractHandler {
 			response.setContentType("text/json;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			baseRequest.setHandled(true);
-			response.getWriter().println(gson.toJson(master.jobs));
+			response.getWriter().println(gson.toJson(master.getJobs()));
 			break;
 		default:
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);

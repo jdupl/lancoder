@@ -25,7 +25,7 @@ public class Simulation extends Thread {
 		Thread masterThread = new Thread(m);
 		masterThread.start();
 
-		Job j = new Job("testname", filepath, JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5);
+		Job j = new Job("testname", filepath, JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 1);
 		System.out.println("SIM: adding a job to master's queue !");
 		m.addJob(j);
 
@@ -89,7 +89,7 @@ public class Simulation extends Thread {
 
 	public void run(String filepath) {
 		// shutdownTest(filepath);
-		//basicSimulation(filepath);
-		 apiSimulation(filepath);
+		basicSimulation(filepath);
+//		 apiSimulation(filepath);
 	}
 }

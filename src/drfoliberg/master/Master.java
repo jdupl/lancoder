@@ -36,8 +36,8 @@ public class Master implements Runnable {
 
 	private MasterConfig config;
 	private String configPath;
-	//public ArrayList<Job> jobs; // change to private after tests
-	public HashMap<String, Job> jobs;
+
+	public HashMap<String, Job> jobs; // change to private after tests
 
 	private ApiServer apiServer;
 

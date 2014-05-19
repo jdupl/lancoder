@@ -55,13 +55,15 @@ public class WorkThread extends Service {
 	@Override
 	public void run() {
 		try {
-			// use start and duration for legacy support
+			// use start and duration for ffmpeg legacy support
 			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
 			String startTimeStr = getDurationString(task.getEncodingStartTime());
 			String durationStr = getDurationString(durationMs);
 
-			String outputFile = String.format("/home/justin/encoding/output-part_%d.mkv", task.getTaskId());
+			File fe = new File(callback.config.getAbsoluteSharedFolder());
+			System.err.println(fe.getAbsolutePath());
 
+			String outputFile = new File(fe, new File(String.format("encoding/output-part_%d.mkv", task.getTaskId())).toString()).toString();
 			System.out.println("WORKER WORK THREAD: Executing a task!");
 			File f = new File(outputFile);
 			if (f.exists()) {
@@ -79,7 +81,7 @@ public class WorkThread extends Service {
 				// TODO Protect from spaces in paths
 				String processStr = String.format(
 						"ffmpeg -ss %s -t %s -i %s -force_key_frames 0 -an -c:v %s -b:v %s %s", startTimeStr,
-						durationStr, "/home/justin/encoding/input.mkv", "libx264", "1000k", outputFile);
+						durationStr, task.getSourceFile(), "libx264", "1000k", outputFile);
 				System.out.println(processStr);
 				process = Runtime.getRuntime().exec(processStr);
 			} catch (IOException e) {
