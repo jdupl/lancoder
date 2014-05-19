@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class MainSimulation {
 
-	final static String[] DEFAULT_FILE_PATHS = { "/home/justin/encoding/input.mkv" };
+	final static String[] DEFAULT_FILE_PATHS = { "/home/foliberg/encoding/input.mkv" };
 
 	/**
 	 * The launch method of the program, which will determine whether to start a master node or worker node.<br/>

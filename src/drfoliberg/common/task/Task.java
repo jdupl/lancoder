@@ -78,7 +78,7 @@ public class Task implements Serializable {
 	}
 
 	public TaskState getStatus() {
-		return taskStatus.getStatus();
+		return taskStatus.getState();
 	}
 
 	public void setStatus(TaskState status) {

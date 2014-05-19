@@ -5,12 +5,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 import drfoliberg.common.FFMpegProber;
-import drfoliberg.common.status.NodeState;
+import drfoliberg.common.status.JobState;
 import drfoliberg.common.task.Task;
 
 /**
- * A job is the whole process of taking the source file, spliting it if necessary, encoding it and merge back all
- * tracks. Tasks will be dispatched to nodes by the master.
+ * A job is the whole process of taking the source file, spliting it if
+ * necessary, encoding it and merge back all tracks. Tasks will be dispatched to
+ * nodes by the master.
  * 
  * @author justin
  * 
@@ -21,7 +22,7 @@ public class Job {
 	private String jobName;
 	private String sourceFile;
 	private JobType jobType;
-	private NodeState jobStatus;
+	private JobState jobStatus;
 	private int lengthOfTasks;
 	private long lengthOfJob;
 	private int frameCount;
@@ -36,14 +37,17 @@ public class Job {
 	 * @param jobType
 	 *            The type of bitrate control
 	 * @param lengthOfTasks
-	 *            The length of the tasks in ms that will be sent to worker (0 = infinite)
+	 *            The length of the tasks in ms that will be sent to worker (0 =
+	 *            infinite)
 	 */
-	public Job(String jobName, String sourceFile, JobType jobType, int lengthOfTasks) {
+	public Job(String jobName, String sourceFile, JobType jobType,
+			int lengthOfTasks) {
 		this.sourceFile = sourceFile;
 		this.jobName = jobName;
 		this.tasks = new ArrayList<>();
 		this.jobType = jobType;
 		this.lengthOfTasks = lengthOfTasks;
+		this.jobStatus = JobState.JOB_TODO;
 
 		// get fps and ms duration from prober
 		this.lengthOfJob = (long) (FFMpegProber.getSecondsDuration(sourceFile) * 1000);
@@ -55,10 +59,12 @@ public class Job {
 		long remaining = lengthOfJob;
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
-			byte[] byteArray = md.digest((sourceFile + jobName + System.currentTimeMillis()).getBytes());
+			byte[] byteArray = md.digest((sourceFile + jobName + System
+					.currentTimeMillis()).getBytes());
 			String result = "";
 			for (int i = 0; i < byteArray.length; i++) {
-				result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
+				result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16)
+						.substring(1);
 			}
 			this.jobId = result;
 		} catch (NoSuchAlgorithmException e) {
@@ -71,7 +77,8 @@ public class Job {
 			Task t = new Task(taskNo++, sourceFile);
 			t.setJobId(jobId);
 			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.10) {
-				System.out.println("next task will be too short, adding the ms to the current task");
+				System.out
+						.println("next task will be too short, adding the ms to the current task");
 				t.setEncodingEndTime(lengthOfJob);
 				remaining = 0;
 			} else {
@@ -80,11 +87,21 @@ public class Job {
 				currentMs += lengthOfTasks;
 			}
 			long ms = t.getEncodingEndTime() - t.getEncodingStartTime();
-			t.setEstimatedFramesCount((long) Math.floor((ms / 1000 * frameRate)));
+			t.setEstimatedFramesCount((long) Math
+					.floor((ms / 1000 * frameRate)));
 
 			this.tasks.add(t);
 		}
-		System.out.println("Job was divided into " + this.tasks.size() + " tasks!");
+		System.out.println("Job was divided into " + this.tasks.size()
+				+ " tasks!");
+	}
+
+	public JobState getJobStatus() {
+		return jobStatus;
+	}
+
+	public void setJobStatus(JobState jobStatus) {
+		this.jobStatus = jobStatus;
 	}
 
 	public long getFrameCount() {

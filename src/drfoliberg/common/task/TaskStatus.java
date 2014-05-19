@@ -70,7 +70,7 @@ public class TaskStatus implements Serializable {
 		this.fps = fps;
 	}
 
-	public TaskState getStatus() {
+	public TaskState getState() {
 		return status;
 	}
 

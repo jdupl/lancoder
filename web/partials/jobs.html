@@ -1,2 +1,39 @@
-<div ng-controller="jobs">
+<p>Here is the current node list of the master server</p>
+<div ng-if="jobs.error">
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        {{nodes.error}}
+    </div>
+</div>
+<div class="animate-repeat" ng-repeat="job in jobs">
+    <div class="panel {{job.panel}}">
+        <div class="panel-heading">
+            <h3 class="panel-title">{{job.jobName}} | {{job.status}}</h3>
+        </div>
+        <div class="panel-body">
+            <div class="panel-body">
+                <div class="animate-if" ng-if="node.currentTask">
+                    <div class="col-md-12">
+                        <div class="col-md-6">
+                            <p>Encoding part {{node.currentTask.taskInfo.taskId}} of file {{node.currentTask.taskInfo.sourceFile}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{node.currentTask.taskStatus.progress}}" aria-valuemin="0" aria-valuemax="100" style="width: {{node.currentTask.taskStatus.progress}}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="col-md-6">
+                            <p>Encoding at {{node.currentTask.taskStatus.fps}}FPS. Estimated time to finish this part: {{node.currentTask.taskStatus.timeEstimated / 1000}}s</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p style="text-align: right">{{node.currentTask.taskStatus.progress}}% Complete</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
