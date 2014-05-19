@@ -42,6 +42,7 @@ angular.module('lancoder.controllers', []).
               $scope.nodesAutoRefresh();
             }, 5000);
           };
+
           refreshNodes();
           $scope.nodesAutoRefresh();
         })
@@ -97,6 +98,16 @@ angular.module('lancoder.controllers', []).
               $scope.jobsAutoRefresh();
             }, 5000);
           };
+          
+          $scope.addjob = function(newjob){
+              $http({method: 'POST', url: '/api/jobs/add', data: newjob})
+                    .success(function(data) {
+                      alert(data);
+                    }).error(function() {
+                      alert('error')
+              });
+          };
+          
           refreshJobs();
           $scope.jobsAutoRefresh();
 

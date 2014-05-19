@@ -1,5 +1,6 @@
 package drfoliberg.master.api;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
@@ -11,6 +12,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import com.google.gson.Gson;
 
+import drfoliberg.common.network.messages.api.ApiJobRequest;
 import drfoliberg.master.Master;
 
 public class ApiHandler extends AbstractHandler {
@@ -38,6 +40,17 @@ public class ApiHandler extends AbstractHandler {
 			response.setStatus(HttpServletResponse.SC_OK);
 			baseRequest.setHandled(true);
 			response.getWriter().println(gson.toJson(master.getJobs()));
+			break;
+		case "/jobs/add":
+			request.getProtocol();
+			BufferedReader br = request.getReader();
+			ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
+			System.out.println(req.getBitrate());
+			System.out.println(req.getInputFile());
+			//Job j = new Job(jobName, sourceFile, jobType, lengthOfTasks) //TODO
+			response.setContentType("text/json;charset=utf-8");
+			response.setStatus(HttpServletResponse.SC_OK);
+			baseRequest.setHandled(true);
 			break;
 		default:
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);

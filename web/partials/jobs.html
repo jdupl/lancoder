@@ -5,6 +5,29 @@
         {{jobs.error}}
     </div>
 </div>
+<button ng-click="showAddJobPanel = true">
+    Add new job
+</button>
+<div ng-show="showAddJobPanel">
+
+    <form role="form">
+        <div class="form-group">
+            <label>Job name</label>
+            <input type="text" class="form-control" placeholder="Job name" ng-model="newJob.name">
+        </div>
+        <div class="form-group">
+            <label>Input File</label>
+            <input type="text" class="form-control" placeholder="Source file" ng-model="newJob.inputFile">
+        </div>
+        <div class="form-group">
+            <label>Job Bitrate</label>
+            <input type="number" class="form-control" ng-model="newJob.bitrate">
+        </div>
+        <button ng-click="addjob(newJob)">Save and add</button>
+        <button ng-click="showAddJobPanel = false">Cancel</button>
+    </form>
+</div>
+
 <div class="animate-repeat" ng-repeat="job in jobs">
     <div class="panel {{job.panel}}">
         <div class="panel-heading">
@@ -13,7 +36,7 @@
         <div class="panel-body">
             <p>{{job.completedTasks}} of out {{job.totalTasks}}</p>
             <p>Encoding at {{job.totalFps}} fps</p>
-            
+
         </div>
     </div>
 </div>
