@@ -27,7 +27,7 @@ public class Job {
 	private long lengthOfJob;
 	private int frameCount;
 	private float frameRate;
-	private int bitrate; // TODO use bitrate
+	private int bitrate;
 
 	/**
 	 * 
@@ -77,7 +77,7 @@ public class Job {
 		}
 
 		while (remaining > 0) {
-			Task t = new Task(taskNo++, sourceFile);
+			Task t = new Task(taskNo++, sourceFile, bitrate);
 			t.setJobId(jobId);
 			t.setEncodingStartTime(currentMs);
 			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.10) {
@@ -95,6 +95,14 @@ public class Job {
 			this.tasks.add(t);
 		}
 		System.out.println("Job was divided into " + this.tasks.size() + " tasks!");
+	}
+
+	public int getBitrate() {
+		return bitrate;
+	}
+
+	public void setBitrate(int bitrate) {
+		this.bitrate = bitrate;
 	}
 
 	public JobState getJobStatus() {

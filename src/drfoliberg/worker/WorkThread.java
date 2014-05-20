@@ -62,10 +62,10 @@ public class WorkThread extends Service {
 			String durationStr = getDurationString(durationMs);
 
 			// Get absolute path of output file and check if it exists
-			// TODO add output folder 
+			// TODO add output folder
 			File absoluteSharedDir = new File(callback.config.getAbsoluteSharedFolder());
-			File outputFile = new File(absoluteSharedDir, new File(String.format("output-part_%d.mkv",
-					task.getTaskId())).toString());
+			File outputFile = new File(absoluteSharedDir, new File(
+					String.format("output-part_%d.mkv", task.getTaskId())).toString());
 			if (outputFile.exists()) {
 				System.err.printf("File %s exists ! deleting file...\n", outputFile.getAbsoluteFile());
 				if (!outputFile.delete()) {
@@ -77,14 +77,14 @@ public class WorkThread extends Service {
 			}
 
 			// Get absolute path of input file
-			File inputFile  = new File(absoluteSharedDir, task.getSourceFile());
+			File inputFile = new File(absoluteSharedDir, task.getSourceFile());
 
 			// Get parameters from the task and bind parameters to process
 			try {
 				// TODO Protect from spaces in paths
 				String processStr = String.format(
-						"ffmpeg -ss %s -t %s -i %s -force_key_frames 0 -an -c:v %s -b:v %s %s", startTimeStr,
-						durationStr, inputFile.getAbsolutePath(), "libx264", "1000k", outputFile);
+						"ffmpeg -ss %s -t %s -i %s -force_key_frames 0 -an -c:v %s -b:v %dk %s", startTimeStr,
+						durationStr, inputFile.getAbsolutePath(), "libx264", task.getBitrate(), outputFile);
 				System.out.println(processStr);
 				process = Runtime.getRuntime().exec(processStr);
 			} catch (IOException e) {

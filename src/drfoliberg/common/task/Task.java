@@ -6,14 +6,23 @@ import drfoliberg.common.status.TaskState;
 
 public class Task implements Serializable {
 
+	public int getBitrate() {
+		return taskInfo.getBitrate();
+	}
+
+	public void setBitrate(int bitrate) {
+		taskInfo.setBitrate(bitrate);
+	}
+
 	private static final long serialVersionUID = -8705492902098705162L;
 	protected TaskInfo taskInfo;
 	protected TaskStatus taskStatus;
 
-	public Task(int taskId, String sourceFile) {
+	public Task(int taskId, String sourceFile, int bitrate) {
 		taskInfo = new TaskInfo();
 		taskInfo.setSourceFile(sourceFile);
 		taskInfo.setTaskId(taskId);
+		taskInfo.setBitrate(bitrate);
 		taskStatus = new TaskStatus();
 	}
 

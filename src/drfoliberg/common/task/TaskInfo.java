@@ -11,6 +11,7 @@ public class TaskInfo implements Serializable {
 	protected long encodingStartTime;
 	protected long encodingEndTime;
 	protected long estimatedFramesCount;
+	protected int bitrate;
 
 	public String getSourceFile() {
 		return sourceFile;
@@ -18,6 +19,14 @@ public class TaskInfo implements Serializable {
 
 	public void setSourceFile(String sourceFile) {
 		this.sourceFile = sourceFile;
+	}
+
+	public int getBitrate() {
+		return bitrate;
+	}
+
+	public void setBitrate(int bitrate) {
+		this.bitrate = bitrate;
 	}
 
 	public int getTaskId() {
