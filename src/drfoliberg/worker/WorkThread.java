@@ -55,33 +55,36 @@ public class WorkThread extends Service {
 	@Override
 	public void run() {
 		try {
+			System.out.println("WORKER WORK THREAD: Executing a task!");
 			// use start and duration for ffmpeg legacy support
 			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
 			String startTimeStr = getDurationString(task.getEncodingStartTime());
 			String durationStr = getDurationString(durationMs);
 
-			File fe = new File(callback.config.getAbsoluteSharedFolder());
-			System.err.println(fe.getAbsolutePath());
-
-			String outputFile = new File(fe, new File(String.format("encoding/output-part_%d.mkv", task.getTaskId())).toString()).toString();
-			System.out.println("WORKER WORK THREAD: Executing a task!");
-			File f = new File(outputFile);
-			if (f.exists()) {
-				System.err.printf("File %s exists ! deleting file...\n", f.getAbsoluteFile());
-				if (!f.delete()) {
-					System.err.printf("Could not delete file %s ", f.getAbsoluteFile());
+			// Get absolute path of output file and check if it exists
+			// TODO add output folder 
+			File absoluteSharedDir = new File(callback.config.getAbsoluteSharedFolder());
+			File outputFile = new File(absoluteSharedDir, new File(String.format("output-part_%d.mkv",
+					task.getTaskId())).toString());
+			if (outputFile.exists()) {
+				System.err.printf("File %s exists ! deleting file...\n", outputFile.getAbsoluteFile());
+				if (!outputFile.delete()) {
+					System.err.printf("Could not delete file %s ", outputFile.getAbsoluteFile());
 					throw new IOException();
 				} else {
 					System.err.println("Success deleting file");
 				}
 			}
 
+			// Get absolute path of input file
+			File inputFile  = new File(absoluteSharedDir, task.getSourceFile());
+
 			// Get parameters from the task and bind parameters to process
 			try {
 				// TODO Protect from spaces in paths
 				String processStr = String.format(
 						"ffmpeg -ss %s -t %s -i %s -force_key_frames 0 -an -c:v %s -b:v %s %s", startTimeStr,
-						durationStr, task.getSourceFile(), "libx264", "1000k", outputFile);
+						durationStr, inputFile.getAbsolutePath(), "libx264", "1000k", outputFile);
 				System.out.println(processStr);
 				process = Runtime.getRuntime().exec(processStr);
 			} catch (IOException e) {

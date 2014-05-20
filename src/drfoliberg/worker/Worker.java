@@ -269,6 +269,7 @@ public class Worker implements Runnable {
 	public void setUnid(String unid) {
 		print("got id " + unid + " from master");
 		this.config.setUniqueID(unid);
+		this.config.dump(configPath);
 	}
 
 	public Task getCurrentTask() {

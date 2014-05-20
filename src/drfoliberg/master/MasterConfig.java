@@ -20,7 +20,7 @@ public class MasterConfig {
 	private static final int DEFAULT_API_LISTEN_PORT = 8080;
 	private static final String DEFAULT_ENCODE_DESTINATION = "encodes";
 	// maybe change for winblows support
-	private static final String DEFAULT_ABSOLUTE_PATH = "~";
+	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
 
 	private int nodeServerPort;
 	private int apiServerPort;

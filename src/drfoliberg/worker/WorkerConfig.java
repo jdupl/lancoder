@@ -22,7 +22,7 @@ public class WorkerConfig implements Serializable {
 	private static final String DEFAULT_TEMP_DIRECTORY = "/tmp";
 	private static final String DEFAULT_UNID = "";
 	private static final String DEFAULT_NAME = "";
-	private static final String DEFAULT_ABSOLUTE_PATH = "~";
+	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
 
 	private InetAddress masterIpAddress;
 	private int masterPort;

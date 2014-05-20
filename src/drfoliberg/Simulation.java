@@ -25,7 +25,7 @@ public class Simulation extends Thread {
 		Thread masterThread = new Thread(m);
 		masterThread.start();
 
-		Job j = new Job("testname", filepath, JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 1);
+		Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 1);
 		System.out.println("SIM: adding a job to master's queue !");
 		m.addJob(j);
 
@@ -44,19 +44,19 @@ public class Simulation extends Thread {
 		Master m = new Master(Main.MASTER_CONFIG_PATH);
 		Thread masterThread = new Thread(m);
 		masterThread.start();
-		
-//		System.out.println("SIM: Creating first worker now,");
-//		Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
-//		Thread w1Thread = new Thread(worker1);
-//		w1Thread.start();
-//		try {
-//			sleep(5000);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		worker1.shutdown();
-		Job j = new Job("testname", filepath, JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5);
+
+		// System.out.println("SIM: Creating first worker now,");
+		// Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
+		// Thread w1Thread = new Thread(worker1);
+		// w1Thread.start();
+		// try {
+		// sleep(5000);
+		// } catch (InterruptedException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		// worker1.shutdown();
+		Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5);
 		System.out.println("SIM: adding a job to master's queue !");
 		m.addJob(j);
 	}
@@ -67,7 +67,7 @@ public class Simulation extends Thread {
 			Thread masterThread = new Thread(m);
 			masterThread.start();
 			sleep(5000);
-			Job j = new Job("testname", filepath, JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5);
+			Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5);
 			System.out.println("SIM: adding a job to master's queue !");
 			m.addJob(j);
 			System.out.println("SIM: Creating first worker now,");
@@ -90,6 +90,6 @@ public class Simulation extends Thread {
 	public void run(String filepath) {
 		// shutdownTest(filepath);
 		basicSimulation(filepath);
-//		 apiSimulation(filepath);
+		// apiSimulation(filepath);
 	}
 }
