@@ -25,7 +25,7 @@ public class Simulation extends Thread {
 		Thread masterThread = new Thread(m);
 		masterThread.start();
 
-		Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 1);
+		Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 1, 1000);
 		System.out.println("SIM: adding a job to master's queue !");
 		m.addJob(j);
 
@@ -56,7 +56,7 @@ public class Simulation extends Thread {
 		// e.printStackTrace();
 		// }
 		// worker1.shutdown();
-		Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5);
+		Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5, 1000);
 		System.out.println("SIM: adding a job to master's queue !");
 		m.addJob(j);
 	}
@@ -67,7 +67,7 @@ public class Simulation extends Thread {
 			Thread masterThread = new Thread(m);
 			masterThread.start();
 			sleep(5000);
-			Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5);
+			Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5, 1000);
 			System.out.println("SIM: adding a job to master's queue !");
 			m.addJob(j);
 			System.out.println("SIM: Creating first worker now,");

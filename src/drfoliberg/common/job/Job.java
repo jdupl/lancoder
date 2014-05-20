@@ -27,6 +27,7 @@ public class Job {
 	private long lengthOfJob;
 	private int frameCount;
 	private float frameRate;
+	private int bitrate; // TODO use bitrate
 
 	/**
 	 * 
@@ -41,13 +42,15 @@ public class Job {
 	 * @param lengthOfTasks
 	 *            The length of the tasks in ms that will be sent to worker (0 = infinite)
 	 */
-	public Job(String jobName, String sourceFile, String sourceDirectory, JobType jobType, int lengthOfTasks) {
+	public Job(String jobName, String sourceFile, String sourceDirectory, JobType jobType, int lengthOfTasks,
+			int bitrate) {
 		this.sourceFile = sourceFile;
 		this.jobName = jobName;
 		this.tasks = new ArrayList<>();
 		this.jobType = jobType;
 		this.lengthOfTasks = lengthOfTasks;
 		this.jobStatus = JobState.JOB_TODO;
+		this.bitrate = bitrate;
 
 		File absoluteSourceFile = new File(new File(sourceDirectory), sourceFile);
 
