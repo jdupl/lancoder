@@ -1,4 +1,4 @@
-package drfoliberg.common.network.messages;
+package drfoliberg.common.network.messages.cluster;
 
 import java.io.Serializable;
 

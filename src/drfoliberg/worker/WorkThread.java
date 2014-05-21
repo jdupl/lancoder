@@ -12,7 +12,7 @@ import drfoliberg.common.Service;
 import drfoliberg.common.exceptions.MissingDecoderException;
 import drfoliberg.common.exceptions.MissingFfmpegException;
 import drfoliberg.common.network.Cause;
-import drfoliberg.common.network.messages.CrashReport;
+import drfoliberg.common.network.messages.cluster.CrashReport;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.task.Task;
 

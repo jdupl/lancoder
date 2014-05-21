@@ -17,10 +17,11 @@ import drfoliberg.common.Service;
 import drfoliberg.common.job.Job;
 import drfoliberg.common.job.JobType;
 import drfoliberg.common.network.ClusterProtocol;
-import drfoliberg.common.network.messages.CrashReport;
-import drfoliberg.common.network.messages.Message;
-import drfoliberg.common.network.messages.StatusReport;
 import drfoliberg.common.network.messages.api.ApiJobRequest;
+import drfoliberg.common.network.messages.api.ApiResponse;
+import drfoliberg.common.network.messages.cluster.CrashReport;
+import drfoliberg.common.network.messages.cluster.Message;
+import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
@@ -279,11 +280,14 @@ public class Master implements Runnable {
 		return true;
 	}
 
-	public boolean addJob(ApiJobRequest req) {
+	public ApiResponse addJob(ApiJobRequest req) {
 
 		String relativeSourceFile = req.getInputFile();
 		File absoluteSourceFile = new File(new File(config.getAbsoluteSharedFolder()), relativeSourceFile);
-		// TODO check if source file exists and is readable
+		if (!absoluteSourceFile.isFile() || !absoluteSourceFile.canRead()) {
+			return new ApiResponse(false, String.format("File %s in %s does not exists or is not readable !",
+					relativeSourceFile, absoluteSourceFile));
+		}
 
 		long lengthOfJob = (long) (FFMpegProber.getSecondsDuration(absoluteSourceFile.getAbsolutePath()) * 1000);
 		float frameRate = FFMpegProber.getFrameRate(absoluteSourceFile.getAbsolutePath());
@@ -291,9 +295,12 @@ public class Master implements Runnable {
 
 		Job j = new Job(req.getName(), relativeSourceFile, JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5, lengthOfJob,
 				frameCount, frameRate, req.getBitrate());
-		addJob(j);
-		return true;
-		// TODO return response object to api
+		// TODO handle dynamic job types and task lengths
+		if (addJob(j)) {
+			return new ApiResponse(true, "Job was successfully added.");
+		}
+		return new ApiResponse(false, "Unknown error while adding the job !");
+
 	}
 
 	public ArrayList<Job> getJobs() {
@@ -428,9 +435,7 @@ public class Master implements Runnable {
 			return false;
 		}
 
-		System.out
-				.println("MASTER: Updating the task " + sender.getCurrentTask().getTaskId() + " to " + progress + "%");
-		// sender.getCurrentTask().setProgress(progress);
+		System.out.printf("MASTER: Updating the task %s  to %f%% \n", sender.getCurrentTask().getTaskId(), progress);
 
 		sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
 

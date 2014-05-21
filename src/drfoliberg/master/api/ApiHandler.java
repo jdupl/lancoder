@@ -13,6 +13,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import com.google.gson.Gson;
 
 import drfoliberg.common.network.messages.api.ApiJobRequest;
+import drfoliberg.common.network.messages.api.ApiResponse;
 import drfoliberg.master.Master;
 
 public class ApiHandler extends AbstractHandler {
@@ -44,10 +45,11 @@ public class ApiHandler extends AbstractHandler {
 		case "/jobs/add":
 			BufferedReader br = request.getReader();
 			ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
-			master.addJob(req);
-			// TODO send response
+			ApiResponse res = master.addJob(req);
+			// TODO send response			
 			response.setContentType("text/json;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
+			response.getWriter().println(gson.toJson(res));
 			baseRequest.setHandled(true);
 			break;
 		default:

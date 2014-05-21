@@ -8,8 +8,8 @@ import java.net.Socket;
 
 import drfoliberg.common.Node;
 import drfoliberg.common.network.ClusterProtocol;
-import drfoliberg.common.network.messages.Message;
-import drfoliberg.common.network.messages.TaskRequestMessage;
+import drfoliberg.common.network.messages.cluster.Message;
+import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 

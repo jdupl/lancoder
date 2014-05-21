@@ -8,10 +8,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import drfoliberg.common.Service;
-import drfoliberg.common.network.messages.ConnectMessage;
-import drfoliberg.common.network.messages.CrashReport;
-import drfoliberg.common.network.messages.Message;
-import drfoliberg.common.network.messages.StatusReport;
+import drfoliberg.common.network.messages.cluster.ConnectMessage;
+import drfoliberg.common.network.messages.cluster.CrashReport;
+import drfoliberg.common.network.messages.cluster.Message;
+import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;

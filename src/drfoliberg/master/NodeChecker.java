@@ -8,8 +8,8 @@ import java.net.Socket;
 import drfoliberg.common.Node;
 import drfoliberg.common.Service;
 import drfoliberg.common.network.ClusterProtocol;
-import drfoliberg.common.network.messages.Message;
-import drfoliberg.common.network.messages.StatusReport;
+import drfoliberg.common.network.messages.cluster.Message;
+import drfoliberg.common.network.messages.cluster.StatusReport;
 
 public class NodeChecker extends Service {
 

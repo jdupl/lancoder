@@ -6,9 +6,9 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import drfoliberg.common.network.ClusterProtocol;
-import drfoliberg.common.network.messages.AuthMessage;
-import drfoliberg.common.network.messages.ConnectMessage;
-import drfoliberg.common.network.messages.Message;
+import drfoliberg.common.network.messages.cluster.AuthMessage;
+import drfoliberg.common.network.messages.cluster.ConnectMessage;
+import drfoliberg.common.network.messages.cluster.Message;
 import drfoliberg.common.status.NodeState;
 
 public class ContactMaster implements Runnable {

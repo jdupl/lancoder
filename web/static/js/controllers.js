@@ -75,7 +75,7 @@ angular.module('lancoder.controllers', []).
                         data[i].totalTasks = data[i].tasks.length;
                         data[i].totalFps = 0;
                         for (var j = 0; j < data[i].totalTasks; j++) {
-                            switch(data[i].tasks[j].taskStatus.status){
+                            switch(data[i].tasks[j].taskStatus.status) {
                               case "TASK_COMPLETED":
                                 data[i].completedTasks++;
                               break;
@@ -99,15 +99,19 @@ angular.module('lancoder.controllers', []).
             }, 5000);
           };
           
-          $scope.addjob = function(newjob){
+          $scope.addjob = function(newjob) {
               $http({method: 'POST', url: '/api/jobs/add', data: newjob})
                     .success(function(data) {
-                      alert(data);
+                      if(data.success) {
+                        refreshJobs();
+                        $scope.showAddJobPanel = false;
+                      } else {
+                        alert(data.message);
+                      }
                     }).error(function() {
-                      alert('error')
+                      alert('Network failure');
               });
           };
-          
           refreshJobs();
           $scope.jobsAutoRefresh();
 

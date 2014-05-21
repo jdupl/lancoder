@@ -1,4 +1,4 @@
-package drfoliberg.common.network.messages;
+package drfoliberg.common.network.messages.cluster;
 
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.ClusterProtocol;
