@@ -1,7 +1,5 @@
 package drfoliberg;
 
-import drfoliberg.common.job.Job;
-import drfoliberg.common.job.JobType;
 import drfoliberg.master.Master;
 import drfoliberg.worker.Worker;
 
@@ -14,20 +12,14 @@ public class Simulation extends Thread {
 	 */
 
 	/**
-	 * Attempts to encode a file locally with a single worker thread.
+	 * Initialize only a master and a worker. Jobs must be added via the api.
 	 * 
-	 * @param filepath
-	 *            Path of the video file to encode
 	 */
-	public void basicSimulation(String filepath) {
+	public void basicSimulation() {
 		System.out.println("SIM: Starting master now");
 		Master m = new Master(Main.MASTER_CONFIG_PATH);
 		Thread masterThread = new Thread(m);
 		masterThread.start();
-
-		Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 1, 1000);
-		System.out.println("SIM: adding a job to master's queue !");
-		m.addJob(j);
 
 		System.out.println("SIM: Creating first worker now,");
 		Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
@@ -35,61 +27,7 @@ public class Simulation extends Thread {
 		w1Thread.start();
 	}
 
-	/**
-	 * Only start a master instance to test api methods
-	 * 
-	 */
-	public void apiSimulation(String filepath) {
-		System.out.println("SIM: Starting master now");
-		Master m = new Master(Main.MASTER_CONFIG_PATH);
-		Thread masterThread = new Thread(m);
-		masterThread.start();
-
-		// System.out.println("SIM: Creating first worker now,");
-		// Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
-		// Thread w1Thread = new Thread(worker1);
-		// w1Thread.start();
-		// try {
-		// sleep(5000);
-		// } catch (InterruptedException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-		// worker1.shutdown();
-		Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5, 1000);
-		System.out.println("SIM: adding a job to master's queue !");
-		m.addJob(j);
-	}
-
-	public void shutdownTest(String filepath) {
-		try {
-			Master m = new Master(Main.MASTER_CONFIG_PATH);
-			Thread masterThread = new Thread(m);
-			masterThread.start();
-			sleep(5000);
-			Job j = new Job("testname", filepath, "/home/justin/encoding", JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5, 1000);
-			System.out.println("SIM: adding a job to master's queue !");
-			m.addJob(j);
-			System.out.println("SIM: Creating first worker now,");
-			Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
-			Thread w1Thread = new Thread(worker1);
-			w1Thread.start();
-			sleep(10000);
-			System.out.println("SIM: Closing worker ");
-			worker1.shutdown();
-			sleep(5000);
-			System.out.println("SIM: Closing master");
-			m.shutdown();
-			System.out.println("SIM: Simulation done !");
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public void run(String filepath) {
-		// shutdownTest(filepath);
-		basicSimulation(filepath);
-		// apiSimulation(filepath);
+	public void run() {
+		basicSimulation();
 	}
 }

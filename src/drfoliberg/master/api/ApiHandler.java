@@ -12,8 +12,6 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import com.google.gson.Gson;
 
-import drfoliberg.common.job.Job;
-import drfoliberg.common.job.JobType;
 import drfoliberg.common.network.messages.api.ApiJobRequest;
 import drfoliberg.master.Master;
 
@@ -46,9 +44,8 @@ public class ApiHandler extends AbstractHandler {
 		case "/jobs/add":
 			BufferedReader br = request.getReader();
 			ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
-			Job j = new Job(req.getName(), req.getInputFile(), master.getConfig().getAbsoluteSharedFolder(),
-					JobType.BITRATE_2_PASS_JOB, 1 * 1000 * 60, req.getBitrate());
-			master.addJob(j);
+			master.addJob(req);
+			// TODO send response
 			response.setContentType("text/json;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			baseRequest.setHandled(true);

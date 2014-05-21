@@ -1,16 +1,14 @@
 package drfoliberg.common.job;
 
-import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
-import drfoliberg.common.FFMpegProber;
 import drfoliberg.common.status.JobState;
 import drfoliberg.common.task.Task;
 
 /**
- * A job is the whole process of taking the source file, spliting it if necessary, encoding it and merge back all
+ * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all
  * tracks. Tasks will be dispatched to nodes by the master.
  * 
  * @author justin
@@ -34,30 +32,33 @@ public class Job {
 	 * @param jobName
 	 *            The job name
 	 * @param sourceFile
-	 *            The source file to encode relative to the shared directory
-	 * @param sourceDirectory
-	 *            The absolute source directory (to scan)
+	 *            The Source file to encode relative to the shared directory
 	 * @param jobType
-	 *            The type of bitrate control
+	 *            The type of bit rate control
 	 * @param lengthOfTasks
 	 *            The length of the tasks in ms that will be sent to worker (0 = infinite)
+	 * @param lengthOfJob
+	 *            Total Length of the job
+	 * @param frameCount
+	 *            The total frame count
+	 * @param frameRate
+	 *            The frame rate to encode at
+	 * @param bitrate
+	 *            The targeted bit rate
 	 */
-	public Job(String jobName, String sourceFile, String sourceDirectory, JobType jobType, int lengthOfTasks,
-			int bitrate) {
-		this.sourceFile = sourceFile;
+	public Job(String jobName, String sourceFile, JobType jobType, int lengthOfTasks, long lengthOfJob, int frameCount,
+			float frameRate, int bitrate) {
 		this.jobName = jobName;
-		this.tasks = new ArrayList<>();
+		this.sourceFile = sourceFile;
 		this.jobType = jobType;
 		this.lengthOfTasks = lengthOfTasks;
-		this.jobStatus = JobState.JOB_TODO;
+		this.lengthOfJob = lengthOfJob;
+		this.frameCount = frameCount;
+		this.frameRate = frameRate;
 		this.bitrate = bitrate;
 
-		File absoluteSourceFile = new File(new File(sourceDirectory), sourceFile);
-
-		// get fps and ms duration from prober
-		this.lengthOfJob = (long) (FFMpegProber.getSecondsDuration(absoluteSourceFile.getAbsolutePath()) * 1000);
-		this.frameRate = FFMpegProber.getFrameRate(absoluteSourceFile.getAbsolutePath());
-		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
+		this.tasks = new ArrayList<>();
+		this.jobStatus = JobState.JOB_TODO;
 
 		long currentMs = 0;
 		int taskNo = 0;
@@ -81,7 +82,6 @@ public class Job {
 			t.setJobId(jobId);
 			t.setEncodingStartTime(currentMs);
 			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.10) {
-				System.out.println("next task will be too short, adding the ms to the current task");
 				t.setEncodingEndTime(lengthOfJob);
 				remaining = 0;
 			} else {
@@ -94,7 +94,6 @@ public class Job {
 
 			this.tasks.add(t);
 		}
-		System.out.println("Job was divided into " + this.tasks.size() + " tasks!");
 	}
 
 	public int getBitrate() {
