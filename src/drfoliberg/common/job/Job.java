@@ -5,6 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 import drfoliberg.common.status.JobState;
+import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 
 /**
@@ -93,6 +94,53 @@ public class Job {
 			t.setEstimatedFramesCount((long) Math.floor((ms / 1000 * frameRate)));
 
 			this.tasks.add(t);
+		}
+	}
+
+	/**
+	 * Returns next task to encode. Changes Job status if job is not started yet.
+	 * 
+	 * @return The task or null if no task is available
+	 */
+	public synchronized Task getNextTask() {
+
+		if (getCountTaskRemaining() == 0) {
+			return null;
+		}
+
+		if (this.getJobStatus() == JobState.JOB_TODO) {
+			// TODO perhaps move this
+			this.setJobStatus(JobState.JOB_COMPUTING);
+		}
+		
+		for (Task task : this.tasks) {
+			if (task.getStatus() == TaskState.TASK_TODO) {
+				return task;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Counts if necessary the tasks currently not processed. A task being processed by a node counts as processed.
+	 * 
+	 * @return The count of tasks left to dispatch
+	 */
+	public synchronized int getCountTaskRemaining() {
+
+		switch (this.getJobStatus()) {
+		case JOB_COMPLETED:
+			return 0;
+		case JOB_TODO:
+			return this.tasks.size();
+		default:
+			int count = 0;
+			for (Task task : this.tasks) {
+				if (task.getStatus() == TaskState.TASK_TODO) {
+					--count;
+				}
+			}
+			return count;
 		}
 	}
 

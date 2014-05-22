@@ -107,22 +107,23 @@ public class Master implements Runnable {
 		return n;
 	}
 
+	/**
+	 * Get the task of a job with the least possible remaining tasks.
+	 * 
+	 * @return
+	 */
 	private Task getNextTask() {
+
+		Job min = null;
 		for (Job j : this.getJobs()) {
-			if (j.getJobStatus() != JobState.JOB_PAUSED) {
-				ArrayList<Task> tasks = j.getTasks();
-				for (Task task : tasks) {
-					if (task.getStatus() == TaskState.TASK_TODO) {
-						// mark task as started
-						if (j.getJobStatus() == JobState.JOB_TODO) {
-							j.setJobStatus(JobState.JOB_COMPUTING);
-						}
-						return task;
-					}
-				}
+			if (min == null) {
+				min = j;
+			} else if (min.getCountTaskRemaining() > j.getCountTaskRemaining()) {
+				min = j;
 			}
 		}
-		return null;
+
+		return min != null ? min.getNextTask() : null;
 	}
 
 	/**
