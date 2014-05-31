@@ -281,6 +281,30 @@ public class Master implements Runnable {
 		return true;
 	}
 
+	public boolean apiDeleteJob(String jobId) {
+		Job j = this.jobs.get(jobId);
+		return deleteJob(j);
+	}
+
+	public boolean deleteJob(Job j) {
+		for (Task t : j.getTasks()) {
+			if (t.getStatus() == TaskState.TASK_COMPUTING) {
+				for (Node n : getNodes()) {
+					if (n.getCurrentTask() == t) {
+						updateNodeTask(n, TaskState.TASK_CANCELED);
+					}
+				}
+			}
+		}
+
+		if (this.jobs.remove(j.getJobId()) == null) {
+			return false;
+		}
+		updateNodesWork();
+		config.dump(configPath);
+		return true;
+	}
+
 	public ApiResponse addJob(ApiJobRequest req) {
 
 		String relativeSourceFile = req.getInputFile();

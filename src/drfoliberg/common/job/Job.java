@@ -145,6 +145,17 @@ public class Job {
 		}
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+
+		if (obj == null || !(obj instanceof Job)) {
+			return false;
+		}
+
+		Job other = (Job) obj;
+		return other.getJobId().equals(this.getJobId());
+	}
+
 	public int getBitrate() {
 		return bitrate;
 	}

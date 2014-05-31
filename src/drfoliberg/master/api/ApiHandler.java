@@ -27,24 +27,26 @@ public class ApiHandler extends AbstractHandler {
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-		System.err.println(target);
+
 		Gson gson = new Gson();
+		ApiResponse res = new ApiResponse(false, "Unknown error");
+		BufferedReader br = null;
+		response.setContentType("text/json;charset=utf-8");
+
 		switch (target) {
 		case "/nodes":
-			response.setContentType("text/json;charset=utf-8");
+
 			response.setStatus(HttpServletResponse.SC_OK);
 			baseRequest.setHandled(true);
 			response.getWriter().println(gson.toJson(master.getNodes()));
 			break;
 		case "/jobs":
-			response.setContentType("text/json;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			baseRequest.setHandled(true);
 			response.getWriter().println(gson.toJson(master.getJobs()));
 			break;
 		case "/jobs/add":
-			ApiResponse res = new ApiResponse(false, "Unknown error");
-			BufferedReader br = request.getReader();
+			br = request.getReader();
 
 			try {
 				ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
@@ -54,7 +56,25 @@ public class ApiHandler extends AbstractHandler {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			}
 
-			response.setContentType("text/json;charset=utf-8");
+			response.getWriter().println(gson.toJson(res));
+			baseRequest.setHandled(true);
+			break;
+		case "/jobs/delete":
+			br = request.getReader();
+
+			try {
+				String id = br.readLine();
+				response.setStatus(HttpServletResponse.SC_OK);
+				if (master.apiDeleteJob(id)) {
+					res = new ApiResponse(true, "");
+				} else {
+					res = new ApiResponse(false, "Job could not be deleted or does not exist !");
+				}
+
+			} catch (Exception e) {
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			}
+
 			response.getWriter().println(gson.toJson(res));
 			baseRequest.setHandled(true);
 			break;

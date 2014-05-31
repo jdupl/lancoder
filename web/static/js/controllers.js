@@ -32,8 +32,8 @@ angular.module('lancoder.controllers', []).
                       }
                       $scope.nodes = data;
                     }).error(function() {
-                      $scope.nodes.error = "Could not reach master server.";
-              });
+              $scope.nodes.error = "Could not reach master server.";
+            });
           };
 
           $scope.nodesAutoRefresh = function() {
@@ -75,21 +75,21 @@ angular.module('lancoder.controllers', []).
                         data[i].totalTasks = data[i].tasks.length;
                         data[i].totalFps = 0;
                         for (var j = 0; j < data[i].totalTasks; j++) {
-                            switch(data[i].tasks[j].taskStatus.status) {
-                              case "TASK_COMPLETED":
-                                data[i].completedTasks++;
+                          switch (data[i].tasks[j].taskStatus.status) {
+                            case "TASK_COMPLETED":
+                              data[i].completedTasks++;
                               break;
-                              case "TASK_COMPUTING":
-                                data[i].totalFps += data[i].tasks[j].taskStatus.fps;
-                                break;
-                            }
+                            case "TASK_COMPUTING":
+                              data[i].totalFps += data[i].tasks[j].taskStatus.fps;
+                              break;
+                          }
                         }
                       }
                       $scope.jobs = data;
                     }).error(function() {
-                        $scope.jobs = [];
-                        $scope.jobs.error = "Could not reach master server.";
-              });
+              $scope.jobs = [];
+              $scope.jobs.error = "Could not reach master server.";
+            });
           };
 
           $scope.jobsAutoRefresh = function() {
@@ -98,19 +98,32 @@ angular.module('lancoder.controllers', []).
               $scope.jobsAutoRefresh();
             }, 5000);
           };
-          
+
           $scope.addjob = function(newjob) {
-              $http({method: 'POST', url: '/api/jobs/add', data: newjob})
+            $http({method: 'POST', url: '/api/jobs/add', data: newjob})
                     .success(function(data) {
-                      if(data.success) {
+                      if (data.success) {
                         refreshJobs();
                         $scope.showAddJobPanel = false;
                       } else {
                         alert(data.message);
                       }
                     }).error(function() {
-                      alert('Network failure');
-              });
+              alert('Network failure');
+            });
+          };
+
+          $scope.deletejob = function(oldjob) {
+            $http({method: 'POST', url: '/api/jobs/delete', data: oldjob})
+                    .success(function(data) {
+                      if (data.success) {
+                        refreshJobs();
+                      } else {
+                        alert(data.message);
+                      }
+                    }).error(function() {
+              alert('Network failure');
+            });
           };
           refreshJobs();
           $scope.jobsAutoRefresh();
