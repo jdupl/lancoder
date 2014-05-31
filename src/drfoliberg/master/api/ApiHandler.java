@@ -43,12 +43,18 @@ public class ApiHandler extends AbstractHandler {
 			response.getWriter().println(gson.toJson(master.getJobs()));
 			break;
 		case "/jobs/add":
+			ApiResponse res = new ApiResponse(false, "Unknown error");
 			BufferedReader br = request.getReader();
-			ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
-			ApiResponse res = master.addJob(req);
-			// TODO send response			
+
+			try {
+				ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
+				res = master.addJob(req);
+				response.setStatus(HttpServletResponse.SC_OK);
+			} catch (Exception e) {
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			}
+
 			response.setContentType("text/json;charset=utf-8");
-			response.setStatus(HttpServletResponse.SC_OK);
 			response.getWriter().println(gson.toJson(res));
 			baseRequest.setHandled(true);
 			break;

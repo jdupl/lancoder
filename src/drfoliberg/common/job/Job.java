@@ -16,6 +16,7 @@ import drfoliberg.common.task.Task;
  * 
  */
 public class Job {
+
 	private ArrayList<Task> tasks;
 	private String jobId;
 	private String jobName;
@@ -112,7 +113,7 @@ public class Job {
 			// TODO perhaps move this
 			this.setJobStatus(JobState.JOB_COMPUTING);
 		}
-		
+
 		for (Task task : this.tasks) {
 			if (task.getStatus() == TaskState.TASK_TODO) {
 				return task;
