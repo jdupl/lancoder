@@ -372,34 +372,36 @@ public class Master implements Runnable {
 	public boolean updateNodeTask(Node n, TaskState updateStatus) {
 		Task task = n.getCurrentTask();
 		// TODO clean logic here
-		if (task != null) {
-			System.out.println("MASTER: the task " + n.getCurrentTask().getTaskId() + " is now " + updateStatus);
-			task.setStatus(updateStatus);
-			if (updateStatus == TaskState.TASK_COMPLETED) {
-				n.setCurrentTask(null);
-
-				Job job = this.jobs.get(task.getJobId());
-				boolean jobDone = true;
-				for (Task t : job.getTasks()) {
-					if (t.getTaskStatus().getState() != TaskState.TASK_COMPLETED) {
-						jobDone = false;
-						break;
-					}
-				}
-
-				if (jobDone) {
-					job.setJobStatus(JobState.JOB_COMPLETED);
-				}
-
-				// TODO implement task.complete() ?
-			} else if (updateStatus == TaskState.TASK_CANCELED) {
-				task.reset();
-				n.setCurrentTask(null);
-			}
-			updateNodesWork();
-		} else {
+		if (task == null) {
 			System.err.println("MASTER: no task was found for node " + n.getName());
+			return false;
 		}
+
+		System.out.println("MASTER: the task " + n.getCurrentTask().getTaskId() + " is now " + updateStatus);
+		task.setStatus(updateStatus);
+		if (updateStatus == TaskState.TASK_COMPLETED) {
+			n.setCurrentTask(null);
+
+			Job job = this.jobs.get(task.getJobId());
+			boolean jobDone = true;
+			for (Task t : job.getTasks()) {
+				if (t.getTaskStatus().getState() != TaskState.TASK_COMPLETED) {
+					jobDone = false;
+					break;
+				}
+			}
+
+			if (jobDone) {
+				job.setJobStatus(JobState.JOB_COMPLETED);
+			}
+
+			// TODO implement task.complete() ?
+		} else if (updateStatus == TaskState.TASK_CANCELED) {
+			task.reset();
+			n.setCurrentTask(null);
+		}
+		updateNodesWork();
+
 		return false;
 	}
 
@@ -460,13 +462,14 @@ public class Master implements Runnable {
 			return false;
 		}
 
-		System.out.printf("MASTER: Updating the task %s  to %f%% \n", sender.getCurrentTask().getTaskId(), progress);
-
-		sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
-
 		if (sender.getCurrentTask().getStatus() == TaskState.TASK_COMPLETED) {
 			updateNodeTask(sender, TaskState.TASK_COMPLETED);
+		} else {
+			System.out.printf("MASTER: Updating the task %s to %f%% \n",
+					sender.getCurrentTask().getTaskId(), progress);
+			sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
 		}
+
 		return true;
 	}
 
