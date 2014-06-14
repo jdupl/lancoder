@@ -84,7 +84,7 @@ public class WorkThread extends Service {
 				// TODO Protect from spaces in paths
 				String processStr = String.format(
 						"ffmpeg -ss %s -t %s -i %s -force_key_frames 0 -an -c:v %s -b:v %dk %s", startTimeStr,
-						durationStr, inputFile.getAbsolutePath(), "libx264", task.getBitrate(), outputFile);
+						durationStr, inputFile.getAbsolutePath(), "libx264", task.getRate(), outputFile);
 				System.out.println(processStr);
 				process = Runtime.getRuntime().exec(processStr);
 			} catch (IOException e) {

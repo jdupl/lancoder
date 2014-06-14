@@ -25,7 +25,11 @@
             </div>
             <div class="form-group">
                 <label>Job Bitrate (kbit/s)</label>
-                <input type="number" class="form-control" ng-model="newJob.bitrate">
+                <input type="number" class="form-control" ng-model="newJob.rate">
+            </div>
+            <div class="form-group">
+                <label>Job Preset</label>
+                <select class="form-control" ng-model="newJob.preset" ng-options="preset for preset in presets"></select>
             </div>
             <div class="btn-group">
                 <button type="button" class="btn btn-success" ng-click="addjob(newJob)">Save and add</button>

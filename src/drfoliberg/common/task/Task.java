@@ -2,28 +2,29 @@ package drfoliberg.common.task;
 
 import java.io.Serializable;
 
+import drfoliberg.common.job.JobConfig;
 import drfoliberg.common.status.TaskState;
 
 public class Task implements Serializable {
-
-	public int getBitrate() {
-		return taskInfo.getBitrate();
-	}
-
-	public void setBitrate(int bitrate) {
-		taskInfo.setBitrate(bitrate);
-	}
 
 	private static final long serialVersionUID = -8705492902098705162L;
 	protected TaskInfo taskInfo;
 	protected TaskStatus taskStatus;
 
-	public Task(int taskId, String sourceFile, int bitrate) {
-		taskInfo = new TaskInfo();
-		taskInfo.setSourceFile(sourceFile);
+	public Task(int taskId, JobConfig config) {
+		taskInfo = new TaskInfo(config);
+		//taskInfo.setSourceFile(sourceFile);
 		taskInfo.setTaskId(taskId);
-		taskInfo.setBitrate(bitrate);
+		//taskInfo.setRate(rate);
 		taskStatus = new TaskStatus();
+	}
+
+	public int getRate() {
+		return taskInfo.getRate();
+	}
+
+	public void setRate(int rate) {
+		taskInfo.setRate(rate);
 	}
 
 	public void reset() {

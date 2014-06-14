@@ -6,7 +6,7 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class FFMpegProber {
+public class FFmpegProber {
 
 	/**
 	 * Get the duration in second of a media file

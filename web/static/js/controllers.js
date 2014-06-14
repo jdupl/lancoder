@@ -47,6 +47,9 @@ angular.module('lancoder.controllers', []).
           $scope.nodesAutoRefresh();
         })
         .controller('jobs', function($scope, $http, $timeout) {
+
+          $scope.presets = ['ULTRAFAST', 'SUPERFAST', 'VERYFAST', 'FASTER', 'FAST', 'MEDIUM', 'SLOW', 'SLOWER', 'VERYSLOW', 'PLACEBO']
+
           var refreshJobs = $scope.refreshJobs = function() {
             // Get jobs
             $http({method: 'GET', url: '/api/jobs'})

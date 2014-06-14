@@ -61,7 +61,6 @@ public class ApiHandler extends AbstractHandler {
 			break;
 		case "/jobs/delete":
 			br = request.getReader();
-
 			try {
 				String id = br.readLine();
 				response.setStatus(HttpServletResponse.SC_OK);
@@ -70,11 +69,9 @@ public class ApiHandler extends AbstractHandler {
 				} else {
 					res = new ApiResponse(false, "Job could not be deleted or does not exist !");
 				}
-
 			} catch (Exception e) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			}
-
 			response.getWriter().println(gson.toJson(res));
 			baseRequest.setHandled(true);
 			break;

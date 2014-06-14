@@ -1,9 +1,35 @@
 package drfoliberg.common.network.messages.api;
 
+import drfoliberg.common.job.FFmpegPreset;
+import drfoliberg.common.job.RateControlType;
+
 public class ApiJobRequest {
+
 	private String name;
 	private String inputFile;
 	private int bitrate;
+	private FFmpegPreset preset;
+	private RateControlType rateControlType;
+
+	public FFmpegPreset getPreset() {
+		return preset;
+	}
+
+	public void setPreset(FFmpegPreset preset) {
+		this.preset = preset;
+	}
+
+	public RateControlType getRateControlType() {
+		return rateControlType;
+	}
+
+	public void setRateControlType(RateControlType rateControlType) {
+		this.rateControlType = rateControlType;
+	}
+
+	public int getBitrate() {
+		return bitrate;
+	}
 
 	public String getInputFile() {
 		return inputFile;
@@ -21,7 +47,7 @@ public class ApiJobRequest {
 		this.inputFile = inputFile;
 	}
 
-	public int getBitrate() {
+	public int getRate() {
 		return bitrate;
 	}
 

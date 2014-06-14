@@ -11,11 +11,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import drfoliberg.common.FFMpegProber;
+import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.Node;
 import drfoliberg.common.Service;
+import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.Job;
-import drfoliberg.common.job.JobType;
+import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.api.ApiJobRequest;
 import drfoliberg.common.network.messages.api.ApiResponse;
@@ -307,6 +308,10 @@ public class Master implements Runnable {
 
 	public ApiResponse addJob(ApiJobRequest req) {
 
+		if (req == null) {
+			return new ApiResponse(false, "Job request is probably missing fields !");
+		}
+
 		String relativeSourceFile = req.getInputFile();
 		File absoluteSourceFile = new File(new File(config.getAbsoluteSharedFolder()), relativeSourceFile);
 		if (!absoluteSourceFile.isFile() || !absoluteSourceFile.canRead()) {
@@ -314,12 +319,19 @@ public class Master implements Runnable {
 					relativeSourceFile, absoluteSourceFile));
 		}
 
-		long lengthOfJob = (long) (FFMpegProber.getSecondsDuration(absoluteSourceFile.getAbsolutePath()) * 1000);
-		float frameRate = FFMpegProber.getFrameRate(absoluteSourceFile.getAbsolutePath());
+		long lengthOfJob = (long) (FFmpegProber.getSecondsDuration(absoluteSourceFile.getAbsolutePath()) * 1000);
+		float frameRate = FFmpegProber.getFrameRate(absoluteSourceFile.getAbsolutePath());
 		int frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 
-		Job j = new Job(req.getName(), relativeSourceFile, JobType.BITRATE_2_PASS_JOB, 1000 * 60 * 5, lengthOfJob,
-				frameCount, frameRate, req.getBitrate());
+		FFmpegPreset preset = FFmpegPreset.SLOW;
+		byte passes = 2;
+		RateControlType rateControlType = RateControlType.CRF;
+		int lengthOfTasks = 1000 * 60 * 5;
+
+		Job j = new Job(req.getName(), relativeSourceFile, lengthOfTasks, lengthOfJob, frameCount, frameRate,
+				req.getRate(), preset, passes, rateControlType);
+		// Job j = new Job(req.getName(), relativeSourceFile, RateControlType.VBR, lengthOfJob, frameCount, frameRate,
+		// rate, preset, passes, rateControlType)
 		// TODO handle dynamic job types and task lengths
 		if (addJob(j)) {
 			return new ApiResponse(true, "Job was successfully added.");
@@ -465,8 +477,7 @@ public class Master implements Runnable {
 		if (sender.getCurrentTask().getStatus() == TaskState.TASK_COMPLETED) {
 			updateNodeTask(sender, TaskState.TASK_COMPLETED);
 		} else {
-			System.out.printf("MASTER: Updating the task %s to %f%% \n",
-					sender.getCurrentTask().getTaskId(), progress);
+			System.out.printf("MASTER: Updating the task %s to %f%% \n", sender.getCurrentTask().getTaskId(), progress);
 			sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
 		}
 

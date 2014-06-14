@@ -15,19 +15,16 @@ import drfoliberg.common.task.Task;
  * @author justin
  * 
  */
-public class Job {
+public class Job extends JobConfig {
 
 	private ArrayList<Task> tasks;
 	private String jobId;
 	private String jobName;
-	private String sourceFile;
-	private JobType jobType;
 	private JobState jobStatus;
 	private int lengthOfTasks;
 	private long lengthOfJob;
 	private int frameCount;
 	private float frameRate;
-	private int bitrate;
 
 	/**
 	 * 
@@ -35,8 +32,6 @@ public class Job {
 	 *            The job name
 	 * @param sourceFile
 	 *            The Source file to encode relative to the shared directory
-	 * @param jobType
-	 *            The type of bit rate control
 	 * @param lengthOfTasks
 	 *            The length of the tasks in ms that will be sent to worker (0 = infinite)
 	 * @param lengthOfJob
@@ -45,20 +40,17 @@ public class Job {
 	 *            The total frame count
 	 * @param frameRate
 	 *            The frame rate to encode at
-	 * @param bitrate
-	 *            The targeted bit rate
 	 */
-	public Job(String jobName, String sourceFile, JobType jobType, int lengthOfTasks, long lengthOfJob, int frameCount,
-			float frameRate, int bitrate) {
+	public Job(String jobName, String sourceFile, int lengthOfTasks, long lengthOfJob, int frameCount, float frameRate,
+			int rate, FFmpegPreset preset, byte passes, RateControlType rateControlType) {
+
+		super(sourceFile, rateControlType, rate, passes, preset, null);
 		this.jobName = jobName;
-		this.sourceFile = sourceFile;
-		this.jobType = jobType;
+
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = lengthOfJob;
 		this.frameCount = frameCount;
 		this.frameRate = frameRate;
-		this.bitrate = bitrate;
-
 		this.tasks = new ArrayList<>();
 		this.jobStatus = JobState.JOB_TODO;
 
@@ -80,10 +72,10 @@ public class Job {
 		}
 
 		while (remaining > 0) {
-			Task t = new Task(taskNo++, sourceFile, bitrate);
+			Task t = new Task(taskNo++, this); // hackish but should work for now TODO clean
 			t.setJobId(jobId);
 			t.setEncodingStartTime(currentMs);
-			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.10) {
+			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.15) {
 				t.setEncodingEndTime(lengthOfJob);
 				remaining = 0;
 			} else {
@@ -156,14 +148,6 @@ public class Job {
 		return other.getJobId().equals(this.getJobId());
 	}
 
-	public int getBitrate() {
-		return bitrate;
-	}
-
-	public void setBitrate(int bitrate) {
-		this.bitrate = bitrate;
-	}
-
 	public JobState getJobStatus() {
 		return jobStatus;
 	}
@@ -228,12 +212,12 @@ public class Job {
 		this.sourceFile = sourceFile;
 	}
 
-	public JobType getJobType() {
-		return jobType;
+	public RateControlType getRateContolType() {
+		return rateContolType;
 	}
 
-	public void setJobType(JobType jobType) {
-		this.jobType = jobType;
+	public void setRateContolType(RateControlType rateContolType) {
+		this.rateContolType = rateContolType;
 	}
 
 }
