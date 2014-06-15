@@ -19,7 +19,7 @@ public class Task implements Serializable {
 		// taskInfo.setRate(rate);
 		taskStatus = new TaskStatus();
 	}
-	
+
 	public String getRateControlArg() {
 		switch (taskInfo.getRateControlType()) {
 		case VBR:
@@ -31,6 +31,14 @@ public class Task implements Serializable {
 			break;
 		}
 		return null;
+	}
+
+	public Object getPresetArg() {
+		if (taskInfo.getPreset() == null) {
+			// Preset is not set. Do not use -preset
+			return "";
+		}
+		return String.format("-preset %s", taskInfo.getPreset().toString());
 	}
 
 	public void reset() {
@@ -52,7 +60,7 @@ public class Task implements Serializable {
 		float percentToComplete = ((float) taskStatus.getFramesCompleted() / taskInfo.getEstimatedFramesCount()) * 100;
 		return percentToComplete;
 	}
-	
+
 	public RateControlType getRateControlType() {
 		return taskInfo.getRateControlType();
 	}

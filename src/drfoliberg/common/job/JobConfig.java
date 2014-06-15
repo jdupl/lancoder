@@ -5,14 +5,6 @@ import java.util.ArrayList;
 
 public class JobConfig implements Serializable {
 
-	public RateControlType getRateControlType() {
-		return rateControlType;
-	}
-
-	public void setRateControlType(RateControlType rateControlType) {
-		this.rateControlType = rateControlType;
-	}
-
 	private static final long serialVersionUID = -8201664961243820323L;
 
 	protected String sourceFile;
@@ -40,6 +32,22 @@ public class JobConfig implements Serializable {
 		this.passes = config.passes;
 		this.preset = config.preset;
 		this.extraEncoderArgs = config.extraEncoderArgs;
+	}
+
+	public FFmpegPreset getPreset() {
+		return preset;
+	}
+
+	public void setPreset(FFmpegPreset preset) {
+		this.preset = preset;
+	}
+
+	public RateControlType getRateControlType() {
+		return rateControlType;
+	}
+
+	public void setRateControlType(RateControlType rateControlType) {
+		this.rateControlType = rateControlType;
 	}
 
 }
