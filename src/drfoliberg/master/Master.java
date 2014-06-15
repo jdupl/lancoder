@@ -300,6 +300,7 @@ public class Master implements Runnable {
 		}
 		for (Task t : j.getTasks()) {
 			if (t.getStatus() == TaskState.TASK_COMPUTING) {
+				// Find which node has this task
 				for (Node n : getNodes()) {
 					if (n.getCurrentTask() == t) {
 						updateNodeTask(n, TaskState.TASK_CANCELED);
@@ -421,7 +422,8 @@ public class Master implements Runnable {
 
 			// TODO implement task.complete() ?
 		} else if (updateStatus == TaskState.TASK_CANCELED) {
-			task.reset();
+			dispatch(task, n); // Check if object is not changed before sending to node 
+			// task.reset();
 			n.setCurrentTask(null);
 		}
 		updateNodesWork();

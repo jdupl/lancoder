@@ -12,6 +12,7 @@ import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.cluster.Message;
 import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 import drfoliberg.common.status.NodeState;
+import drfoliberg.common.status.TaskState;
 
 public class WorkerServer extends Service {
 
@@ -57,7 +58,11 @@ public class WorkerServer extends Service {
 								out.flush();
 							} else {
 								TaskRequestMessage tqm = (TaskRequestMessage) m;
-								if (worker.startWork(tqm.task)) {
+								if (tqm.task.getStatus() == TaskState.TASK_CANCELED) {
+									out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));
+									out.flush();
+									worker.stopWork(tqm.task);
+								} else if (worker.startWork(tqm.task)) {
 									out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));
 									out.flush();
 									worker.updateStatus(NodeState.WORKING);
@@ -69,7 +74,7 @@ public class WorkerServer extends Service {
 							s.close();
 							break;
 						case STATUS_REQUEST:
-                            out.writeObject(this.worker.getStatusReport());
+							out.writeObject(this.worker.getStatusReport());
 							out.flush();
 							s.close();
 							break;

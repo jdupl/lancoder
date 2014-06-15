@@ -34,6 +34,14 @@ public class JobConfig implements Serializable {
 		this.extraEncoderArgs = config.extraEncoderArgs;
 	}
 
+	public byte getPasses() {
+		return passes;
+	}
+
+	public void setPasses(byte passes) {
+		this.passes = passes;
+	}
+
 	public FFmpegPreset getPreset() {
 		return preset;
 	}

@@ -38,17 +38,14 @@ public class WorkThread extends Service {
 	 * @return The string in the right format for ffmpeg/libav
 	 */
 	private String getDurationString(long ms) {
-
 		int hours = (int) (ms / (3600 * 1000));
 		int remaining = (int) (ms - hours * 3600 * 1000);
-
 		int minutes = (int) (remaining / (60 * 1000));
+
 		remaining -= minutes * 60 * 1000;
 
 		int seconds = remaining / 1000;
-
 		int decimals = remaining % 1000;
-
 		return String.format("%d:%d:%d.%d", hours, minutes, seconds, decimals);
 	}
 
@@ -82,9 +79,9 @@ public class WorkThread extends Service {
 			// Get parameters from the task and bind parameters to process
 			try {
 				// TODO Protect from spaces in paths
-				String processStr = String.format(
-						"ffmpeg -ss %s -t %s -i %s -force_key_frames 0 -an -c:v %s %s %s %s", startTimeStr,
-						durationStr, inputFile.getAbsolutePath(), "libx264", task.getRateControlArg(), task.getPresetArg(), outputFile);
+				String processStr = String.format("ffmpeg -ss %s -t %s -i %s -force_key_frames 0 -an -c:v %s %s %s %s",
+						startTimeStr, durationStr, inputFile.getAbsolutePath(), "libx264", task.getRateControlArg(),
+						task.getPresetArg(), outputFile);
 				System.out.println(processStr);
 				process = Runtime.getRuntime().exec(processStr);
 			} catch (IOException e) {
@@ -102,27 +99,35 @@ public class WorkThread extends Service {
 			Pattern missingDecoder = Pattern.compile("Error while opening encoder for output stream");
 			while (s.hasNext() && !close) {
 				// TODO better scanning (avoid regexing the same line multiple times if result)
-				line = s.nextLine();
+				try {
+					line = s.nextLine();
 
-				Matcher m = currentFramePattern.matcher(line);
-				if (m.find()) {
-					long currentFrame = Long.parseLong(m.group(1));
-					callback.getCurrentTask().setFramesCompleted(currentFrame);
+					Matcher m = currentFramePattern.matcher(line);
+					if (m.find()) {
+						long currentFrame = Long.parseLong(m.group(1));
+						callback.getCurrentTask().setFramesCompleted(currentFrame);
 
-					System.err.printf("frame: %d out of %d (%f%%) \n", currentFrame, task.getEstimatedFramesCount(),
-							callback.getCurrentTask().getProgress());
-				}
-				m = fpsPattern.matcher(line);
-				if (m.find()) {
-					float fps = Float.parseFloat(m.group(1));
-					callback.getCurrentTask().setFps(fps);
-					System.err.printf("fps: %s \n", fps);
-				}
-				m = missingDecoder.matcher(line);
-				if (m.find()) {
-					s.close();
-					System.err.println("Missing decoder !");
-					throw new MissingDecoderException();
+						System.err.printf("frame: %d out of %d (%f%%) \n", currentFrame,
+								task.getEstimatedFramesCount(), callback.getCurrentTask().getProgress());
+					}
+					m = fpsPattern.matcher(line);
+					if (m.find()) {
+						float fps = Float.parseFloat(m.group(1));
+						callback.getCurrentTask().setFps(fps);
+						System.err.printf("fps: %s \n", fps);
+					}
+					m = missingDecoder.matcher(line);
+					if (m.find()) {
+						s.close();
+						System.err.println("Missing decoder !");
+						throw new MissingDecoderException();
+					}
+				} catch (NullPointerException e) {
+					// If task is interrupted, current task might become null
+					if (!close) {
+						// If thread is not stopped and a null pointer occurs, it is not normal
+						throw e;
+					}
 				}
 			}
 			s.close();
@@ -132,6 +137,7 @@ public class WorkThread extends Service {
 				callback.taskDone(task, masterIp);
 			} else {
 				// work thread is being interrupted
+				System.err.println("WORKER: stopping work");
 				process.destroy();
 			}
 
@@ -146,7 +152,6 @@ public class WorkThread extends Service {
 			// update status
 			callback.updateStatus(NodeState.CRASHED);
 		} catch (MissingDecoderException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

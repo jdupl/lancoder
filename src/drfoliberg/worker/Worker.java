@@ -107,6 +107,14 @@ public class Worker implements Runnable {
 		services.remove(workThread);
 	}
 
+	public void stopWork(Task t) {
+		// TODO check which task to stop (if many tasks are implemented)
+		this.workThread.stop();
+		System.err.println("Setting current task to null");
+		this.currentTask = null;
+		this.updateStatus(NodeState.FREE);
+	}
+
 	public synchronized boolean startWork(Task t) {
 		if (this.getStatus() != NodeState.FREE) {
 			print("cannot accept work as i'm not free. Current status: " + this.getStatus());
