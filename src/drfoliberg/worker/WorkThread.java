@@ -34,8 +34,6 @@ public class WorkThread extends Service {
 	File taskTempOutputFile;
 	File taskTempOutputFolder;
 
-	int currentPass;
-
 	public WorkThread(Worker w, Task t, InetAddress masterIp) {
 		this.masterIp = masterIp;
 		task = t;
@@ -62,10 +60,10 @@ public class WorkThread extends Service {
 		return String.format("%d:%d:%d.%d", hours, minutes, seconds, decimals);
 	}
 
-	public void encodePass(int passNum, String startTimeStr, String durationStr) throws MissingFfmpegException,
+	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
 			MissingDecoderException, WorkInterruptedException {
+		task.setTimeStarted(System.currentTimeMillis());
 		File inputFile = new File(absoluteSharedDir, task.getSourceFile());
-
 		// Get parameters from the task and bind parameters to process
 		try {
 			String[] baseArgs = new String[] { "ffmpeg", "-ss", startTimeStr, "-t", durationStr, "-i",
@@ -82,11 +80,19 @@ public class WorkThread extends Service {
 			// Add output file
 			String outFile = taskTempOutputFile.getAbsoluteFile().toString();
 			if (task.getPasses() > 1) {
-
+				ffmpegArgs.add("-pass");
+				ffmpegArgs.add(String.valueOf(task.getTaskStatus().getCurrentPass()));
+				if (task.getTaskStatus().getCurrentPass() != task.getPasses()) {
+					ffmpegArgs.add("-f");
+					ffmpegArgs.add("rawvideo");
+					ffmpegArgs.add("-y");
+					outFile = "/dev/null"; // TODO use NUL for windows
+				}
 			}
 			ffmpegArgs.add(outFile);
 
 			ProcessBuilder pb = new ProcessBuilder(ffmpegArgs);
+			System.err.println(pb.command().toString());
 			pb.directory(taskTempOutputFolder);
 			process = pb.start();
 		} catch (IOException e) {
@@ -153,9 +159,11 @@ public class WorkThread extends Service {
 
 			createDirs();
 
-			this.currentPass = 1;
-			while (currentPass <= task.getPasses()) {
-				encodePass(currentPass++, startTimeStr, durationStr);
+			task.getTaskStatus().setCurrentPass((byte) 1);
+			while (task.getTaskStatus().getCurrentPass() <= task.getPasses()) {
+				System.err.printf("Encoding pass %d of %d\n", task.getTaskStatus().getCurrentPass(), task.getPasses());
+				encodePass(startTimeStr, durationStr);
+				task.getTaskStatus().setCurrentPass((byte) (task.getTaskStatus().getCurrentPass() + 1));
 			}
 
 			moveTempPartFile();
@@ -205,7 +213,7 @@ public class WorkThread extends Service {
 		jobFinalFolder = new File(jobFinalFolder, this.task.getJobId());
 
 		taskFinalFolder = new File(jobFinalFolder, "parts");
-		taskFinalFolder = new File(taskFinalFolder, String.valueOf(task.getTaskId()));
+		// taskFinalFolder = new File(taskFinalFolder, String.valueOf(task.getTaskId()));
 
 		// Create temp part folder
 		String tempOutput = callback.config.getTempEncodingFolder();

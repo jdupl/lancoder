@@ -8,8 +8,17 @@ public class ApiJobRequest {
 	private String name;
 	private String inputFile;
 	private int rate;
+	private byte passes;
 	private FFmpegPreset preset;
 	private RateControlType rateControlType;
+
+	public byte getPasses() {
+		return passes;
+	}
+
+	public void setPasses(byte passes) {
+		this.passes = passes;
+	}
 
 	public FFmpegPreset getPreset() {
 		return preset;
@@ -50,5 +59,4 @@ public class ApiJobRequest {
 	public void setRate(int rate) {
 		this.rate = rate;
 	}
-
 }

@@ -48,11 +48,12 @@ angular.module('lancoder.controllers', []).
         })
         .controller('jobs', function($scope, $http, $timeout) {
 
-          $scope.presets = ['ULTRAFAST', 'SUPERFAST', 'VERYFAST', 'FASTER', 'FAST', 'MEDIUM', 'SLOW', 'SLOWER', 'VERYSLOW', 'PLACEBO']
+          $scope.presets = ['ULTRAFAST', 'SUPERFAST', 'VERYFAST', 'FASTER', 'FAST', 'MEDIUM', 'SLOW', 'SLOWER', 'VERYSLOW', 'PLACEBO'];
           $scope.controlTypes = [
             { value: 'VBR', name: 'Variable Bitrate' },
             { value: 'CRF', name:'Constant rate factor' }
           ];
+          $scope.passes = [1, 2];
 
           var refreshJobs = $scope.refreshJobs = function() {
             // Get jobs
@@ -136,7 +137,7 @@ angular.module('lancoder.controllers', []).
           $scope.jobsAutoRefresh();
 
         }).controller('HeaderController', function($scope, $location) {
-  $scope.isActive = function(viewLocation) {
-    return viewLocation === $location.path();
-  };
+          $scope.isActive = function(viewLocation) {
+            return viewLocation === $location.path();
+          };
 });

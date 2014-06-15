@@ -30,13 +30,19 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label>Rate control type</label>
-                        <select class="form-control" ng-model="newJob.rateControlType" ng-options="ct.value as ct.name for ct in controlTypes" ng-selected="VBR"></select>
+                        <select class="form-control" ng-model="newJob.rateControlType" ng-options="ct.value as ct.name for ct in controlTypes"></select>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Passes</label>
+                        <select class="form-control" ng-model="newJob.passes" ng-options="pass for pass in passes"></select>
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <div class="form-group">
                         <div ng-switch on="newJob.rateControlType">
                             <div ng-switch-when="CRF">
@@ -49,7 +55,7 @@
                         <input type="number" class="form-control" ng-model="newJob.rate">
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label>Job Preset</label>
                         <select class="form-control" ng-model="newJob.preset" ng-options="preset for preset in presets"></select>

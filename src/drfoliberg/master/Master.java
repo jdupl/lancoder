@@ -337,7 +337,8 @@ public class Master implements Runnable {
 
 		FFmpegPreset preset = req.getPreset();
 		RateControlType rateControlType = req.getRateControlType();
-		byte passes = 1; // TODO get passes from request
+
+		byte passes = req.getPasses() < 0 || req.getPasses() > 2 ? 1 : req.getPasses();
 
 		int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
 
@@ -422,8 +423,7 @@ public class Master implements Runnable {
 
 			// TODO implement task.complete() ?
 		} else if (updateStatus == TaskState.TASK_CANCELED) {
-			dispatch(task, n); // Check if object is not changed before sending to node 
-			// task.reset();
+			dispatch(task, n); // Check if object is not changed before sending to node
 			n.setCurrentTask(null);
 		}
 		updateNodesWork();
