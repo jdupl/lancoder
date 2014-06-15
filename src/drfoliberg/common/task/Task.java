@@ -3,6 +3,7 @@ package drfoliberg.common.task;
 import java.io.Serializable;
 
 import drfoliberg.common.job.JobConfig;
+import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.status.TaskState;
 
 public class Task implements Serializable {
@@ -13,18 +14,23 @@ public class Task implements Serializable {
 
 	public Task(int taskId, JobConfig config) {
 		taskInfo = new TaskInfo(config);
-		//taskInfo.setSourceFile(sourceFile);
+		// taskInfo.setSourceFile(sourceFile);
 		taskInfo.setTaskId(taskId);
-		//taskInfo.setRate(rate);
+		// taskInfo.setRate(rate);
 		taskStatus = new TaskStatus();
 	}
-
-	public int getRate() {
-		return taskInfo.getRate();
-	}
-
-	public void setRate(int rate) {
-		taskInfo.setRate(rate);
+	
+	public String getRateControlArg() {
+		switch (taskInfo.getRateControlType()) {
+		case VBR:
+			return String.format("-b:v %dk", this.getRate());
+		case CRF:
+			return String.format("-crf %d", this.getRate());
+		default:
+			// TODO throw exception
+			break;
+		}
+		return null;
 	}
 
 	public void reset() {
@@ -45,6 +51,22 @@ public class Task implements Serializable {
 	public float getProgress() {
 		float percentToComplete = ((float) taskStatus.getFramesCompleted() / taskInfo.getEstimatedFramesCount()) * 100;
 		return percentToComplete;
+	}
+	
+	public RateControlType getRateControlType() {
+		return taskInfo.getRateControlType();
+	}
+
+	public void setRateControlType(RateControlType rateControlType) {
+		taskInfo.setRateControlType(rateControlType);
+	}
+
+	public int getRate() {
+		return taskInfo.getRate();
+	}
+
+	public void setRate(int rate) {
+		taskInfo.setRate(rate);
 	}
 
 	public long getFramesCompleted() {

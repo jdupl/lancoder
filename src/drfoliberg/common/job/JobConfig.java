@@ -5,6 +5,14 @@ import java.util.ArrayList;
 
 public class JobConfig implements Serializable {
 
+	public RateControlType getRateControlType() {
+		return rateControlType;
+	}
+
+	public void setRateControlType(RateControlType rateControlType) {
+		this.rateControlType = rateControlType;
+	}
+
 	private static final long serialVersionUID = -8201664961243820323L;
 
 	protected String sourceFile;
