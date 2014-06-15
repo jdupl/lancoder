@@ -1,6 +1,7 @@
 package drfoliberg.common.task;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import drfoliberg.common.job.JobConfig;
 import drfoliberg.common.job.RateControlType;
@@ -20,25 +21,31 @@ public class Task implements Serializable {
 		taskStatus = new TaskStatus();
 	}
 
-	public String getRateControlArg() {
+	public ArrayList<String> getRateControlArgs() {
+		ArrayList<String> args = new ArrayList<>();
 		switch (taskInfo.getRateControlType()) {
 		case VBR:
-			return String.format("-b:v %dk", this.getRate());
+			args.add("-b:v");
+			args.add(String.format("%dk", this.getRate()));
+			break;
 		case CRF:
-			return String.format("-crf %d", this.getRate());
+			args.add("-crf");
+			args.add(String.format("%d", this.getRate()));
+			break;
 		default:
 			// TODO throw exception
 			break;
 		}
-		return null;
+		return args;
 	}
 
-	public Object getPresetArg() {
-		if (taskInfo.getPreset() == null) {
-			// Preset is not set. Do not use -preset
-			return "";
+	public ArrayList<String> getPresetArg() {
+		ArrayList<String> args = new ArrayList<>();
+		if (taskInfo.getPreset() != null) {
+			args.add("-preset");
+			args.add(taskInfo.getPreset().toString());
 		}
-		return String.format("-preset %s", taskInfo.getPreset().toString());
+		return args;
 	}
 
 	public void reset() {
@@ -59,6 +66,14 @@ public class Task implements Serializable {
 	public float getProgress() {
 		float percentToComplete = ((float) taskStatus.getFramesCompleted() / taskInfo.getEstimatedFramesCount()) * 100;
 		return percentToComplete;
+	}
+
+	public byte getPasses() {
+		return taskInfo.getPasses();
+	}
+
+	public void setPasses(byte passes) {
+		taskInfo.setPasses(passes);
 	}
 
 	public RateControlType getRateControlType() {
