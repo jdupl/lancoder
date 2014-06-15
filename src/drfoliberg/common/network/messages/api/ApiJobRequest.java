@@ -7,7 +7,7 @@ public class ApiJobRequest {
 
 	private String name;
 	private String inputFile;
-	private int bitrate;
+	private int rate;
 	private FFmpegPreset preset;
 	private RateControlType rateControlType;
 
@@ -27,10 +27,6 @@ public class ApiJobRequest {
 		this.rateControlType = rateControlType;
 	}
 
-	public int getBitrate() {
-		return bitrate;
-	}
-
 	public String getInputFile() {
 		return inputFile;
 	}
@@ -48,11 +44,11 @@ public class ApiJobRequest {
 	}
 
 	public int getRate() {
-		return bitrate;
+		return rate;
 	}
 
-	public void setBitrate(int bitrate) {
-		this.bitrate = bitrate;
+	public void setRate(int rate) {
+		this.rate = rate;
 	}
 
 }

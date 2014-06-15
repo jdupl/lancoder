@@ -16,6 +16,7 @@ import drfoliberg.common.Node;
 import drfoliberg.common.Service;
 import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.Job;
+import drfoliberg.common.job.JobConfig;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.api.ApiJobRequest;
@@ -282,12 +283,21 @@ public class Master implements Runnable {
 		return true;
 	}
 
-	public boolean apiDeleteJob(String jobId) {
+	public ApiResponse apiDeleteJob(String jobId) {
+		ApiResponse response = new ApiResponse(true);
 		Job j = this.jobs.get(jobId);
-		return deleteJob(j);
+		if (j == null) {
+			response = new ApiResponse(false, String.format("Could not retrieve job %s.", jobId));
+		} else if (!deleteJob(j)) {
+			response = new ApiResponse(false, String.format("Could not delete job %s.", jobId));
+		}
+		return response;
 	}
 
 	public boolean deleteJob(Job j) {
+		if (j == null) {
+			return false;
+		}
 		for (Task t : j.getTasks()) {
 			if (t.getStatus() == TaskState.TASK_COMPUTING) {
 				for (Node n : getNodes()) {
@@ -319,20 +329,22 @@ public class Master implements Runnable {
 					relativeSourceFile, absoluteSourceFile));
 		}
 
+		String jobName = req.getName();
 		long lengthOfJob = (long) (FFmpegProber.getSecondsDuration(absoluteSourceFile.getAbsolutePath()) * 1000);
 		float frameRate = FFmpegProber.getFrameRate(absoluteSourceFile.getAbsolutePath());
 		int frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 
-		FFmpegPreset preset = FFmpegPreset.SLOW;
-		byte passes = 2;
-		RateControlType rateControlType = RateControlType.CRF;
-		int lengthOfTasks = 1000 * 60 * 5;
+		FFmpegPreset preset = req.getPreset();
+		RateControlType rateControlType = req.getRateControlType();
+		byte passes = 1; // TODO get passes from request
 
-		Job j = new Job(req.getName(), relativeSourceFile, lengthOfTasks, lengthOfJob, frameCount, frameRate,
-				req.getRate(), preset, passes, rateControlType);
-		// Job j = new Job(req.getName(), relativeSourceFile, RateControlType.VBR, lengthOfJob, frameCount, frameRate,
-		// rate, preset, passes, rateControlType)
-		// TODO handle dynamic job types and task lengths
+		int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
+
+		ArrayList<String> extraArgs = new ArrayList<>(); // TODO get extra encoder args from api request
+
+		JobConfig conf = new JobConfig(relativeSourceFile, rateControlType, req.getRate(), passes, preset, extraArgs);
+		Job j = new Job(conf, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate);
+
 		if (addJob(j)) {
 			return new ApiResponse(true, "Job was successfully added.");
 		}

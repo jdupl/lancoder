@@ -35,7 +35,6 @@ public class ApiHandler extends AbstractHandler {
 
 		switch (target) {
 		case "/nodes":
-
 			response.setStatus(HttpServletResponse.SC_OK);
 			baseRequest.setHandled(true);
 			response.getWriter().println(gson.toJson(master.getNodes()));
@@ -64,11 +63,7 @@ public class ApiHandler extends AbstractHandler {
 			try {
 				String id = br.readLine();
 				response.setStatus(HttpServletResponse.SC_OK);
-				if (master.apiDeleteJob(id)) {
-					res = new ApiResponse(true, "");
-				} else {
-					res = new ApiResponse(false, "Job could not be deleted or does not exist !");
-				}
+				res = master.apiDeleteJob(id);
 			} catch (Exception e) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			}

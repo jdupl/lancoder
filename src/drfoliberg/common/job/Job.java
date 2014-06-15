@@ -17,6 +17,7 @@ import drfoliberg.common.task.Task;
  */
 public class Job extends JobConfig {
 
+	private static final long serialVersionUID = -3817299446490049451L;
 	private ArrayList<Task> tasks;
 	private String jobId;
 	private String jobName;
@@ -27,7 +28,7 @@ public class Job extends JobConfig {
 	private float frameRate;
 
 	/**
-	 * 
+	 * @deprecated
 	 * @param jobName
 	 *            The job name
 	 * @param sourceFile
@@ -54,6 +55,24 @@ public class Job extends JobConfig {
 		this.tasks = new ArrayList<>();
 		this.jobStatus = JobState.JOB_TODO;
 
+	}
+
+	public Job(JobConfig config, String jobName, int lengthOfTasks, long lengthOfJob, int frameCount, float frameRate) {
+		super(config);
+
+		this.jobName = jobName;
+		this.lengthOfTasks = lengthOfTasks;
+		this.lengthOfJob = lengthOfJob;
+		this.frameCount = frameCount;
+		this.frameRate = frameRate;
+
+		this.tasks = new ArrayList<>();
+		this.jobStatus = JobState.JOB_TODO;
+
+		createTasks();
+	}
+
+	private void createTasks() {
 		long currentMs = 0;
 		int taskNo = 0;
 		long remaining = lengthOfJob;
@@ -213,11 +232,11 @@ public class Job extends JobConfig {
 	}
 
 	public RateControlType getRateContolType() {
-		return rateContolType;
+		return rateControlType;
 	}
 
 	public void setRateContolType(RateControlType rateContolType) {
-		this.rateContolType = rateContolType;
+		this.rateControlType = rateContolType;
 	}
 
 }
