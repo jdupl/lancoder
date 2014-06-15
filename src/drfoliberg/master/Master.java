@@ -149,7 +149,7 @@ public class Master implements Runnable {
 	 * 
 	 * @return true if any work was dispatched
 	 */
-	private synchronized boolean updateNodesWork() {
+	public synchronized boolean updateNodesWork() {
 		// TODO loop to send more tasks (not just once)
 		Task nextTask = getNextTask();
 		if (nextTask == null) {
@@ -167,6 +167,7 @@ public class Master implements Runnable {
 	}
 
 	public boolean dispatch(Task task, Node node) {
+		task.getTaskStatus().setState(TaskState.TASK_COMPUTING);
 		Dispatcher dispatcher = new Dispatcher(node, task, this);
 		Thread t = new Thread(dispatcher);
 		t.start();
@@ -254,9 +255,9 @@ public class Master implements Runnable {
 			n.setUnid(getNewUNID(n));
 		}
 		if (nodes.containsKey(n.getUnid())) {
-			System.out.println("MASTER: Could not add node!");
-			// TODO handle node with same unid reconnecting -> offline status
-			return false;
+			nodes.get(n.getUnid()).setStatus(NodeState.FREE);
+			// Node with same unid reconnecting
+			return true;
 		} else {
 			n.setStatus(NodeState.NOT_CONNECTED);
 			nodes.put(n.getUnid(), n);

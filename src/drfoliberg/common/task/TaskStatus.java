@@ -75,8 +75,8 @@ public class TaskStatus implements Serializable {
 		return status;
 	}
 
-	public void setStatus(TaskState status) {
-		this.status = status;
+	public void setState(TaskState state) {
+		this.status = state;
 	}
 
 	public byte getCurrentPass() {

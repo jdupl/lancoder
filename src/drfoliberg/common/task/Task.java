@@ -137,7 +137,7 @@ public class Task implements Serializable {
 	}
 
 	public void setStatus(TaskState status) {
-		taskStatus.setStatus(status);
+		taskStatus.setState(status);
 	}
 
 	public String getSourceFile() {

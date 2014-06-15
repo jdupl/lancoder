@@ -24,7 +24,13 @@ public class Dispatcher implements Runnable {
 		this.task = task;
 	}
 
+	private void taskRefused() {
+		task.setStatus(TaskState.TASK_TODO);
+		master.updateNodesWork();
+	}
+
 	public void run() {
+		boolean success = false;
 		try {
 			Socket s = new Socket(node.getNodeAddress(), node.getNodePort());
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
@@ -45,6 +51,7 @@ public class Dispatcher implements Runnable {
 					System.err.println("MASTER DISPATCH: node accepted task");
 					node.setCurrentTask(task);
 					task.setStatus(TaskState.TASK_COMPUTING);
+					success = true;
 					s.close();
 					break;
 				default:
@@ -61,7 +68,7 @@ public class Dispatcher implements Runnable {
 			// TODO: handle node not listening ?
 			System.out.println("MASTER HANDLE: could not send packet to worker! WORKER IS OFFLINE");
 			if (task.getTaskStatus().getState() == TaskState.TASK_CANCELED) {
-				task.getTaskStatus().setStatus(TaskState.TASK_TODO);
+				task.getTaskStatus().setState(TaskState.TASK_TODO);
 			}
 
 		} catch (ClassNotFoundException e) {
@@ -71,7 +78,10 @@ public class Dispatcher implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.out.println(e.getMessage());
+		} finally {
+			if (!success) {
+				taskRefused();
+			}
 		}
 	}
-
 }
