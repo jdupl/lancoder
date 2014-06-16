@@ -67,7 +67,7 @@ public class WorkThread extends Service {
 		// Get parameters from the task and bind parameters to process
 		try {
 			String[] baseArgs = new String[] { "ffmpeg", "-ss", startTimeStr, "-t", durationStr, "-i",
-					inputFile.getAbsolutePath(), "-force_key_frames", "0", "-an", "-c:v", "libx264" };
+					inputFile.getAbsolutePath(), "-sn", "-force_key_frames", "0", "-an", "-c:v", "libx264" };
 			ArrayList<String> ffmpegArgs = new ArrayList<>();
 			// Add base args to process builder
 			for (String arg : baseArgs) {
@@ -113,6 +113,7 @@ public class WorkThread extends Service {
 			try {
 				line = s.nextLine();
 				Matcher m = currentFramePattern.matcher(line);
+
 				if (m.find()) {
 					long currentFrame = Long.parseLong(m.group(1));
 					callback.getCurrentTask().setFramesCompleted(currentFrame);
@@ -134,6 +135,7 @@ public class WorkThread extends Service {
 				}
 			} catch (NullPointerException e) {
 				// If task is interrupted, current task might become null
+				e.printStackTrace();
 				if (!close) {
 					// If thread is not stopped and a null pointer occurs, it is not normal
 					throw new WorkInterruptedException();

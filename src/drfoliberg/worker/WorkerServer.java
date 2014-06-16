@@ -61,6 +61,7 @@ public class WorkerServer extends Service {
 								if (tqm.task.getStatus() == TaskState.TASK_CANCELED) {
 									out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));
 									out.flush();
+									System.err.println("WORKER: master requests to stop work !");
 									worker.stopWork(tqm.task);
 								} else if (worker.startWork(tqm.task)) {
 									out.writeObject(new Message(ClusterProtocol.TASK_ACCEPTED));

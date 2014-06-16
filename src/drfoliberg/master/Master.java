@@ -167,7 +167,9 @@ public class Master implements Runnable {
 	}
 
 	public boolean dispatch(Task task, Node node) {
-		task.getTaskStatus().setState(TaskState.TASK_COMPUTING);
+		if (task.getTaskStatus().getState() == TaskState.TASK_TODO) {
+			task.getTaskStatus().setState(TaskState.TASK_COMPUTING);
+		}
 		Dispatcher dispatcher = new Dispatcher(node, task, this);
 		Thread t = new Thread(dispatcher);
 		t.start();
@@ -388,6 +390,7 @@ public class Master implements Runnable {
 			toCancel = n.getCurrentTask();
 			if (toCancel != null) {
 				updateNodeTask(n, TaskState.TASK_TODO);
+				n.setCurrentTask(null);
 			}
 			n.setStatus(NodeState.NOT_CONNECTED);
 		} else {
@@ -424,7 +427,7 @@ public class Master implements Runnable {
 
 			// TODO implement task.complete() ?
 		} else if (updateStatus == TaskState.TASK_CANCELED) {
-			dispatch(task, n); // Check if object is not changed before sending to node
+			dispatch(task, n);
 			n.setCurrentTask(null);
 		}
 		updateNodesWork();
@@ -489,7 +492,7 @@ public class Master implements Runnable {
 			return false;
 		}
 
-		if (sender.getCurrentTask().getStatus() == TaskState.TASK_COMPLETED) {
+		if (report.getTask().getStatus() == TaskState.TASK_COMPLETED) {
 			updateNodeTask(sender, TaskState.TASK_COMPLETED);
 		} else {
 			System.out.printf("MASTER: Updating the task %s to %f%% \n", sender.getCurrentTask().getTaskId(), progress);
