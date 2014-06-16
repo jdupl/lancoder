@@ -4,8 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -208,14 +213,37 @@ public class WorkThread extends Service {
 		}
 	}
 
+	private static void givePerms(File f) {
+		try {
+			Path p = Paths.get(f.toURI());
+			Set<PosixFilePermission> perms = Files.getPosixFilePermissions(p);
+			perms.add(PosixFilePermission.OTHERS_WRITE);
+			Files.setPosixFilePermissions(p, perms);
+		} catch (IOException e) {
+			System.err.printf("Could not set group writable to %s\n", f.toString());
+		}
+	}
+
 	private void createDirs() {
 		absoluteSharedDir = new File(callback.config.getAbsoluteSharedFolder());
 		// Create final part folder
 		jobFinalFolder = new File(absoluteSharedDir, callback.config.getFinalEncodingFolder());
+		if (!jobFinalFolder.exists()) {
+			jobFinalFolder.mkdirs();
+			givePerms(jobFinalFolder);
+		}
+
 		jobFinalFolder = new File(jobFinalFolder, this.task.getJobId());
+		if (!jobFinalFolder.exists()) {
+			jobFinalFolder.mkdirs();
+			givePerms(jobFinalFolder);
+		}
 
 		taskFinalFolder = new File(jobFinalFolder, "parts");
-		// taskFinalFolder = new File(taskFinalFolder, String.valueOf(task.getTaskId()));
+		if (!taskFinalFolder.exists()) {
+			taskFinalFolder.mkdirs();
+			givePerms(taskFinalFolder);
+		}
 
 		// Create temp part folder
 		String tempOutput = callback.config.getTempEncodingFolder();
@@ -225,12 +253,14 @@ public class WorkThread extends Service {
 			tempOutputJob.mkdirs();
 		}
 
-		taskTempOutputFolder = new File(tempOutputJob, "parts");
-		taskTempOutputFolder = new File(taskTempOutputFolder, String.format("part_%d", task.getTaskId()));
-
+		taskTempOutputFolder = new File(tempOutputJob, String.format("part_%d", task.getTaskId()));
 		// remove any previous temp files for this part
 		cleanTempPart();
-		taskTempOutputFolder.mkdirs();
+
+		if (!taskTempOutputFolder.exists()) {
+			taskTempOutputFolder.mkdirs();
+			givePerms(taskTempOutputFolder);
+		}
 
 		taskTempOutputFile = new File(taskTempOutputFolder, String.format("output-part_%d.mkv", task.getTaskId()));
 	}
