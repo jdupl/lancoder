@@ -8,8 +8,11 @@ import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
+
+import org.apache.commons.io.FileUtils;
 
 import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.Node;
@@ -323,39 +326,61 @@ public class Master implements Runnable {
 
 	public ApiResponse addJob(ApiJobRequest req) {
 
+		boolean success = true;
+
 		if (req == null) {
 			return new ApiResponse(false, "Job request is probably missing fields !");
 		}
 
 		String relativeSourceFile = req.getInputFile();
+
+		ArrayList<File> inputs = new ArrayList<>();
 		File absoluteSourceFile = new File(new File(config.getAbsoluteSharedFolder()), relativeSourceFile);
-		if (!absoluteSourceFile.isFile() || !absoluteSourceFile.canRead()) {
-			return new ApiResponse(false, String.format("File %s in %s does not exists or is not readable !",
-					relativeSourceFile, absoluteSourceFile));
+
+		if (absoluteSourceFile.isDirectory()) {
+			System.err.println("Directory given!");
+			Collection<File> given = FileUtils.listFiles(absoluteSourceFile, new String[] { "mkv", "mp4", "avi" },
+					false); // TODO include recursive ?
+			for (File file : given) {
+				inputs.add(file);
+			}
+		} else if (absoluteSourceFile.isFile()) {
+			inputs.add(absoluteSourceFile);
+		} else {
+			return new ApiResponse(false, String.format(
+					"File or directory %s in %s does not exists or is not readable !", relativeSourceFile,
+					absoluteSourceFile));
 		}
 
-		String jobName = req.getName();
-		long lengthOfJob = (long) (FFmpegProber.getSecondsDuration(absoluteSourceFile.getAbsolutePath()) * 1000);
-		float frameRate = FFmpegProber.getFrameRate(absoluteSourceFile.getAbsolutePath());
-		int frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
+		for (File file : inputs) {
+			String relative = new File(config.getAbsoluteSharedFolder()).toURI().relativize(file.toURI()).getPath();
+			System.err.println(relative);
+			String jobName = String.format("%s - %s", req.getName(), file.getName());
+			long lengthOfJob = (long) (FFmpegProber.getSecondsDuration(file.getAbsolutePath()) * 1000);
+			float frameRate = FFmpegProber.getFrameRate(file.getAbsolutePath());
+			int frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 
-		FFmpegPreset preset = req.getPreset();
-		RateControlType rateControlType = req.getRateControlType();
+			FFmpegPreset preset = req.getPreset();
+			RateControlType rateControlType = req.getRateControlType();
 
-		byte passes = req.getPasses() < 0 || req.getPasses() > 2 ? 1 : req.getPasses();
+			byte passes = req.getPasses() < 0 || req.getPasses() > 2 ? 1 : req.getPasses();
 
-		int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
+			int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
 
-		ArrayList<String> extraArgs = new ArrayList<>(); // TODO get extra encoder args from api request
+			ArrayList<String> extraArgs = new ArrayList<>(); // TODO get extra encoder args from api request
 
-		JobConfig conf = new JobConfig(relativeSourceFile, rateControlType, req.getRate(), passes, preset, extraArgs);
-		Job j = new Job(conf, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate);
+			JobConfig conf = new JobConfig(relative, rateControlType, req.getRate(), passes, preset, extraArgs);
+			Job j = new Job(conf, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate);
 
-		if (addJob(j)) {
-			return new ApiResponse(true, "Job was successfully added.");
+			if (!addJob(j)) {
+				success = false;
+			}
 		}
-		return new ApiResponse(false, "Unknown error while adding the job !");
 
+		if (success) {
+			return new ApiResponse(true, "All jobs were successfully added.");
+		}
+		return new ApiResponse(false, "Some jobs could not be added.");
 	}
 
 	public ArrayList<Job> getJobs() {
