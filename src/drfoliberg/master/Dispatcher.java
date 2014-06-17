@@ -67,8 +67,8 @@ public class Dispatcher implements Runnable {
 		} catch (ConnectException e) {
 			// TODO: handle node not listening ?
 			System.out.println("MASTER HANDLE: could not send packet to worker! WORKER IS OFFLINE");
-			if (task.getTaskStatus().getState() == TaskState.TASK_CANCELED) {
-				task.getTaskStatus().setState(TaskState.TASK_TODO);
+			if (task.getState() == TaskState.TASK_CANCELED) {
+				task.setState(TaskState.TASK_TODO);
 			}
 
 		} catch (ClassNotFoundException e) {

@@ -88,8 +88,8 @@ public class WorkThread extends Service {
 			if (task.getPasses() > 1) {
 				// Add pass arguments
 				ffmpegArgs.add("-pass");
-				ffmpegArgs.add(String.valueOf(task.getTaskStatus().getCurrentPass()));
-				if (task.getTaskStatus().getCurrentPass() != task.getPasses()) {
+				ffmpegArgs.add(String.valueOf(task.getCurrentPass()));
+				if (task.getCurrentPass() != task.getPasses()) {
 					ffmpegArgs.add("-f");
 					ffmpegArgs.add("rawvideo");
 					ffmpegArgs.add("-y");
@@ -175,11 +175,11 @@ public class WorkThread extends Service {
 
 			createDirs();
 
-			task.getTaskStatus().setCurrentPass((byte) 1);
-			while (task.getTaskStatus().getCurrentPass() <= task.getPasses()) {
-				System.err.printf("Encoding pass %d of %d\n", task.getTaskStatus().getCurrentPass(), task.getPasses());
+			task.setCurrentPass((byte) 1);
+			while (task.getCurrentPass() <= task.getPasses()) {
+				System.err.printf("Encoding pass %d of %d\n", task.getCurrentPass(), task.getPasses());
 				encodePass(startTimeStr, durationStr);
-				task.getTaskStatus().setCurrentPass((byte) (task.getTaskStatus().getCurrentPass() + 1));
+				task.setCurrentPass((byte) (task.getCurrentPass() + 1));
 			}
 
 			moveTempPartFile();

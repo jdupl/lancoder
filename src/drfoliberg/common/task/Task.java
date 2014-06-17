@@ -3,6 +3,7 @@ package drfoliberg.common.task;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.JobConfig;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.status.TaskState;
@@ -198,6 +199,34 @@ public class Task implements Serializable {
 
 	public void setTimeStarted(long timeStarted) {
 		taskStatus.setTimeStarted(timeStarted);
+	}
+
+	public void setPreset(FFmpegPreset preset) {
+		taskInfo.setPreset(preset);
+	}
+
+	public ArrayList<String> getExtraEncoderArgs() {
+		return taskInfo.getExtraEncoderArgs();
+	}
+
+	public void setExtraEncoderArgs(ArrayList<String> extraEncoderArgs) {
+		taskInfo.setExtraEncoderArgs(extraEncoderArgs);
+	}
+
+	public TaskState getState() {
+		return taskStatus.getState();
+	}
+
+	public void setState(TaskState state) {
+		taskStatus.setState(state);
+	}
+
+	public byte getCurrentPass() {
+		return taskStatus.getCurrentPass();
+	}
+
+	public void setCurrentPass(byte currentPass) {
+		taskStatus.setCurrentPass(currentPass);
 	}
 
 }

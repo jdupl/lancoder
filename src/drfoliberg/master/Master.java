@@ -155,14 +155,14 @@ public class Master implements Runnable {
 	 */
 	public synchronized boolean updateNodesWork() {
 		// TODO loop to send more tasks (not just once)
-		Task nextTask = getNextTask();
-		if (nextTask == null) {
-			System.out.println("MASTER: No available work!");
-			return false;
-		}
 		Node node = getBestFreeNode();
 		if (node == null) {
 			System.out.println("MASTER: No available nodes!");
+			return false;
+		}
+		Task nextTask = getNextTask();
+		if (nextTask == null) {
+			System.out.println("MASTER: No available work!");
 			return false;
 		}
 		dispatch(nextTask, node);
@@ -171,8 +171,8 @@ public class Master implements Runnable {
 	}
 
 	public boolean dispatch(Task task, Node node) {
-		if (task.getTaskStatus().getState() == TaskState.TASK_TODO) {
-			task.getTaskStatus().setState(TaskState.TASK_COMPUTING);
+		if (task.getState() == TaskState.TASK_TODO) {
+			task.setState(TaskState.TASK_COMPUTING);
 		}
 		Dispatcher dispatcher = new Dispatcher(node, task, this);
 		Thread t = new Thread(dispatcher);
@@ -354,7 +354,6 @@ public class Master implements Runnable {
 
 		for (File file : inputs) {
 			String relative = new File(config.getAbsoluteSharedFolder()).toURI().relativize(file.toURI()).getPath();
-			System.err.println(relative);
 			String jobName = String.format("%s - %s", req.getName(), file.getName());
 			long lengthOfJob = (long) (FFmpegProber.getSecondsDuration(file.getAbsolutePath()) * 1000);
 			float frameRate = FFmpegProber.getFrameRate(file.getAbsolutePath());
@@ -441,14 +440,15 @@ public class Master implements Runnable {
 			Job job = this.jobs.get(task.getJobId());
 			boolean jobDone = true;
 			for (Task t : job.getTasks()) {
-				if (t.getTaskStatus().getState() != TaskState.TASK_COMPLETED) {
+				if (t.getState() != TaskState.TASK_COMPLETED) {
 					jobDone = false;
 					break;
 				}
 			}
 
 			if (jobDone) {
-				job.setJobStatus(JobState.JOB_COMPLETED);
+				jobCompleted(job);
+				//
 			}
 
 			// TODO implement task.complete() ?
@@ -459,6 +459,28 @@ public class Master implements Runnable {
 		updateNodesWork();
 
 		return false;
+	}
+
+	private void jobCompleted(Job job) {
+		job.setJobStatus(JobState.JOB_COMPLETED);
+		if(!checkJobIntegrity(job)){
+			// restart missing tasks 
+		}
+	}
+
+	/**
+	 * Check if all tasks are on the disk
+	 * 
+	 * @param j
+	 * 
+	 * @return true if all files are accessible
+	 */
+	private boolean checkJobIntegrity(Job job) {
+		ArrayList<Task> tasks = job.getTasks();
+		for (Task task : tasks) {
+			// check output file
+		}
+		return true;
 	}
 
 	/**

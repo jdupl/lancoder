@@ -15,22 +15,6 @@ public class TaskInfo extends JobConfig {
 		super(config);
 	}
 
-	public String getSourceFile() {
-		return sourceFile;
-	}
-
-	public void setSourceFile(String sourceFile) {
-		this.sourceFile = sourceFile;
-	}
-
-	public int getRate() {
-		return rate;
-	}
-
-	public void setRate(int rate) {
-		this.rate = rate;
-	}
-
 	public int getTaskId() {
 		return taskId;
 	}

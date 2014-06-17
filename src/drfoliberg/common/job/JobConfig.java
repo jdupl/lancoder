@@ -58,4 +58,28 @@ public class JobConfig implements Serializable {
 		this.rateControlType = rateControlType;
 	}
 
+	public String getSourceFile() {
+		return sourceFile;
+	}
+
+	public void setSourceFile(String sourceFile) {
+		this.sourceFile = sourceFile;
+	}
+
+	public int getRate() {
+		return rate;
+	}
+
+	public void setRate(int rate) {
+		this.rate = rate;
+	}
+
+	public ArrayList<String> getExtraEncoderArgs() {
+		return extraEncoderArgs;
+	}
+
+	public void setExtraEncoderArgs(ArrayList<String> extraEncoderArgs) {
+		this.extraEncoderArgs = extraEncoderArgs;
+	}
+
 }

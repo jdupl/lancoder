@@ -223,14 +223,6 @@ public class Job extends JobConfig {
 		this.jobName = jobName;
 	}
 
-	public String getSourceFile() {
-		return sourceFile;
-	}
-
-	public void setSourceFile(String sourceFile) {
-		this.sourceFile = sourceFile;
-	}
-
 	public RateControlType getRateContolType() {
 		return rateControlType;
 	}
