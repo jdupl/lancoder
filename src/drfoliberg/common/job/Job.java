@@ -121,7 +121,7 @@ public class Job extends JobConfig {
 		}
 
 		if (this.getJobStatus() == JobState.JOB_TODO) {
-			// TODO perhaps move this
+			// TODO move this to job manager
 			this.setJobStatus(JobState.JOB_COMPUTING);
 		}
 
@@ -149,7 +149,7 @@ public class Job extends JobConfig {
 			int count = 0;
 			for (Task task : this.tasks) {
 				if (task.getStatus() == TaskState.TASK_TODO) {
-					--count;
+					++count;
 				}
 			}
 			return count;

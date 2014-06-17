@@ -112,16 +112,17 @@ public class Master implements Runnable {
 	/**
 	 * Get the task of a job with the least possible remaining tasks.
 	 * 
-	 * @return
+	 * @return The task to dispatch next or null is none available
 	 */
 	private Task getNextTask() {
-
 		Job min = null;
+		int minTaskCount = Integer.MAX_VALUE;
+
 		for (Job j : this.getJobs()) {
-			if (min == null) {
+			int taskCount = j != null ? j.getCountTaskRemaining() : 0;
+			if (taskCount != 0 && (min == null || minTaskCount > taskCount)) {
 				min = j;
-			} else if (min.getCountTaskRemaining() > j.getCountTaskRemaining()) {
-				min = j;
+				minTaskCount = taskCount;
 			}
 		}
 
