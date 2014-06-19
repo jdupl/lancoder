@@ -3,7 +3,6 @@ package drfoliberg.master;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.ConnectException;
 import java.net.Socket;
 
 import drfoliberg.common.Node;
@@ -30,6 +29,11 @@ public class Dispatcher implements Runnable {
 		master.updateNodesWork();
 	}
 
+	private void taskAccepted() {
+		node.setCurrentTask(task);
+		task.setStatus(TaskState.TASK_COMPUTING);
+	}
+
 	public void run() {
 		boolean success = false;
 		try {
@@ -50,8 +54,6 @@ public class Dispatcher implements Runnable {
 					break;
 				case TASK_ACCEPTED:
 					System.err.println("MASTER DISPATCH: node accepted task");
-					node.setCurrentTask(task);
-					task.setStatus(TaskState.TASK_COMPUTING);
 					success = true;
 					s.close();
 					break;
@@ -65,23 +67,15 @@ public class Dispatcher implements Runnable {
 			} else {
 				System.out.println("MASTER DISPATCH: received invalid message!!");
 			}
-		} catch (ConnectException e) {
-			// TODO: handle node not listening ?
-			System.out.println("MASTER HANDLE: could not send packet to worker! WORKER IS OFFLINE");
-			if (task.getState() == TaskState.TASK_CANCELED) {
-				task.setState(TaskState.TASK_TODO);
-			}
-
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println(e.getMessage());
 		} finally {
 			if (!success) {
 				taskRefused();
+			} else {
+				taskAccepted();
 			}
 		}
 	}
