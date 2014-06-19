@@ -16,9 +16,7 @@ public class Task implements Serializable {
 
 	public Task(int taskId, JobConfig config) {
 		taskInfo = new TaskInfo(config);
-		// taskInfo.setSourceFile(sourceFile);
 		taskInfo.setTaskId(taskId);
-		// taskInfo.setRate(rate);
 		taskStatus = new TaskStatus();
 	}
 
@@ -227,6 +225,18 @@ public class Task implements Serializable {
 
 	public void setCurrentPass(byte currentPass) {
 		taskStatus.setCurrentPass(currentPass);
+	}
+
+	public String getOutputFile() {
+		return taskInfo.getOutputFile();
+	}
+
+	public void setOutputFile(String outputFile) {
+		taskInfo.setOutputFile(outputFile);
+	}
+
+	public FFmpegPreset getPreset() {
+		return taskInfo.getPreset();
 	}
 
 }

@@ -7,6 +7,11 @@ public class TaskInfo extends JobConfig {
 	private static final long serialVersionUID = -7347337372025478193L;
 	protected int taskId;
 	protected String jobId;
+	/**
+	 * Path of the file relative to the final encodes output folder.
+	 */
+	protected String outputFile;
+
 	protected long encodingStartTime;
 	protected long encodingEndTime;
 	protected long estimatedFramesCount;
@@ -53,6 +58,14 @@ public class TaskInfo extends JobConfig {
 
 	public void setEstimatedFramesCount(long estimatedFramesCount) {
 		this.estimatedFramesCount = estimatedFramesCount;
+	}
+
+	public String getOutputFile() {
+		return outputFile;
+	}
+
+	public void setOutputFile(String outputFile) {
+		this.outputFile = outputFile;
 	}
 
 }

@@ -18,7 +18,15 @@ public enum JobState {
 	 */
 	JOB_PAUSED,
 	/**
-	 * All tasks in the job are completed.
+	 * All tasks in the job are encoded. This status should be temporary as it would go to muxing afterwards.
+	 */
+	JOB_ENCODED,
+	/**
+	 * Job is currently being muxed.
+	 */
+	JOB_MUXING,
+	/**
+	 * All tasks in the job are encoded and muxed.
 	 */
 	JOB_COMPLETED
 }

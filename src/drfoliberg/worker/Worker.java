@@ -20,13 +20,12 @@ import drfoliberg.common.task.TaskReport;
 public class Worker implements Runnable {
 
 	WorkerConfig config;
+	
 	private String configPath;
-
 	private Task currentTask;
 	private NodeState status;
-
 	private ArrayList<Service> services;
-	public WorkerServer workerListener;
+	private WorkerServer workerListener;
 	private WorkThread workThread;
 
 	public Worker(String configPath) {
@@ -100,10 +99,9 @@ public class Worker implements Runnable {
 		System.out.println((getWorkerName().toUpperCase()) + ": " + s);
 	}
 
-	public void taskDone(Task task, InetAddress masterIp) {
+	public void taskDone(Task t) {
 		this.currentTask.setStatus(TaskState.TASK_COMPLETED);
 		this.updateStatus(NodeState.FREE);
-		this.currentTask = null;
 		services.remove(workThread);
 	}
 
@@ -121,7 +119,7 @@ public class Worker implements Runnable {
 			return false;
 		} else {
 			this.currentTask = t;
-			this.workThread = new WorkThread(this, t, config.getMasterIpAddress());
+			this.workThread = new WorkThread(this, t);
 			Thread wt = new Thread(workThread);
 			wt.start();
 			services.add(workThread);
@@ -163,6 +161,9 @@ public class Worker implements Runnable {
 
 		switch (statusCode) {
 		case FREE:
+			notifyMasterStatusChange(statusCode);
+			this.currentTask = null;
+			break;
 		case WORKING:
 		case PAUSED:
 			notifyMasterStatusChange(statusCode);

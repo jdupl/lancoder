@@ -18,7 +18,6 @@ public class WorkerConfig implements Serializable {
 	private static final transient int DEFAULT_MASTER_PORT = 1337;
 	private static final int DEFAULT_LISTEN_PORT = 1338;
 	private static final InetAddress DEFAULT_MASTER_IP = InetAddress.getLoopbackAddress();
-	private static final String DEFAULT_ENCODE_DIRECTORY = "encodes";
 	private static final String DEFAULT_TEMP_DIRECTORY = "/tmp";
 	private static final String DEFAULT_UNID = "";
 	private static final String DEFAULT_NAME = "";
@@ -31,7 +30,6 @@ public class WorkerConfig implements Serializable {
 	private String name;
 	private String absoluteSharedFolder;
 	private String tempEncodingFolder;
-	private String finalEncodingFolder;
 
 	public WorkerConfig() {
 		this.masterIpAddress = DEFAULT_MASTER_IP;
@@ -41,7 +39,6 @@ public class WorkerConfig implements Serializable {
 		this.name = DEFAULT_NAME;
 		this.absoluteSharedFolder = DEFAULT_ABSOLUTE_PATH;
 		this.tempEncodingFolder = DEFAULT_TEMP_DIRECTORY;
-		this.finalEncodingFolder = DEFAULT_ENCODE_DIRECTORY;
 	}
 
 	/**
@@ -110,14 +107,6 @@ public class WorkerConfig implements Serializable {
 
 	public void setTempEncodingFolder(String tempEncodingFolder) {
 		this.tempEncodingFolder = tempEncodingFolder;
-	}
-
-	public String getFinalEncodingFolder() {
-		return finalEncodingFolder;
-	}
-
-	public void setFinalEncodingFolder(String finalEncodingFolder) {
-		this.finalEncodingFolder = finalEncodingFolder;
 	}
 
 	public String getName() {

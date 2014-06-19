@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.Node;
@@ -33,8 +34,10 @@ import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.TaskReport;
 import drfoliberg.master.api.ApiServer;
+import drfoliberg.muxer.Muxer;
+import drfoliberg.muxer.MuxerListener;
 
-public class Master implements Runnable {
+public class Master implements Runnable, MuxerListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
@@ -324,6 +327,13 @@ public class Master implements Runnable {
 		return true;
 	}
 
+	public Job createJob(JobConfig jobConfig, String jobName, int lengthOfTasks, long lengthOfJob, int frameCount,
+			float frameRate) {
+		// TODO Move to factory
+		return new Job(jobConfig, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate,
+				config.getFinalEncodingFolder());
+	}
+
 	public ApiResponse addJob(ApiJobRequest req) {
 
 		boolean success = true;
@@ -354,7 +364,11 @@ public class Master implements Runnable {
 
 		for (File file : inputs) {
 			String relative = new File(config.getAbsoluteSharedFolder()).toURI().relativize(file.toURI()).getPath();
-			String jobName = String.format("%s - %s", req.getName(), file.getName());
+			String jobName = req.getName();
+			if (inputs.size() > 1) {
+				String fileName = FilenameUtils.removeExtension(file.getName());
+				jobName = String.format("%s - %s", req.getName(), fileName);
+			}
 			long lengthOfJob = (long) (FFmpegProber.getSecondsDuration(file.getAbsolutePath()) * 1000);
 			float frameRate = FFmpegProber.getFrameRate(file.getAbsolutePath());
 			int frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
@@ -369,7 +383,7 @@ public class Master implements Runnable {
 			ArrayList<String> extraArgs = new ArrayList<>(); // TODO get extra encoder args from api request
 
 			JobConfig conf = new JobConfig(relative, rateControlType, req.getRate(), passes, preset, extraArgs);
-			Job j = new Job(conf, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate);
+			Job j = createJob(conf, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate);
 
 			if (!addJob(j)) {
 				success = false;
@@ -447,8 +461,7 @@ public class Master implements Runnable {
 			}
 
 			if (jobDone) {
-				jobCompleted(job);
-				//
+				jobEncodingCompleted(job);
 			}
 
 			// TODO implement task.complete() ?
@@ -461,26 +474,47 @@ public class Master implements Runnable {
 		return false;
 	}
 
-	private void jobCompleted(Job job) {
-		job.setJobStatus(JobState.JOB_COMPLETED);
-		if(!checkJobIntegrity(job)){
-			// restart missing tasks 
+	/**
+	 * Check job parts and start muxing process
+	 * 
+	 * @param job
+	 */
+	private void jobEncodingCompleted(Job job) {
+		job.setJobStatus(JobState.JOB_ENCODED);
+		if (!checkJobIntegrity(job)) {
+			job.setJobStatus(JobState.JOB_COMPUTING);
+		} else {
+			// start muxing
+			File absoltuteJobOutputFolder = new File(config.getAbsoluteSharedFolder(), job.getOutputFolder());
+			Muxer m = new Muxer(this, job, absoltuteJobOutputFolder.getAbsolutePath());
+			// this.services.add(m); TODO add muxer to services
+			Thread t = new Thread(m);
+			t.start();
 		}
 	}
 
 	/**
-	 * Check if all tasks are on the disk
+	 * Check if all tasks are on the disk after encoding is done. Resets status of bad tasks.
 	 * 
 	 * @param j
+	 *            The job to check
 	 * 
 	 * @return true if all files are accessible
 	 */
 	private boolean checkJobIntegrity(Job job) {
-		ArrayList<Task> tasks = job.getTasks();
-		for (Task task : tasks) {
-			// check output file
+		boolean integrity = true;
+
+		for (Task task : job.getTasks()) {
+			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getOutputFile());
+			if (!absoluteTaskFile.exists()) {
+				System.err.printf("Cannot start muxing ! Task %d of job %s is not found!\n", task.getTaskId(),
+						job.getJobName());
+				System.err.printf("BTW I was looking for file '%s'\n", absoluteTaskFile);
+				integrity = false;
+				task.setStatus(TaskState.TASK_TODO);
+			}
 		}
-		return true;
+		return integrity;
 	}
 
 	/**
@@ -573,6 +607,24 @@ public class Master implements Runnable {
 		nodeCheckerThread.start();
 		Thread apiThread = new Thread(apiServer);
 		apiThread.start();
+	}
+
+	@Override
+	public void muxingStarting(Job job) {
+		job.setJobStatus(JobState.JOB_MUXING);
+	}
+
+	@Override
+	public void muxingCompleted(Job job) {
+		System.out.printf("Job %s finished muxing !\n", job.getJobName());
+		job.setJobStatus(JobState.JOB_COMPLETED);
+	}
+
+	@Override
+	public void muxingFailed(Job job, Exception e) {
+		// TODO Auto-generated method stub
+		System.err.printf("Muxing failed for job %s\n", job.getJobName());
+		e.printStackTrace();
 	}
 
 }

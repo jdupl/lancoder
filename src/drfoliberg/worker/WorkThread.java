@@ -3,7 +3,6 @@ package drfoliberg.worker;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,23 +26,37 @@ import drfoliberg.common.task.Task;
 
 public class WorkThread extends Service {
 
-	private InetAddress masterIp;
 	private Task task;
 	private Worker callback;
 	Process process;
 
-	File jobFinalFolder;
 	File taskFinalFolder;
-
 	File absoluteSharedDir;
 	File taskTempOutputFile;
 	File taskTempOutputFolder;
 
-	public WorkThread(Worker w, Task t, InetAddress masterIp) {
-		this.masterIp = masterIp;
+	public WorkThread(Worker w, Task t) {
 		task = t;
 		callback = w;
 		callback.getCurrentTask().start();
+	}
+
+	private void createDirs() {
+		if (!taskFinalFolder.exists()) {
+			taskFinalFolder.mkdirs();
+			givePerms(taskFinalFolder);
+		}
+		taskTempOutputFolder = FileUtils.getFile(callback.config.getTempEncodingFolder(), task.getJobId(),
+				String.valueOf(task.getTaskId()));
+		if (!taskTempOutputFolder.exists()) {
+			taskTempOutputFolder.mkdirs();
+			givePerms(taskTempOutputFolder);
+		}
+		// remove any previous temp files for this part
+		cleanTempPart();
+		String extension = "mkv";
+		String filename = String.format("%d.%s", task.getTaskId(), extension);
+		taskTempOutputFile = new File(taskTempOutputFolder, filename);
 	}
 
 	/**
@@ -68,8 +81,11 @@ public class WorkThread extends Service {
 	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
 			MissingDecoderException, WorkInterruptedException {
 
+		absoluteSharedDir = new File(callback.config.getAbsoluteSharedFolder());
 		task.setTimeStarted(System.currentTimeMillis());
+
 		File inputFile = new File(absoluteSharedDir, task.getSourceFile());
+
 		// Get parameters from the task and bind parameters to process
 		try {
 			String[] baseArgs = new String[] { "ffmpeg", "-ss", startTimeStr, "-t", durationStr, "-i",
@@ -159,6 +175,7 @@ public class WorkThread extends Service {
 		s.close();
 
 		if (close) {
+			System.err.println("Destroying ffmpeg process");
 			process.destroy();
 			throw new WorkInterruptedException();
 		}
@@ -173,6 +190,9 @@ public class WorkThread extends Service {
 			String startTimeStr = getDurationString(task.getEncodingStartTime());
 			String durationStr = getDurationString(durationMs);
 
+			this.taskFinalFolder = FileUtils.getFile(callback.config.getAbsoluteSharedFolder(), task.getOutputFile())
+					.getParentFile();
+
 			createDirs();
 
 			task.setCurrentPass((byte) 1);
@@ -184,7 +204,7 @@ public class WorkThread extends Service {
 
 			moveTempPartFile();
 			cleanTempPart();
-			callback.taskDone(task, masterIp);
+			callback.taskDone(task);
 
 		} catch (MissingFfmpegException e) {
 			CrashReport report = new CrashReport(callback.config.getUniqueID(), new Cause(e, "", true),
@@ -204,7 +224,7 @@ public class WorkThread extends Service {
 		System.out.println("WORKER: Deleting temp task folder");
 		if (taskTempOutputFolder.exists()) {
 			try {
-				FileUtils.deleteDirectory(taskTempOutputFolder);
+				FileUtils.cleanDirectory(taskTempOutputFolder);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -215,7 +235,8 @@ public class WorkThread extends Service {
 		// TODO check if file already exists at destination and delete ?
 		System.out.println("WORKER: Moving temp file to shared folder");
 		try {
-			FileUtils.moveFileToDirectory(taskTempOutputFile, taskFinalFolder, true);
+			//FileUtils.moveFileToDirectory(taskTempOutputFile, taskFinalFolder, true);
+			FileUtils.moveFile(taskTempOutputFile, new File(absoluteSharedDir, task.getOutputFile()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -225,51 +246,18 @@ public class WorkThread extends Service {
 		try {
 			Path p = Paths.get(f.toURI());
 			Set<PosixFilePermission> perms = Files.getPosixFilePermissions(p);
+			perms.add(PosixFilePermission.OWNER_READ);
+			perms.add(PosixFilePermission.OWNER_WRITE);
+			perms.add(PosixFilePermission.OWNER_EXECUTE);
+			perms.add(PosixFilePermission.GROUP_READ);
+			perms.add(PosixFilePermission.GROUP_WRITE);
+			perms.add(PosixFilePermission.GROUP_EXECUTE);
+			perms.add(PosixFilePermission.OTHERS_READ);
 			perms.add(PosixFilePermission.OTHERS_WRITE);
+			perms.add(PosixFilePermission.OTHERS_EXECUTE);
 			Files.setPosixFilePermissions(p, perms);
 		} catch (IOException e) {
 			System.err.printf("Could not set group writable to %s\n", f.toString());
 		}
-	}
-
-	private void createDirs() {
-		absoluteSharedDir = new File(callback.config.getAbsoluteSharedFolder());
-		// Create final part folder
-		jobFinalFolder = new File(absoluteSharedDir, callback.config.getFinalEncodingFolder());
-		if (!jobFinalFolder.exists()) {
-			jobFinalFolder.mkdirs();
-			givePerms(jobFinalFolder);
-		}
-
-		jobFinalFolder = new File(jobFinalFolder, this.task.getJobId());
-		if (!jobFinalFolder.exists()) {
-			jobFinalFolder.mkdirs();
-			givePerms(jobFinalFolder);
-		}
-
-		taskFinalFolder = new File(jobFinalFolder, "parts");
-		if (!taskFinalFolder.exists()) {
-			taskFinalFolder.mkdirs();
-			givePerms(taskFinalFolder);
-		}
-
-		// Create temp part folder
-		String tempOutput = callback.config.getTempEncodingFolder();
-
-		File tempOutputJob = new File(new File(tempOutput), task.getJobId());
-		if (!tempOutputJob.exists()) {
-			tempOutputJob.mkdirs();
-		}
-
-		taskTempOutputFolder = new File(tempOutputJob, String.format("part_%d", task.getTaskId()));
-		// remove any previous temp files for this part
-		cleanTempPart();
-
-		if (!taskTempOutputFolder.exists()) {
-			taskTempOutputFolder.mkdirs();
-			givePerms(taskTempOutputFolder);
-		}
-
-		taskTempOutputFile = new File(taskTempOutputFolder, String.format("output-part_%d.mkv", task.getTaskId()));
 	}
 }

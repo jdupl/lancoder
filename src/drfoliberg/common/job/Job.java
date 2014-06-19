@@ -1,8 +1,12 @@
 package drfoliberg.common.job;
 
+import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.TaskState;
@@ -26,38 +30,21 @@ public class Job extends JobConfig {
 	private long lengthOfJob;
 	private int frameCount;
 	private float frameRate;
-
 	/**
-	 * @deprecated
-	 * @param jobName
-	 *            The job name
-	 * @param sourceFile
-	 *            The Source file to encode relative to the shared directory
-	 * @param lengthOfTasks
-	 *            The length of the tasks in ms that will be sent to worker (0 = infinite)
-	 * @param lengthOfJob
-	 *            Total Length of the job
-	 * @param frameCount
-	 *            The total frame count
-	 * @param frameRate
-	 *            The frame rate to encode at
+	 * Output path of this job, relative to absolute shared directory
 	 */
-	public Job(String jobName, String sourceFile, int lengthOfTasks, long lengthOfJob, int frameCount, float frameRate,
-			int rate, FFmpegPreset preset, byte passes, RateControlType rateControlType) {
+	private String outputFolder;
+	/**
+	 * Filename for final output file relative to outputFolder
+	 */
+	private String outputFileName;
+	/**
+	 * The folder in which to store the parts before muxing
+	 */
+	private String partsFolderName;
 
-		super(sourceFile, rateControlType, rate, passes, preset, null);
-		this.jobName = jobName;
-
-		this.lengthOfTasks = lengthOfTasks;
-		this.lengthOfJob = lengthOfJob;
-		this.frameCount = frameCount;
-		this.frameRate = frameRate;
-		this.tasks = new ArrayList<>();
-		this.jobStatus = JobState.JOB_TODO;
-
-	}
-
-	public Job(JobConfig config, String jobName, int lengthOfTasks, long lengthOfJob, int frameCount, float frameRate) {
+	public Job(JobConfig config, String jobName, int lengthOfTasks, long lengthOfJob, int frameCount, float frameRate,
+			String encodingOutputFolder) {
 		super(config);
 
 		this.jobName = jobName;
@@ -68,14 +55,15 @@ public class Job extends JobConfig {
 
 		this.tasks = new ArrayList<>();
 		this.jobStatus = JobState.JOB_TODO;
+		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
+		// Get source' filename 
+		File source = new File(config.getSourceFile());
+		// Set output's filename 
+		this.outputFileName = String.format("%s.mkv", FilenameUtils.removeExtension(source.getName()));
+		// Get /sharedFolder/LANcoder/jobsOutput/jobName/ (without the shared folder)
+		File relativeEncodingOutput = FileUtils.getFile(encodingOutputFolder, jobName);
+		this.outputFolder = relativeEncodingOutput.getPath();
 
-		createTasks();
-	}
-
-	private void createTasks() {
-		long currentMs = 0;
-		int taskNo = 0;
-		long remaining = lengthOfJob;
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
 			byte[] byteArray = md.digest((sourceFile + jobName + System.currentTimeMillis()).getBytes());
@@ -89,9 +77,22 @@ public class Job extends JobConfig {
 			// even if the algorithm is not available, don't crash
 			this.jobId = String.valueOf(System.currentTimeMillis());
 		}
+		createTasks();
+	}
 
+	/**
+	 * Creates tasks of the job with good handling of paths.
+	 * 
+	 */
+	private void createTasks() {
+		long currentMs = 0;
+		int taskNo = 0;
+		long remaining = lengthOfJob;
+
+		// Get relative (to absolute shared directory) output folder for this job's tasks
+		File relativeTasksOutput = FileUtils.getFile(this.getOutputFolder(), this.partsFolderName);
 		while (remaining > 0) {
-			Task t = new Task(taskNo++, this); // hackish but should work for now TODO clean
+			Task t = new Task(taskNo, this); // hackish but should work for now TODO clean
 			t.setJobId(jobId);
 			t.setEncodingStartTime(currentMs);
 			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.15) {
@@ -105,7 +106,13 @@ public class Job extends JobConfig {
 			long ms = t.getEncodingEndTime() - t.getEncodingStartTime();
 			t.setEstimatedFramesCount((long) Math.floor((ms / 1000 * frameRate)));
 
+			// Set task output file
+			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
+					String.format("part-%d.mkv", t.getTaskId())); // TODO check for extension
+			t.setOutputFile(relativeTaskOutputFile.getPath());
+
 			this.tasks.add(t);
+			taskNo++;
 		}
 	}
 
@@ -229,6 +236,30 @@ public class Job extends JobConfig {
 
 	public void setRateContolType(RateControlType rateContolType) {
 		this.rateControlType = rateContolType;
+	}
+
+	public String getOutputFolder() {
+		return outputFolder;
+	}
+
+	public void setOutputFolder(String outputFolder) {
+		this.outputFolder = outputFolder;
+	}
+
+	public String getOutputFileName() {
+		return outputFileName;
+	}
+
+	public void setOutputFileName(String outputFileName) {
+		this.outputFileName = outputFileName;
+	}
+
+	public String getPartsFolderName() {
+		return partsFolderName;
+	}
+
+	public void setPartsFolderName(String partsFolderName) {
+		this.partsFolderName = partsFolderName;
 	}
 
 }

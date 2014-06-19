@@ -22,6 +22,7 @@ public class Dispatcher implements Runnable {
 	public Dispatcher(Node node, Task task, Master master) {
 		this.node = node;
 		this.task = task;
+		this.master = master;
 	}
 
 	private void taskRefused() {
