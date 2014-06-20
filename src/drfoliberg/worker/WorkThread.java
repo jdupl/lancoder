@@ -6,10 +6,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -235,29 +234,10 @@ public class WorkThread extends Service {
 		// TODO check if file already exists at destination and delete ?
 		System.out.println("WORKER: Moving temp file to shared folder");
 		try {
-			//FileUtils.moveFileToDirectory(taskTempOutputFile, taskFinalFolder, true);
+			// FileUtils.moveFileToDirectory(taskTempOutputFile, taskFinalFolder, true);
 			FileUtils.moveFile(taskTempOutputFile, new File(absoluteSharedDir, task.getOutputFile()));
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
-	}
-
-	private static void givePerms(File f) {
-		try {
-			Path p = Paths.get(f.toURI());
-			Set<PosixFilePermission> perms = Files.getPosixFilePermissions(p);
-			perms.add(PosixFilePermission.OWNER_READ);
-			perms.add(PosixFilePermission.OWNER_WRITE);
-			perms.add(PosixFilePermission.OWNER_EXECUTE);
-			perms.add(PosixFilePermission.GROUP_READ);
-			perms.add(PosixFilePermission.GROUP_WRITE);
-			perms.add(PosixFilePermission.GROUP_EXECUTE);
-			perms.add(PosixFilePermission.OTHERS_READ);
-			perms.add(PosixFilePermission.OTHERS_WRITE);
-			perms.add(PosixFilePermission.OTHERS_EXECUTE);
-			Files.setPosixFilePermissions(p, perms);
-		} catch (IOException e) {
-			System.err.printf("Could not set group writable to %s\n", f.toString());
 		}
 	}
 }
