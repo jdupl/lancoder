@@ -3,16 +3,10 @@ package drfoliberg.worker;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.io.FileUtils;
 
 import drfoliberg.common.Service;
 import drfoliberg.common.exceptions.MissingDecoderException;
@@ -22,6 +16,7 @@ import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.messages.cluster.CrashReport;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.task.Task;
+import drfoliberg.common.utils.FileUtils;
 
 public class WorkThread extends Service {
 
@@ -41,15 +36,16 @@ public class WorkThread extends Service {
 	}
 
 	private void createDirs() {
+
 		if (!taskFinalFolder.exists()) {
 			taskFinalFolder.mkdirs();
-			givePerms(taskFinalFolder);
+			FileUtils.givePerms(taskFinalFolder, false);
 		}
 		taskTempOutputFolder = FileUtils.getFile(callback.config.getTempEncodingFolder(), task.getJobId(),
 				String.valueOf(task.getTaskId()));
 		if (!taskTempOutputFolder.exists()) {
 			taskTempOutputFolder.mkdirs();
-			givePerms(taskTempOutputFolder);
+			FileUtils.givePerms(taskTempOutputFolder, false);
 		}
 		// remove any previous temp files for this part
 		cleanTempPart();
@@ -220,7 +216,7 @@ public class WorkThread extends Service {
 	}
 
 	private void cleanTempPart() {
-		System.out.println("WORKER: Deleting temp task folder");
+		System.out.println("WORKER: Deleting temp task folder content.");
 		if (taskTempOutputFolder.exists()) {
 			try {
 				FileUtils.cleanDirectory(taskTempOutputFolder);
@@ -231,11 +227,16 @@ public class WorkThread extends Service {
 	}
 
 	private void moveTempPartFile() {
-		// TODO check if file already exists at destination and delete ?
 		System.out.println("WORKER: Moving temp file to shared folder");
 		try {
-			// FileUtils.moveFileToDirectory(taskTempOutputFile, taskFinalFolder, true);
-			FileUtils.moveFile(taskTempOutputFile, new File(absoluteSharedDir, task.getOutputFile()));
+			File destination = new File(absoluteSharedDir, task.getOutputFile());
+			if (destination.exists()) {
+				// TODO check if file already exists at destination and delete ?
+				System.err.println("Task output file already exists !");
+			}
+			FileUtils.givePerms(taskTempOutputFolder, true);
+			FileUtils.moveFile(taskTempOutputFile, destination);
+			FileUtils.givePerms(destination, false);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
