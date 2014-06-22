@@ -73,7 +73,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 	}
 
 	/**
-	 * Sets permissions rw-rw-rw- to file or directory given. Fails silently and returns false if an exception occurred
+	 * Sets permissions rwxrwxrwx to file or directory given. Fails silently and returns false if an exception occurred
 	 * at some point.
 	 * 
 	 * @param f
@@ -83,7 +83,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 	 * @return True if all files/directory were set to permissions
 	 */
 	public static boolean givePerms(File f, boolean recursive) {
-		return givePerms(f, "rw-rw-rw-", recursive);
+		return givePerms(f, "rwxrwxrwx", recursive);
 	}
 
 }

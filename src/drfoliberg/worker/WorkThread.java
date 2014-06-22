@@ -134,7 +134,6 @@ public class WorkThread extends Service {
 		try {
 			while (s.hasNext() && !close) {
 				// TODO better scanning (avoid regexing the same line multiple times if result)
-
 				line = s.nextLine();
 				Matcher m = currentFramePattern.matcher(line);
 
@@ -231,10 +230,9 @@ public class WorkThread extends Service {
 		try {
 			File destination = new File(absoluteSharedDir, task.getOutputFile());
 			if (destination.exists()) {
-				// TODO check if file already exists at destination and delete ?
+				// TODO if file already exists at destination and delete ?
 				System.err.println("Task output file already exists !");
 			}
-			FileUtils.givePerms(taskTempOutputFolder, true);
 			FileUtils.moveFile(taskTempOutputFile, destination);
 			FileUtils.givePerms(destination, false);
 		} catch (IOException e) {

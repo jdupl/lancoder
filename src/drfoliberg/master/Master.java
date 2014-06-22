@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import drfoliberg.common.FFmpegProber;
@@ -33,6 +32,7 @@ import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.TaskReport;
+import drfoliberg.common.utils.FileUtils;
 import drfoliberg.master.api.ApiServer;
 import drfoliberg.muxer.Muxer;
 import drfoliberg.muxer.MuxerListener;
@@ -362,20 +362,25 @@ public class Master implements Runnable, MuxerListener {
 					absoluteSourceFile));
 		}
 
-		for (File file : inputs) {
-			String relative = new File(config.getAbsoluteSharedFolder()).toURI().relativize(file.toURI()).getPath();
+		for (File sourceFile : inputs) {
+			boolean jobSuccess = true;
+			String relative = new File(config.getAbsoluteSharedFolder()).toURI().relativize(sourceFile.toURI())
+					.getPath();
+			// Set job's name
 			String jobName = req.getName();
 			if (inputs.size() > 1) {
-				String fileName = FilenameUtils.removeExtension(file.getName());
+				String fileName = FilenameUtils.removeExtension(sourceFile.getName());
 				jobName = String.format("%s - %s", req.getName(), fileName);
 			}
-			long lengthOfJob = (long) (FFmpegProber.getSecondsDuration(file.getAbsolutePath()) * 1000);
-			float frameRate = FFmpegProber.getFrameRate(file.getAbsolutePath());
+			// Get meta-data from source file
+			long lengthOfJob = (long) (FFmpegProber.getSecondsDuration(sourceFile.getAbsolutePath()) * 1000);
+			float frameRate = FFmpegProber.getFrameRate(sourceFile.getAbsolutePath());
 			int frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 
 			FFmpegPreset preset = req.getPreset();
 			RateControlType rateControlType = req.getRateControlType();
 
+			// Limit to 1 or 2 passes
 			byte passes = req.getPasses() < 0 || req.getPasses() > 2 ? 1 : req.getPasses();
 
 			int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
@@ -385,7 +390,30 @@ public class Master implements Runnable, MuxerListener {
 			JobConfig conf = new JobConfig(relative, rateControlType, req.getRate(), passes, preset, extraArgs);
 			Job j = createJob(conf, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate);
 
-			if (!addJob(j)) {
+			// Create base folders
+			File absoluteOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getOutputFolder());
+			File absolutePartsOutput = FileUtils.getFile(absoluteOutput, j.getPartsFolderName());
+
+			if (absoluteOutput.exists()) {
+				try {
+					// Attempt to clean
+					System.err.printf("Directory is not empty. Attempting to clean %s\n", absoluteOutput.toString());
+					FileUtils.cleanDirectory(absoluteOutput);
+				} catch (IOException e) {
+					jobSuccess = false;
+					e.printStackTrace();
+				}
+			} else {
+				absoluteOutput.mkdirs();
+			}
+			FileUtils.givePerms(absoluteOutput, false);
+			absolutePartsOutput.mkdir();
+			FileUtils.givePerms(absolutePartsOutput, false);
+
+			if (jobSuccess) {
+				jobSuccess = addJob(j);
+			}
+			if (!jobSuccess) {
 				success = false;
 			}
 		}
