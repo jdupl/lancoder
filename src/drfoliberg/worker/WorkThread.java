@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -94,8 +95,8 @@ public class WorkThread extends Service {
 			ffmpegArgs.addAll(task.getRateControlArgs());
 			ffmpegArgs.addAll(task.getPresetArg());
 
+			// output file and pass arguments
 			String outFile = taskTempOutputFile.getAbsoluteFile().toString();
-
 			if (task.getPasses() > 1) {
 				// Add pass arguments
 				ffmpegArgs.add("-pass");
@@ -108,9 +109,9 @@ public class WorkThread extends Service {
 					outFile = "/dev/null"; // TODO use NUL for windows
 				}
 			}
-			// Add output file
 			ffmpegArgs.add(outFile);
 
+			// build the process
 			ProcessBuilder pb = new ProcessBuilder(ffmpegArgs);
 			System.out.println(pb.command().toString());
 
@@ -196,9 +197,13 @@ public class WorkThread extends Service {
 				task.setCurrentPass((byte) (task.getCurrentPass() + 1));
 			}
 
-			moveTempPartFile();
-			cleanTempPart();
-			callback.taskDone(task);
+			// moveTempPartFile();
+			if (transcodeToMpegTs()) {
+				cleanTempPart();
+				callback.taskDone(task);
+			} else {
+				// handle work failed
+			}
 
 		} catch (MissingFfmpegException e) {
 			CrashReport report = new CrashReport(callback.config.getUniqueID(), new Cause(e, "", true),
@@ -225,18 +230,34 @@ public class WorkThread extends Service {
 		}
 	}
 
-	private void moveTempPartFile() {
-		System.out.println("WORKER: Moving temp file to shared folder");
+	private boolean transcodeToMpegTs() {
+		File destination = new File(absoluteSharedDir, task.getOutputFile());
+		// TODO handle robust handling of progress and errors
 		try {
-			File destination = new File(absoluteSharedDir, task.getOutputFile());
-			if (destination.exists()) {
-				// TODO if file already exists at destination and delete ?
-				System.err.println("Task output file already exists !");
+			ProcessBuilder ffmpeg = new ProcessBuilder();
+			String[] baseArgs = new String[] { "ffmpeg", "-i", taskTempOutputFile.getAbsolutePath(), "-f", "mpegts",
+					"-c", "copy", "-bsf:v", "h264_mp4toannexb", destination.getAbsolutePath() };
+			ArrayList<String> args = new ArrayList<>();
+			Collections.addAll(args, baseArgs);
+			ffmpeg.command(args);
+			System.err.println(args.toString());
+
+			Process transcoder = ffmpeg.start();
+			transcoder.waitFor();
+			if (transcoder.exitValue() != 0) {
+				System.err.println("Transcoding from mkv to mpegts appears to have failed !");
+				return false;
 			}
-			FileUtils.moveFile(taskTempOutputFile, destination);
 			FileUtils.givePerms(destination, false);
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return false;
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
 		}
+		return true;
 	}
 }

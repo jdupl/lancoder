@@ -24,12 +24,13 @@ public class Muxer extends Service {
 
 	@Override
 	public void run() {
+		boolean success = false;
 		File muxedFile = new File(absoluteJobFolder, job.getOutputFileName());
 		ArrayList<String> args = new ArrayList<>();
 		Collections.addAll(args, new String[] { "mkvmerge", "-o", muxedFile.getAbsolutePath() });
 		for (int i = 0; i < job.getTasks().size(); i++) {
-			Task t = job.getTasks().get(i); 
-			File path = new File( t.getOutputFile());
+			Task t = job.getTasks().get(i);
+			File path = new File(t.getOutputFile());
 			path = new File(job.getPartsFolderName(), path.getName());
 			args.add(path.getPath());
 			if (i != job.getTasks().size() - 1) {
@@ -39,13 +40,24 @@ public class Muxer extends Service {
 		ProcessBuilder pb = new ProcessBuilder(args);
 		System.out.println("MUXER: " + args.toString());
 		pb.directory(new File(absoluteJobFolder));
+		System.out.println("MUXER: trying to mux in path " + absoluteJobFolder);
 		fireMuxingStarting();
+
 		try {
-			pb.start();
+			Process m = pb.start();
+			m.waitFor();
+			success = m.exitValue() == 0 ? true : false;
 		} catch (IOException e) {
 			fireMuxingFailed(e);
+		} catch (InterruptedException e) {
+			fireMuxingFailed(e);
+		} finally {
+			if (success) {
+				fireMuxingCompleted();
+			} else {
+				fireMuxingFailed();
+			}
 		}
-		fireMuxingCompleted();
 	}
 
 	private void fireMuxingStarting() {
@@ -61,6 +73,13 @@ public class Muxer extends Service {
 	}
 
 	private void fireMuxingFailed(Exception e) {
+		for (MuxerListener l : this.listeners) {
+			l.muxingFailed(job, e);
+		}
+	}
+
+	private void fireMuxingFailed() {
+		Exception e = new Exception("Unknown error");
 		for (MuxerListener l : this.listeners) {
 			l.muxingFailed(job, e);
 		}

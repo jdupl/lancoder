@@ -108,7 +108,7 @@ public class Job extends JobConfig {
 
 			// Set task output file
 			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
-					String.format("part-%d.mkv", t.getTaskId())); // TODO check for extension
+					String.format("part-%d.mpeg.ts", t.getTaskId())); // TODO check for extension
 			t.setOutputFile(relativeTaskOutputFile.getPath());
 
 			this.tasks.add(t);
