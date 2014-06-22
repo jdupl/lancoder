@@ -30,5 +30,10 @@
 			<artifactId>jetty-server</artifactId>
 			<version>9.2.0.M0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.7</version>
+		</dependency>
 	</dependencies>
 </project>

@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.Node;
@@ -40,6 +42,7 @@ import drfoliberg.muxer.MuxerListener;
 public class Master implements Runnable, MuxerListener {
 
 	public static final String ALGORITHM = "SHA-256";
+	Logger logger = LoggerFactory.getLogger(Master.class);
 
 	private MasterNodeServer nodeServer;
 	private NodeChecker nodeChecker;
@@ -477,10 +480,12 @@ public class Master implements Runnable, MuxerListener {
 		System.out.println("MASTER: the task " + n.getCurrentTask().getTaskId() + " is now " + updateStatus);
 		task.setStatus(updateStatus);
 		if (updateStatus == TaskState.TASK_COMPLETED) {
+			logger.info(String.format("Node %s completed task %d of job %s", n.getName(), n.getCurrentTask()
+					.getTaskId(), n.getCurrentTask().getJobId()));
 			n.setCurrentTask(null);
-
 			Job job = this.jobs.get(task.getJobId());
 			boolean jobDone = true;
+
 			for (Task t : job.getTasks()) {
 				if (t.getState() != TaskState.TASK_COMPLETED) {
 					jobDone = false;
