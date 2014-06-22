@@ -4,34 +4,37 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import drfoliberg.common.Node;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.cluster.Message;
 import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
-import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 
-public class Dispatcher implements Runnable {
+public class Dispatcher implements Runnable, DispatcherListener {
 
 	Node node;
 	Task task;
-	Master master;
+	ArrayList<DispatcherListener> listeners;
 
-	public Dispatcher(Node node, Task task, Master master) {
+	public Dispatcher(Node node, Task task, DispatcherListener mainListener) {
 		this.node = node;
 		this.task = task;
-		this.master = master;
+		listeners = new ArrayList<>();
+		listeners.add(mainListener);
 	}
 
-	private void taskRefused() {
-		task.setStatus(TaskState.TASK_TODO);
-		master.updateNodesWork();
+	public void taskRefused(Task t, Node n) {
+		for (DispatcherListener listener : listeners) {
+			listener.taskRefused(t, n);
+		}
 	}
 
-	private void taskAccepted() {
-		node.setCurrentTask(task);
-		task.setStatus(TaskState.TASK_COMPUTING);
+	public void taskAccepted(Task t, Node n) {
+		for (DispatcherListener listener : listeners) {
+			listener.taskAccepted(t, n);
+		}
 	}
 
 	public void run() {
@@ -73,9 +76,9 @@ public class Dispatcher implements Runnable {
 			e.printStackTrace();
 		} finally {
 			if (!success) {
-				taskRefused();
+				taskRefused(task, node);
 			} else {
-				taskAccepted();
+				taskAccepted(task, node);
 			}
 		}
 	}

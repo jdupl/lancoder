@@ -16,3 +16,6 @@ doc
 *.iml
 /nbproject/
 /target
+
+# logs
+*.log

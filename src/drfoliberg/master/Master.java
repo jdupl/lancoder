@@ -39,7 +39,7 @@ import drfoliberg.master.api.ApiServer;
 import drfoliberg.muxer.Muxer;
 import drfoliberg.muxer.MuxerListener;
 
-public class Master implements Runnable, MuxerListener {
+public class Master implements Runnable, MuxerListener, DispatcherListener {
 
 	public static final String ALGORITHM = "SHA-256";
 	Logger logger = LoggerFactory.getLogger(Master.class);
@@ -658,6 +658,17 @@ public class Master implements Runnable, MuxerListener {
 		// TODO Auto-generated method stub
 		System.err.printf("Muxing failed for job %s\n", job.getJobName());
 		e.printStackTrace();
+	}
+
+	@Override
+	public void taskRefused(Task t, Node n) {
+		t.setStatus(TaskState.TASK_TODO);
+	}
+
+	@Override
+	public void taskAccepted(Task t, Node n) {
+		n.setCurrentTask(t);
+		t.setStatus(TaskState.TASK_COMPUTING);
 	}
 
 }
