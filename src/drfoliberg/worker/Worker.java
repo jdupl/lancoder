@@ -14,15 +14,15 @@ import drfoliberg.common.network.messages.cluster.Message;
 import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
-import drfoliberg.common.task.Task;
-import drfoliberg.common.task.TaskReport;
+import drfoliberg.common.task.video.TaskReport;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class Worker implements Runnable {
 
 	WorkerConfig config;
 	
 	private String configPath;
-	private Task currentTask;
+	private VideoEncodingTask currentTask;
 	private NodeState status;
 	private ArrayList<Service> services;
 	private WorkerServer workerListener;
@@ -99,13 +99,13 @@ public class Worker implements Runnable {
 		System.out.println((getWorkerName().toUpperCase()) + ": " + s);
 	}
 
-	public void taskDone(Task t) {
+	public void taskDone(VideoEncodingTask t) {
 		this.currentTask.setStatus(TaskState.TASK_COMPLETED);
 		this.updateStatus(NodeState.FREE);
 		services.remove(workThread);
 	}
 
-	public void stopWork(Task t) {
+	public void stopWork(VideoEncodingTask t) {
 		// TODO check which task to stop (if many tasks are implemented)
 		this.workThread.stop();
 		System.err.println("Setting current task to null");
@@ -113,7 +113,7 @@ public class Worker implements Runnable {
 		this.updateStatus(NodeState.FREE);
 	}
 
-	public synchronized boolean startWork(Task t) {
+	public synchronized boolean startWork(VideoEncodingTask t) {
 		if (this.getStatus() != NodeState.FREE) {
 			print("cannot accept work as i'm not free. Current status: " + this.getStatus());
 			return false;
@@ -146,7 +146,7 @@ public class Worker implements Runnable {
 		TaskReport taskReport = null;
 		if (currentTask != null) {
 			taskReport = new TaskReport(config.getUniqueID(), this.currentTask);
-			Task t = taskReport.getTask();
+			VideoEncodingTask t = taskReport.getTask();
 			t.setTimeElapsed(System.currentTimeMillis() - currentTask.getTimeStarted());
 			t.setTimeEstimated(currentTask.getETA());
 			t.setProgress(currentTask.getProgress());
@@ -281,7 +281,7 @@ public class Worker implements Runnable {
 		this.config.dump(configPath);
 	}
 
-	public Task getCurrentTask() {
+	public VideoEncodingTask getCurrentTask() {
 		return this.currentTask;
 	}
 }

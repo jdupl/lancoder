@@ -10,7 +10,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.TaskState;
-import drfoliberg.common.task.Task;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 /**
  * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all
@@ -22,7 +22,7 @@ import drfoliberg.common.task.Task;
 public class Job extends JobConfig {
 
 	private static final long serialVersionUID = -3817299446490049451L;
-	private ArrayList<Task> tasks;
+	private ArrayList<VideoEncodingTask> tasks;
 	private String jobId;
 	private String jobName;
 	private JobState jobStatus;
@@ -92,7 +92,7 @@ public class Job extends JobConfig {
 		// Get relative (to absolute shared directory) output folder for this job's tasks
 		File relativeTasksOutput = FileUtils.getFile(this.getOutputFolder(), this.partsFolderName);
 		while (remaining > 0) {
-			Task t = new Task(taskNo, this); // hackish but should work for now TODO clean
+			VideoEncodingTask t = new VideoEncodingTask(taskNo, this); // hackish but should work for now TODO clean
 			t.setJobId(jobId);
 			t.setEncodingStartTime(currentMs);
 			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.15) {
@@ -121,7 +121,7 @@ public class Job extends JobConfig {
 	 * 
 	 * @return The task or null if no task is available
 	 */
-	public synchronized Task getNextTask() {
+	public synchronized VideoEncodingTask getNextTask() {
 
 		if (getCountTaskRemaining() == 0) {
 			return null;
@@ -132,7 +132,7 @@ public class Job extends JobConfig {
 			this.setJobStatus(JobState.JOB_COMPUTING);
 		}
 
-		for (Task task : this.tasks) {
+		for (VideoEncodingTask task : this.tasks) {
 			if (task.getStatus() == TaskState.TASK_TODO) {
 				return task;
 			}
@@ -154,7 +154,7 @@ public class Job extends JobConfig {
 			return this.tasks.size();
 		default:
 			int count = 0;
-			for (Task task : this.tasks) {
+			for (VideoEncodingTask task : this.tasks) {
 				if (task.getStatus() == TaskState.TASK_TODO) {
 					++count;
 				}
@@ -206,11 +206,11 @@ public class Job extends JobConfig {
 		this.lengthOfJob = lengthOfJob;
 	}
 
-	public ArrayList<Task> getTasks() {
+	public ArrayList<VideoEncodingTask> getTasks() {
 		return tasks;
 	}
 
-	public void setTasks(ArrayList<Task> tasks) {
+	public void setTasks(ArrayList<VideoEncodingTask> tasks) {
 		this.tasks = tasks;
 	}
 

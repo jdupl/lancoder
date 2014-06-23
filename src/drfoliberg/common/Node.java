@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.net.InetAddress;
 
 import drfoliberg.common.status.NodeState;
-import drfoliberg.common.task.Task;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class Node implements Serializable {
 
@@ -15,7 +15,7 @@ public class Node implements Serializable {
 	private String name;
 	private String unid;
 
-	private Task currentTask;
+	private VideoEncodingTask currentTask;
 
 	public Node(InetAddress nodeAddresse, int nodePort, String name) {
 		this.nodeAddress = nodeAddresse;
@@ -74,11 +74,11 @@ public class Node implements Serializable {
 		this.name = name;
 	}
 
-	public Task getCurrentTask() {
+	public VideoEncodingTask getCurrentTask() {
 		return currentTask;
 	}
 
-	public void setCurrentTask(Task currentTask) {
+	public void setCurrentTask(VideoEncodingTask currentTask) {
 		if (currentTask == null) {
 			System.out.printf("MASTER: %s now has NO TASK\n", name);
 		} else {

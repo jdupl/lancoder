@@ -10,28 +10,28 @@ import drfoliberg.common.Node;
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.network.messages.cluster.Message;
 import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
-import drfoliberg.common.task.Task;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class Dispatcher implements Runnable, DispatcherListener {
 
 	Node node;
-	Task task;
+	VideoEncodingTask task;
 	ArrayList<DispatcherListener> listeners;
 
-	public Dispatcher(Node node, Task task, DispatcherListener mainListener) {
+	public Dispatcher(Node node, VideoEncodingTask task, DispatcherListener mainListener) {
 		this.node = node;
 		this.task = task;
 		listeners = new ArrayList<>();
 		listeners.add(mainListener);
 	}
 
-	public void taskRefused(Task t, Node n) {
+	public void taskRefused(VideoEncodingTask t, Node n) {
 		for (DispatcherListener listener : listeners) {
 			listener.taskRefused(t, n);
 		}
 	}
 
-	public void taskAccepted(Task t, Node n) {
+	public void taskAccepted(VideoEncodingTask t, Node n) {
 		for (DispatcherListener listener : listeners) {
 			listener.taskAccepted(t, n);
 		}

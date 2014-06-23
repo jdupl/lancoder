@@ -2,7 +2,7 @@ package drfoliberg.common.network.messages.cluster;
 
 import drfoliberg.common.network.ClusterProtocol;
 import drfoliberg.common.status.NodeState;
-import drfoliberg.common.task.TaskReport;
+import drfoliberg.common.task.video.TaskReport;
 
 public class StatusReport extends AuthMessage {
 

@@ -16,12 +16,12 @@ import drfoliberg.common.exceptions.WorkInterruptedException;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.messages.cluster.CrashReport;
 import drfoliberg.common.status.NodeState;
-import drfoliberg.common.task.Task;
+import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
 
 public class WorkThread extends Service {
 
-	private Task task;
+	private VideoEncodingTask task;
 	private Worker callback;
 	Process process;
 
@@ -30,7 +30,7 @@ public class WorkThread extends Service {
 	File taskTempOutputFile;
 	File taskTempOutputFolder;
 
-	public WorkThread(Worker w, Task t) {
+	public WorkThread(Worker w, VideoEncodingTask t) {
 		task = t;
 		callback = w;
 		callback.getCurrentTask().start();

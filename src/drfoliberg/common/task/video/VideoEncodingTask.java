@@ -1,4 +1,4 @@
-package drfoliberg.common.task;
+package drfoliberg.common.task.video;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -8,13 +8,13 @@ import drfoliberg.common.job.JobConfig;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.status.TaskState;
 
-public class Task implements Serializable {
+public class VideoEncodingTask implements Serializable {
 
 	private static final long serialVersionUID = -8705492902098705162L;
 	protected TaskInfo taskInfo;
 	protected TaskStatus taskStatus;
 
-	public Task(int taskId, JobConfig config) {
+	public VideoEncodingTask(int taskId, JobConfig config) {
 		taskInfo = new TaskInfo(config);
 		taskInfo.setTaskId(taskId);
 		taskStatus = new TaskStatus();

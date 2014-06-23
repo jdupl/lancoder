@@ -7,7 +7,7 @@ import java.util.Collections;
 
 import drfoliberg.common.Service;
 import drfoliberg.common.job.Job;
-import drfoliberg.common.task.Task;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class Muxer extends Service {
 
@@ -29,7 +29,7 @@ public class Muxer extends Service {
 		ArrayList<String> args = new ArrayList<>();
 		Collections.addAll(args, new String[] { "mkvmerge", "-o", muxedFile.getAbsolutePath() });
 		for (int i = 0; i < job.getTasks().size(); i++) {
-			Task t = job.getTasks().get(i);
+			VideoEncodingTask t = job.getTasks().get(i);
 			File path = new File(t.getOutputFile());
 			path = new File(job.getPartsFolderName(), path.getName());
 			args.add(path.getPath());

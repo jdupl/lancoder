@@ -1,4 +1,4 @@
-package drfoliberg.common.task;
+package drfoliberg.common.task.video;
 
 public class Pass {
 

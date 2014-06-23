@@ -32,8 +32,8 @@ import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
-import drfoliberg.common.task.Task;
-import drfoliberg.common.task.TaskReport;
+import drfoliberg.common.task.video.TaskReport;
+import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
 import drfoliberg.master.api.ApiServer;
 import drfoliberg.muxer.Muxer;
@@ -123,7 +123,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 	 * 
 	 * @return The task to dispatch next or null is none available
 	 */
-	private Task getNextTask() {
+	private VideoEncodingTask getNextTask() {
 		Job min = null;
 		int minTaskCount = Integer.MAX_VALUE;
 
@@ -166,7 +166,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 			System.out.println("MASTER: No available nodes!");
 			return false;
 		}
-		Task nextTask = getNextTask();
+		VideoEncodingTask nextTask = getNextTask();
 		if (nextTask == null) {
 			System.out.println("MASTER: No available work!");
 			return false;
@@ -176,7 +176,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 		return true;
 	}
 
-	public boolean dispatch(Task task, Node node) {
+	public boolean dispatch(VideoEncodingTask task, Node node) {
 		if (task.getState() == TaskState.TASK_TODO) {
 			task.setState(TaskState.TASK_COMPUTING);
 		}
@@ -221,7 +221,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 	 */
 	public boolean disconnectNode(Node n) {
 		try {
-			Task t = n.getCurrentTask();
+			VideoEncodingTask t = n.getCurrentTask();
 			if (t != null) {
 				t.reset();
 			}
@@ -311,7 +311,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 		if (j == null) {
 			return false;
 		}
-		for (Task t : j.getTasks()) {
+		for (VideoEncodingTask t : j.getTasks()) {
 			if (t.getStatus() == TaskState.TASK_COMPUTING) {
 				// Find which node has this task
 				for (Node n : getNodes()) {
@@ -456,7 +456,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 	public synchronized boolean removeNode(Node n) {
 		if (n != null) {
 			// Cancel node's task status if any
-			Task toCancel = null;
+			VideoEncodingTask toCancel = null;
 			toCancel = n.getCurrentTask();
 			if (toCancel != null) {
 				updateNodeTask(n, TaskState.TASK_TODO);
@@ -470,7 +470,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 	}
 
 	public boolean updateNodeTask(Node n, TaskState updateStatus) {
-		Task task = n.getCurrentTask();
+		VideoEncodingTask task = n.getCurrentTask();
 		// TODO clean logic here
 		if (task == null) {
 			System.err.println("MASTER: no task was found for node " + n.getName());
@@ -486,7 +486,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 			Job job = this.jobs.get(task.getJobId());
 			boolean jobDone = true;
 
-			for (Task t : job.getTasks()) {
+			for (VideoEncodingTask t : job.getTasks()) {
 				if (t.getState() != TaskState.TASK_COMPLETED) {
 					jobDone = false;
 					break;
@@ -537,7 +537,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 	private boolean checkJobIntegrity(Job job) {
 		boolean integrity = true;
 
-		for (Task task : job.getTasks()) {
+		for (VideoEncodingTask task : job.getTasks()) {
 			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getOutputFile());
 			if (!absoluteTaskFile.exists()) {
 				System.err.printf("Cannot start muxing ! Task %d of job %s is not found!\n", task.getTaskId(),
@@ -591,7 +591,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 			return false;
 		}
 
-		Task nodeTask = sender.getCurrentTask();
+		VideoEncodingTask nodeTask = sender.getCurrentTask();
 
 		if (nodeTask == null) {
 			System.err.printf("MASTER: Node %s has no task! \n", sender.getName());
@@ -661,12 +661,12 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 	}
 
 	@Override
-	public void taskRefused(Task t, Node n) {
+	public void taskRefused(VideoEncodingTask t, Node n) {
 		t.setStatus(TaskState.TASK_TODO);
 	}
 
 	@Override
-	public void taskAccepted(Task t, Node n) {
+	public void taskAccepted(VideoEncodingTask t, Node n) {
 		n.setCurrentTask(t);
 		t.setStatus(TaskState.TASK_COMPUTING);
 	}
