@@ -3,6 +3,7 @@ package drfoliberg.common.task.audio;
 import java.io.Serializable;
 
 import drfoliberg.common.job.RateControlType;
+import drfoliberg.common.status.TaskState;
 
 public class AudioEncodingTask implements Serializable {
 
@@ -15,6 +16,7 @@ public class AudioEncodingTask implements Serializable {
 	private String inputFile;
 	private String outputFile;
 	private RateControlType rateControlType;
+	private TaskState taskState;
 
 	/**
 	 * Creates an audio encoding task with handling of the extension and quality control
@@ -36,6 +38,7 @@ public class AudioEncodingTask implements Serializable {
 		this.rateControlType = rateControlType;
 		this.inputFile = inputFile;
 		this.outputFile = String.format("%s.%s", outputFile, codec.getContainer());
+		this.taskState = TaskState.TASK_TODO;
 	}
 
 	public AudioCodec getCodec() {
@@ -92,6 +95,14 @@ public class AudioEncodingTask implements Serializable {
 
 	public void setRateControlType(RateControlType rateControlType) {
 		this.rateControlType = rateControlType;
+	}
+
+	public TaskState getTaskState() {
+		return taskState;
+	}
+
+	public void setTaskState(TaskState taskState) {
+		this.taskState = taskState;
 	}
 
 }

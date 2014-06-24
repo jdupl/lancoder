@@ -1,11 +1,13 @@
 package drfoliberg.converter;
 
+import drfoliberg.common.task.audio.AudioEncodingTask;
+
 public interface ConverterListener {
 
-	public void convertionFinished();
+	public void convertionFinished(AudioEncodingTask t);
 
-	public void convertionStarted();
+	public void convertionStarted(AudioEncodingTask t);
 
-	public void convertionFailed();
+	public void convertionFailed(AudioEncodingTask t);
 
 }

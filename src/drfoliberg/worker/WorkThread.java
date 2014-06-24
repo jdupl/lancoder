@@ -50,9 +50,7 @@ public class WorkThread extends Service {
 		}
 		// remove any previous temp files for this part
 		cleanTempPart();
-		String extension = "mkv";
-		String filename = String.format("%d.%s", task.getTaskId(), extension);
-		taskTempOutputFile = new File(taskTempOutputFolder, filename);
+
 	}
 
 	/**
@@ -88,9 +86,7 @@ public class WorkThread extends Service {
 					inputFile.getAbsolutePath(), "-sn", "-force_key_frames", "0", "-an", "-c:v", "libx264" };
 			ArrayList<String> ffmpegArgs = new ArrayList<>();
 			// Add base args to process builder
-			for (String arg : baseArgs) {
-				ffmpegArgs.add(arg);
-			}
+			Collections.addAll(ffmpegArgs, baseArgs);
 
 			ffmpegArgs.addAll(task.getRateControlArgs());
 			ffmpegArgs.addAll(task.getPresetArg());
@@ -188,7 +184,12 @@ public class WorkThread extends Service {
 			this.taskFinalFolder = FileUtils.getFile(callback.config.getAbsoluteSharedFolder(), task.getOutputFile())
 					.getParentFile();
 
+			String extension = "mkv";
+			String filename = String.format("%d.%s", task.getTaskId(), extension);
+
 			createDirs();
+
+			taskTempOutputFile = new File(taskTempOutputFolder, filename);
 
 			task.setCurrentPass((byte) 1);
 			while (task.getCurrentPass() <= task.getPasses()) {

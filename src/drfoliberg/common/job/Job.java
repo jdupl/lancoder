@@ -10,6 +10,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.TaskState;
+import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.VideoEncodingTask;
 
 /**
@@ -23,6 +24,7 @@ public class Job extends JobConfig {
 
 	private static final long serialVersionUID = -3817299446490049451L;
 	private ArrayList<VideoEncodingTask> tasks;
+	private ArrayList<AudioEncodingTask> audioTasks;
 	private String jobId;
 	private String jobName;
 	private JobState jobStatus;
@@ -54,11 +56,12 @@ public class Job extends JobConfig {
 		this.frameRate = frameRate;
 
 		this.tasks = new ArrayList<>();
+		this.audioTasks = new ArrayList<>();
 		this.jobStatus = JobState.JOB_TODO;
 		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
-		// Get source' filename 
+		// Get source' filename
 		File source = new File(config.getSourceFile());
-		// Set output's filename 
+		// Set output's filename
 		this.outputFileName = String.format("%s.mkv", FilenameUtils.removeExtension(source.getName()));
 		// Get /sharedFolder/LANcoder/jobsOutput/jobName/ (without the shared folder)
 		File relativeEncodingOutput = FileUtils.getFile(encodingOutputFolder, jobName);
@@ -114,6 +117,7 @@ public class Job extends JobConfig {
 			this.tasks.add(t);
 			taskNo++;
 		}
+
 	}
 
 	/**
@@ -260,6 +264,14 @@ public class Job extends JobConfig {
 
 	public void setPartsFolderName(String partsFolderName) {
 		this.partsFolderName = partsFolderName;
+	}
+
+	public ArrayList<AudioEncodingTask> getAudioTasks() {
+		return audioTasks;
+	}
+
+	public void setAudioTasks(ArrayList<AudioEncodingTask> audioTasks) {
+		this.audioTasks = audioTasks;
 	}
 
 }

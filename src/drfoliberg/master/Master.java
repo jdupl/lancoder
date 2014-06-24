@@ -32,14 +32,18 @@ import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
+import drfoliberg.common.task.audio.AudioCodec;
+import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.TaskReport;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
+import drfoliberg.converter.ConverterListener;
+import drfoliberg.converter.ConverterPool;
 import drfoliberg.master.api.ApiServer;
 import drfoliberg.muxer.Muxer;
 import drfoliberg.muxer.MuxerListener;
 
-public class Master implements Runnable, MuxerListener, DispatcherListener {
+public class Master implements Runnable, MuxerListener, DispatcherListener, ConverterListener {
 
 	public static final String ALGORITHM = "SHA-256";
 	Logger logger = LoggerFactory.getLogger(Master.class);
@@ -49,6 +53,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 	private HashMap<String, Node> nodes;
 
 	private ArrayList<Service> services;
+	private ConverterPool convertingPool;
 
 	private MasterConfig config;
 	private String configPath;
@@ -69,6 +74,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 			// this saves default configuration to disk
 			this.config = MasterConfig.generate(configPath);
 		}
+
+		convertingPool = new ConverterPool(Runtime.getRuntime().availableProcessors()); // exprimental
+
 		// TODO refactor these to observers/events patterns
 		nodeServer = new MasterNodeServer(this);
 		nodeChecker = new NodeChecker(this);
@@ -123,7 +131,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 	 * 
 	 * @return The task to dispatch next or null is none available
 	 */
-	private VideoEncodingTask getNextTask() {
+	private VideoEncodingTask getNextVideoTask() {
 		Job min = null;
 		int minTaskCount = Integer.MAX_VALUE;
 
@@ -136,6 +144,17 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 		}
 
 		return min != null ? min.getNextTask() : null;
+	}
+
+	private AudioEncodingTask getNextAudioTask() {
+		for (Job j : this.getJobs()) {
+			for (AudioEncodingTask task : j.getAudioTasks()) {
+				if (task.getTaskState() == TaskState.TASK_TODO) {
+					return task;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -161,12 +180,19 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 	 */
 	public synchronized boolean updateNodesWork() {
 		// TODO loop to send more tasks (not just once)
+		AudioEncodingTask audioTask = getNextAudioTask();
+
+		while (audioTask != null && convertingPool.hasFreeConverters()) {
+			convertingPool.encode(audioTask, this);
+			audioTask = getNextAudioTask();
+		}
+
 		Node node = getBestFreeNode();
 		if (node == null) {
 			System.out.println("MASTER: No available nodes!");
 			return false;
 		}
-		VideoEncodingTask nextTask = getNextTask();
+		VideoEncodingTask nextTask = getNextVideoTask();
 		if (nextTask == null) {
 			System.out.println("MASTER: No available work!");
 			return false;
@@ -332,9 +358,17 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 
 	public Job createJob(JobConfig jobConfig, String jobName, int lengthOfTasks, long lengthOfJob, int frameCount,
 			float frameRate) {
-		// TODO Move to factory
-		return new Job(jobConfig, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate,
+		// TODO Move to factories (audio task, video task)
+		// (this part needs heavy refactor)
+		Job j = new Job(jobConfig, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate,
 				config.getFinalEncodingFolder());
+
+		File absoluteSource = FileUtils.getFile(config.getAbsoluteSharedFolder(), jobConfig.getSourceFile());
+		File absoluteOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getOutputFolder(), "audio");
+		j.getAudioTasks().add(
+				new AudioEncodingTask(AudioCodec.VORBIS, 2, 44100, 3, RateControlType.CRF, absoluteSource
+						.getAbsolutePath(), absoluteOutput.getAbsolutePath()));
+		return j;
 	}
 
 	public ApiResponse addJob(ApiJobRequest req) {
@@ -655,20 +689,38 @@ public class Master implements Runnable, MuxerListener, DispatcherListener {
 
 	@Override
 	public void muxingFailed(Job job, Exception e) {
-		// TODO Auto-generated method stub
+		// TODO Do something more (implement job failure ?)
 		System.err.printf("Muxing failed for job %s\n", job.getJobName());
 		e.printStackTrace();
 	}
 
 	@Override
-	public void taskRefused(VideoEncodingTask t, Node n) {
+	public synchronized void taskRefused(VideoEncodingTask t, Node n) {
 		t.setStatus(TaskState.TASK_TODO);
 	}
 
 	@Override
-	public void taskAccepted(VideoEncodingTask t, Node n) {
+	public synchronized void taskAccepted(VideoEncodingTask t, Node n) {
 		n.setCurrentTask(t);
 		t.setStatus(TaskState.TASK_COMPUTING);
+	}
+
+	@Override
+	public synchronized void convertionFinished(AudioEncodingTask t) {
+		System.out.println("MASTER: Finished encoding an audio task");
+		t.setTaskState(TaskState.TASK_COMPLETED);
+	}
+
+	@Override
+	public synchronized void convertionStarted(AudioEncodingTask t) {
+		System.out.println("MASTER: Starting encoding an audio task");
+		t.setTaskState(TaskState.TASK_COMPUTING);
+	}
+
+	@Override
+	public synchronized void convertionFailed(AudioEncodingTask t) {
+		System.out.println("MASTER: Failed encoding an audio task");
+		t.setTaskState(TaskState.TASK_TODO); // TODO Add something genius here
 	}
 
 }

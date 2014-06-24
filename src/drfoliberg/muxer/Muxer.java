@@ -7,6 +7,7 @@ import java.util.Collections;
 
 import drfoliberg.common.Service;
 import drfoliberg.common.job.Job;
+import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class Muxer extends Service {
@@ -28,15 +29,28 @@ public class Muxer extends Service {
 		File muxedFile = new File(absoluteJobFolder, job.getOutputFileName());
 		ArrayList<String> args = new ArrayList<>();
 		Collections.addAll(args, new String[] { "mkvmerge", "-o", muxedFile.getAbsolutePath() });
+		// Video
+		args.add("--forced-track");
+		args.add("0:no");
 		for (int i = 0; i < job.getTasks().size(); i++) {
+			Collections.addAll(args, new String[] { "-d", "0", "-A", "-S", "-T", "--no-global-tags", "--no-chapters" });
+			if (i != 0) {
+				args.add("+");
+			}
 			VideoEncodingTask t = job.getTasks().get(i);
 			File path = new File(t.getOutputFile());
 			path = new File(job.getPartsFolderName(), path.getName());
 			args.add(path.getPath());
-			if (i != job.getTasks().size() - 1) {
-				args.add("+");
-			}
 		}
+		// Audio
+		for (int i = 0; i < job.getAudioTasks().size(); i++) {
+			Collections.addAll(args, new String[] { "--forced-track", "0:no", "-a", "0", "-D", "-S", "-T",
+					"--no-global-tags", "--no-chapters" });
+			AudioEncodingTask task = job.getAudioTasks().get(i);
+			args.add(task.getOutputFile());
+
+		}
+
 		ProcessBuilder pb = new ProcessBuilder(args);
 		System.out.println("MUXER: " + args.toString());
 		pb.directory(new File(absoluteJobFolder));
