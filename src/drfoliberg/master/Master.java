@@ -709,6 +709,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	public synchronized void convertionFinished(AudioEncodingTask t) {
 		System.out.println("MASTER: Finished encoding an audio task");
 		t.setTaskState(TaskState.TASK_COMPLETED);
+		updateNodesWork();
 	}
 
 	@Override
