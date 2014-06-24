@@ -11,6 +11,8 @@ import java.util.Set;
 
 public class FileUtils extends org.apache.commons.io.FileUtils {
 
+	private static String OS = System.getProperty("os.name").toLowerCase();
+
 	/**
 	 * Sets permissions to file or directory given. Fails silently and returns false if an exception occurred at some
 	 * point.
@@ -64,7 +66,12 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 	private static boolean givePerm(File f, Set<PosixFilePermission> perms) {
 		try {
 			Path p = Paths.get(f.toURI());
-			Files.setPosixFilePermissions(p, perms);
+			if (OS.indexOf("win") >= 0) {
+				// just set writable on windows I guess...
+				p.toFile().setWritable(true);
+			} else {
+				Files.setPosixFilePermissions(p, perms);
+			}
 		} catch (IOException e) {
 			System.err.printf("Could not set permissions '%s' to %s\n", perms, f.toString());
 			return false;
