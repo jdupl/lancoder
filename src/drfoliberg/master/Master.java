@@ -288,21 +288,26 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	 * @return if the node could be added
 	 */
 	public boolean addNode(Node n) {
+		boolean success = true;
 		// Is this a new node ?
 		if (n.getUnid().equals("")) {
 			n.setUnid(getNewUNID(n));
 		}
-		if (nodes.containsKey(n.getUnid())) {
+		Node masterInstance = nodes.get(n.getUnid());
+		if (masterInstance != null && masterInstance.getStatus() == NodeState.NOT_CONNECTED) {
 			nodes.get(n.getUnid()).setStatus(NodeState.FREE);
 			// Node with same unid reconnecting
-			return true;
-		} else {
+		} else if (masterInstance == null) {
 			n.setStatus(NodeState.NOT_CONNECTED);
 			nodes.put(n.getUnid(), n);
 			System.out.println("MASTER: Added node " + n.getName() + " with unid: " + n.getUnid());
-			updateNodesWork();
-			return true;
+		} else {
+			success = false;
 		}
+		if (success) {
+			updateNodesWork();
+		}
+		return success;
 	}
 
 	public ArrayList<Node> getNodes() {
