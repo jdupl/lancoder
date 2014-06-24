@@ -21,6 +21,7 @@ import drfoliberg.common.utils.FileUtils;
 
 public class WorkThread extends Service {
 
+	private static String OS = System.getProperty("os.name").toLowerCase();
 	private VideoEncodingTask task;
 	private Worker callback;
 	Process process;
@@ -72,6 +73,11 @@ public class WorkThread extends Service {
 		return String.format("%d:%d:%d.%d", hours, minutes, seconds, decimals);
 	}
 
+	private static boolean isWindows() {
+		return (OS.indexOf("win") >= 0);
+
+	}
+
 	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
 			MissingDecoderException, WorkInterruptedException {
 
@@ -102,7 +108,11 @@ public class WorkThread extends Service {
 					ffmpegArgs.add("rawvideo");
 					ffmpegArgs.add("-y");
 					// Change output file to null
-					outFile = "/dev/null"; // TODO use NUL for windows
+					if (isWindows()) {
+						outFile = "NUL";
+					} else {
+						outFile = "/dev/null";
+					}
 				}
 			}
 			ffmpegArgs.add(outFile);
