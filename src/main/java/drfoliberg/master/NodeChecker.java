@@ -11,6 +11,7 @@ import main.java.drfoliberg.common.network.ClusterProtocol;
 import main.java.drfoliberg.common.network.messages.cluster.Message;
 import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
 
+@Deprecated
 public class NodeChecker extends Service {
 
 	private final static int MS_DELAY_BETWEEN_CHECKS = 5000;

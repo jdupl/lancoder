@@ -37,6 +37,7 @@ public class HttpNodeChecker extends Service {
 		}
 		System.out.println("MASTER NODE CHECKER: checking if nodes are still alive");
 		for (Node n : listener.getOnlineNodes()) {
+			System.out.println("Checking node " + n.getNodeAddress());
 			checkNode(n);
 		}
 		return false;
@@ -46,7 +47,8 @@ public class HttpNodeChecker extends Service {
 		try {
 			Gson gson = new Gson();
 			CloseableHttpClient client = HttpClients.createDefault();
-			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
+			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).setConnectTimeout(2000)
+					.setConnectionRequestTimeout(2000).build();
 
 			URI url = new URI("http", null, n.getNodeAddress().getHostAddress(), n.getNodePort(), Routes.NODE_STATUS,
 					null, null);

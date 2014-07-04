@@ -3,11 +3,15 @@ package main.java.drfoliberg.worker;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 
 import main.java.drfoliberg.common.ServerListener;
 import main.java.drfoliberg.common.Service;
@@ -34,7 +38,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.gson.Gson;
 
-public class Worker implements Runnable, ServerListener, WorkerServletListerner {
+public class Worker implements Runnable, ServerListener, WorkerServletListerner, ConctactMasterListener {
 
 	WorkerConfig config;
 
@@ -44,6 +48,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner 
 	private ArrayList<Service> services;
 	private WorkerHttpServer server;
 	private WorkThread workThread;
+	private InetAddress address;
 
 	public Worker(String configPath) {
 		this.configPath = configPath;
@@ -60,6 +65,26 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner 
 		server = new WorkerHttpServer(config.getListenPort(), this, this);
 		services.add(server);
 		print("initialized not connected to a master server");
+
+		try {
+
+			Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
+			for (; n.hasMoreElements();) {
+				NetworkInterface e = n.nextElement();
+				Enumeration<InetAddress> a = e.getInetAddresses();
+				for (; a.hasMoreElements();) {
+					InetAddress addr = a.nextElement();
+					if (!addr.isLoopbackAddress() && (addr  instanceof Inet4Address) ) {
+						address = addr;
+						System.out.println("Assuming worker ip is:" + address.getHostAddress());
+					}
+
+				}
+			}
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public Worker(WorkerConfig config) {
@@ -171,13 +196,17 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner 
 	}
 
 	public synchronized void updateStatus(NodeState statusCode) {
-		// TODO move this
+
+		if (this.status == NodeState.NOT_CONNECTED && statusCode != NodeState.NOT_CONNECTED) {
+			this.stopContactMaster();
+		}
 		print("changing worker status to " + statusCode);
 		this.status = statusCode;
 
 		switch (statusCode) {
 		case FREE:
-			notifyMasterStatusChange(statusCode);
+			// notifyMasterStatusChange(statusCode);
+			notifyHttpMasterStatusChange();
 			this.currentTask = null;
 			break;
 		case WORKING:
@@ -186,9 +215,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner 
 			break;
 		case NOT_CONNECTED:
 			// start thread to try to contact master
-			ContactMaster contact = new ContactMaster(this);
-			Thread mastercontactThread = new Thread(contact);
-			mastercontactThread.start();
+			startContactMaster();
 			break;
 		case CRASHED:
 			// cancel current work
@@ -197,6 +224,24 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner 
 		default:
 			System.err.println("WORKER: Unhandlded status code while" + " updating status");
 			break;
+		}
+	}
+
+	private void startContactMaster() {
+		ContactMasterHttp contact = new ContactMasterHttp(getMasterIpAddress(), getMasterPort(), this);
+		Thread mastercontactThread = new Thread(contact);
+		mastercontactThread.start();
+		this.services.add(contact);
+	}
+
+	public void stopContactMaster() {
+		System.out.println("Trying to stop contact service");
+		for (Service s : this.services) {
+			if (s instanceof ContactMasterHttp) {
+				System.out.println("Found service. Sending stop request.");
+				s.stop();
+				break;
+			}
 		}
 	}
 
@@ -237,6 +282,8 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner 
 			CloseableHttpResponse response = client.execute(post);
 			if (response.getStatusLine().getStatusCode() == 200) {
 				success = true;
+			}else{
+				System.err.println(response.getStatusLine().getStatusCode());
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -245,7 +292,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner 
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return success;
 	}
 
@@ -317,11 +364,11 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner 
 	}
 
 	public void run() {
-		updateStatus(NodeState.NOT_CONNECTED);
 		for (Service s : services) {
 			Thread t = new Thread(s);
 			t.start();
 		}
+		updateStatus(NodeState.NOT_CONNECTED);
 		System.err.println("Started all services");
 	}
 
@@ -368,5 +415,31 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner 
 	public void shutdownWorker() {
 		System.err.println("Received shutdown request from api !");
 		this.shutdown();
+	}
+
+	@Override
+	public void receivedUnid(String unid) {
+		setUnid(unid);
+		updateStatus(NodeState.FREE);
+	}
+
+	@Override
+	public String getCurrentNodeUnid() {
+		return this.config.getUniqueID();
+	}
+
+	@Override
+	public String getCurrentNodeName() {
+		return this.getWorkerName();
+	}
+
+	@Override
+	public int getCurrentNodePort() {
+		return this.getListenPort();
+	}
+
+	@Override
+	public InetAddress getCurrentNodeAddress() {
+		return this.address;
 	}
 }

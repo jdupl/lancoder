@@ -25,7 +25,7 @@ public class Simulation extends Thread {
 		Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
 		Thread w1Thread = new Thread(worker1);
 		w1Thread.start();
-		worker1.notifyHttpMasterStatusChange();
+
 	}
 
 	public void run() {

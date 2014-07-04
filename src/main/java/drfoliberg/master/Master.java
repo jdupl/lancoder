@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 
 import main.java.drfoliberg.common.FFmpegProber;
 import main.java.drfoliberg.common.Node;
+import main.java.drfoliberg.common.ServerListener;
 import main.java.drfoliberg.common.Service;
 import main.java.drfoliberg.common.job.FFmpegPreset;
 import main.java.drfoliberg.common.job.Job;
@@ -22,6 +23,7 @@ import main.java.drfoliberg.common.job.RateControlType;
 import main.java.drfoliberg.common.network.ClusterProtocol;
 import main.java.drfoliberg.common.network.messages.api.ApiJobRequest;
 import main.java.drfoliberg.common.network.messages.api.ApiResponse;
+import main.java.drfoliberg.common.network.messages.cluster.ConnectMessage;
 import main.java.drfoliberg.common.network.messages.cluster.CrashReport;
 import main.java.drfoliberg.common.network.messages.cluster.Message;
 import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
@@ -35,7 +37,10 @@ import main.java.drfoliberg.common.task.video.VideoEncodingTask;
 import main.java.drfoliberg.common.utils.FileUtils;
 import main.java.drfoliberg.converter.ConverterListener;
 import main.java.drfoliberg.converter.ConverterPool;
+import main.java.drfoliberg.master.api.node.MasterHttpNodeServer;
+import main.java.drfoliberg.master.api.node.MasterNodeServletListener;
 import main.java.drfoliberg.master.api.web.ApiServer;
+import main.java.drfoliberg.master.checker.HttpNodeChecker;
 import main.java.drfoliberg.master.checker.NodeCheckerListener;
 import main.java.drfoliberg.master.dispatcher.Dispatcher;
 import main.java.drfoliberg.master.dispatcher.DispatcherListener;
@@ -46,13 +51,16 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Master implements Runnable, MuxerListener, DispatcherListener, ConverterListener, NodeCheckerListener {
+public class Master implements Runnable, MuxerListener, DispatcherListener, ConverterListener, NodeCheckerListener,
+		MasterNodeServletListener, ServerListener {
 
 	public static final String ALGORITHM = "SHA-256";
 	Logger logger = LoggerFactory.getLogger(Master.class);
 
-	private MasterNodeServer nodeServer;
-	private NodeChecker nodeChecker;
+	// private MasterNodeServer nodeServer;
+	private MasterHttpNodeServer nodeServer;
+	//private NodeChecker nodeChecker;
+	private HttpNodeChecker nodeChecker;
 	private HashMap<String, Node> nodes;
 
 	private ArrayList<Service> services;
@@ -81,8 +89,10 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		convertingPool = new ConverterPool(Runtime.getRuntime().availableProcessors()); // exprimental
 
 		// TODO refactor these to observers/events patterns
-		nodeServer = new MasterNodeServer(this);
-		nodeChecker = new NodeChecker(this);
+		// nodeServer = new MasterNodeServer(this);
+		nodeServer = new MasterHttpNodeServer(getConfig().getNodeServerPort(), this, this);
+		//nodeChecker = new NodeChecker(this);
+		nodeChecker = new HttpNodeChecker(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
 
@@ -298,8 +308,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		}
 		Node masterInstance = nodes.get(n.getUnid());
 		if (masterInstance != null && masterInstance.getStatus() == NodeState.NOT_CONNECTED) {
-			nodes.get(n.getUnid()).setStatus(NodeState.FREE);
 			// Node with same unid reconnecting
+			nodes.get(n.getUnid()).setStatus(NodeState.NOT_CONNECTED);
 		} else if (masterInstance == null) {
 			n.setStatus(NodeState.NOT_CONNECTED);
 			nodes.put(n.getUnid(), n);
@@ -667,12 +677,16 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 
 	public void run() {
 		// start services
-		Thread listenerThread = new Thread(nodeServer);
-		listenerThread.start();
-		Thread nodeCheckerThread = new Thread(nodeChecker);
-		nodeCheckerThread.start();
-		Thread apiThread = new Thread(apiServer);
-		apiThread.start();
+		// Thread listenerThread = new Thread(nodeServer);
+		// listenerThread.start();
+		// Thread nodeCheckerThread = new Thread(nodeChecker);
+		// nodeCheckerThread.start();
+		// Thread apiThread = new Thread(apiServer);
+		// apiThread.start();
+		for (Service s : this.services) {
+			Thread t = new Thread(s);
+			t.start();
+		}
 	}
 
 	@Override
@@ -738,6 +752,29 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		} else {
 			System.err.println("Could not mark node as disconnected as it was not found");
 		}
+	}
+
+	@Override
+	public void serverShutdown(Service server) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void serverFailure(Exception e, Service server) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public String readConnectRequest(ConnectMessage cm) {
+		Node sender = new Node(cm.address, cm.localPort, cm.name);
+		sender.setUnid(cm.getUnid());
+		if (addNode(sender)) {
+			System.err.println("added node " + sender.getUnid());
+			return sender.getUnid();
+		}
+		return null;
 	}
 
 }

@@ -17,11 +17,11 @@ public class ServletServer extends Service implements ServerListener {
 
 	@Override
 	public void run() {
-		System.err.println("Starting worker server");
+		System.err.println("Starting servlet server");
 		try {
 			server.start();
 			server.join();
-			System.err.println("Started worker server");
+			System.err.println("Started servlet server");
 		} catch (Exception e) {
 			serverFailure(e, this);
 		}

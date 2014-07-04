@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 
 import main.java.drfoliberg.common.Service;
-
+@Deprecated
 public class MasterNodeServer extends Service {
 
 	private Master master;

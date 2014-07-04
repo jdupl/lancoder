@@ -8,6 +8,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.entity.ContentType;
+
 import main.java.drfoliberg.common.network.Routes;
 import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
 import main.java.drfoliberg.common.network.messages.cluster.TaskRequestMessage;
@@ -46,7 +48,7 @@ public class WorkerServlet extends HttpServlet implements WorkerServletListerner
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Gson gson = new Gson();
 		resp.setCharacterEncoding(StandardCharsets.UTF_8.toString());
-		resp.setContentType("application/json");
+		resp.setContentType(ContentType.APPLICATION_JSON.toString());
 		switch (req.getRequestURI()) {
 		case Routes.NODE_STATUS:
 			StatusReport report = statusRequest();
@@ -110,8 +112,6 @@ public class WorkerServlet extends HttpServlet implements WorkerServletListerner
 
 	@Override
 	public void shutdownWorker() {
-		servletListener.shutdownWorker();
-		
+		servletListener.shutdownWorker();	
 	}
-
 }
