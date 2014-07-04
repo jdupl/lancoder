@@ -10,7 +10,7 @@ import main.java.drfoliberg.common.network.messages.cluster.AuthMessage;
 import main.java.drfoliberg.common.network.messages.cluster.ConnectMessage;
 import main.java.drfoliberg.common.network.messages.cluster.Message;
 import main.java.drfoliberg.common.status.NodeState;
-
+@Deprecated
 public class ContactMaster implements Runnable {
 
 	Worker worker;
@@ -25,7 +25,7 @@ public class ContactMaster implements Runnable {
 				+ worker.getMasterIpAddress().toString());
 		Socket socket = null;
 		try {
-			socket = new Socket(worker.getMasterIpAddress(), 1337);
+			socket = new Socket(worker.getMasterIpAddress(), worker.getMasterPort());
 
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			out.flush();

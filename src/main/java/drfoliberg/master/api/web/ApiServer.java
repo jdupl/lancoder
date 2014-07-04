@@ -1,4 +1,4 @@
-package main.java.drfoliberg.master.api;
+package main.java.drfoliberg.master.api.web;
 
 import main.java.drfoliberg.common.Service;
 import main.java.drfoliberg.master.Master;
@@ -11,8 +11,8 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 
 public class ApiServer extends Service {
 
-	private static final String webDir = "main/web" ;
-	
+	private static final String webDir = "main/web";
+
 	private Master master;
 	Server server;
 

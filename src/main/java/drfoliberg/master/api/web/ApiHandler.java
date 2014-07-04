@@ -1,4 +1,4 @@
-package main.java.drfoliberg.master.api;
+package main.java.drfoliberg.master.api.web;
 
 import java.io.BufferedReader;
 import java.io.IOException;

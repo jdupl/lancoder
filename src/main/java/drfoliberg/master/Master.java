@@ -35,7 +35,10 @@ import main.java.drfoliberg.common.task.video.VideoEncodingTask;
 import main.java.drfoliberg.common.utils.FileUtils;
 import main.java.drfoliberg.converter.ConverterListener;
 import main.java.drfoliberg.converter.ConverterPool;
-import main.java.drfoliberg.master.api.ApiServer;
+import main.java.drfoliberg.master.api.web.ApiServer;
+import main.java.drfoliberg.master.checker.NodeCheckerListener;
+import main.java.drfoliberg.master.dispatcher.Dispatcher;
+import main.java.drfoliberg.master.dispatcher.DispatcherListener;
 import main.java.drfoliberg.muxer.Muxer;
 import main.java.drfoliberg.muxer.MuxerListener;
 
@@ -43,7 +46,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Master implements Runnable, MuxerListener, DispatcherListener, ConverterListener {
+public class Master implements Runnable, MuxerListener, DispatcherListener, ConverterListener, NodeCheckerListener {
 
 	public static final String ALGORITHM = "SHA-256";
 	Logger logger = LoggerFactory.getLogger(Master.class);
@@ -478,7 +481,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		ArrayList<Node> nodes = new ArrayList<>();
 		for (Entry<String, Node> e : this.nodes.entrySet()) {
 			Node n = e.getValue();
-			if (n.getStatus() == NodeState.FREE || n.getStatus() == NodeState.WORKING) {
+			if (n.getStatus() != NodeState.PAUSED && n.getStatus() != NodeState.NOT_CONNECTED) {
 				nodes.add(n);
 			}
 		}
@@ -492,6 +495,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	 *            The node to disconnect
 	 * @return
 	 */
+	@Deprecated
 	public synchronized boolean removeNode(Node n) {
 		if (n != null) {
 			// Cancel node's task status if any
@@ -596,10 +600,13 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	 *            The report to be read
 	 * @return true if update could be sent, false otherwise
 	 */
-	public boolean readStatusReport(StatusReport report) {
+	public void readStatusReport(StatusReport report) {
 		NodeState s = report.status;
 		String unid = report.getUnid();
 		Node sender = identifySender(unid);
+		if (report.getTaskReport() != null) {
+			readTaskReport(report.getTaskReport());
+		}
 		// only update if status is changed
 		if (sender.getStatus() != report.status) {
 			System.out.println("node " + sender.getName() + " is updating it's status from " + sender.getStatus()
@@ -607,53 +614,40 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 			sender.setStatus(s);
 			updateNodesWork();
 		}
-		// TODO: get real return value of the update
-		return true;
 	}
 
 	/**
 	 * Reads a task report and launches an update of the task status and progress
 	 * 
 	 * @param report
-	 *            The report to be read
-	 * @return Return true if update could be sent, false otherwise
+	 *            The report to read
 	 */
-	public boolean readTaskReport(TaskReport report) {
-
+	@Override
+	public void readTaskReport(TaskReport report) {
 		float progress = report.getTask().getProgress();
 		// find node
 		String nodeId = report.getUnid();
 		Node sender = identifySender(nodeId);
 
 		if (sender == null) {
-			System.err.println("MASTER: Could not find task in the node list!");
-			return false;
+			return;
 		}
-
-		VideoEncodingTask nodeTask = sender.getCurrentTask();
-
-		if (nodeTask == null) {
-			System.err.printf("MASTER: Node %s has no task! \n", sender.getName());
-			return false;
-		}
-
-		// check task-node association
-		if (!nodeTask.getJobId().equals(report.getTask().getJobId())
-				|| nodeTask.getTaskId() != report.getTask().getTaskId()) {
-			System.err.printf("MASTER: Bad task update from node %s." + " Expected task: %d, job: %s."
-					+ " Got task: %d, job: %s", sender.getUnid(), nodeTask.getTaskId(), nodeTask.getJobId(), report
-					.getTask().getTaskId(), report.getTask().getJobId());
-			return false;
-		}
-
-		if (report.getTask().getStatus() == TaskState.TASK_COMPLETED) {
+		if (!nodeHasTask(sender, report.getTask())) {
+			System.err.printf("MASTER: Bad task update from node.");
+		} else if (report.getTask().getStatus() == TaskState.TASK_COMPLETED) {
 			updateNodeTask(sender, TaskState.TASK_COMPLETED);
 		} else {
 			System.out.printf("MASTER: Updating the task %s to %f%% \n", sender.getCurrentTask().getTaskId(), progress);
 			sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
 		}
+	}
 
-		return true;
+	private boolean nodeHasTask(Node n, VideoEncodingTask t) {
+		if (n == null) {
+			System.err.println("MASTER: Node is null !");
+			return false;
+		}
+		return n.getCurrentTask().equals(t);
 	}
 
 	public void readCrashReport(CrashReport report) {
@@ -727,6 +721,23 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	public synchronized void convertionFailed(AudioEncodingTask t) {
 		System.out.println("MASTER: Failed encoding an audio task");
 		t.setTaskState(TaskState.TASK_TODO); // TODO Add something genius here
+	}
+
+	@Override
+	public void nodeDisconnected(Node n) {
+		if (n != null) {
+			System.err.printf("Node %s was disconnected !\n", n.getName());
+			// Cancel node's task status if any
+			VideoEncodingTask toCancel = null;
+			toCancel = n.getCurrentTask();
+			if (toCancel != null) {
+				updateNodeTask(n, TaskState.TASK_TODO);
+				n.setCurrentTask(null);
+			}
+			n.setStatus(NodeState.NOT_CONNECTED);
+		} else {
+			System.err.println("Could not mark node as disconnected as it was not found");
+		}
 	}
 
 }

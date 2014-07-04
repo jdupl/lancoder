@@ -5,34 +5,50 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
+import main.java.drfoliberg.common.ServerListener;
 import main.java.drfoliberg.common.Service;
+import main.java.drfoliberg.common.network.Routes;
 import main.java.drfoliberg.common.network.messages.cluster.ConnectMessage;
 import main.java.drfoliberg.common.network.messages.cluster.CrashReport;
 import main.java.drfoliberg.common.network.messages.cluster.Message;
 import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
+import main.java.drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 import main.java.drfoliberg.common.status.NodeState;
 import main.java.drfoliberg.common.status.TaskState;
 import main.java.drfoliberg.common.task.video.TaskReport;
 import main.java.drfoliberg.common.task.video.VideoEncodingTask;
+import main.java.drfoliberg.worker.server.WorkerHttpServer;
+import main.java.drfoliberg.worker.server.WorkerServletListerner;
 
-public class Worker implements Runnable {
+import org.apache.commons.io.Charsets;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+
+import com.google.gson.Gson;
+
+public class Worker implements Runnable, ServerListener, WorkerServletListerner {
 
 	WorkerConfig config;
-	
+
 	private String configPath;
 	private VideoEncodingTask currentTask;
 	private NodeState status;
 	private ArrayList<Service> services;
-	private WorkerServer workerListener;
+	private WorkerHttpServer server;
 	private WorkThread workThread;
 
 	public Worker(String configPath) {
 		this.configPath = configPath;
 
 		services = new ArrayList<>();
-		this.workerListener = new WorkerServer(this);
 
 		config = WorkerConfig.load(configPath);
 		if (config != null) {
@@ -41,8 +57,8 @@ public class Worker implements Runnable {
 			// this saves default configuration to disk
 			this.config = WorkerConfig.generate(configPath);
 		}
-
-		services.add(workerListener);
+		server = new WorkerHttpServer(config.getListenPort(), this, this);
+		services.add(server);
 		print("initialized not connected to a master server");
 	}
 
@@ -203,6 +219,37 @@ public class Worker implements Runnable {
 		return true;
 	}
 
+	public boolean notifyHttpMasterStatusChange() {
+		boolean success = false;
+		CloseableHttpClient client = HttpClientBuilder.create().build();
+		StatusReport report = this.getStatusReport();
+		Gson gson = new Gson();
+		try {
+			StringEntity entity = new StringEntity(gson.toJson(report));
+			entity.setContentEncoding(Charsets.UTF_8.toString());
+			entity.setContentType(ContentType.APPLICATION_JSON.toString());
+			URI url = new URI("http", null, config.getMasterIpAddress().getHostAddress(), config.getMasterPort(),
+					Routes.NODE_STATUS, null, null);
+			HttpPost post = new HttpPost(url);
+
+			post.setEntity(entity);
+
+			CloseableHttpResponse response = client.execute(post);
+			if (response.getStatusLine().getStatusCode() == 200) {
+				success = true;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return success;
+	}
+
+	@Deprecated
 	public boolean notifyMasterStatusChange(NodeState status) {
 		Socket socket = null;
 		boolean success = true;
@@ -271,8 +318,11 @@ public class Worker implements Runnable {
 
 	public void run() {
 		updateStatus(NodeState.NOT_CONNECTED);
-		Thread listerThread = new Thread(workerListener);
-		listerThread.start();
+		for (Service s : services) {
+			Thread t = new Thread(s);
+			t.start();
+		}
+		System.err.println("Started all services");
 	}
 
 	public void setUnid(String unid) {
@@ -283,5 +333,40 @@ public class Worker implements Runnable {
 
 	public VideoEncodingTask getCurrentTask() {
 		return this.currentTask;
+	}
+
+	@Override
+	public boolean taskRequest(TaskRequestMessage tqm) {
+		return startWork(tqm.task);
+	}
+
+	@Override
+	public StatusReport statusRequest() {
+		return getStatusReport();
+	}
+
+	@Override
+	public void serverShutdown(Service server) {
+		this.services.remove(server);
+	}
+
+	@Override
+	public void serverFailure(Exception e, Service server) {
+		e.printStackTrace();
+	}
+
+	@Override
+	public boolean deleteTask(TaskRequestMessage tqm) {
+		if (tqm != null && currentTask != null && tqm.task.equals(currentTask)) {
+			this.stopWork(currentTask);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void shutdownWorker() {
+		System.err.println("Received shutdown request from api !");
+		this.shutdown();
 	}
 }

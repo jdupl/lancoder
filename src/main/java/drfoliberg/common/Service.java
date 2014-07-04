@@ -7,4 +7,9 @@ public abstract class Service implements Runnable {
 	public void stop() {
 		this.close = true;
 	}
+
+	public void serviceFailure(Exception e) {
+		e.printStackTrace();
+		// TODO send to service listener
+	}
 }

@@ -1,4 +1,4 @@
-package main.java.drfoliberg.master;
+package main.java.drfoliberg.master.dispatcher;
 
 import main.java.drfoliberg.common.Node;
 import main.java.drfoliberg.common.task.video.VideoEncodingTask;

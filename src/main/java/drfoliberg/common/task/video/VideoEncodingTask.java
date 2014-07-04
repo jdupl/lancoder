@@ -47,6 +47,21 @@ public class VideoEncodingTask implements Serializable {
 		return args;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof VideoEncodingTask)) {
+			return false;
+		}
+		VideoEncodingTask other = (VideoEncodingTask) obj;
+		if (other.getJobId() == null || this.getJobId() == null) {
+			return false;
+		}
+		return other.getTaskId() == this.getTaskId() && other.getJobId().equals(this.getJobId());
+	}
+
 	public void reset() {
 		taskStatus.setFramesCompleted(0);
 		setStatus(TaskState.TASK_TODO);
