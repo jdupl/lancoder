@@ -19,7 +19,8 @@ public class FFmpegProber {
 		Process process = null;
 		boolean found = false;
 		try {
-			process = Runtime.getRuntime().exec("ffprobe " + filename);
+			ProcessBuilder pb = new ProcessBuilder("ffprobe", filename);
+			process = pb.start();
 		} catch (IOException e) {
 			return -1;
 		}
@@ -29,13 +30,13 @@ public class FFmpegProber {
 		String line = "";
 
 		// Format is like "Duration: 01:24:20.51"
-		Pattern durationPattern = Pattern.compile("Duration:"
-				+ "\\s*([0-9]{2}):([0-9]{2}):([0-9]{2}\\.[0-9]{2})");
+		Pattern durationPattern = Pattern.compile("Duration:" + "\\s*([0-9]{2}):([0-9]{2}):([0-9]{2}\\.[0-9]{2})");
 
 		float totalSeconds = -1;
 
 		while (s.hasNext() && !found) {
 			line = s.nextLine();
+			System.out.println(line);
 			Matcher m = durationPattern.matcher(line);
 			if (m.find()) {
 				found = true;
@@ -62,7 +63,8 @@ public class FFmpegProber {
 		boolean found = false;
 		Process process = null;
 		try {
-			process = Runtime.getRuntime().exec("ffprobe " + filename);
+			ProcessBuilder pb = new ProcessBuilder("ffprobe", filename);
+			process = pb.start();
 		} catch (IOException e) {
 			return -1;
 		}
