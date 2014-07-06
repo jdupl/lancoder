@@ -35,7 +35,8 @@ public class MasterNodeServlet extends HttpServlet {
 			if (cm == null) {
 				resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
 			} else {
-				this.listener.readConnectRequest(cm);
+				this.listener.connectRequest(cm);
+				resp.setStatus(HttpServletResponse.SC_OK);
 				resp.setCharacterEncoding(StandardCharsets.UTF_8.toString());
 				resp.setContentType(ContentType.TEXT_PLAIN.toString());
 				resp.getWriter().print(cm.getUnid());
@@ -44,6 +45,17 @@ public class MasterNodeServlet extends HttpServlet {
 		case Routes.NODE_STATUS:
 			StatusReport report = gson.fromJson(req.getReader(), StatusReport.class);
 			listener.readStatusReport(report);
+			resp.setStatus(HttpServletResponse.SC_OK);
+			break;
+		case Routes.DISCONNECT_NODE:
+			// node is shutting down by it self
+			ConnectMessage c = gson.fromJson(req.getReader(), ConnectMessage.class);
+			if (c == null) {
+				resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			} else {
+				this.listener.disconnectRequest(c);
+				resp.setStatus(HttpServletResponse.SC_OK);
+			}
 			break;
 		default:
 			resp.sendError(HttpServletResponse.SC_NOT_FOUND);

@@ -2,9 +2,8 @@ package main.java.drfoliberg.master;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -20,12 +19,11 @@ import main.java.drfoliberg.common.job.FFmpegPreset;
 import main.java.drfoliberg.common.job.Job;
 import main.java.drfoliberg.common.job.JobConfig;
 import main.java.drfoliberg.common.job.RateControlType;
-import main.java.drfoliberg.common.network.ClusterProtocol;
+import main.java.drfoliberg.common.network.Routes;
 import main.java.drfoliberg.common.network.messages.api.ApiJobRequest;
 import main.java.drfoliberg.common.network.messages.api.ApiResponse;
 import main.java.drfoliberg.common.network.messages.cluster.ConnectMessage;
 import main.java.drfoliberg.common.network.messages.cluster.CrashReport;
-import main.java.drfoliberg.common.network.messages.cluster.Message;
 import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
 import main.java.drfoliberg.common.status.JobState;
 import main.java.drfoliberg.common.status.NodeState;
@@ -48,6 +46,10 @@ import main.java.drfoliberg.muxer.Muxer;
 import main.java.drfoliberg.muxer.MuxerListener;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,9 +59,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	public static final String ALGORITHM = "SHA-256";
 	Logger logger = LoggerFactory.getLogger(Master.class);
 
-	// private MasterNodeServer nodeServer;
 	private MasterHttpNodeServer nodeServer;
-	// private NodeChecker nodeChecker;
 	private HttpNodeChecker nodeChecker;
 	private HashMap<String, Node> nodes;
 
@@ -88,10 +88,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 
 		convertingPool = new ConverterPool(Runtime.getRuntime().availableProcessors()); // exprimental
 
-		// TODO refactor these to observers/events patterns
-		// nodeServer = new MasterNodeServer(this);
 		nodeServer = new MasterHttpNodeServer(getConfig().getNodeServerPort(), this, this);
-		// nodeChecker = new NodeChecker(this);
 		nodeChecker = new HttpNodeChecker(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
@@ -102,14 +99,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	}
 
 	public void shutdown() {
-		// TODO say goodbye to nodes
-		for (Node n : getOnlineNodes()) {
-			disconnectNode(n);
-		}
-
-		for (Service s : services) {
-			s.stop();
-		}
 		// save config and make sure current tasks are reset
 		for (Node n : getNodes()) {
 			if (n.getCurrentTask() != null) {
@@ -117,6 +106,15 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 			}
 		}
 		config.dump(configPath);
+
+		// say goodbye to nodes
+		for (Node n : getOnlineNodes()) {
+			disconnectNode(n);
+		}
+
+		for (Service s : services) {
+			s.stop();
+		}
 	}
 
 	public MasterConfig getConfig() {
@@ -256,41 +254,26 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	 * 
 	 * @param n
 	 *            The node to remove
-	 * @return Successfully found and removed the node
 	 */
-	public boolean disconnectNode(Node n) {
-//		try {
-			VideoEncodingTask t = n.getCurrentTask();
-			if (t != null) {
-				t.reset();
-			}
-			// TODO replace old code
-//			Socket s = new Socket(n.getNodeAddress(), n.getNodePort());
-//			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-//			out.flush();
-//			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-//			out.writeObject(new Message(ClusterProtocol.DISCONNECT_ME));
-//			out.flush();
-//			Object o = in.readObject();
-//			if (o instanceof Message) {
-//				Message m = (Message) o;
-//				switch (m.getCode()) {
-//				case BYE:
-//					removeNode(n);
-//					s.close();
-//					break;
-//				default:
-//					break;
-//				}
-//			}
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (ClassNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		return false;
+	public void disconnectNode(Node n) {
+		try {
+			CloseableHttpClient client = HttpClients.createDefault();
+			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
+
+			URI url = new URI("http", null, n.getNodeAddress().getHostAddress(), n.getNodePort(),
+					Routes.DISCONNECT_NODE, null, null);
+			HttpPost post = new HttpPost(url);
+			post.setConfig(defaultRequestConfig);
+
+			// Send request, but don't mind the response
+			client.execute(post);
+			// remove node from list
+			removeNode(n);
+		} catch (IOException e) {
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -502,27 +485,26 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	}
 
 	/**
-	 * Set disconnected status to node and cancel node's task
+	 * Set disconnected status to node and cancel node's task. Use shutdownNode() to gracefully shutdown a node.
+	 * 
 	 * 
 	 * @param n
 	 *            The node to disconnect
-	 * @return
 	 */
-	@Deprecated
-	public synchronized boolean removeNode(Node n) {
+	public synchronized void removeNode(Node n) {
 		if (n != null) {
 			// Cancel node's task status if any
 			VideoEncodingTask toCancel = null;
 			toCancel = n.getCurrentTask();
 			if (toCancel != null) {
-				updateNodeTask(n, TaskState.TASK_TODO);
+				// updateNodeTask(n, TaskState.TASK_TODO);
+				toCancel.reset();
 				n.setCurrentTask(null);
 			}
 			n.setStatus(NodeState.NOT_CONNECTED);
 		} else {
 			System.err.println("Could not mark node as disconnected as it was not found");
 		}
-		return false;
 	}
 
 	public boolean updateNodeTask(Node n, TaskState updateStatus) {
@@ -682,13 +664,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	}
 
 	public void run() {
-		// start services
-		// Thread listenerThread = new Thread(nodeServer);
-		// listenerThread.start();
-		// Thread nodeCheckerThread = new Thread(nodeChecker);
-		// nodeCheckerThread.start();
-		// Thread apiThread = new Thread(apiServer);
-		// apiThread.start();
 		for (Service s : this.services) {
 			Thread t = new Thread(s);
 			t.start();
@@ -747,35 +722,21 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 
 	@Override
 	public void nodeDisconnected(Node n) {
-		if (n != null) {
-			System.err.printf("Node %s was disconnected !\n", n.getName());
-			// Cancel node's task status if any
-			VideoEncodingTask toCancel = null;
-			toCancel = n.getCurrentTask();
-			if (toCancel != null) {
-				updateNodeTask(n, TaskState.TASK_TODO);
-				n.setCurrentTask(null);
-			}
-			n.setStatus(NodeState.NOT_CONNECTED);
-		} else {
-			System.err.println("Could not mark node as disconnected as it was not found");
-		}
+		this.removeNode(n);
 	}
 
 	@Override
 	public void serverShutdown(Service server) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void serverFailure(Exception e, Service server) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
-	public String readConnectRequest(ConnectMessage cm) {
+	public String connectRequest(ConnectMessage cm) {
 		Node sender = new Node(cm.address, cm.localPort, cm.name);
 		sender.setUnid(cm.getUnid());
 		if (addNode(sender)) {
@@ -785,4 +746,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		return null;
 	}
 
+	@Override
+	public void disconnectRequest(ConnectMessage cm) {
+		Node n = identifySender(cm.getUnid());
+		this.removeNode(n);
+	}
 }

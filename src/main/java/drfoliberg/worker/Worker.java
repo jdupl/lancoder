@@ -24,12 +24,14 @@ import main.java.drfoliberg.worker.server.WorkerHttpServer;
 import main.java.drfoliberg.worker.server.WorkerServletListerner;
 
 import org.apache.commons.io.Charsets;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.Gson;
 
@@ -71,7 +73,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 						address = addr;
 						System.out.println("Assuming worker ip is:" + address.getHostAddress());
 					}
-
 				}
 			}
 		} catch (SocketException e) {
@@ -86,13 +87,16 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	public void shutdown() {
+		if (this.status != NodeState.NOT_CONNECTED) {
+			System.out.println("Sending disconnect notification to master");
+			gracefulShutdown();
+		}
 		int nbServices = services.size();
 		print("shutting down " + nbServices + " service(s).");
 
 		for (Service s : services) {
 			s.stop();
 		}
-		// TODO Send a connect message with a status indicating disconnection
 		config.dump(configPath);
 	}
 
@@ -204,9 +208,42 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		}
 	}
 
-	public synchronized boolean sendCrashReport(CrashReport report) {
-		// TODO
-		return true;
+	private void gracefulShutdown() {
+		try {
+			CloseableHttpClient client = HttpClients.createDefault();
+			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
+
+			URI url = new URI("http", null, this.getCurrentNodeAddress().getHostAddress(), this.getCurrentNodePort(),
+					Routes.DISCONNECT_NODE, null, null);
+			HttpPost post = new HttpPost(url);
+			post.setConfig(defaultRequestConfig);
+
+			// Send request, but don't mind the response
+			client.execute(post);
+
+		} catch (IOException e) {
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public synchronized void sendCrashReport(CrashReport report) {
+		try {
+			CloseableHttpClient client = HttpClients.createDefault();
+			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
+
+			URI url = new URI("http", null, this.getCurrentNodeAddress().getHostAddress(), this.getCurrentNodePort(),
+					Routes.NODE_CRASH, null, null);
+			HttpPost post = new HttpPost(url);
+			post.setConfig(defaultRequestConfig);
+
+			// Send request, but don't mind the response
+			client.execute(post);
+
+		} catch (IOException e) {
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public boolean notifyHttpMasterStatusChange() {

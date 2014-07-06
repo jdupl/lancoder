@@ -6,7 +6,9 @@ import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
 
 public interface MasterNodeServletListener extends ServletListener {
 
-	public String readConnectRequest(ConnectMessage cm);
+	public String connectRequest(ConnectMessage cm);
+
+	public void disconnectRequest(ConnectMessage cm);
 
 	public void readStatusReport(StatusReport report);
 
