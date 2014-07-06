@@ -52,8 +52,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 
 	public Worker(String configPath) {
 		this.configPath = configPath;
-
-		services = new ArrayList<>();
+		this.services = new ArrayList<>();
 
 		config = WorkerConfig.load(configPath);
 		if (config != null) {
@@ -67,14 +66,13 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		print("initialized not connected to a master server");
 
 		try {
-
 			Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
-			for (; n.hasMoreElements();) {
+			while (n.hasMoreElements()) {
 				NetworkInterface e = n.nextElement();
 				Enumeration<InetAddress> a = e.getInetAddresses();
-				for (; a.hasMoreElements();) {
+				while (a.hasMoreElements()) {
 					InetAddress addr = a.nextElement();
-					if (!addr.isLoopbackAddress() && (addr  instanceof Inet4Address) ) {
+					if (!addr.isLoopbackAddress() && (addr instanceof Inet4Address)) {
 						address = addr;
 						System.out.println("Assuming worker ip is:" + address.getHostAddress());
 					}
@@ -282,7 +280,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			CloseableHttpResponse response = client.execute(post);
 			if (response.getStatusLine().getStatusCode() == 200) {
 				success = true;
-			}else{
+			} else {
 				System.err.println(response.getStatusLine().getStatusCode());
 			}
 		} catch (IOException e) {

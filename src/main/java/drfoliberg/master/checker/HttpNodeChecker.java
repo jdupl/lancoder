@@ -15,7 +15,7 @@ import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
 import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
@@ -37,7 +37,6 @@ public class HttpNodeChecker extends Service {
 		}
 		System.out.println("MASTER NODE CHECKER: checking if nodes are still alive");
 		for (Node n : listener.getOnlineNodes()) {
-			System.out.println("Checking node " + n.getNodeAddress());
 			checkNode(n);
 		}
 		return false;
@@ -52,14 +51,16 @@ public class HttpNodeChecker extends Service {
 
 			URI url = new URI("http", null, n.getNodeAddress().getHostAddress(), n.getNodePort(), Routes.NODE_STATUS,
 					null, null);
-			HttpPost post = new HttpPost(url);
-			post.setConfig(defaultRequestConfig);
-			CloseableHttpResponse response = client.execute(post);
+			HttpGet get = new HttpGet(url);
+			get.setConfig(defaultRequestConfig);
+			CloseableHttpResponse response = client.execute(get);
 			if (response.getStatusLine().getStatusCode() == 200) {
 				InputStream is = response.getEntity().getContent();
 				BufferedReader br = new BufferedReader(new InputStreamReader(is, Charsets.UTF_8));
 				StatusReport report = gson.fromJson(br, StatusReport.class);
 				listener.readStatusReport(report);
+			} else {
+				System.err.printf("Node responded with bad status: %d\n", response.getStatusLine().getStatusCode());
 			}
 		} catch (IOException e) {
 			listener.nodeDisconnected(n);

@@ -59,7 +59,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 
 	// private MasterNodeServer nodeServer;
 	private MasterHttpNodeServer nodeServer;
-	//private NodeChecker nodeChecker;
+	// private NodeChecker nodeChecker;
 	private HttpNodeChecker nodeChecker;
 	private HashMap<String, Node> nodes;
 
@@ -91,7 +91,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		// TODO refactor these to observers/events patterns
 		// nodeServer = new MasterNodeServer(this);
 		nodeServer = new MasterHttpNodeServer(getConfig().getNodeServerPort(), this, this);
-		//nodeChecker = new NodeChecker(this);
+		// nodeChecker = new NodeChecker(this);
 		nodeChecker = new HttpNodeChecker(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
@@ -610,6 +610,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	 *            The report to be read
 	 * @return true if update could be sent, false otherwise
 	 */
+	@Override
 	public void readStatusReport(StatusReport report) {
 		NodeState s = report.status;
 		String unid = report.getUnid();
@@ -619,10 +620,12 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		}
 		// only update if status is changed
 		if (sender.getStatus() != report.status) {
-			System.out.println("node " + sender.getName() + " is updating it's status from " + sender.getStatus()
-					+ " to " + report.status);
+			System.out.printf("node %s is updating it's status from %s to %s\n", sender.getName(), sender.getStatus(),
+					report.status);
 			sender.setStatus(s);
 			updateNodesWork();
+		} else {
+			System.out.printf("Node %s is still alive\n", sender.getName());
 		}
 	}
 
