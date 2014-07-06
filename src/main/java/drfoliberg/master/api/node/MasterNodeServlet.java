@@ -42,7 +42,6 @@ public class MasterNodeServlet extends HttpServlet {
 			}
 			break;
 		case Routes.NODE_STATUS:
-			System.err.println("Received update status");
 			StatusReport report = gson.fromJson(req.getReader(), StatusReport.class);
 			listener.readStatusReport(report);
 			break;

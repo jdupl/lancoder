@@ -10,7 +10,6 @@ import java.net.URISyntaxException;
 import main.java.drfoliberg.common.Service;
 import main.java.drfoliberg.common.network.Routes;
 import main.java.drfoliberg.common.network.messages.cluster.ConnectMessage;
-import main.java.drfoliberg.common.status.NodeState;
 
 import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;

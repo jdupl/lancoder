@@ -79,6 +79,7 @@ public class Node implements Serializable {
 	}
 
 	public void setCurrentTask(VideoEncodingTask currentTask) {
+		// TODO move this
 		if (currentTask == null) {
 			System.out.printf("MASTER: %s now has NO TASK\n", name);
 		} else {

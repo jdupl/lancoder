@@ -13,7 +13,7 @@ import main.java.drfoliberg.common.network.messages.cluster.Message;
 import main.java.drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 import main.java.drfoliberg.common.status.NodeState;
 import main.java.drfoliberg.common.status.TaskState;
-
+@Deprecated
 public class WorkerServer extends Service {
 
 	private Worker worker;

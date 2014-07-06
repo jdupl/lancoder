@@ -14,7 +14,7 @@ import main.java.drfoliberg.common.network.messages.cluster.CrashReport;
 import main.java.drfoliberg.common.network.messages.cluster.Message;
 import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
 import main.java.drfoliberg.common.status.NodeState;
-
+@Deprecated
 public class MasterHandle implements Runnable {
 
 	ObjectInputStream in;

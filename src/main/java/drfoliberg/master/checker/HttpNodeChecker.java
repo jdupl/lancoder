@@ -65,7 +65,6 @@ public class HttpNodeChecker extends Service {
 		} catch (IOException e) {
 			listener.nodeDisconnected(n);
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

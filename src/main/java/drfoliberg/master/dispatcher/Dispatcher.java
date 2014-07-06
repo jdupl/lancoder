@@ -12,6 +12,7 @@ import main.java.drfoliberg.common.network.messages.cluster.Message;
 import main.java.drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 import main.java.drfoliberg.common.task.video.VideoEncodingTask;
 
+@Deprecated
 public class Dispatcher implements Runnable, DispatcherListener {
 
 	Node node;

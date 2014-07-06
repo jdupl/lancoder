@@ -42,8 +42,8 @@ import main.java.drfoliberg.master.api.node.MasterNodeServletListener;
 import main.java.drfoliberg.master.api.web.ApiServer;
 import main.java.drfoliberg.master.checker.HttpNodeChecker;
 import main.java.drfoliberg.master.checker.NodeCheckerListener;
-import main.java.drfoliberg.master.dispatcher.Dispatcher;
 import main.java.drfoliberg.master.dispatcher.DispatcherListener;
+import main.java.drfoliberg.master.dispatcher.HttpDispatcher;
 import main.java.drfoliberg.muxer.Muxer;
 import main.java.drfoliberg.muxer.MuxerListener;
 
@@ -219,7 +219,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		if (task.getState() == TaskState.TASK_TODO) {
 			task.setState(TaskState.TASK_COMPUTING);
 		}
-		Dispatcher dispatcher = new Dispatcher(node, task, this);
+		HttpDispatcher dispatcher = new HttpDispatcher(node, task, this);
 		Thread t = new Thread(dispatcher);
 		t.start();
 		return true;
@@ -390,7 +390,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	}
 
 	public ApiResponse addJob(ApiJobRequest req) {
-
+		System.err.println("Reading job request...");
 		boolean success = true;
 
 		if (req == null) {
@@ -474,8 +474,10 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		}
 
 		if (success) {
+			System.err.println("Job(s) added");
 			return new ApiResponse(true, "All jobs were successfully added.");
 		}
+		System.err.println("Error while adding job");
 		return new ApiResponse(false, "Some jobs could not be added.");
 	}
 
@@ -712,11 +714,13 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 
 	@Override
 	public synchronized void taskRefused(VideoEncodingTask t, Node n) {
+		System.err.printf("Node %s refused task\n", n.getName());
 		t.setStatus(TaskState.TASK_TODO);
 	}
 
 	@Override
 	public synchronized void taskAccepted(VideoEncodingTask t, Node n) {
+		System.err.printf("Node %s accepted task\n", n.getName());
 		n.setCurrentTask(t);
 		t.setStatus(TaskState.TASK_COMPUTING);
 	}

@@ -203,13 +203,12 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 
 		switch (statusCode) {
 		case FREE:
-			// notifyMasterStatusChange(statusCode);
 			notifyHttpMasterStatusChange();
 			this.currentTask = null;
 			break;
 		case WORKING:
 		case PAUSED:
-			notifyMasterStatusChange(statusCode);
+			notifyHttpMasterStatusChange();
 			break;
 		case NOT_CONNECTED:
 			// start thread to try to contact master
