@@ -1,12 +1,9 @@
 package main.java.drfoliberg.worker;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -16,9 +13,7 @@ import java.util.Enumeration;
 import main.java.drfoliberg.common.ServerListener;
 import main.java.drfoliberg.common.Service;
 import main.java.drfoliberg.common.network.Routes;
-import main.java.drfoliberg.common.network.messages.cluster.ConnectMessage;
 import main.java.drfoliberg.common.network.messages.cluster.CrashReport;
-import main.java.drfoliberg.common.network.messages.cluster.Message;
 import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
 import main.java.drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 import main.java.drfoliberg.common.status.NodeState;
@@ -80,7 +75,8 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 				}
 			}
 		} catch (SocketException e) {
-			// TODO Auto-generated catch block
+			// TODO Perhaps juste close worker
+			// TODO test on windows
 			e.printStackTrace();
 		}
 	}
@@ -96,41 +92,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		for (Service s : services) {
 			s.stop();
 		}
-
-		Socket socket = null;
-		try {
-			socket = new Socket(config.getMasterIpAddress(), config.getMasterPort());
-			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-			out.flush();
-			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-
-			// Send a connect message with a status indicating disconnection
-			Message message = new ConnectMessage(config.getUniqueID(), config.getListenPort(), config.getName(),
-					NodeState.NOT_CONNECTED);
-			out.writeObject(message);
-			out.flush();
-			Object o = in.readObject();
-			if (o instanceof Message) {
-				Message m = (Message) o;
-				switch (m.getCode()) {
-				case BYE:
-					socket.close();
-					break;
-				default:
-					socket.close();
-					print("something odd happened");
-					break;
-				}
-			} else {
-				print("received invalid message!");
-			}
-			socket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-
+		// TODO Send a connect message with a status indicating disconnection
 		config.dump(configPath);
 	}
 
@@ -243,21 +205,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	public synchronized boolean sendCrashReport(CrashReport report) {
-		try {
-			System.err.println("Sending crash report");
-			Socket s = new Socket(config.getMasterIpAddress(), config.getMasterPort());
-			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-			out.flush();
-			out.writeObject(report);
-			out.flush();
-			in.close();
-			s.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
+		// TODO
 		return true;
 	}
 
@@ -290,53 +238,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			e.printStackTrace();
 		}
 
-		return success;
-	}
-
-	@Deprecated
-	public boolean notifyMasterStatusChange(NodeState status) {
-		Socket socket = null;
-		boolean success = true;
-		try {
-			// Init the socket to master
-			socket = new Socket(getMasterIpAddress(), config.getMasterPort());
-			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-			out.flush();
-			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-
-			// send report in socket
-			out.writeObject(getStatusReport());
-			out.flush();
-			Object o = in.readObject();
-			// check if master sent node new UNID
-			if (o instanceof Message) {
-				Message response = (Message) o;
-				switch (response.getCode()) {
-				case BYE:
-					// master is closing the socket
-					break;
-				default:
-					System.err.println("WORKER:" + " Master sent unexpected message response");
-				}
-			} else {
-				System.err.println("WORKER CONTACT:" + " Could not read what master sent !");
-			}
-			socket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			success = false;
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			success = false;
-		} finally {
-			if (socket != null) {
-				try {
-					socket.close();
-				} catch (IOException e) {
-					// pls java
-				}
-			}
-		}
 		return success;
 	}
 

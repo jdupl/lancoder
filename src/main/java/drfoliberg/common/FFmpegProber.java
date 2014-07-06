@@ -36,7 +36,6 @@ public class FFmpegProber {
 
 		while (s.hasNext() && !found) {
 			line = s.nextLine();
-			System.out.println(line);
 			Matcher m = durationPattern.matcher(line);
 			if (m.find()) {
 				found = true;

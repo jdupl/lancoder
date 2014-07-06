@@ -259,36 +259,37 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	 * @return Successfully found and removed the node
 	 */
 	public boolean disconnectNode(Node n) {
-		try {
+//		try {
 			VideoEncodingTask t = n.getCurrentTask();
 			if (t != null) {
 				t.reset();
 			}
-			Socket s = new Socket(n.getNodeAddress(), n.getNodePort());
-			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-			out.flush();
-			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-			out.writeObject(new Message(ClusterProtocol.DISCONNECT_ME));
-			out.flush();
-			Object o = in.readObject();
-			if (o instanceof Message) {
-				Message m = (Message) o;
-				switch (m.getCode()) {
-				case BYE:
-					removeNode(n);
-					s.close();
-					break;
-				default:
-					break;
-				}
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			// TODO replace old code
+//			Socket s = new Socket(n.getNodeAddress(), n.getNodePort());
+//			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+//			out.flush();
+//			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+//			out.writeObject(new Message(ClusterProtocol.DISCONNECT_ME));
+//			out.flush();
+//			Object o = in.readObject();
+//			if (o instanceof Message) {
+//				Message m = (Message) o;
+//				switch (m.getCode()) {
+//				case BYE:
+//					removeNode(n);
+//					s.close();
+//					break;
+//				default:
+//					break;
+//				}
+//			}
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (ClassNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		return false;
 	}
 
