@@ -77,7 +77,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			}
 		} catch (SocketException e) {
 			// TODO Perhaps juste close worker
-			// TODO test on windows
 			e.printStackTrace();
 		}
 	}
@@ -123,6 +122,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			print("cannot accept work as i'm not free. Current status: " + this.getStatus());
 			return false;
 		} else {
+			updateStatus(NodeState.WORKING);
 			this.currentTask = t;
 			this.workThread = new WorkThread(this, t);
 			Thread wt = new Thread(workThread);
@@ -182,6 +182,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			break;
 		case CRASHED:
 			// cancel current work
+			notifyHttpMasterStatusChange();
 			this.currentTask = null;
 			break;
 		default:
@@ -249,6 +250,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	public boolean notifyHttpMasterStatusChange() {
 		boolean success = false;
 		CloseableHttpClient client = HttpClientBuilder.create().build();
+		System.out.println("Creating status report");
 		StatusReport report = this.getStatusReport();
 		Gson gson = new Gson();
 		try {
@@ -258,9 +260,8 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			URI url = new URI("http", null, config.getMasterIpAddress().getHostAddress(), config.getMasterPort(),
 					Routes.NODE_STATUS, null, null);
 			HttpPost post = new HttpPost(url);
-
 			post.setEntity(entity);
-
+			System.out.println("Sending status to master!");
 			CloseableHttpResponse response = client.execute(post);
 			if (response.getStatusLine().getStatusCode() == 200) {
 				success = true;
@@ -341,6 +342,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	public boolean deleteTask(TaskRequestMessage tqm) {
 		if (tqm != null && currentTask != null && tqm.task.equals(currentTask)) {
 			this.stopWork(currentTask);
+			this.updateStatus(NodeState.FREE);
 			return true;
 		}
 		return false;

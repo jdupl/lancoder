@@ -174,7 +174,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	 * 
 	 * @return pointer to the node object
 	 */
-	private Node getBestFreeNode() {
+	private synchronized Node getBestFreeNode() {
 		for (Entry<String, Node> entry : nodes.entrySet()) {
 			Node n = entry.getValue();
 			if (n.getStatus() == NodeState.FREE) {
@@ -189,8 +189,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	 * 
 	 * @return true if any work was dispatched
 	 */
-	public synchronized boolean updateNodesWork() {
-		// TODO loop to send more tasks (not just once)
+	public void updateNodesWork() {
 		AudioEncodingTask audioTask = getNextAudioTask();
 
 		while (audioTask != null && convertingPool.hasFreeConverters()) {
@@ -198,29 +197,31 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 			audioTask = getNextAudioTask();
 		}
 
-		Node node = getBestFreeNode();
-		if (node == null) {
-			System.out.println("MASTER: No available nodes!");
-			return false;
+		Node node = null;
+		VideoEncodingTask nextTask = null;
+		// Avoid looping through jobs as it might be cpu intensive in large projects
+		// Order of the while condition is important as looping through workers is faster
+		while ((node = getBestFreeNode()) != null && (nextTask = getNextVideoTask()) != null) {
+			System.err.println("Trying to dispatch to " + node.getName() + " task " + nextTask.getTaskId());
+			dispatch(nextTask, node);
 		}
-		VideoEncodingTask nextTask = getNextVideoTask();
 		if (nextTask == null) {
 			System.out.println("MASTER: No available work!");
-			return false;
+		}else if (node == null) {
+			System.out.println("MASTER: No available nodes!");
 		}
-		dispatch(nextTask, node);
+
 		config.dump(configPath);
-		return true;
 	}
 
-	public boolean dispatch(VideoEncodingTask task, Node node) {
+	public void dispatch(VideoEncodingTask task, Node node) {
 		if (task.getState() == TaskState.TASK_TODO) {
 			task.setState(TaskState.TASK_COMPUTING);
 		}
+		node.setStatus(NodeState.LOCKED);
 		HttpDispatcher dispatcher = new HttpDispatcher(node, task, this);
 		Thread t = new Thread(dispatcher);
 		t.start();
-		return true;
 	}
 
 	private String getNewUNID(Node n) {
@@ -343,7 +344,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 			if (t.getStatus() == TaskState.TASK_COMPUTING) {
 				// Find which node has this task
 				for (Node n : getNodes()) {
-					if (n.getCurrentTask() == t) {
+					if (n.getCurrentTask().equals(t)) {
 						updateNodeTask(n, TaskState.TASK_CANCELED);
 					}
 				}
