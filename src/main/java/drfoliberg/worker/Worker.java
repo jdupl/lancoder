@@ -20,6 +20,8 @@ import main.java.drfoliberg.common.status.NodeState;
 import main.java.drfoliberg.common.status.TaskState;
 import main.java.drfoliberg.common.task.video.TaskReport;
 import main.java.drfoliberg.common.task.video.VideoEncodingTask;
+import main.java.drfoliberg.worker.contacter.ConctactMasterListener;
+import main.java.drfoliberg.worker.contacter.ContactMasterHttp;
 import main.java.drfoliberg.worker.server.WorkerHttpServer;
 import main.java.drfoliberg.worker.server.WorkerServletListerner;
 
