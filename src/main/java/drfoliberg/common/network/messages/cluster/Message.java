@@ -2,27 +2,18 @@ package main.java.drfoliberg.common.network.messages.cluster;
 
 import java.io.Serializable;
 
-import main.java.drfoliberg.common.network.ClusterProtocol;
-
 public class Message implements Serializable {
 
-    private static final long serialVersionUID = -483657531000641905L;
+	public String getPath() {
+		return path;
+	}
 
-    protected ClusterProtocol code;
+	private static final long serialVersionUID = -483657531000641905L;
 
-    /**
-     * Generic message object without unid.
-     * See child AuthMessage object to use unid along with messages
-     *
-     * @param code
-     */
-    public Message(ClusterProtocol code) {
-        this.code = code;
-    }
+	protected String path;
 
-    public ClusterProtocol getCode() {
-        return code;
-    }
-
+	public Message(String path) {
+		this.path = path;
+	}
 
 }

@@ -1,6 +1,6 @@
 package main.java.drfoliberg.common.network.messages.cluster;
 
-import main.java.drfoliberg.common.network.ClusterProtocol;
+import main.java.drfoliberg.common.network.Routes;
 import main.java.drfoliberg.common.status.NodeState;
 import main.java.drfoliberg.common.task.video.TaskReport;
 
@@ -17,12 +17,12 @@ public class StatusReport extends AuthMessage {
 //		this.node = n;
 //	}
 	public StatusReport(NodeState status, String unid) {
-		super(ClusterProtocol.STATUS_REPORT, unid);
+		super(Routes.NODE_STATUS, unid);
 		this.status = status;
 	}
 
 	public StatusReport(NodeState status, String unid, TaskReport taskReport) {
-		super(ClusterProtocol.STATUS_REPORT, unid);
+		super(Routes.NODE_STATUS, unid);
 		this.taskReport = taskReport;
 		this.status = status;
 	}

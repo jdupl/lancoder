@@ -1,6 +1,6 @@
 package main.java.drfoliberg.common.network.messages.cluster;
 
-import main.java.drfoliberg.common.network.ClusterProtocol;
+import main.java.drfoliberg.common.network.Routes;
 import main.java.drfoliberg.common.task.video.VideoEncodingTask;
 
 public class TaskRequestMessage extends Message {
@@ -16,7 +16,7 @@ public class TaskRequestMessage extends Message {
 	 *            The task to request to the worker
 	 */
 	public TaskRequestMessage(VideoEncodingTask task) {
-		super(ClusterProtocol.TASK_REQUEST);
+		super(Routes.ADD_TASK);
 		this.task = task;
 	}
 }
