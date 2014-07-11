@@ -35,11 +35,12 @@ public class MasterNodeServlet extends HttpServlet {
 			if (cm == null) {
 				resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
 			} else {
-				this.listener.connectRequest(cm);
+				String unid = this.listener.connectRequest(cm);
 				resp.setStatus(HttpServletResponse.SC_OK);
 				resp.setCharacterEncoding(StandardCharsets.UTF_8.toString());
 				resp.setContentType(ContentType.TEXT_PLAIN.toString());
-				resp.getWriter().print(cm.getUnid());
+				// Send new unid to node
+				resp.getWriter().print(unid);
 			}
 			break;
 		case Routes.NODE_STATUS:

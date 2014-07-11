@@ -744,6 +744,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 			System.err.println("added node " + sender.getUnid());
 			return sender.getUnid();
 		}
+		// Could not add node
 		return null;
 	}
 
