@@ -693,13 +693,15 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	public synchronized void taskRefused(VideoEncodingTask t, Node n) {
 		System.err.printf("Node %s refused task\n", n.getName());
 		t.setStatus(TaskState.TASK_TODO);
+		n.setStatus(NodeState.FREE);
+		updateNodesWork();
 	}
 
 	@Override
 	public synchronized void taskAccepted(VideoEncodingTask t, Node n) {
 		System.err.printf("Node %s accepted task\n", n.getName());
 		n.setCurrentTask(t);
-		t.setStatus(TaskState.TASK_COMPUTING);
+		t.setStatus(TaskState.TASK_ASSIGNED);
 	}
 
 	@Override

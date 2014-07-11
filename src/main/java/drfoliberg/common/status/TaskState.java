@@ -22,5 +22,9 @@ public enum TaskState {
 	 * Task was cancelled by a node (possibly a crash or shutdown). This state is temporary as it should go back to
 	 * TASK_TODO to be picked up by another node.
 	 */
-	TASK_CANCELED
+	TASK_CANCELED,
+	/**
+	 * Task is assigned, but not started (should only be temporary)
+	 */
+	TASK_ASSIGNED
 }
