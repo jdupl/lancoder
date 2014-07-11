@@ -14,8 +14,6 @@ import main.java.drfoliberg.common.exceptions.MissingDecoderException;
 import main.java.drfoliberg.common.exceptions.MissingFfmpegException;
 import main.java.drfoliberg.common.exceptions.WorkInterruptedException;
 import main.java.drfoliberg.common.network.Cause;
-import main.java.drfoliberg.common.network.messages.cluster.CrashReport;
-import main.java.drfoliberg.common.status.NodeState;
 import main.java.drfoliberg.common.task.video.VideoEncodingTask;
 import main.java.drfoliberg.common.utils.FileUtils;
 
@@ -23,7 +21,8 @@ public class WorkThread extends Service {
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
 	private VideoEncodingTask task;
-	private Worker callback;
+	// private Worker callback;
+	WorkThreadListener listener;
 	Process process;
 
 	File taskFinalFolder;
@@ -33,8 +32,8 @@ public class WorkThread extends Service {
 
 	public WorkThread(Worker w, VideoEncodingTask t) {
 		task = t;
-		callback = w;
-		callback.getCurrentTask().start();
+		// callback = w;
+		// callback.getCurrentTask().start();
 	}
 
 	private void createDirs() {
@@ -43,7 +42,7 @@ public class WorkThread extends Service {
 			taskFinalFolder.mkdirs();
 			FileUtils.givePerms(taskFinalFolder, false);
 		}
-		taskTempOutputFolder = FileUtils.getFile(callback.config.getTempEncodingFolder(), task.getJobId(),
+		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getJobId(),
 				String.valueOf(task.getTaskId()));
 		if (!taskTempOutputFolder.exists()) {
 			taskTempOutputFolder.mkdirs();
@@ -81,7 +80,7 @@ public class WorkThread extends Service {
 	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
 			MissingDecoderException, WorkInterruptedException {
 
-		absoluteSharedDir = new File(callback.config.getAbsoluteSharedFolder());
+		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
 		task.setTimeStarted(System.currentTimeMillis());
 
 		File inputFile = new File(absoluteSharedDir, task.getSourceFile());
@@ -146,15 +145,18 @@ public class WorkThread extends Service {
 
 				if (m.find()) {
 					long currentFrame = Long.parseLong(m.group(1));
-					callback.getCurrentTask().setFramesCompleted(currentFrame);
+					// callback.getCurrentTask().setFramesCompleted(currentFrame);
+					task.setFramesCompleted(currentFrame);
 
 					System.err.printf("frame: %d out of %d (%f%%) \n", currentFrame, task.getEstimatedFramesCount(),
-							callback.getCurrentTask().getProgress());
+					// callback.getCurrentTask().getProgress());
+							task.getProgress());
 				}
 				m = fpsPattern.matcher(line);
 				if (m.find()) {
 					float fps = Float.parseFloat(m.group(1));
-					callback.getCurrentTask().setFps(fps);
+					// callback.getCurrentTask().setFps(fps);
+					task.setFps(fps);
 					System.err.printf("fps: %s \n", fps);
 				}
 				m = missingDecoder.matcher(line);
@@ -184,6 +186,7 @@ public class WorkThread extends Service {
 
 	@Override
 	public void run() {
+		boolean success = false;
 		try {
 			System.out.println("WORKER WORK THREAD: Executing a task!");
 			// use start and duration for ffmpeg legacy support
@@ -191,8 +194,8 @@ public class WorkThread extends Service {
 			String startTimeStr = getDurationString(task.getEncodingStartTime());
 			String durationStr = getDurationString(durationMs);
 
-			this.taskFinalFolder = FileUtils.getFile(callback.config.getAbsoluteSharedFolder(), task.getOutputFile())
-					.getParentFile();
+			this.taskFinalFolder = FileUtils.getFile(listener.getConfig().getAbsoluteSharedFolder(),
+					task.getOutputFile()).getParentFile();
 
 			String extension = "mkv";
 			String filename = String.format("%d.%s", task.getTaskId(), extension);
@@ -209,24 +212,18 @@ public class WorkThread extends Service {
 			}
 
 			// moveTempPartFile();
-			if (transcodeToMpegTs()) {
-				cleanTempPart();
-				callback.taskDone(task);
-			} else {
-				// handle work failed
-			}
+			success = transcodeToMpegTs();
 
-		} catch (MissingFfmpegException e) {
-			CrashReport report = new CrashReport(callback.config.getUniqueID(), new Cause(e, "", true),
-					callback.getStatusReport());
-			callback.sendCrashReport(report);
-			// update status
-			callback.updateStatus(NodeState.CRASHED);
-		} catch (MissingDecoderException e) {
-			e.printStackTrace();
+		} catch (MissingFfmpegException | MissingDecoderException e) {
+			listener.nodeCrash(new Cause(e, "unknown", true));
 		} catch (WorkInterruptedException e) {
 			System.err.println("WORKER: stopping work");
-			cleanTempPart();
+		} finally {
+			if (success) {
+				listener.workCompleted(task);
+			} else {
+				listener.workFailed(task);
+			}
 		}
 	}
 

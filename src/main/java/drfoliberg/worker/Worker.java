@@ -12,6 +12,7 @@ import java.util.Enumeration;
 
 import main.java.drfoliberg.common.ServerListener;
 import main.java.drfoliberg.common.Service;
+import main.java.drfoliberg.common.network.Cause;
 import main.java.drfoliberg.common.network.Routes;
 import main.java.drfoliberg.common.network.messages.cluster.CrashReport;
 import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
@@ -37,7 +38,8 @@ import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.Gson;
 
-public class Worker implements Runnable, ServerListener, WorkerServletListerner, ConctactMasterListener {
+public class Worker implements Runnable, ServerListener, WorkerServletListerner, ConctactMasterListener,
+		WorkThreadListener {
 
 	WorkerConfig config;
 
@@ -159,6 +161,11 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			t.setProgress(currentTask.getProgress());
 		}
 		return taskReport;
+	}
+
+	public synchronized void updateTaskStatus(VideoEncodingTask t, TaskState newState) {
+		t.setStatus(newState);
+		notifyHttpMasterStatusChange();
 	}
 
 	public synchronized void updateStatus(NodeState statusCode) {
@@ -380,5 +387,42 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	@Override
 	public InetAddress getCurrentNodeAddress() {
 		return this.address;
+	}
+
+	@Override
+	public void workStarted(VideoEncodingTask task) {
+		System.err.println("Worker starting task");
+		updateTaskStatus(task, TaskState.TASK_COMPUTING);
+		this.currentTask = task;
+		if (this.status != NodeState.WORKING) {
+			updateStatus(NodeState.WORKING);
+		}
+	}
+
+	@Override
+	public void workCompleted(VideoEncodingTask task) {
+		System.err.println("Worker completed task");
+		updateTaskStatus(task, TaskState.TASK_COMPLETED);
+		// TODO if worker has many current tasks, implement check if worker has more tasks
+		this.currentTask = null;
+		updateStatus(NodeState.FREE);
+	}
+
+	@Override
+	public void workFailed(VideoEncodingTask task) {
+		updateTaskStatus(task, TaskState.TASK_CANCELED);
+		this.currentTask = null;
+		updateStatus(NodeState.FREE);
+	}
+
+	@Override
+	public void nodeCrash(Cause cause) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public WorkerConfig getConfig() {
+		return this.config;
 	}
 }
