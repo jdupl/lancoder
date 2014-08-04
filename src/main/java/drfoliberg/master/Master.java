@@ -638,6 +638,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		} else {
 			System.out.printf("MASTER: Updating the task %s to %f%% \n", sender.getCurrentTask().getTaskId(), progress);
 			sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
+			sender.getCurrentTask().setTaskState(report.getTask().getTaskState());
 		}
 	}
 

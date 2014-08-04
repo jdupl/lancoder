@@ -132,6 +132,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			Thread wt = new Thread(workThread);
 			wt.start();
 			services.add(workThread);
+			this.currentTask.setTaskState(TaskState.TASK_COMPUTING);
 			return true;
 		}
 	}
