@@ -12,7 +12,7 @@ public class TaskStatus implements Serializable {
 	protected long timeEstimated;
 	protected long framesCompleted;
 	protected double fps;
-	protected byte currentPass;
+	protected int currentPass;
 	/**
 	 * Progress is always calculated in Task object itself. We still need this field here for serialization.
 	 */
@@ -79,11 +79,11 @@ public class TaskStatus implements Serializable {
 		this.status = state;
 	}
 
-	public byte getCurrentPass() {
+	public int getCurrentPass() {
 		return currentPass;
 	}
 
-	public void setCurrentPass(byte currentPass) {
+	public void setCurrentPass(int currentPass) {
 		this.currentPass = currentPass;
 	}
 

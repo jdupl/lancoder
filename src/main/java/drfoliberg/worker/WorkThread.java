@@ -74,7 +74,6 @@ public class WorkThread extends Service {
 
 	private static boolean isWindows() {
 		return (OS.indexOf("win") >= 0);
-
 	}
 
 	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
@@ -145,17 +144,14 @@ public class WorkThread extends Service {
 
 				if (m.find()) {
 					long currentFrame = Long.parseLong(m.group(1));
-					// callback.getCurrentTask().setFramesCompleted(currentFrame);
 					task.setFramesCompleted(currentFrame);
 
 					System.err.printf("frame: %d out of %d (%f%%) \n", currentFrame, task.getEstimatedFramesCount(),
-					// callback.getCurrentTask().getProgress());
 							task.getProgress());
 				}
 				m = fpsPattern.matcher(line);
 				if (m.find()) {
 					float fps = Float.parseFloat(m.group(1));
-					// callback.getCurrentTask().setFps(fps);
 					task.setFps(fps);
 					System.err.printf("fps: %s \n", fps);
 				}
@@ -204,11 +200,11 @@ public class WorkThread extends Service {
 
 			taskTempOutputFile = new File(taskTempOutputFolder, filename);
 
-			task.setCurrentPass((byte) 1);
+			task.setCurrentPass(1);
 			while (task.getCurrentPass() <= task.getPasses()) {
 				System.err.printf("Encoding pass %d of %d\n", task.getCurrentPass(), task.getPasses());
 				encodePass(startTimeStr, durationStr);
-				task.setCurrentPass((byte) (task.getCurrentPass() + 1));
+				task.setCurrentPass(task.getCurrentPass() + 1);
 			}
 
 			// moveTempPartFile();
@@ -238,6 +234,7 @@ public class WorkThread extends Service {
 		}
 	}
 
+	@Deprecated
 	private boolean transcodeToMpegTs() {
 		File destination = new File(absoluteSharedDir, task.getOutputFile());
 		// TODO handle robust handling of progress and errors

@@ -234,11 +234,11 @@ public class VideoEncodingTask implements Serializable {
 		taskStatus.setState(state);
 	}
 
-	public byte getCurrentPass() {
+	public int getCurrentPass() {
 		return taskStatus.getCurrentPass();
 	}
 
-	public void setCurrentPass(byte currentPass) {
+	public void setCurrentPass(int currentPass) {
 		taskStatus.setCurrentPass(currentPass);
 	}
 
