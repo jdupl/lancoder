@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common.utils;
+package drfoliberg.common.utils;
 
 import java.io.File;
 import java.io.IOException;

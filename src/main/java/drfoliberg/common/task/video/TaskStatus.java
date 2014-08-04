@@ -1,8 +1,8 @@
-package main.java.drfoliberg.common.task.video;
+package drfoliberg.common.task.video;
 
 import java.io.Serializable;
 
-import main.java.drfoliberg.common.status.TaskState;
+import drfoliberg.common.status.TaskState;
 
 public class TaskStatus implements Serializable {
 
@@ -17,6 +17,7 @@ public class TaskStatus implements Serializable {
 	 * Progress is always calculated in Task object itself. We still need this field here for serialization.
 	 */
 	protected float progress;
+	@Deprecated
 	protected TaskState status;
 
 	public TaskStatus() {

@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common.task.video;
+package drfoliberg.common.task.video;
 
 public class Pass {
 

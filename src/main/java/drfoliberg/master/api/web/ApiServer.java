@@ -1,7 +1,7 @@
-package main.java.drfoliberg.master.api.web;
+package drfoliberg.master.api.web;
 
-import main.java.drfoliberg.common.Service;
-import main.java.drfoliberg.master.Master;
+import drfoliberg.common.Service;
+import drfoliberg.master.Master;
 
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;

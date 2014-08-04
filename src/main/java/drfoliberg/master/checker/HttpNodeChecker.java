@@ -1,4 +1,4 @@
-package main.java.drfoliberg.master.checker;
+package drfoliberg.master.checker;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,10 +7,10 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import main.java.drfoliberg.common.Node;
-import main.java.drfoliberg.common.Service;
-import main.java.drfoliberg.common.network.Routes;
-import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
+import drfoliberg.common.Node;
+import drfoliberg.common.Service;
+import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.cluster.StatusReport;
 
 import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;

@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common.network.messages.api;
+package drfoliberg.common.network.messages.api;
 
 import java.io.Serializable;
 

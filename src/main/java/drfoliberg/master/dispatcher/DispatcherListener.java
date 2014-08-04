@@ -1,7 +1,7 @@
-package main.java.drfoliberg.master.dispatcher;
+package drfoliberg.master.dispatcher;
 
-import main.java.drfoliberg.common.Node;
-import main.java.drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.Node;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 public interface DispatcherListener {
 

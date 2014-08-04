@@ -1,4 +1,4 @@
-package main.java.drfoliberg.master.api.node;
+package drfoliberg.master.api.node;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -8,9 +8,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import main.java.drfoliberg.common.network.Routes;
-import main.java.drfoliberg.common.network.messages.cluster.ConnectMessage;
-import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
+import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.cluster.ConnectMessage;
+import drfoliberg.common.network.messages.cluster.StatusReport;
 
 import org.apache.http.entity.ContentType;
 

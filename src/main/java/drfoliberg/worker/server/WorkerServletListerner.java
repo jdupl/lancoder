@@ -1,8 +1,8 @@
-package main.java.drfoliberg.worker.server;
+package drfoliberg.worker.server;
 
-import main.java.drfoliberg.common.ServletListener;
-import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
-import main.java.drfoliberg.common.network.messages.cluster.TaskRequestMessage;
+import drfoliberg.common.ServletListener;
+import drfoliberg.common.network.messages.cluster.StatusReport;
+import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 
 public interface WorkerServletListerner extends ServletListener {
 

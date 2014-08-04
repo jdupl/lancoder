@@ -1,4 +1,4 @@
-package main.java.drfoliberg.worker;
+package drfoliberg.worker;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,13 +9,13 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import main.java.drfoliberg.common.Service;
-import main.java.drfoliberg.common.exceptions.MissingDecoderException;
-import main.java.drfoliberg.common.exceptions.MissingFfmpegException;
-import main.java.drfoliberg.common.exceptions.WorkInterruptedException;
-import main.java.drfoliberg.common.network.Cause;
-import main.java.drfoliberg.common.task.video.VideoEncodingTask;
-import main.java.drfoliberg.common.utils.FileUtils;
+import drfoliberg.common.Service;
+import drfoliberg.common.exceptions.MissingDecoderException;
+import drfoliberg.common.exceptions.MissingFfmpegException;
+import drfoliberg.common.exceptions.WorkInterruptedException;
+import drfoliberg.common.network.Cause;
+import drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.utils.FileUtils;
 
 public class WorkThread extends Service {
 
@@ -104,11 +104,7 @@ public class WorkThread extends Service {
 					ffmpegArgs.add("rawvideo");
 					ffmpegArgs.add("-y");
 					// Change output file to null
-					if (isWindows()) {
-						outFile = "NUL";
-					} else {
-						outFile = "/dev/null";
-					}
+					outFile = isWindows() ? "NUL" : "/dev/null";
 				}
 			}
 			ffmpegArgs.add(outFile);

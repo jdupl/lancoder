@@ -1,14 +1,14 @@
-package main.java.drfoliberg.common.task.video;
+package drfoliberg.common.task.video;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
-import main.java.drfoliberg.common.job.FFmpegPreset;
-import main.java.drfoliberg.common.job.JobConfig;
-import main.java.drfoliberg.common.job.RateControlType;
-import main.java.drfoliberg.common.status.TaskState;
+import drfoliberg.common.job.FFmpegPreset;
+import drfoliberg.common.job.JobConfig;
+import drfoliberg.common.job.RateControlType;
+import drfoliberg.common.status.TaskState;
+import drfoliberg.common.task.Task;
 
-public class VideoEncodingTask implements Serializable {
+public class VideoEncodingTask extends Task {
 
 	private static final long serialVersionUID = -8705492902098705162L;
 	protected TaskInfo taskInfo;

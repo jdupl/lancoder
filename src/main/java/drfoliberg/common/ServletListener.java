@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common;
+package drfoliberg.common;
 
 public interface ServletListener {
 

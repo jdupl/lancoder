@@ -1,7 +1,7 @@
-package main.java.drfoliberg.worker;
+package drfoliberg.worker;
 
-import main.java.drfoliberg.common.network.Cause;
-import main.java.drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.network.Cause;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 public interface WorkThreadListener {
 

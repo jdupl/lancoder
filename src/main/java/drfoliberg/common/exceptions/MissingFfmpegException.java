@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common.exceptions;
+package drfoliberg.common.exceptions;
 
 public class MissingFfmpegException extends Exception {
 

@@ -1,4 +1,4 @@
-package main.java.drfoliberg.worker;
+package drfoliberg.worker;
 
 public class CurrentTaskStatus {
 

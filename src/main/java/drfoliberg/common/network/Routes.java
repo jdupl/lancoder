@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common.network;
+package drfoliberg.common.network;
 
 public class Routes {
 	public static final String NODE_STATUS = "/node/status";

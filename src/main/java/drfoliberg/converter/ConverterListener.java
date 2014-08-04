@@ -1,6 +1,6 @@
-package main.java.drfoliberg.converter;
+package drfoliberg.converter;
 
-import main.java.drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.common.task.audio.AudioEncodingTask;
 
 public interface ConverterListener {
 

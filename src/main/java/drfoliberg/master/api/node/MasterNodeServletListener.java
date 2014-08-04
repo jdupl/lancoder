@@ -1,8 +1,8 @@
-package main.java.drfoliberg.master.api.node;
+package drfoliberg.master.api.node;
 
-import main.java.drfoliberg.common.ServletListener;
-import main.java.drfoliberg.common.network.messages.cluster.ConnectMessage;
-import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
+import drfoliberg.common.ServletListener;
+import drfoliberg.common.network.messages.cluster.ConnectMessage;
+import drfoliberg.common.network.messages.cluster.StatusReport;
 
 public interface MasterNodeServletListener extends ServletListener {
 

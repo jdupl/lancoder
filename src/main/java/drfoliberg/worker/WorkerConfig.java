@@ -1,4 +1,4 @@
-package main.java.drfoliberg.worker;
+package drfoliberg.worker;
 
 import java.io.IOException;
 import java.io.Serializable;

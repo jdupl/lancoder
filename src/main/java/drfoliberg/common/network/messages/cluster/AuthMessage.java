@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common.network.messages.cluster;
+package drfoliberg.common.network.messages.cluster;
 
 /**
  * Extends Message to require unid. Master server directly knows which node sent the message. Master server can verify

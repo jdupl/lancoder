@@ -1,6 +1,6 @@
-package main.java.drfoliberg.common.task.video;
+package drfoliberg.common.task.video;
 
-import main.java.drfoliberg.common.job.JobConfig;
+import drfoliberg.common.job.JobConfig;
 
 public class TaskInfo extends JobConfig {
 

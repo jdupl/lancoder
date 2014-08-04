@@ -1,12 +1,12 @@
-package main.java.drfoliberg.converter;
+package drfoliberg.converter;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import main.java.drfoliberg.common.Service;
-import main.java.drfoliberg.common.job.RateControlType;
-import main.java.drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.common.Service;
+import drfoliberg.common.job.RateControlType;
+import drfoliberg.common.task.audio.AudioEncodingTask;
 
 public class AudioConverter extends Service implements ConverterListener {
 

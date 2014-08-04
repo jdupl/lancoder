@@ -1,11 +1,11 @@
-package main.java.drfoliberg.common.network;
+package drfoliberg.common.network;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import main.java.drfoliberg.common.Node;
-import main.java.drfoliberg.common.network.messages.cluster.Message;
+import drfoliberg.common.Node;
+import drfoliberg.common.network.messages.cluster.Message;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;

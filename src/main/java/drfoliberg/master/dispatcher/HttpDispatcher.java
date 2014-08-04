@@ -1,14 +1,14 @@
-package main.java.drfoliberg.master.dispatcher;
+package drfoliberg.master.dispatcher;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
-import main.java.drfoliberg.common.Node;
-import main.java.drfoliberg.common.network.Routes;
-import main.java.drfoliberg.common.network.messages.cluster.TaskRequestMessage;
-import main.java.drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.Node;
+import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;

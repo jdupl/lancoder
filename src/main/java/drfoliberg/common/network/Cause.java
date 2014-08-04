@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common.network;
+package drfoliberg.common.network;
 
 import java.io.Serializable;
 

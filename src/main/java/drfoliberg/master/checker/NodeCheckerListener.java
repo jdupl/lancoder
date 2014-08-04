@@ -1,10 +1,10 @@
-package main.java.drfoliberg.master.checker;
+package drfoliberg.master.checker;
 
 import java.util.ArrayList;
 
-import main.java.drfoliberg.common.Node;
-import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
-import main.java.drfoliberg.common.task.video.TaskReport;
+import drfoliberg.common.Node;
+import drfoliberg.common.network.messages.cluster.StatusReport;
+import drfoliberg.common.task.video.TaskReport;
 
 public interface NodeCheckerListener {
 

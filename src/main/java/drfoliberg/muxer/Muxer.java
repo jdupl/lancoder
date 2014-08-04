@@ -1,14 +1,14 @@
-package main.java.drfoliberg.muxer;
+package drfoliberg.muxer;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import main.java.drfoliberg.common.Service;
-import main.java.drfoliberg.common.job.Job;
-import main.java.drfoliberg.common.task.audio.AudioEncodingTask;
-import main.java.drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.Service;
+import drfoliberg.common.job.Job;
+import drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class Muxer extends Service {
 

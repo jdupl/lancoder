@@ -1,8 +1,8 @@
-package main.java.drfoliberg.common.network.messages.cluster;
+package drfoliberg.common.network.messages.cluster;
 
-import main.java.drfoliberg.common.network.Routes;
-import main.java.drfoliberg.common.status.NodeState;
-import main.java.drfoliberg.common.task.video.TaskReport;
+import drfoliberg.common.network.Routes;
+import drfoliberg.common.status.NodeState;
+import drfoliberg.common.task.video.TaskReport;
 
 public class StatusReport extends AuthMessage {
 

@@ -1,12 +1,12 @@
-package main.java.drfoliberg.master;
+package drfoliberg.master;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-import main.java.drfoliberg.common.Node;
-import main.java.drfoliberg.common.job.Job;
+import drfoliberg.common.Node;
+import drfoliberg.common.job.Job;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

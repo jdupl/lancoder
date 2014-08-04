@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common.status;
+package drfoliberg.common.status;
 
 /**
  * Possible states for a node.

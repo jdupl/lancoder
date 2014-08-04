@@ -1,7 +1,7 @@
-package main.java.drfoliberg.common.network.messages.cluster;
+package drfoliberg.common.network.messages.cluster;
 
-import main.java.drfoliberg.common.network.Routes;
-import main.java.drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.network.Routes;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class TaskRequestMessage extends Message {
 

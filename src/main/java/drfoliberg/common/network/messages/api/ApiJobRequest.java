@@ -1,7 +1,7 @@
-package main.java.drfoliberg.common.network.messages.api;
+package drfoliberg.common.network.messages.api;
 
-import main.java.drfoliberg.common.job.FFmpegPreset;
-import main.java.drfoliberg.common.job.RateControlType;
+import drfoliberg.common.job.FFmpegPreset;
+import drfoliberg.common.job.RateControlType;
 
 public class ApiJobRequest {
 

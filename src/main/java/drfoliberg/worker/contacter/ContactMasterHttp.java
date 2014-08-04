@@ -1,4 +1,4 @@
-package main.java.drfoliberg.worker.contacter;
+package drfoliberg.worker.contacter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,9 +7,9 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import main.java.drfoliberg.common.Service;
-import main.java.drfoliberg.common.network.Routes;
-import main.java.drfoliberg.common.network.messages.cluster.ConnectMessage;
+import drfoliberg.common.Service;
+import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.cluster.ConnectMessage;
 
 import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;

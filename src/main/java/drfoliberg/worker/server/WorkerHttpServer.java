@@ -1,9 +1,9 @@
-package main.java.drfoliberg.worker.server;
+package drfoliberg.worker.server;
 
 import javax.servlet.http.HttpServlet;
 
-import main.java.drfoliberg.common.ServerListener;
-import main.java.drfoliberg.common.ServletServer;
+import drfoliberg.common.ServerListener;
+import drfoliberg.common.ServletServer;
 
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;

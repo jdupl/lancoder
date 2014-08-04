@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common.task.audio;
+package drfoliberg.common.task.audio;
 
 public enum AudioCodec {
 

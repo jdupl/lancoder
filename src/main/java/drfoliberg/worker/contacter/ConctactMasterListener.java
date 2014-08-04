@@ -1,4 +1,4 @@
-package main.java.drfoliberg.worker.contacter;
+package drfoliberg.worker.contacter;
 
 import java.net.InetAddress;
 

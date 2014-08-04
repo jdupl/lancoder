@@ -1,6 +1,6 @@
-package main.java.drfoliberg.muxer;
+package drfoliberg.muxer;
 
-import main.java.drfoliberg.common.job.Job;
+import drfoliberg.common.job.Job;
 
 public interface MuxerListener {
 

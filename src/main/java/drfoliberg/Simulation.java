@@ -1,7 +1,7 @@
-package main.java.drfoliberg;
+package drfoliberg;
 
-import main.java.drfoliberg.master.Master;
-import main.java.drfoliberg.worker.Worker;
+import drfoliberg.master.Master;
+import drfoliberg.worker.Worker;
 
 public class Simulation extends Thread {
 

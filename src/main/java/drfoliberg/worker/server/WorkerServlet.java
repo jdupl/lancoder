@@ -1,4 +1,4 @@
-package main.java.drfoliberg.worker.server;
+package drfoliberg.worker.server;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -10,9 +10,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.entity.ContentType;
 
-import main.java.drfoliberg.common.network.Routes;
-import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
-import main.java.drfoliberg.common.network.messages.cluster.TaskRequestMessage;
+import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.cluster.StatusReport;
+import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 
 import com.google.gson.Gson;
 

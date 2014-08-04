@@ -1,11 +1,10 @@
-package main.java.drfoliberg.common.task.audio;
+package drfoliberg.common.task.audio;
 
-import java.io.Serializable;
+import drfoliberg.common.job.RateControlType;
+import drfoliberg.common.status.TaskState;
+import drfoliberg.common.task.Task;
 
-import main.java.drfoliberg.common.job.RateControlType;
-import main.java.drfoliberg.common.status.TaskState;
-
-public class AudioEncodingTask implements Serializable {
+public class AudioEncodingTask extends Task {
 
 	private static final long serialVersionUID = 1319651638856267785L;
 
@@ -16,7 +15,6 @@ public class AudioEncodingTask implements Serializable {
 	private String inputFile;
 	private String outputFile;
 	private RateControlType rateControlType;
-	private TaskState taskState;
 
 	/**
 	 * Creates an audio encoding task with handling of the extension and quality control
@@ -95,14 +93,6 @@ public class AudioEncodingTask implements Serializable {
 
 	public void setRateControlType(RateControlType rateControlType) {
 		this.rateControlType = rateControlType;
-	}
-
-	public TaskState getTaskState() {
-		return taskState;
-	}
-
-	public void setTaskState(TaskState taskState) {
-		this.taskState = taskState;
 	}
 
 }

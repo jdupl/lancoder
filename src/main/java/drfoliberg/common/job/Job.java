@@ -1,14 +1,14 @@
-package main.java.drfoliberg.common.job;
+package drfoliberg.common.job;
 
 import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
-import main.java.drfoliberg.common.status.JobState;
-import main.java.drfoliberg.common.status.TaskState;
-import main.java.drfoliberg.common.task.audio.AudioEncodingTask;
-import main.java.drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.status.JobState;
+import drfoliberg.common.status.TaskState;
+import drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;

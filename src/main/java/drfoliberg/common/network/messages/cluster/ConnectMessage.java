@@ -1,9 +1,9 @@
-package main.java.drfoliberg.common.network.messages.cluster;
+package drfoliberg.common.network.messages.cluster;
 
 import java.io.Serializable;
 import java.net.InetAddress;
 
-import main.java.drfoliberg.common.network.Routes;
+import drfoliberg.common.network.Routes;
 
 public class ConnectMessage extends AuthMessage implements Serializable {
 

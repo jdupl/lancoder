@@ -1,9 +1,9 @@
-package main.java.drfoliberg.converter;
+package drfoliberg.converter;
 
 import java.util.Hashtable;
 
-import main.java.drfoliberg.common.status.TaskState;
-import main.java.drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.common.status.TaskState;
+import drfoliberg.common.task.audio.AudioEncodingTask;
 
 public class ConverterPool implements ConverterListener {
 

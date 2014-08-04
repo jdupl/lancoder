@@ -1,7 +1,7 @@
-package main.java.drfoliberg.common.network.messages.cluster;
+package drfoliberg.common.network.messages.cluster;
 
-import main.java.drfoliberg.common.network.Cause;
-import main.java.drfoliberg.common.network.Routes;
+import drfoliberg.common.network.Cause;
+import drfoliberg.common.network.Routes;
 
 public class CrashReport extends AuthMessage {
 

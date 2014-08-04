@@ -1,10 +1,10 @@
-package main.java.drfoliberg.common;
+package drfoliberg.common;
 
 import java.io.Serializable;
 import java.net.InetAddress;
 
-import main.java.drfoliberg.common.status.NodeState;
-import main.java.drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.status.NodeState;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class Node implements Serializable {
 

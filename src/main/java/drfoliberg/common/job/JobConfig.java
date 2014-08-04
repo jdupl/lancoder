@@ -1,4 +1,4 @@
-package main.java.drfoliberg.common.job;
+package drfoliberg.common.job;
 
 import java.io.Serializable;
 import java.util.ArrayList;

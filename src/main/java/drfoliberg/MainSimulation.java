@@ -1,4 +1,4 @@
-package main.java.drfoliberg;
+package drfoliberg;
 
 import java.io.IOException;
 

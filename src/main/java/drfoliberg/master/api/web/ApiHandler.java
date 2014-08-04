@@ -1,4 +1,4 @@
-package main.java.drfoliberg.master.api.web;
+package drfoliberg.master.api.web;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,9 +7,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import main.java.drfoliberg.common.network.messages.api.ApiJobRequest;
-import main.java.drfoliberg.common.network.messages.api.ApiResponse;
-import main.java.drfoliberg.master.Master;
+import drfoliberg.common.network.messages.api.ApiJobRequest;
+import drfoliberg.common.network.messages.api.ApiResponse;
+import drfoliberg.master.Master;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;

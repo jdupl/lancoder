@@ -1,4 +1,4 @@
-package main.java.drfoliberg.worker;
+package drfoliberg.worker;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -10,21 +10,21 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
-import main.java.drfoliberg.common.ServerListener;
-import main.java.drfoliberg.common.Service;
-import main.java.drfoliberg.common.network.Cause;
-import main.java.drfoliberg.common.network.Routes;
-import main.java.drfoliberg.common.network.messages.cluster.CrashReport;
-import main.java.drfoliberg.common.network.messages.cluster.StatusReport;
-import main.java.drfoliberg.common.network.messages.cluster.TaskRequestMessage;
-import main.java.drfoliberg.common.status.NodeState;
-import main.java.drfoliberg.common.status.TaskState;
-import main.java.drfoliberg.common.task.video.TaskReport;
-import main.java.drfoliberg.common.task.video.VideoEncodingTask;
-import main.java.drfoliberg.worker.contacter.ConctactMasterListener;
-import main.java.drfoliberg.worker.contacter.ContactMasterHttp;
-import main.java.drfoliberg.worker.server.WorkerHttpServer;
-import main.java.drfoliberg.worker.server.WorkerServletListerner;
+import drfoliberg.common.ServerListener;
+import drfoliberg.common.Service;
+import drfoliberg.common.network.Cause;
+import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.cluster.CrashReport;
+import drfoliberg.common.network.messages.cluster.StatusReport;
+import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
+import drfoliberg.common.status.NodeState;
+import drfoliberg.common.status.TaskState;
+import drfoliberg.common.task.video.TaskReport;
+import drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.worker.contacter.ConctactMasterListener;
+import drfoliberg.worker.contacter.ContactMasterHttp;
+import drfoliberg.worker.server.WorkerHttpServer;
+import drfoliberg.worker.server.WorkerServletListerner;
 
 import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;
