@@ -11,7 +11,7 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 
 public class ApiServer extends Service {
 
-	private static final String webDir = "main/web";
+	private static final String webDir = "web_resources/";
 
 	private Master master;
 	Server server;
@@ -29,6 +29,7 @@ public class ApiServer extends Service {
 
 		// static resources handler
 		ResourceHandler staticHandler = new ResourceHandler();
+		
 		staticHandler.setResourceBase(this.getClass().getClassLoader().getResource(webDir).toExternalForm());
 		staticHandler.setDirectoriesListed(true);
 		ctxStatic.setHandler(staticHandler);

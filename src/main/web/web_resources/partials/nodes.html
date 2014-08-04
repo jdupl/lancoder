@@ -15,21 +15,21 @@
                 <div class="row">
                     <div class="col-md-6">
                         <p>Encoding part {{node.currentTask.taskInfo.taskId}} of file {{node.currentTask.taskInfo.sourceFile}}</p>
-                        <p>Pass {{node.currentTask.taskStatus.currentPass}} of {{node.currentTask.taskInfo.passes}}</p>
+                        <p>Pass {{node.currentTask.taskProgress.currentPass}} of {{node.currentTask.taskInfo.passes}}</p>
                     </div>
                     <div class="col-md-6">
                         <div class="progress">
-                            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{node.currentTask.taskStatus.progress}}" aria-valuemin="0" aria-valuemax="100" style="width: {{node.currentTask.taskStatus.progress}}%">
+                            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{node.currentTask.taskProgress.progress}}" aria-valuemin="0" aria-valuemax="100" style="width: {{node.currentTask.taskProgress.progress}}%">
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
-                        <p>Encoding at {{node.currentTask.taskStatus.fps}}FPS. Estimated time to finish this pass: {{node.currentTask.taskStatus.timeEstimated / 1000}}s</p>
+                        <p>Encoding at {{node.currentTask.taskProgress.fps}}FPS. Estimated time to finish this pass: {{node.currentTask.taskProgress.timeEstimated / 1000}}s</p>
                     </div>
                     <div class="col-md-6">
-                        <p style="text-align: right">{{node.currentTask.taskStatus.progress}}% Complete</p>
+                        <p style="text-align: right">{{node.currentTask.taskProgress.progress}}% Complete</p>
                     </div>
                 </div>
             </div>

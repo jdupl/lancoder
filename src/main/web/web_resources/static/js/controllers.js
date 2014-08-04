@@ -83,12 +83,12 @@ angular.module('lancoder.controllers', []).
                         data[i].totalTasks = data[i].tasks.length;
                         data[i].totalFps = 0;
                         for (var j = 0; j < data[i].totalTasks; j++) {
-                          switch (data[i].tasks[j].taskStatus.status) {
+                          switch (data[i].tasks[j].taskState) {
                             case "TASK_COMPLETED":
                               data[i].completedTasks++;
                               break;
                             case "TASK_COMPUTING":
-                              data[i].totalFps += data[i].tasks[j].taskStatus.fps;
+                              data[i].totalFps += data[i].tasks[j].taskProgress.fps;
                               break;
                           }
                         }

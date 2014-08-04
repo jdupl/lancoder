@@ -19,3 +19,4 @@ doc
 
 # logs
 *.log
+/src/nbproject/
