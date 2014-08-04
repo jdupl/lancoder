@@ -128,7 +128,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		} else {
 			updateStatus(NodeState.WORKING);
 			this.currentTask = t;
-			this.workThread = new WorkThread(this, t);
+			this.workThread = new WorkThread(t, this);
 			Thread wt = new Thread(workThread);
 			wt.start();
 			services.add(workThread);

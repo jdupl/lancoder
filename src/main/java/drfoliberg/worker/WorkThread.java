@@ -21,7 +21,6 @@ public class WorkThread extends Service {
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
 	private VideoEncodingTask task;
-	// private Worker callback;
 	WorkThreadListener listener;
 	Process process;
 
@@ -30,10 +29,9 @@ public class WorkThread extends Service {
 	File taskTempOutputFile;
 	File taskTempOutputFolder;
 
-	public WorkThread(Worker w, VideoEncodingTask t) {
+	public WorkThread(VideoEncodingTask t, WorkThreadListener listener) {
 		task = t;
-		// callback = w;
-		// callback.getCurrentTask().start();
+		this.listener = listener;
 	}
 
 	private void createDirs() {
@@ -145,7 +143,6 @@ public class WorkThread extends Service {
 				if (m.find()) {
 					long currentFrame = Long.parseLong(m.group(1));
 					task.setFramesCompleted(currentFrame);
-
 					System.err.printf("frame: %d out of %d (%f%%) \n", currentFrame, task.getEstimatedFramesCount(),
 							task.getProgress());
 				}
@@ -234,7 +231,6 @@ public class WorkThread extends Service {
 		}
 	}
 
-	@Deprecated
 	private boolean transcodeToMpegTs() {
 		File destination = new File(absoluteSharedDir, task.getOutputFile());
 		// TODO handle robust handling of progress and errors
