@@ -215,8 +215,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	}
 
 	public void dispatch(VideoEncodingTask task, Node node) {
-		if (task.getState() == TaskState.TASK_TODO) {
-			task.setState(TaskState.TASK_COMPUTING);
+		if (task.getTaskState() == TaskState.TASK_TODO) {
+			task.setTaskState(TaskState.TASK_COMPUTING);
 		}
 		node.setStatus(NodeState.LOCKED);
 		HttpDispatcher dispatcher = new HttpDispatcher(node, task, this);
@@ -341,7 +341,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 			return false;
 		}
 		for (VideoEncodingTask t : j.getTasks()) {
-			if (t.getStatus() == TaskState.TASK_COMPUTING) {
+			if (t.getTaskState() == TaskState.TASK_COMPUTING) {
 				// Find which node has this task
 				for (Node n : getNodes()) {
 					if (n.getCurrentTask().equals(t)) {
@@ -517,7 +517,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		}
 
 		System.out.println("MASTER: the task " + n.getCurrentTask().getTaskId() + " is now " + updateStatus);
-		task.setStatus(updateStatus);
+		task.setTaskState(updateStatus);
 		if (updateStatus == TaskState.TASK_COMPLETED) {
 			logger.info(String.format("Node %s completed task %d of job %s", n.getName(), n.getCurrentTask()
 					.getTaskId(), n.getCurrentTask().getJobId()));
@@ -526,7 +526,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 			boolean jobDone = true;
 
 			for (VideoEncodingTask t : job.getTasks()) {
-				if (t.getState() != TaskState.TASK_COMPLETED) {
+				if (t.getTaskState() != TaskState.TASK_COMPLETED) {
 					jobDone = false;
 					break;
 				}
@@ -583,7 +583,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 						job.getJobName());
 				System.err.printf("BTW I was looking for file '%s'\n", absoluteTaskFile);
 				integrity = false;
-				task.setStatus(TaskState.TASK_TODO);
+				task.setTaskState(TaskState.TASK_TODO);
 			}
 		}
 		return integrity;
@@ -633,7 +633,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		}
 		if (!nodeHasTask(sender, report.getTask())) {
 			System.err.printf("MASTER: Bad task update from node.");
-		} else if (report.getTask().getStatus() == TaskState.TASK_COMPLETED) {
+		} else if (report.getTask().getTaskState() == TaskState.TASK_COMPLETED) {
 			updateNodeTask(sender, TaskState.TASK_COMPLETED);
 		} else {
 			System.out.printf("MASTER: Updating the task %s to %f%% \n", sender.getCurrentTask().getTaskId(), progress);
@@ -692,7 +692,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	@Override
 	public synchronized void taskRefused(VideoEncodingTask t, Node n) {
 		System.err.printf("Node %s refused task\n", n.getName());
-		t.setStatus(TaskState.TASK_TODO);
+		t.setTaskState(TaskState.TASK_TODO);
 		n.setStatus(NodeState.FREE);
 		updateNodesWork();
 	}
@@ -701,7 +701,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	public synchronized void taskAccepted(VideoEncodingTask t, Node n) {
 		System.err.printf("Node %s accepted task\n", n.getName());
 		n.setCurrentTask(t);
-		t.setStatus(TaskState.TASK_ASSIGNED);
+		t.setTaskState(TaskState.TASK_ASSIGNED);
 	}
 
 	@Override

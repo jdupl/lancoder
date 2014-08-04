@@ -12,12 +12,12 @@ public class VideoEncodingTask extends Task {
 
 	private static final long serialVersionUID = -8705492902098705162L;
 	protected TaskInfo taskInfo;
-	protected TaskStatus taskStatus;
+	protected TaskProgess taskProgress;
 
 	public VideoEncodingTask(int taskId, JobConfig config) {
 		taskInfo = new TaskInfo(config);
 		taskInfo.setTaskId(taskId);
-		taskStatus = new TaskStatus();
+		taskProgress = new TaskProgess();
 	}
 
 	public ArrayList<String> getRateControlArgs() {
@@ -63,13 +63,13 @@ public class VideoEncodingTask extends Task {
 	}
 
 	public void reset() {
-		taskStatus.setFramesCompleted(0);
-		setStatus(TaskState.TASK_TODO);
+		taskProgress.setFramesCompleted(0);
+		setTaskState(TaskState.TASK_TODO);
 	}
 
 	public void start() {
 		setTimeStarted(System.currentTimeMillis());
-		setStatus(TaskState.TASK_COMPUTING);
+		setTaskState(TaskState.TASK_COMPUTING);
 	}
 
 	public long getETA() {
@@ -78,7 +78,7 @@ public class VideoEncodingTask extends Task {
 	}
 
 	public float getProgress() {
-		float percentToComplete = ((float) taskStatus.getFramesCompleted() / taskInfo.getEstimatedFramesCount()) * 100;
+		float percentToComplete = ((float) taskProgress.getFramesCompleted() / taskInfo.getEstimatedFramesCount()) * 100;
 		return percentToComplete;
 	}
 
@@ -107,51 +107,43 @@ public class VideoEncodingTask extends Task {
 	}
 
 	public long getFramesCompleted() {
-		return taskStatus.getFramesCompleted();
+		return taskProgress.getFramesCompleted();
 	}
 
 	public void setFramesCompleted(long framesCompleted) {
-		taskStatus.setFramesCompleted(framesCompleted);
+		taskProgress.setFramesCompleted(framesCompleted);
 	}
 
-	public void setTaskStatus(TaskStatus taskStatus) {
-		this.taskStatus = taskStatus;
+	public void setTaskStatus(TaskProgess taskStatus) {
+		this.taskProgress = taskStatus;
 	}
 
-	public TaskStatus getTaskStatus() {
-		return taskStatus;
+	public TaskProgess getTaskStatus() {
+		return taskProgress;
 	}
 
 	public long getTimeElapsed() {
-		return taskStatus.getTimeElapsed();
+		return taskProgress.getTimeElapsed();
 	}
 
 	public void setTimeElapsed(long timeElapsed) {
-		taskStatus.setTimeElapsed(timeElapsed);
+		taskProgress.setTimeElapsed(timeElapsed);
 	}
 
 	public long getTimeEstimated() {
-		return taskStatus.getTimeEstimated();
+		return taskProgress.getTimeEstimated();
 	}
 
 	public void setTimeEstimated(long timeEstimated) {
-		taskStatus.setTimeEstimated(timeEstimated);
+		taskProgress.setTimeEstimated(timeEstimated);
 	}
 
 	public double getFps() {
-		return taskStatus.getFps();
+		return taskProgress.getFps();
 	}
 
 	public void setFps(double fps) {
-		taskStatus.setFps(fps);
-	}
-
-	public TaskState getStatus() {
-		return taskStatus.getState();
-	}
-
-	public void setStatus(TaskState status) {
-		taskStatus.setState(status);
+		taskProgress.setFps(fps);
 	}
 
 	public String getSourceFile() {
@@ -203,15 +195,15 @@ public class VideoEncodingTask extends Task {
 	}
 
 	public long getTimeStarted() {
-		return taskStatus.getTimeStarted();
+		return taskProgress.getTimeStarted();
 	}
 
 	public void setProgress(float progress) {
-		taskStatus.setProgress(progress);
+		taskProgress.setProgress(progress);
 	}
 
 	public void setTimeStarted(long timeStarted) {
-		taskStatus.setTimeStarted(timeStarted);
+		taskProgress.setTimeStarted(timeStarted);
 	}
 
 	public void setPreset(FFmpegPreset preset) {
@@ -226,20 +218,12 @@ public class VideoEncodingTask extends Task {
 		taskInfo.setExtraEncoderArgs(extraEncoderArgs);
 	}
 
-	public TaskState getState() {
-		return taskStatus.getState();
-	}
-
-	public void setState(TaskState state) {
-		taskStatus.setState(state);
-	}
-
 	public int getCurrentPass() {
-		return taskStatus.getCurrentPass();
+		return taskProgress.getCurrentPass();
 	}
 
 	public void setCurrentPass(int currentPass) {
-		taskStatus.setCurrentPass(currentPass);
+		taskProgress.setCurrentPass(currentPass);
 	}
 
 	public String getOutputFile() {

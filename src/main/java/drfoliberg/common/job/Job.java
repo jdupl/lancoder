@@ -137,7 +137,7 @@ public class Job extends JobConfig {
 		}
 
 		for (VideoEncodingTask task : this.tasks) {
-			if (task.getStatus() == TaskState.TASK_TODO) {
+			if (task.getTaskState() == TaskState.TASK_TODO) {
 				return task;
 			}
 		}
@@ -159,7 +159,7 @@ public class Job extends JobConfig {
 		default:
 			int count = 0;
 			for (VideoEncodingTask task : this.tasks) {
-				if (task.getStatus() == TaskState.TASK_TODO) {
+				if (task.getTaskState() == TaskState.TASK_TODO) {
 					++count;
 				}
 			}

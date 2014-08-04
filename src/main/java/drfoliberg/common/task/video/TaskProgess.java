@@ -2,9 +2,7 @@ package drfoliberg.common.task.video;
 
 import java.io.Serializable;
 
-import drfoliberg.common.status.TaskState;
-
-public class TaskStatus implements Serializable {
+public class TaskProgess implements Serializable {
 
 	private static final long serialVersionUID = 7437966237627538221L;
 	protected long timeStarted;
@@ -17,11 +15,9 @@ public class TaskStatus implements Serializable {
 	 * Progress is always calculated in Task object itself. We still need this field here for serialization.
 	 */
 	protected float progress;
-	@Deprecated
-	protected TaskState status;
 
-	public TaskStatus() {
-		this.status = TaskState.TASK_TODO;
+	public TaskProgess() {
+
 	}
 
 	public float getProgress() {
@@ -70,14 +66,6 @@ public class TaskStatus implements Serializable {
 
 	public void setFps(double fps) {
 		this.fps = fps;
-	}
-
-	public TaskState getState() {
-		return status;
-	}
-
-	public void setState(TaskState state) {
-		this.status = state;
 	}
 
 	public int getCurrentPass() {

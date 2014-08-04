@@ -108,7 +108,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	public void taskDone(VideoEncodingTask t) {
-		this.currentTask.setStatus(TaskState.TASK_COMPLETED);
+		this.currentTask.setTaskState(TaskState.TASK_COMPLETED);
 		this.updateStatus(NodeState.FREE);
 		services.remove(workThread);
 	}
@@ -164,7 +164,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	public synchronized void updateTaskStatus(VideoEncodingTask t, TaskState newState) {
-		t.setStatus(newState);
+		t.setTaskState(newState);
 		notifyHttpMasterStatusChange();
 	}
 
