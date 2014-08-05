@@ -73,7 +73,7 @@ public class FFmpegProber {
 		String line = "";
 
 		// Format is like "23.98" fps or "25 fps"
-		Pattern fpsPattern = Pattern.compile("([0-9]+\\.?[0-9]+)\\s*fps");
+		Pattern fpsPattern = Pattern.compile("([0-9]+\\.?[0-9]+)\\s*(fps|tbr)");
 
 		float fps = -1;
 
