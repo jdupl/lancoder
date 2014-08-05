@@ -5,11 +5,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
-import drfoliberg.common.Node;
-import drfoliberg.common.network.Routes;
-import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
-import drfoliberg.common.task.Task;
-
 import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -20,6 +15,10 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.Gson;
+
+import drfoliberg.common.Node;
+import drfoliberg.common.network.Routes;
+import drfoliberg.common.task.Task;
 
 public class HttpDispatcher implements Runnable, DispatcherListener {
 	Node node;
@@ -47,9 +46,7 @@ public class HttpDispatcher implements Runnable, DispatcherListener {
 			HttpPut put = new HttpPut(url);
 			put.setConfig(defaultRequestConfig);
 
-			TaskRequestMessage trm = new TaskRequestMessage(task);
-
-			StringEntity entity = new StringEntity(gson.toJson(trm));
+			StringEntity entity = new StringEntity(gson.toJson(task));
 			entity.setContentEncoding(Charsets.UTF_8.toString());
 			entity.setContentType(ContentType.APPLICATION_JSON.toString());
 			put.setEntity(entity);

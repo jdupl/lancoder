@@ -19,6 +19,7 @@ public class VideoEncodingTask extends Task implements Serializable {
 		super(jobId, taskId);
 		taskInfo = new TaskInfo(config);
 		taskInfo.setTaskId(taskId);
+		taskInfo.setJobId(jobId);
 		taskProgress = new TaskProgess();
 	}
 
