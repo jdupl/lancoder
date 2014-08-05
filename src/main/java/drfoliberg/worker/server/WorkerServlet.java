@@ -1,6 +1,5 @@
 package drfoliberg.worker.server;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -11,12 +10,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.entity.ContentType;
 
+import com.google.gson.Gson;
+
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.network.messages.cluster.StatusReport;
-import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
+import drfoliberg.common.task.Task;
+import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.VideoEncodingTask;
-
-import com.google.gson.Gson;
 
 public class WorkerServlet extends HttpServlet implements WorkerServletListerner {
 
@@ -67,13 +67,14 @@ public class WorkerServlet extends HttpServlet implements WorkerServletListerner
 		Gson gson = new Gson();
 		switch (req.getRequestURI()) {
 		case Routes.ADD_TASK:
-			TaskRequestMessage tqm = gson.fromJson(req.getReader(), TaskRequestMessage.class);
-			if (tqm.task instanceof VideoEncodingTask){
-				System.out.println("");
+			Task task = gson.fromJson(req.getReader(), VideoEncodingTask.class);
+			if (task == null) {
+				req.getReader().reset();
+				task = gson.fromJson(req.getReader(), AudioEncodingTask.class);
 			}
-			if (tqm == null) {
+			if (task == null) {
 				resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-			} else if (!taskRequest(tqm)) {
+			} else if (!taskRequest(task)) {
 				resp.sendError(HttpServletResponse.SC_CONFLICT);
 			}
 			break;
@@ -87,10 +88,10 @@ public class WorkerServlet extends HttpServlet implements WorkerServletListerner
 		Gson gson = new Gson();
 		switch (req.getRequestURI()) {
 		case Routes.DELETE_TASK:
-			TaskRequestMessage tqm = gson.fromJson(req.getReader(), TaskRequestMessage.class);
-			if (tqm == null) {
+			Task task = gson.fromJson(req.getReader(), Task.class);
+			if (task == null) {
 				resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-			} else if (!deleteTask(tqm)) {
+			} else if (!deleteTask(task)) {
 				resp.sendError(HttpServletResponse.SC_NO_CONTENT);
 			}
 			break;
@@ -101,8 +102,8 @@ public class WorkerServlet extends HttpServlet implements WorkerServletListerner
 	}
 
 	@Override
-	public boolean taskRequest(TaskRequestMessage tqm) {
-		return servletListener.taskRequest(tqm);
+	public boolean taskRequest(Task task) {
+		return servletListener.taskRequest(task);
 	}
 
 	@Override
@@ -111,12 +112,12 @@ public class WorkerServlet extends HttpServlet implements WorkerServletListerner
 	}
 
 	@Override
-	public boolean deleteTask(TaskRequestMessage tqm) {
-		return servletListener.deleteTask(tqm);
+	public boolean deleteTask(Task task) {
+		return servletListener.deleteTask(task);
 	}
 
 	@Override
 	public void shutdownWorker() {
-		servletListener.shutdownWorker();	
+		servletListener.shutdownWorker();
 	}
 }

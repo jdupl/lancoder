@@ -16,7 +16,6 @@ import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.network.messages.cluster.CrashReport;
 import drfoliberg.common.network.messages.cluster.StatusReport;
-import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
@@ -345,8 +344,8 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	@Override
-	public boolean taskRequest(TaskRequestMessage tqm) {
-		return startWork(tqm.task);
+	public boolean taskRequest(Task tqm) {
+		return startWork(tqm);
 	}
 
 	@Override
@@ -365,9 +364,9 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	@Override
-	public boolean deleteTask(TaskRequestMessage tqm) {
+	public boolean deleteTask(Task t) {
 		for (Task task : currentTasks) {
-			if (task.equals(tqm.task)) {
+			if (task.equals(t)) {
 				stopWork(task);
 				return true;
 			}

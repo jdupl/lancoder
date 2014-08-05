@@ -74,7 +74,7 @@ public class Node implements Serializable {
 		this.name = name;
 	}
 
-	public ArrayList<Task> getCurrentTask() {
+	public ArrayList<Task> getCurrentTasks() {
 		return currentTasks;
 	}
 

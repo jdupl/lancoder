@@ -98,7 +98,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public void shutdown() {
 		// save config and make sure current tasks are reset
 		for (Node n : getNodes()) {
-			for (Task task : n.getCurrentTask()) {
+			for (Task task : n.getCurrentTasks()) {
 				task.reset();
 			}
 		}
@@ -177,7 +177,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		for (Entry<String, Node> entry : nodes.entrySet()) {
 			Node n = entry.getValue();
 			if (n.getStatus() == NodeState.FREE) {
-				if (n.getCurrentTask().size() < minTasks) {
+				if (n.getCurrentTasks().size() < minTasks) {
 					best = n;
 				}
 
@@ -194,8 +194,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 		for (Entry<String, Node> entry : nodes.entrySet()) {
 			Node n = entry.getValue();
-			if (n.getCurrentTask().size() < maxConcurentTasks) {
-				if (n.getCurrentTask().size() < minTasks) {
+			if (n.getCurrentTasks().size() < maxConcurentTasks) {
+				if (n.getCurrentTasks().size() < minTasks) {
 					best = n;
 				}
 			}
@@ -369,7 +369,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			if (t.getTaskState() == TaskState.TASK_COMPUTING) {
 				// Find which node has this task
 				for (Node n : getNodes()) {
-					if (n.getCurrentTask().equals(t)) {
+					if (n.getCurrentTasks().equals(t)) {
 						updateNodeTask(t, n, TaskState.TASK_CANCELED);
 					}
 				}
@@ -521,9 +521,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public synchronized void removeNode(Node n) {
 		if (n != null) {
 			// Cancel node's task status if any
-			for (Task t : n.getCurrentTask()) {
+			for (Task t : n.getCurrentTasks()) {
 				t.reset();
-				n.getCurrentTask().remove(t);
+				n.getCurrentTasks().remove(t);
 			}
 			n.setStatus(NodeState.NOT_CONNECTED);
 		} else {
@@ -548,7 +548,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			// logger.info(String.format("Node %s completed task %d of job %s", n.getName(), n.getCurrentTask()
 			// .getTaskId(), n.getCurrentTask().getJobId()));
 			// n.setCurrentTask(null);
-			n.getCurrentTask().remove(task);
+			n.getCurrentTasks().remove(task);
 			Job job = this.jobs.get(task.getJobId());
 			boolean jobDone = true;
 
@@ -564,7 +564,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			// TODO implement task.complete() ?
 		} else if (updateStatus == TaskState.TASK_CANCELED) {
 			dispatch(task, n);
-			n.getCurrentTask().remove(task);
+			n.getCurrentTasks().remove(task);
 		}
 		updateNodesWork();
 
@@ -591,7 +591,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	/**
-	 * Check if all tasks are on the disk after encoding is done. Resets status of bad tasks.
+	 * Check if all tasks are on the disk after encoding is done. Resets status of missing tasks.
 	 * 
 	 * @param j
 	 *            The job to check
@@ -656,7 +656,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		if (sender == null) {
 			return;
 		}
-		for (Task t : sender.getCurrentTask()) {
+		for (Task t : sender.getCurrentTasks()) {
 			if (t instanceof VideoEncodingTask) {
 				task = (VideoEncodingTask) t;
 			}
@@ -672,12 +672,18 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		}
 	}
 
-	private boolean nodeHasTask(Node n, VideoEncodingTask t) {
+	// TODO move to node.hasTask
+	private boolean nodeHasTask(Node n, Task t) {
 		if (n == null) {
 			System.err.println("MASTER: Node is null !");
 			return false;
 		}
-		return n.getCurrentTask().equals(t);
+		for (Task task : n.getCurrentTasks()) {
+			if (task.equals(task)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void readCrashReport(CrashReport report) {
