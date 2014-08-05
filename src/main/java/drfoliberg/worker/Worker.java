@@ -144,9 +144,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		} else {
 			return false;
 		}
-
 		t.setTaskState(TaskState.TASK_COMPUTING);
-		this.currentTasks.add(t);
 		updateStatus(NodeState.WORKING);
 		return true;
 	}
@@ -157,7 +155,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	 * @return the StatusReport object
 	 */
 	public StatusReport getStatusReport() {
-		return new StatusReport(getStatus(), config.getUniqueID(), getTaskReport());
+		return new StatusReport(getStatus(), config.getUniqueID(), getTaskReports());
 	}
 
 	/**
@@ -165,19 +163,26 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	 * 
 	 * @return null if no current task
 	 */
-	public TaskReport getTaskReport() {
+	public ArrayList<TaskReport> getTaskReports() {
 		// if worker has no task, return null report
-		TaskReport taskReport = null;
+		ArrayList<TaskReport> reports = new ArrayList<TaskReport>();
 		for (Task task : currentTasks) {
+			TaskReport report = null;
 			if (task instanceof VideoEncodingTask) {
 				VideoEncodingTask currentTask = (VideoEncodingTask) task;
 				currentTask.setTimeElapsed(System.currentTimeMillis() - currentTask.getTimeStarted());
 				currentTask.setTimeEstimated(currentTask.getETA());
 				currentTask.setProgress(currentTask.getProgress());
-				taskReport = new TaskReport(config.getUniqueID(), currentTask);
+				report = new TaskReport(config.getUniqueID(), currentTask);
+			} else if (task instanceof AudioEncodingTask) {
+				report = new TaskReport(config.getUniqueID(), task);
+			}
+			
+			if (report != null) {
+				reports.add(report);
 			}
 		}
-		return taskReport;
+		return reports;
 	}
 
 	public synchronized void updateTaskStatus(Task t, TaskState newState) {
@@ -207,9 +212,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			startContactMaster();
 			break;
 		case CRASHED:
-			// cancel current work
 			notifyHttpMasterStatusChange();
-			// this.currentTask = null;
 			break;
 		default:
 			System.err.println("WORKER: Unhandlded status code while" + " updating status");
@@ -408,7 +411,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	public void workStarted(Task task) {
 		System.err.println("Worker starting task");
 		updateTaskStatus(task, TaskState.TASK_COMPUTING);
-		// this.currentTask = task;
 		this.currentTasks.add(task);
 		if (this.status != NodeState.WORKING) {
 			updateStatus(NodeState.WORKING);
@@ -420,8 +422,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		System.err.println("Worker completed task");
 		updateTaskStatus(task, TaskState.TASK_COMPLETED);
 		this.currentTasks.remove(task);
-		if (task instanceof VideoEncodingTask) {
-			// TODO if worker has many current tasks, implement check if worker has more tasks
+		if (currentTasks.size() == 0) {
 			updateStatus(NodeState.FREE);
 		}
 	}
@@ -431,16 +432,17 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		System.err.println("Worker failed task " + task.getTaskId());
 		updateTaskStatus(task, TaskState.TASK_CANCELED);
 		this.currentTasks.remove(task);
-		if (task instanceof VideoEncodingTask) {
-			// TODO if worker has many current tasks, implement check if worker has more tasks
+		if (currentTasks.size() == 0) {
 			updateStatus(NodeState.FREE);
 		}
+		// if (task instanceof VideoEncodingTask) {
+		// updateStatus(NodeState.FREE);
+		// }
 	}
 
 	@Override
 	public void nodeCrash(Cause cause) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override

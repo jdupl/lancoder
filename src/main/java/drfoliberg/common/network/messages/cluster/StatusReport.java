@@ -1,5 +1,7 @@
 package drfoliberg.common.network.messages.cluster;
 
+import java.util.ArrayList;
+
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.task.video.TaskReport;
@@ -8,7 +10,7 @@ public class StatusReport extends AuthMessage {
 
 	private static final long serialVersionUID = -844534455490561432L;
 	private long loadAverage;
-	private TaskReport taskReport;
+	private ArrayList<TaskReport> taskReports;
 	//public Node node;
 	public NodeState status;
 
@@ -21,9 +23,9 @@ public class StatusReport extends AuthMessage {
 		this.status = status;
 	}
 
-	public StatusReport(NodeState status, String unid, TaskReport taskReport) {
+	public StatusReport(NodeState status, String unid, ArrayList<TaskReport> taskReports) {
 		super(Routes.NODE_STATUS, unid);
-		this.taskReport = taskReport;
+		this.taskReports = taskReports;
 		this.status = status;
 	}
 
@@ -35,11 +37,12 @@ public class StatusReport extends AuthMessage {
 		this.loadAverage = loadAverage;
 	}
 
-	public TaskReport getTaskReport() {
-		return taskReport;
+	public ArrayList<TaskReport> getTaskReports() {
+		return taskReports;
 	}
 
-    public void setTaskReport(TaskReport taskReport) {
-        this.taskReport = taskReport;
-    }
+	public void setTaskReports(ArrayList<TaskReport> taskReport) {
+		this.taskReports = taskReport;
+	}
+
 }

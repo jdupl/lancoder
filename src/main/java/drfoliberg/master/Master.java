@@ -624,8 +624,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		NodeState s = report.status;
 		String unid = report.getUnid();
 		Node sender = identifySender(unid);
-		if (report.getTaskReport() != null) {
-			readTaskReport(report.getTaskReport());
+		if (report.getTaskReports() != null) {
+			readTaskReports(report.getTaskReports());
 		}
 		// only update if status is changed
 		if (sender.getStatus() != report.status) {
@@ -639,34 +639,41 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	/**
-	 * Reads a task report and launches an update of the task status and progress
+	 * Reads all task reports and launches an update of the task status and progress
 	 * 
-	 * @param report
-	 *            The report to read
+	 * @param reports
+	 *            The reports to read
 	 */
 	@Override
-	public void readTaskReport(TaskReport report) {
-		String nodeId = report.getUnid();
-		VideoEncodingTask task = null;
-		float progress = report.getTask().getProgress();
-		Node sender = identifySender(nodeId);
+	public void readTaskReports(ArrayList<TaskReport> reports) {
+		for (TaskReport report : reports) {
+			Task reportTask = report.getTask();
+			Task actualTask = null;
+			String nodeId = report.getUnid();
+			Node sender = identifySender(nodeId);
 
-		if (sender == null) {
-			return;
-		}
-		for (Task t : sender.getCurrentTasks()) {
-			if (t instanceof VideoEncodingTask) {
-				task = (VideoEncodingTask) t;
+			if (sender == null || !nodeHasTask(sender, reportTask)) {
+				System.err.printf("MASTER: Bad task update from node.");
+			} else {
+				for (Task t : sender.getCurrentTasks()) {
+					if (t.equals(reportTask)) {
+						actualTask = t;
+					}
+				}
+				if (reportTask.getTaskState() == TaskState.TASK_COMPLETED) {
+					updateNodeTask(actualTask, sender, TaskState.TASK_COMPLETED);
+				} else {
+					System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(),
+							actualTask.getTaskState(), reportTask.getTaskState());
+					actualTask.setTaskState(report.getTask().getTaskState());
+					if (reportTask instanceof VideoEncodingTask) {
+						VideoEncodingTask vTask = (VideoEncodingTask) reportTask;
+						float progress = vTask.getProgress();
+						System.out.printf("MASTER: Updating the task %d to %f%% \n", reportTask.getTaskId(), progress);
+						vTask.setTaskStatus(vTask.getTaskStatus());
+					}
+				}
 			}
-		}
-		if (!nodeHasTask(sender, report.getTask())) {
-			System.err.printf("MASTER: Bad task update from node.");
-		} else if (report.getTask().getTaskState() == TaskState.TASK_COMPLETED) {
-			updateNodeTask(report.getTask(), sender, TaskState.TASK_COMPLETED);
-		} else {
-			System.out.printf("MASTER: Updating the task %s to %f%% \n", task.getTaskId(), progress);
-			task.setTaskStatus(report.getTask().getTaskStatus());
-			task.setTaskState(report.getTask().getTaskState());
 		}
 	}
 

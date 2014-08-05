@@ -2,18 +2,20 @@ package drfoliberg.common.task.video;
 
 import java.io.Serializable;
 
+import drfoliberg.common.task.Task;
+
 public class TaskReport implements Serializable {
 
 	private static final long serialVersionUID = -8315284437551682238L;
-	private VideoEncodingTask task;
+	private Task task;
 	private String unid;
 
-	public TaskReport(String unid, VideoEncodingTask task) {
+	public TaskReport(String unid, Task task) {
 		this.unid = unid;
 		this.task = task;
 	}
 
-	public VideoEncodingTask getTask() {
+	public Task getTask() {
 		return task;
 	}
 

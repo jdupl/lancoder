@@ -14,7 +14,7 @@ public interface NodeCheckerListener {
 	
 	public void nodeDisconnected(Node n);
 
-	public void readTaskReport(TaskReport taskReport);
+	public void readTaskReports(ArrayList<TaskReport> taskReports);
 
 	public void readStatusReport(StatusReport statusReport);
 }

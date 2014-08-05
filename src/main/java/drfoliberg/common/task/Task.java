@@ -36,4 +36,13 @@ public class Task implements Serializable {
 	public int getTaskId() {
 		return this.taskId;
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj != null && obj instanceof Task) {
+			Task other = (Task) obj;
+			return other.taskId == this.taskId && other.jobId.equals(this.jobId);
+		}
+		return false;
+	}
 }
