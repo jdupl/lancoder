@@ -16,10 +16,6 @@ public class TaskProgess implements Serializable {
 	 */
 	protected float progress;
 
-	public TaskProgess() {
-
-	}
-
 	public float getProgress() {
 		return progress;
 	}

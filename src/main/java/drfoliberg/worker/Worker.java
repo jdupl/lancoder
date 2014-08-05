@@ -19,10 +19,15 @@ import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
+import drfoliberg.common.task.Task;
+import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.TaskReport;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.worker.contacter.ConctactMasterListener;
 import drfoliberg.worker.contacter.ContactMasterHttp;
+import drfoliberg.worker.converter.audio.AudioConverterPool;
+import drfoliberg.worker.converter.video.VideoWorkThread;
+import drfoliberg.worker.converter.video.WorkThreadListener;
 import drfoliberg.worker.server.WorkerHttpServer;
 import drfoliberg.worker.server.WorkerServletListerner;
 
@@ -44,16 +49,18 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	WorkerConfig config;
 
 	private String configPath;
-	private VideoEncodingTask currentTask;
+	private ArrayList<Task> currentTasks;
 	private NodeState status;
 	private ArrayList<Service> services;
 	private WorkerHttpServer server;
-	private WorkThread workThread;
+	private VideoWorkThread workThread;
 	private InetAddress address;
+	private AudioConverterPool convertingPool;
 
 	public Worker(String configPath) {
 		this.configPath = configPath;
 		this.services = new ArrayList<>();
+		this.currentTasks = new ArrayList<>();
 
 		config = WorkerConfig.load(configPath);
 		if (config != null) {
@@ -64,6 +71,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		}
 		server = new WorkerHttpServer(config.getListenPort(), this, this);
 		services.add(server);
+		convertingPool = new AudioConverterPool(Runtime.getRuntime().availableProcessors());
 		print("initialized not connected to a master server");
 
 		try {
@@ -108,33 +116,43 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	public void taskDone(VideoEncodingTask t) {
-		this.currentTask.setTaskState(TaskState.TASK_COMPLETED);
+		// this.currentTask.setTaskState(TaskState.TASK_COMPLETED);
+		t.setTaskState(TaskState.TASK_COMPLETED);
 		this.updateStatus(NodeState.FREE);
 		services.remove(workThread);
 	}
 
-	public void stopWork(VideoEncodingTask t) {
+	public void stopWork(Task t) {
 		// TODO check which task to stop (if many tasks are implemented)
 		this.workThread.stop();
 		System.err.println("Setting current task to null");
-		this.currentTask = null;
-		this.updateStatus(NodeState.FREE);
+		this.currentTasks.remove(t);
+		if (t instanceof VideoEncodingTask) {
+			this.updateStatus(NodeState.FREE);
+		}
 	}
 
-	public synchronized boolean startWork(VideoEncodingTask t) {
-		if (this.getStatus() != NodeState.FREE) {
-			print("cannot accept work as i'm not free. Current status: " + this.getStatus());
-			return false;
-		} else {
-			updateStatus(NodeState.WORKING);
-			this.currentTask = t;
-			this.workThread = new WorkThread(t, this);
+	public synchronized boolean startWork(Task t) {
+		if (t instanceof VideoEncodingTask && this.status == NodeState.FREE) {
+			VideoEncodingTask vTask = (VideoEncodingTask) t;
+			this.workThread = new VideoWorkThread(vTask, this);
 			Thread wt = new Thread(workThread);
 			wt.start();
 			services.add(workThread);
-			this.currentTask.setTaskState(TaskState.TASK_COMPUTING);
-			return true;
+		} else if (t instanceof AudioEncodingTask) {
+			AudioEncodingTask aTask = (AudioEncodingTask) t;
+			if (this.convertingPool.hasFreeConverters()) {
+				convertingPool.encode(aTask, this);
+			}
+		} else {
+			return false;
 		}
+
+		t.setTaskState(TaskState.TASK_COMPUTING);
+		this.currentTasks.add(t);
+		updateStatus(NodeState.WORKING);
+
+		return true;
 	}
 
 	/**
@@ -154,17 +172,19 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	public TaskReport getTaskReport() {
 		// if worker has no task, return null report
 		TaskReport taskReport = null;
-		if (currentTask != null) {
-			taskReport = new TaskReport(config.getUniqueID(), this.currentTask);
-			VideoEncodingTask t = taskReport.getTask();
-			t.setTimeElapsed(System.currentTimeMillis() - currentTask.getTimeStarted());
-			t.setTimeEstimated(currentTask.getETA());
-			t.setProgress(currentTask.getProgress());
+		for (Task task : currentTasks) {
+			if (task instanceof VideoEncodingTask) {
+				VideoEncodingTask currentTask = (VideoEncodingTask) task;
+				currentTask.setTimeElapsed(System.currentTimeMillis() - currentTask.getTimeStarted());
+				currentTask.setTimeEstimated(currentTask.getETA());
+				currentTask.setProgress(currentTask.getProgress());
+				taskReport = new TaskReport(config.getUniqueID(), currentTask);
+			}
 		}
 		return taskReport;
 	}
 
-	public synchronized void updateTaskStatus(VideoEncodingTask t, TaskState newState) {
+	public synchronized void updateTaskStatus(Task t, TaskState newState) {
 		t.setTaskState(newState);
 		notifyHttpMasterStatusChange();
 	}
@@ -180,7 +200,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		switch (statusCode) {
 		case FREE:
 			notifyHttpMasterStatusChange();
-			this.currentTask = null;
+			// this.currentTask = null;
 			break;
 		case WORKING:
 		case PAUSED:
@@ -193,7 +213,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		case CRASHED:
 			// cancel current work
 			notifyHttpMasterStatusChange();
-			this.currentTask = null;
+			// this.currentTask = null;
 			break;
 		default:
 			System.err.println("WORKER: Unhandlded status code while" + " updating status");
@@ -276,7 +296,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			if (response.getStatusLine().getStatusCode() == 200) {
 				success = true;
 			} else {
-				System.err.println(response.getStatusLine().getStatusCode());
+				System.err.println("Master responded " + response.getStatusLine().getStatusCode() + " when notifying for new status");
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -324,10 +344,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		this.config.dump(configPath);
 	}
 
-	public VideoEncodingTask getCurrentTask() {
-		return this.currentTask;
-	}
-
 	@Override
 	public boolean taskRequest(TaskRequestMessage tqm) {
 		return startWork(tqm.task);
@@ -350,10 +366,11 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 
 	@Override
 	public boolean deleteTask(TaskRequestMessage tqm) {
-		if (tqm != null && currentTask != null && tqm.task.equals(currentTask)) {
-			this.stopWork(currentTask);
-			this.updateStatus(NodeState.FREE);
-			return true;
+		for (Task task : currentTasks) {
+			if (task.equals(tqm.task)) {
+				stopWork(task);
+				return true;
+			}
 		}
 		return false;
 	}
@@ -391,29 +408,36 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	@Override
-	public void workStarted(VideoEncodingTask task) {
+	public void workStarted(Task task) {
 		System.err.println("Worker starting task");
 		updateTaskStatus(task, TaskState.TASK_COMPUTING);
-		this.currentTask = task;
+		// this.currentTask = task;
+		this.currentTasks.add(task);
 		if (this.status != NodeState.WORKING) {
 			updateStatus(NodeState.WORKING);
 		}
 	}
 
 	@Override
-	public void workCompleted(VideoEncodingTask task) {
+	public void workCompleted(Task task) {
 		System.err.println("Worker completed task");
 		updateTaskStatus(task, TaskState.TASK_COMPLETED);
-		// TODO if worker has many current tasks, implement check if worker has more tasks
-		this.currentTask = null;
-		updateStatus(NodeState.FREE);
+		this.currentTasks.remove(task);
+		if (task instanceof VideoEncodingTask) {
+			// TODO if worker has many current tasks, implement check if worker has more tasks
+			updateStatus(NodeState.FREE);
+		}
 	}
 
 	@Override
-	public void workFailed(VideoEncodingTask task) {
+	public void workFailed(Task task) {
+		System.err.println("Worker failed task");
 		updateTaskStatus(task, TaskState.TASK_CANCELED);
-		this.currentTask = null;
-		updateStatus(NodeState.FREE);
+		this.currentTasks.remove(task);
+		if (task instanceof VideoEncodingTask) {
+			// TODO if worker has many current tasks, implement check if worker has more tasks
+			updateStatus(NodeState.FREE);
+		}
 	}
 
 	@Override

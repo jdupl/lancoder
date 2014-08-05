@@ -11,6 +11,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.Node;
 import drfoliberg.common.ServerListener;
@@ -28,13 +36,12 @@ import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
+import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioCodec;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.TaskReport;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
-import drfoliberg.converter.ConverterListener;
-import drfoliberg.converter.ConverterPool;
 import drfoliberg.master.api.node.MasterHttpNodeServer;
 import drfoliberg.master.api.node.MasterNodeServletListener;
 import drfoliberg.master.api.web.ApiServer;
@@ -45,15 +52,7 @@ import drfoliberg.master.dispatcher.HttpDispatcher;
 import drfoliberg.muxer.Muxer;
 import drfoliberg.muxer.MuxerListener;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class Master implements Runnable, MuxerListener, DispatcherListener, ConverterListener, NodeCheckerListener,
+public class Master implements Runnable, MuxerListener, DispatcherListener, NodeCheckerListener,
 		MasterNodeServletListener, ServerListener {
 
 	public static final String ALGORITHM = "SHA-256";
@@ -64,7 +63,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	private HashMap<String, Node> nodes;
 
 	private ArrayList<Service> services;
-	private ConverterPool convertingPool;
+	// private AudioConverterPool convertingPool;
 
 	private MasterConfig config;
 	private String configPath;
@@ -86,8 +85,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 			this.config = MasterConfig.generate(configPath);
 		}
 
-		convertingPool = new ConverterPool(Runtime.getRuntime().availableProcessors()); // exprimental
-
 		nodeServer = new MasterHttpNodeServer(getConfig().getNodeServerPort(), this, this);
 		nodeChecker = new HttpNodeChecker(this);
 		// api server to serve/get information from users
@@ -101,8 +98,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	public void shutdown() {
 		// save config and make sure current tasks are reset
 		for (Node n : getNodes()) {
-			if (n.getCurrentTask() != null) {
-				n.getCurrentTask().reset();
+			for (Task task : n.getCurrentTask()) {
+				task.reset();
 			}
 		}
 		config.dump(configPath);
@@ -169,19 +166,41 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	}
 
 	/**
-	 * This should look for available online and free nodes. TODO The node order should be intelligent. Fastest node
-	 * should be selected.
+	 * This should look for available online and free nodes.
 	 * 
 	 * @return pointer to the node object
 	 */
 	private synchronized Node getBestFreeNode() {
+		Node best = null;
+		int minTasks = Integer.MAX_VALUE;
+
 		for (Entry<String, Node> entry : nodes.entrySet()) {
 			Node n = entry.getValue();
 			if (n.getStatus() == NodeState.FREE) {
-				return n;
+				if (n.getCurrentTask().size() < minTasks) {
+					best = n;
+				}
+
 			}
 		}
-		return null;
+		return best;
+	}
+
+	private synchronized Node getBestAudioNode() {
+		// Maximum conccurent audio jobs
+		int maxConcurentTasks = 3; // TODO should use node data
+		Node best = null;
+		int minTasks = 0;
+
+		for (Entry<String, Node> entry : nodes.entrySet()) {
+			Node n = entry.getValue();
+			if (n.getCurrentTask().size() < maxConcurentTasks) {
+				if (n.getCurrentTask().size() < minTasks) {
+					best = n;
+				}
+			}
+		}
+		return best;
 	}
 
 	/**
@@ -190,31 +209,37 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	 * @return true if any work was dispatched
 	 */
 	public void updateNodesWork() {
-		AudioEncodingTask audioTask = getNextAudioTask();
 
-		while (audioTask != null && convertingPool.hasFreeConverters()) {
-			convertingPool.encode(audioTask, this);
-			audioTask = getNextAudioTask();
-		}
+		// while (audioTask != null && convertingPool.hasFreeConverters()) {
+		// dispatch(audioTask, );
+		// audioTask = getNextAudioTask();
+		// }
+		System.out.println("MASTER: Checking dispatch");
 
 		Node node = null;
-		VideoEncodingTask nextTask = null;
+		VideoEncodingTask nextVideoTask = null;
+		AudioEncodingTask nextAudioTask = null;
+
+		while (((nextAudioTask = getNextAudioTask()) != null && (node = getBestAudioNode()) != null)) {
+			dispatch(nextAudioTask, node);
+		}
+
 		// Avoid looping through jobs as it might be cpu intensive in large projects
 		// Order of the while condition is important as looping through workers is faster
-		while ((node = getBestFreeNode()) != null && (nextTask = getNextVideoTask()) != null) {
-			System.err.println("Trying to dispatch to " + node.getName() + " task " + nextTask.getTaskId());
-			dispatch(nextTask, node);
+		while ((node = getBestFreeNode()) != null && (nextVideoTask = getNextVideoTask()) != null) {
+			System.err.println("Trying to dispatch to " + node.getName() + " task " + nextVideoTask.getTaskId());
+			dispatch(nextVideoTask, node);
 		}
-		if (nextTask == null) {
-			System.out.println("MASTER: No available work!");
-		}else if (node == null) {
+		if (node == null) {
 			System.out.println("MASTER: No available nodes!");
+		} else if (nextVideoTask == null) {
+			System.out.println("MASTER: No available work!");
 		}
 
 		config.dump(configPath);
 	}
 
-	public void dispatch(VideoEncodingTask task, Node node) {
+	public void dispatch(Task task, Node node) {
 		if (task.getTaskState() == TaskState.TASK_TODO) {
 			task.setTaskState(TaskState.TASK_COMPUTING);
 		}
@@ -226,7 +251,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 
 	private String getNewUNID(Node n) {
 		String result = "";
-		System.out.println("MASTER: generating a nuid for node " + n.getName());
+		System.out.println("MASTER: generating a unid for node " + n.getName());
 		long ms = System.currentTimeMillis();
 		String input = ms + n.getName();
 		MessageDigest md = null;
@@ -288,7 +313,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	public boolean addNode(Node n) {
 		boolean success = true;
 		// Is this a new node ?
-		if (n.getUnid().equals("")) {
+		if (n.getUnid() == null || n.getUnid().equals("")) {
 			n.setUnid(getNewUNID(n));
 		}
 		Node masterInstance = nodes.get(n.getUnid());
@@ -302,9 +327,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		} else {
 			success = false;
 		}
-		if (success) {
-			updateNodesWork();
-		}
+		// if (success) {
+		// updateNodesWork();
+		// }
 		return success;
 	}
 
@@ -340,12 +365,12 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		if (j == null) {
 			return false;
 		}
-		for (VideoEncodingTask t : j.getTasks()) {
+		for (Task t : j.getTasks()) {
 			if (t.getTaskState() == TaskState.TASK_COMPUTING) {
 				// Find which node has this task
 				for (Node n : getNodes()) {
 					if (n.getCurrentTask().equals(t)) {
-						updateNodeTask(n, TaskState.TASK_CANCELED);
+						updateNodeTask(t, n, TaskState.TASK_CANCELED);
 					}
 				}
 			}
@@ -370,7 +395,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		File absoluteOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getOutputFolder(), "audio");
 		j.getAudioTasks().add(
 				new AudioEncodingTask(AudioCodec.VORBIS, 2, 44100, 3, RateControlType.CRF, absoluteSource
-						.getAbsolutePath(), absoluteOutput.getAbsolutePath()));
+						.getAbsolutePath(), absoluteOutput.getAbsolutePath(), j.getJobId(), j.getTasks().size() + 1));
 		return j;
 	}
 
@@ -460,6 +485,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 
 		if (success) {
 			System.err.println("Job(s) added");
+			updateNodesWork();
 			return new ApiResponse(true, "All jobs were successfully added.");
 		}
 		System.err.println("Error while adding job");
@@ -495,12 +521,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	public synchronized void removeNode(Node n) {
 		if (n != null) {
 			// Cancel node's task status if any
-			VideoEncodingTask toCancel = null;
-			toCancel = n.getCurrentTask();
-			if (toCancel != null) {
-				// updateNodeTask(n, TaskState.TASK_TODO);
-				toCancel.reset();
-				n.setCurrentTask(null);
+			for (Task t : n.getCurrentTask()) {
+				t.reset();
+				n.getCurrentTask().remove(t);
 			}
 			n.setStatus(NodeState.NOT_CONNECTED);
 		} else {
@@ -508,38 +531,40 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		}
 	}
 
-	public boolean updateNodeTask(Node n, TaskState updateStatus) {
-		VideoEncodingTask task = n.getCurrentTask();
+	public boolean updateNodeTask(Task task, Node n, TaskState updateStatus) {
+		// ArrayList<Task> tasks = n.getCurrentTask();
 		// TODO clean logic here
+
+		// Task task = null;
+
 		if (task == null) {
 			System.err.println("MASTER: no task was found for node " + n.getName());
 			return false;
 		}
 
-		System.out.println("MASTER: the task " + n.getCurrentTask().getTaskId() + " is now " + updateStatus);
+		// System.out.println("MASTER: the task " + task.getTaskId() + " is now " + updateStatus);
 		task.setTaskState(updateStatus);
 		if (updateStatus == TaskState.TASK_COMPLETED) {
-			logger.info(String.format("Node %s completed task %d of job %s", n.getName(), n.getCurrentTask()
-					.getTaskId(), n.getCurrentTask().getJobId()));
-			n.setCurrentTask(null);
+			// logger.info(String.format("Node %s completed task %d of job %s", n.getName(), n.getCurrentTask()
+			// .getTaskId(), n.getCurrentTask().getJobId()));
+			// n.setCurrentTask(null);
+			n.getCurrentTask().remove(task);
 			Job job = this.jobs.get(task.getJobId());
 			boolean jobDone = true;
 
-			for (VideoEncodingTask t : job.getTasks()) {
+			for (Task t : job.getTasks()) {
 				if (t.getTaskState() != TaskState.TASK_COMPLETED) {
 					jobDone = false;
 					break;
 				}
 			}
-
 			if (jobDone) {
 				jobEncodingCompleted(job);
 			}
-
 			// TODO implement task.complete() ?
 		} else if (updateStatus == TaskState.TASK_CANCELED) {
 			dispatch(task, n);
-			n.setCurrentTask(null);
+			n.getCurrentTask().remove(task);
 		}
 		updateNodesWork();
 
@@ -576,7 +601,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	private boolean checkJobIntegrity(Job job) {
 		boolean integrity = true;
 
-		for (VideoEncodingTask task : job.getTasks()) {
+		for (VideoEncodingTask task : job.getVideoTasks()) {
 			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getOutputFile());
 			if (!absoluteTaskFile.exists()) {
 				System.err.printf("Cannot start muxing ! Task %d of job %s is not found!\n", task.getTaskId(),
@@ -623,22 +648,27 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	 */
 	@Override
 	public void readTaskReport(TaskReport report) {
-		float progress = report.getTask().getProgress();
-		// find node
 		String nodeId = report.getUnid();
+		VideoEncodingTask task = null;
+		float progress = report.getTask().getProgress();
 		Node sender = identifySender(nodeId);
 
 		if (sender == null) {
 			return;
 		}
+		for (Task t : sender.getCurrentTask()) {
+			if (t instanceof VideoEncodingTask) {
+				task = (VideoEncodingTask) t;
+			}
+		}
 		if (!nodeHasTask(sender, report.getTask())) {
 			System.err.printf("MASTER: Bad task update from node.");
 		} else if (report.getTask().getTaskState() == TaskState.TASK_COMPLETED) {
-			updateNodeTask(sender, TaskState.TASK_COMPLETED);
+			updateNodeTask(report.getTask(), sender, TaskState.TASK_COMPLETED);
 		} else {
-			System.out.printf("MASTER: Updating the task %s to %f%% \n", sender.getCurrentTask().getTaskId(), progress);
-			sender.getCurrentTask().setTaskStatus(report.getTask().getTaskStatus());
-			sender.getCurrentTask().setTaskState(report.getTask().getTaskState());
+			System.out.printf("MASTER: Updating the task %s to %f%% \n", task.getTaskId(), progress);
+			task.setTaskStatus(report.getTask().getTaskStatus());
+			task.setTaskState(report.getTask().getTaskState());
 		}
 	}
 
@@ -662,7 +692,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 		} else {
 			System.out.printf("Node %s crashed but not fatally.\n", node.getName());
 		}
-		updateNodeTask(node, TaskState.TASK_CANCELED);
+		// updateNodeTask(node, TaskState.TASK_CANCELED);
 	}
 
 	public void run() {
@@ -691,7 +721,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	}
 
 	@Override
-	public synchronized void taskRefused(VideoEncodingTask t, Node n) {
+	public synchronized void taskRefused(Task t, Node n) {
 		System.err.printf("Node %s refused task\n", n.getName());
 		t.setTaskState(TaskState.TASK_TODO);
 		n.setStatus(NodeState.FREE);
@@ -699,29 +729,11 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Conv
 	}
 
 	@Override
-	public synchronized void taskAccepted(VideoEncodingTask t, Node n) {
+	public synchronized void taskAccepted(Task t, Node n) {
 		System.err.printf("Node %s accepted task\n", n.getName());
-		n.setCurrentTask(t);
+		// n.setCurrentTask(t);
+		n.addTask(t);
 		t.setTaskState(TaskState.TASK_ASSIGNED);
-	}
-
-	@Override
-	public synchronized void convertionFinished(AudioEncodingTask t) {
-		System.out.println("MASTER: Finished encoding an audio task");
-		t.setTaskState(TaskState.TASK_COMPLETED);
-		updateNodesWork();
-	}
-
-	@Override
-	public synchronized void convertionStarted(AudioEncodingTask t) {
-		System.out.println("MASTER: Starting encoding an audio task");
-		t.setTaskState(TaskState.TASK_COMPUTING);
-	}
-
-	@Override
-	public synchronized void convertionFailed(AudioEncodingTask t) {
-		System.out.println("MASTER: Failed encoding an audio task");
-		t.setTaskState(TaskState.TASK_TODO); // TODO Add something genius here
 	}
 
 	@Override

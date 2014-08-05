@@ -5,13 +5,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
-import drfoliberg.common.status.JobState;
-import drfoliberg.common.status.TaskState;
-import drfoliberg.common.task.audio.AudioEncodingTask;
-import drfoliberg.common.task.video.VideoEncodingTask;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+
+import drfoliberg.common.status.JobState;
+import drfoliberg.common.status.TaskState;
+import drfoliberg.common.task.Task;
+import drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 /**
  * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all
@@ -23,7 +24,7 @@ import org.apache.commons.io.FilenameUtils;
 public class Job extends JobConfig {
 
 	private static final long serialVersionUID = -3817299446490049451L;
-	private ArrayList<VideoEncodingTask> tasks;
+	private ArrayList<VideoEncodingTask> videoTasks;
 	private ArrayList<AudioEncodingTask> audioTasks;
 	private String jobId;
 	private String jobName;
@@ -55,7 +56,7 @@ public class Job extends JobConfig {
 		this.frameCount = frameCount;
 		this.frameRate = frameRate;
 
-		this.tasks = new ArrayList<>();
+		this.videoTasks = new ArrayList<>();
 		this.audioTasks = new ArrayList<>();
 		this.jobStatus = JobState.JOB_TODO;
 		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
@@ -95,8 +96,8 @@ public class Job extends JobConfig {
 		// Get relative (to absolute shared directory) output folder for this job's tasks
 		File relativeTasksOutput = FileUtils.getFile(this.getOutputFolder(), this.partsFolderName);
 		while (remaining > 0) {
-			VideoEncodingTask t = new VideoEncodingTask(taskNo, this); // hackish but should work for now TODO clean
-			t.setJobId(jobId);
+			VideoEncodingTask t = new VideoEncodingTask(taskNo,jobId, this); // hackish but should work for now TODO clean
+//			t.setJobId(jobId);
 			t.setEncodingStartTime(currentMs);
 			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.15) {
 				t.setEncodingEndTime(lengthOfJob);
@@ -114,7 +115,7 @@ public class Job extends JobConfig {
 					String.format("part-%d.mpeg.ts", t.getTaskId())); // TODO check for extension
 			t.setOutputFile(relativeTaskOutputFile.getPath());
 
-			this.tasks.add(t);
+			this.videoTasks.add(t);
 			taskNo++;
 		}
 
@@ -136,7 +137,7 @@ public class Job extends JobConfig {
 			this.setJobStatus(JobState.JOB_COMPUTING);
 		}
 
-		for (VideoEncodingTask task : this.tasks) {
+		for (VideoEncodingTask task : this.videoTasks) {
 			if (task.getTaskState() == TaskState.TASK_TODO) {
 				return task;
 			}
@@ -155,10 +156,10 @@ public class Job extends JobConfig {
 		case JOB_COMPLETED:
 			return 0;
 		case JOB_TODO:
-			return this.tasks.size();
+			return this.videoTasks.size();
 		default:
 			int count = 0;
-			for (VideoEncodingTask task : this.tasks) {
+			for (VideoEncodingTask task : this.videoTasks) {
 				if (task.getTaskState() == TaskState.TASK_TODO) {
 					++count;
 				}
@@ -210,12 +211,15 @@ public class Job extends JobConfig {
 		this.lengthOfJob = lengthOfJob;
 	}
 
-	public ArrayList<VideoEncodingTask> getTasks() {
+	public ArrayList<Task> getTasks() {
+		ArrayList<Task> tasks = new ArrayList<>();
+		tasks.addAll(audioTasks);
+		tasks.addAll(videoTasks);
 		return tasks;
 	}
 
 	public void setTasks(ArrayList<VideoEncodingTask> tasks) {
-		this.tasks = tasks;
+		this.videoTasks = tasks;
 	}
 
 	public String getJobId() {
@@ -270,8 +274,8 @@ public class Job extends JobConfig {
 		return audioTasks;
 	}
 
-	public void setAudioTasks(ArrayList<AudioEncodingTask> audioTasks) {
-		this.audioTasks = audioTasks;
+	public ArrayList<VideoEncodingTask> getVideoTasks() {
+		return videoTasks;
 	}
 
 }

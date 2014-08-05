@@ -1,12 +1,12 @@
 package drfoliberg.master.dispatcher;
 
 import drfoliberg.common.Node;
-import drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.task.Task;
 
 public interface DispatcherListener {
 
-	public void taskRefused(VideoEncodingTask t, Node n);
+	public void taskRefused(Task t, Node n);
 
-	public void taskAccepted(VideoEncodingTask t, Node n);
+	public void taskAccepted(Task t, Node n);
 
 }

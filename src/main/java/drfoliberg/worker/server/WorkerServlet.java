@@ -1,5 +1,6 @@
 package drfoliberg.worker.server;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -13,6 +14,7 @@ import org.apache.http.entity.ContentType;
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 import com.google.gson.Gson;
 
@@ -66,6 +68,9 @@ public class WorkerServlet extends HttpServlet implements WorkerServletListerner
 		switch (req.getRequestURI()) {
 		case Routes.ADD_TASK:
 			TaskRequestMessage tqm = gson.fromJson(req.getReader(), TaskRequestMessage.class);
+			if (tqm.task instanceof VideoEncodingTask){
+				System.out.println("");
+			}
 			if (tqm == null) {
 				resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
 			} else if (!taskRequest(tqm)) {

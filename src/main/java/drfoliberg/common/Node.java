@@ -2,9 +2,10 @@ package drfoliberg.common;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.ArrayList;
 
 import drfoliberg.common.status.NodeState;
-import drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.task.Task;
 
 public class Node implements Serializable {
 
@@ -14,20 +15,20 @@ public class Node implements Serializable {
 	private NodeState status;
 	private String name;
 	private String unid;
-
-	private VideoEncodingTask currentTask;
+	private ArrayList<Task> currentTasks;
 
 	public Node(InetAddress nodeAddresse, int nodePort, String name) {
 		this.nodeAddress = nodeAddresse;
 		this.status = NodeState.NOT_CONNECTED;
 		this.nodePort = nodePort;
 		this.name = name;
+		currentTasks = new ArrayList<>();
 	}
 
 	@Override
 	public String toString() {
 		return "Node [nodeAddress=" + nodeAddress + ", nodePort=" + nodePort + ", status=" + status + ", name=" + name
-				+ ", unid=" + unid + ", currentTask=" + currentTask + "]";
+				+ ", unid=" + unid + ", currentTask=" + currentTasks.toArray() + "]";
 	}
 
 	public boolean equals(Object o) {
@@ -39,7 +40,6 @@ public class Node implements Serializable {
 			}
 		}
 		return equals;
-
 	}
 
 	public InetAddress getNodeAddress() {
@@ -74,19 +74,12 @@ public class Node implements Serializable {
 		this.name = name;
 	}
 
-	public VideoEncodingTask getCurrentTask() {
-		return currentTask;
+	public ArrayList<Task> getCurrentTask() {
+		return currentTasks;
 	}
 
-	public void setCurrentTask(VideoEncodingTask currentTask) {
-		// TODO move this
-		if (currentTask == null) {
-			System.out.printf("MASTER: %s now has NO TASK\n", name);
-		} else {
-			System.out.printf("MASTER: %s now has task id %d\n", name, currentTask.getTaskId());
-		}
-
-		this.currentTask = currentTask;
+	public void addTask(Task currentTask) {
+		this.currentTasks.add(currentTask);
 	}
 
 	public String getUnid() {

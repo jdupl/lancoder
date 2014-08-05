@@ -1,4 +1,4 @@
-package drfoliberg.converter;
+package drfoliberg.worker.converter.audio;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -6,15 +6,19 @@ import java.util.Collections;
 
 import drfoliberg.common.Service;
 import drfoliberg.common.job.RateControlType;
+import drfoliberg.common.network.Cause;
+import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.worker.WorkerConfig;
+import drfoliberg.worker.converter.video.WorkThreadListener;
 
-public class AudioConverter extends Service implements ConverterListener {
+public class AudioWorkThread extends Service implements WorkThreadListener {
 
 	AudioEncodingTask task;
-	ArrayList<ConverterListener> listeners;
+	ArrayList<WorkThreadListener> listeners;
 	Process p;
 
-	public AudioConverter(AudioEncodingTask task, ConverterListener listener) {
+	public AudioWorkThread(AudioEncodingTask task, WorkThreadListener listener) {
 		this.task = task;
 		listeners = new ArrayList<>();
 		listeners.add(listener);
@@ -54,7 +58,8 @@ public class AudioConverter extends Service implements ConverterListener {
 		ProcessBuilder pb = new ProcessBuilder(args);
 
 		try {
-			convertionStarted(task);
+//			convertionStarted(task);
+			workStarted(task);
 			p = pb.start();
 			p.waitFor();
 			success = p.exitValue() == 0 ? true : false;
@@ -62,9 +67,9 @@ public class AudioConverter extends Service implements ConverterListener {
 			e.printStackTrace();
 		} finally {
 			if (success) {
-				convertionFinished(task);
+				workCompleted(task);
 			} else {
-				convertionFailed(task);
+				workFailed(task);
 			}
 		}
 	}
@@ -78,31 +83,41 @@ public class AudioConverter extends Service implements ConverterListener {
 	}
 
 	@Override
-	public synchronized void convertionFinished(AudioEncodingTask t) {
-		for (ConverterListener listener : listeners) {
-			listener.convertionFinished(t);
+	public synchronized void workCompleted(Task t) {
+		for (WorkThreadListener listener : listeners) {
+			listener.workCompleted(t);
+		}
+	}
+	
+	public synchronized void workFailed(Task t) {
+		for (WorkThreadListener listener : listeners) {
+			listener.workFailed(t);
 		}
 	}
 
-	@Override
-	public synchronized void convertionStarted(AudioEncodingTask t) {
-		for (ConverterListener listener : listeners) {
-			listener.convertionStarted(t);
-		}
-	}
-
-	@Override
-	public synchronized void convertionFailed(AudioEncodingTask t) {
-		for (ConverterListener listener : listeners) {
-			listener.convertionFailed(t);
-		}
-	}
-
-	public void addListener(ConverterListener listener) {
+	public void addListener(WorkThreadListener listener) {
 		listeners.add(listener);
 	}
 
-	public void removeListener(ConverterListener listener) {
+	public void removeListener(WorkThreadListener listener) {
 		listeners.remove(listener);
+	}
+
+	@Override
+	public void nodeCrash(Cause cause) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public WorkerConfig getConfig() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void workStarted(Task task) {
+		// TODO Auto-generated method stub
+		
 	}
 }

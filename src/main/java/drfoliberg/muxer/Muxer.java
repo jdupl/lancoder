@@ -32,12 +32,12 @@ public class Muxer extends Service {
 		// Video
 		args.add("--forced-track");
 		args.add("0:no");
-		for (int i = 0; i < job.getTasks().size(); i++) {
+		for (int i = 0; i < job.getVideoTasks().size(); i++) {
 			Collections.addAll(args, new String[] { "-d", "0", "-A", "-S", "-T", "--no-global-tags", "--no-chapters" });
 			if (i != 0) {
 				args.add("+");
 			}
-			VideoEncodingTask t = job.getTasks().get(i);
+			VideoEncodingTask t = job.getVideoTasks().get(i);
 			File path = new File(t.getOutputFile());
 			path = new File(job.getPartsFolderName(), path.getName());
 			args.add(path.getPath());

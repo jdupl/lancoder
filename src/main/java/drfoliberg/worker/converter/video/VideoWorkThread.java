@@ -1,4 +1,4 @@
-package drfoliberg.worker;
+package drfoliberg.worker.converter.video;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import drfoliberg.common.network.Cause;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
 
-public class WorkThread extends Service {
+public class VideoWorkThread extends Service {
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
 	private VideoEncodingTask task;
@@ -29,7 +29,7 @@ public class WorkThread extends Service {
 	File taskTempOutputFile;
 	File taskTempOutputFolder;
 
-	public WorkThread(VideoEncodingTask t, WorkThreadListener listener) {
+	public VideoWorkThread(VideoEncodingTask t, WorkThreadListener listener) {
 		task = t;
 		this.listener = listener;
 	}

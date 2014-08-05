@@ -1,13 +1,13 @@
 package drfoliberg.common.network.messages.cluster;
 
 import drfoliberg.common.network.Routes;
-import drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.task.Task;
 
 public class TaskRequestMessage extends Message {
 
 	private static final long serialVersionUID = -994042578899999534L;
 
-	public VideoEncodingTask task;
+	public Task task;
 
 	/**
 	 * Sent from master to workers
@@ -15,7 +15,7 @@ public class TaskRequestMessage extends Message {
 	 * @param task
 	 *            The task to request to the worker
 	 */
-	public TaskRequestMessage(VideoEncodingTask task) {
+	public TaskRequestMessage(Task task) {
 		super(Routes.ADD_TASK);
 		this.task = task;
 	}

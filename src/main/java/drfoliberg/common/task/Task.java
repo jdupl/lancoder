@@ -8,8 +8,12 @@ public class Task implements Serializable {
 
 	private static final long serialVersionUID = 1570513115706156687L;
 	protected TaskState taskState;
+	protected int taskId;
+	protected String jobId;
 
-	public Task() {
+	public Task(String jobId, int taskId) {
+		this.jobId = jobId;
+		this.taskId = taskId;
 		this.taskState = TaskState.TASK_TODO;
 	}
 
@@ -19,5 +23,17 @@ public class Task implements Serializable {
 
 	public void setTaskState(TaskState taskState) {
 		this.taskState = taskState;
+	}
+
+	public void reset() {
+		this.taskState = TaskState.TASK_TODO;
+	}
+
+	public String getJobId() {
+		return this.jobId;
+	}
+
+	public int getTaskId() {
+		return this.taskId;
 	}
 }

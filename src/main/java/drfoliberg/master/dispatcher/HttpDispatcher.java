@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import drfoliberg.common.Node;
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
-import drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.task.Task;
 
 import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;
@@ -23,10 +23,10 @@ import com.google.gson.Gson;
 
 public class HttpDispatcher implements Runnable, DispatcherListener {
 	Node node;
-	VideoEncodingTask task;
+	Task task;
 	ArrayList<DispatcherListener> listeners;
 
-	public HttpDispatcher(Node node, VideoEncodingTask task, DispatcherListener mainListener) {
+	public HttpDispatcher(Node node, Task task, DispatcherListener mainListener) {
 		this.node = node;
 		this.task = task;
 		this.listeners = new ArrayList<>();
@@ -74,15 +74,14 @@ public class HttpDispatcher implements Runnable, DispatcherListener {
 	}
 
 	@Override
-	public void taskRefused(VideoEncodingTask t, Node n) {
+	public void taskRefused(Task t, Node n) {
 		for (DispatcherListener dispatcherListener : listeners) {
 			dispatcherListener.taskRefused(t, n);
 		}
 
 	}
 
-	@Override
-	public void taskAccepted(VideoEncodingTask t, Node n) {
+	public void taskAccepted(Task t, Node n) {
 		for (DispatcherListener dispatcherListener : listeners) {
 			dispatcherListener.taskAccepted(t, n);
 		}
