@@ -54,7 +54,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	private WorkerHttpServer server;
 	private VideoWorkThread workThread;
 	private InetAddress address;
-	private AudioConverterPool convertingPool;
+	private AudioConverterPool audioPool;
 
 	public Worker(String configPath) {
 		this.configPath = configPath;
@@ -70,7 +70,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		}
 		server = new WorkerHttpServer(config.getListenPort(), this, this);
 		services.add(server);
-		convertingPool = new AudioConverterPool(Runtime.getRuntime().availableProcessors());
+		audioPool = new AudioConverterPool(Runtime.getRuntime().availableProcessors(), this);
 		print("initialized not connected to a master server");
 
 		try {
@@ -138,11 +138,9 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			Thread wt = new Thread(workThread);
 			wt.start();
 			services.add(workThread);
-		} else if (t instanceof AudioEncodingTask) {
+		} else if (t instanceof AudioEncodingTask && this.audioPool.hasFreeConverters()) {
 			AudioEncodingTask aTask = (AudioEncodingTask) t;
-			if (this.convertingPool.hasFreeConverters()) {
-				convertingPool.encode(aTask, this);
-			}
+			audioPool.encode(aTask);
 		} else {
 			return false;
 		}
@@ -150,7 +148,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		t.setTaskState(TaskState.TASK_COMPUTING);
 		this.currentTasks.add(t);
 		updateStatus(NodeState.WORKING);
-
 		return true;
 	}
 
@@ -295,7 +292,8 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			if (response.getStatusLine().getStatusCode() == 200) {
 				success = true;
 			} else {
-				System.err.println("Master responded " + response.getStatusLine().getStatusCode() + " when notifying for new status");
+				System.err.println("Master responded " + response.getStatusLine().getStatusCode()
+						+ " when notifying for new status");
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -430,7 +428,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 
 	@Override
 	public void workFailed(Task task) {
-		System.err.println("Worker failed task");
+		System.err.println("Worker failed task " + task.getTaskId());
 		updateTaskStatus(task, TaskState.TASK_CANCELED);
 		this.currentTasks.remove(task);
 		if (task instanceof VideoEncodingTask) {

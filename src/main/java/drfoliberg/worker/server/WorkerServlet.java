@@ -65,21 +65,21 @@ public class WorkerServlet extends HttpServlet implements WorkerServletListerner
 	@Override
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Gson gson = new Gson();
+		Task task = null;
 		switch (req.getRequestURI()) {
-		case Routes.ADD_TASK:
-			Task task = gson.fromJson(req.getReader(), VideoEncodingTask.class);
-			if (task == null) {
-				req.getReader().reset();
-				task = gson.fromJson(req.getReader(), AudioEncodingTask.class);
-			}
-			if (task == null) {
-				resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-			} else if (!taskRequest(task)) {
-				resp.sendError(HttpServletResponse.SC_CONFLICT);
-			}
+		case Routes.ADD_VIDEO_TASK:
+			task = gson.fromJson(req.getReader(), VideoEncodingTask.class);
 			break;
+		case Routes.ADD_AUDIO_TASK:
+			task = gson.fromJson(req.getReader(), AudioEncodingTask.class);
 		default:
 			break;
+		}
+		
+		if (task == null) {
+			resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+		} else if (!taskRequest(task)) {
+			resp.sendError(HttpServletResponse.SC_CONFLICT);
 		}
 	}
 

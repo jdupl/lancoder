@@ -177,7 +177,7 @@ public class VideoWorkThread extends Service {
 	public void run() {
 		boolean success = false;
 		try {
-			System.out.println("WORKER WORK THREAD: Executing a task!");
+			System.out.println("WORKER WORK THREAD: Executing task " + task.getTaskId());
 			// use start and duration for ffmpeg legacy support
 			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
 			String startTimeStr = getDurationString(task.getEncodingStartTime());

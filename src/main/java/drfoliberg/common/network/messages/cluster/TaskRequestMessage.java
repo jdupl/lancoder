@@ -16,7 +16,7 @@ public class TaskRequestMessage extends Message {
 	 *            The task to request to the worker
 	 */
 	public TaskRequestMessage(Task task) {
-		super(Routes.ADD_TASK);
+		super(Routes.ADD_VIDEO_TASK);
 		this.task = task;
 	}
 }

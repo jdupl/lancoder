@@ -3,6 +3,7 @@ package drfoliberg.master.dispatcher;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 
 import org.apache.commons.io.Charsets;
@@ -19,17 +20,28 @@ import com.google.gson.Gson;
 import drfoliberg.common.Node;
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.task.Task;
+import drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class HttpDispatcher implements Runnable, DispatcherListener {
 	Node node;
 	Task task;
 	ArrayList<DispatcherListener> listeners;
+	String route;
 
 	public HttpDispatcher(Node node, Task task, DispatcherListener mainListener) {
 		this.node = node;
 		this.task = task;
 		this.listeners = new ArrayList<>();
 		this.listeners.add(mainListener);
+		
+		if (task instanceof VideoEncodingTask) {
+			route = Routes.ADD_VIDEO_TASK;
+		} else if (task instanceof AudioEncodingTask) {
+			route = Routes.ADD_AUDIO_TASK;
+		} else {
+			throw new InvalidParameterException("Task must be an audio task or a video task");
+		}
 	}
 
 	@Override
@@ -40,9 +52,8 @@ public class HttpDispatcher implements Runnable, DispatcherListener {
 			CloseableHttpClient client = HttpClients.createDefault();
 			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).setConnectTimeout(2000)
 					.setConnectionRequestTimeout(2000).build();
-
-			URI url = new URI("http", null, node.getNodeAddress().getHostAddress(), node.getNodePort(),
-					Routes.ADD_TASK, null, null);
+			URI url = new URI("http", null, node.getNodeAddress().getHostAddress(), node.getNodePort(), route, null,
+					null);
 			HttpPut put = new HttpPut(url);
 			put.setConfig(defaultRequestConfig);
 

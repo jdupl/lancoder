@@ -8,7 +8,8 @@ public class Routes {
 	public static final String NODE_CRASH = "/node/crash";
 
 	public static final String PAUSE_TASK = "/task/pause";
-	public static final String ADD_TASK = "/task/add";
+	public static final String ADD_VIDEO_TASK = "/task/add/video";
+	public static final String ADD_AUDIO_TASK = "/task/add/audio";
 	public static final String DELETE_TASK = "/task/add";
 
 }

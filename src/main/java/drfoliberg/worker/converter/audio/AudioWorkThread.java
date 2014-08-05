@@ -4,29 +4,31 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.apache.commons.io.FileUtils;
+
 import drfoliberg.common.Service;
 import drfoliberg.common.job.RateControlType;
-import drfoliberg.common.network.Cause;
-import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioEncodingTask;
-import drfoliberg.worker.WorkerConfig;
 import drfoliberg.worker.converter.video.WorkThreadListener;
 
-public class AudioWorkThread extends Service implements WorkThreadListener {
+public class AudioWorkThread extends Service {
 
 	AudioEncodingTask task;
-	ArrayList<WorkThreadListener> listeners;
+	WorkThreadListener listener;
 	Process p;
 
 	public AudioWorkThread(AudioEncodingTask task, WorkThreadListener listener) {
 		this.task = task;
-		listeners = new ArrayList<>();
-		listeners.add(listener);
+		this.listener = listener;
 	}
 
-	private static ArrayList<String> getArgs(AudioEncodingTask task) {
+	private ArrayList<String> getArgs(AudioEncodingTask task) {
+		String absoluteFolder = this.listener.getConfig().getAbsoluteSharedFolder();
+		String absoluteInput = FileUtils.getFile(absoluteFolder, task.getInputFile()).getAbsolutePath();
+		String absoluteOutput = FileUtils.getFile(absoluteFolder, task.getOutputFile()).getAbsolutePath();
+
 		ArrayList<String> args = new ArrayList<>();
-		String[] baseArgs = new String[] { "ffmpeg", "-i", task.getInputFile(), "-vn", "-sn", "-ac",
+		String[] baseArgs = new String[] { "ffmpeg", "-i", absoluteInput, "-vn", "-sn", "-ac",
 				String.valueOf(task.getChannels()), "-ar", String.valueOf(task.getSampleRate()), "-c:a",
 				task.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
@@ -44,7 +46,7 @@ public class AudioWorkThread extends Service implements WorkThreadListener {
 			// TODO unknown codec exception
 			break;
 		}
-		args.add(task.getOutputFile());
+		args.add(absoluteOutput);
 		return args;
 	}
 
@@ -58,8 +60,7 @@ public class AudioWorkThread extends Service implements WorkThreadListener {
 		ProcessBuilder pb = new ProcessBuilder(args);
 
 		try {
-//			convertionStarted(task);
-			workStarted(task);
+			listener.workStarted(task);
 			p = pb.start();
 			p.waitFor();
 			success = p.exitValue() == 0 ? true : false;
@@ -67,9 +68,9 @@ public class AudioWorkThread extends Service implements WorkThreadListener {
 			e.printStackTrace();
 		} finally {
 			if (success) {
-				workCompleted(task);
+				listener.workCompleted(task);
 			} else {
-				workFailed(task);
+				listener.workFailed(task);
 			}
 		}
 	}
@@ -80,44 +81,5 @@ public class AudioWorkThread extends Service implements WorkThreadListener {
 		if (p != null) {
 			p.destroy();
 		}
-	}
-
-	@Override
-	public synchronized void workCompleted(Task t) {
-		for (WorkThreadListener listener : listeners) {
-			listener.workCompleted(t);
-		}
-	}
-	
-	public synchronized void workFailed(Task t) {
-		for (WorkThreadListener listener : listeners) {
-			listener.workFailed(t);
-		}
-	}
-
-	public void addListener(WorkThreadListener listener) {
-		listeners.add(listener);
-	}
-
-	public void removeListener(WorkThreadListener listener) {
-		listeners.remove(listener);
-	}
-
-	@Override
-	public void nodeCrash(Cause cause) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public WorkerConfig getConfig() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void workStarted(Task task) {
-		// TODO Auto-generated method stub
-		
 	}
 }

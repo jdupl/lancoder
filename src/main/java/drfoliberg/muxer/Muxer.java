@@ -48,7 +48,6 @@ public class Muxer extends Service {
 					"--no-global-tags", "--no-chapters" });
 			AudioEncodingTask task = job.getAudioTasks().get(i);
 			args.add(task.getOutputFile());
-
 		}
 
 		ProcessBuilder pb = new ProcessBuilder(args);

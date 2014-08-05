@@ -180,24 +180,21 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 				if (n.getCurrentTasks().size() < minTasks) {
 					best = n;
 				}
-
 			}
 		}
 		return best;
 	}
 
 	private synchronized Node getBestAudioNode() {
-		// Maximum conccurent audio jobs
+		// Maximum concurrent audio jobs
 		int maxConcurentTasks = 3; // TODO should use node data
 		Node best = null;
-		int minTasks = 0;
+		int minTasks = Integer.MAX_VALUE;
 
 		for (Entry<String, Node> entry : nodes.entrySet()) {
 			Node n = entry.getValue();
-			if (n.getCurrentTasks().size() < maxConcurentTasks) {
-				if (n.getCurrentTasks().size() < minTasks) {
-					best = n;
-				}
+			if (n.getCurrentTasks().size() < maxConcurentTasks && n.getCurrentTasks().size() < minTasks) {
+				best = n;
 			}
 		}
 		return best;
@@ -391,11 +388,12 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		Job j = new Job(jobConfig, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate,
 				config.getFinalEncodingFolder());
 
-		File absoluteSource = FileUtils.getFile(config.getAbsoluteSharedFolder(), jobConfig.getSourceFile());
-		File absoluteOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getOutputFolder(), "audio");
+		// Create audio tasks
+		int nextTaskId = j.getTasks().size() + 1;
+		File output = FileUtils.getFile(j.getOutputFolder(), String.valueOf(nextTaskId));
 		j.getAudioTasks().add(
-				new AudioEncodingTask(AudioCodec.VORBIS, 2, 44100, 3, RateControlType.CRF, absoluteSource
-						.getAbsolutePath(), absoluteOutput.getAbsolutePath(), j.getJobId(), j.getTasks().size() + 1));
+				new AudioEncodingTask(AudioCodec.VORBIS, 2, 44100, 3, RateControlType.CRF, jobConfig.getSourceFile(),
+						output.getPath(), j.getJobId(), nextTaskId));
 		return j;
 	}
 
