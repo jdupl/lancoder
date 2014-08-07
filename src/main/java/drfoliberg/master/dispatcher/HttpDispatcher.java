@@ -34,7 +34,7 @@ public class HttpDispatcher implements Runnable, DispatcherListener {
 		this.task = task;
 		this.listeners = new ArrayList<>();
 		this.listeners.add(mainListener);
-		
+
 		if (task instanceof VideoEncodingTask) {
 			route = Routes.ADD_VIDEO_TASK;
 		} else if (task instanceof AudioEncodingTask) {

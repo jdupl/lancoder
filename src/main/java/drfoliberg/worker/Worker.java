@@ -177,7 +177,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			} else if (task instanceof AudioEncodingTask) {
 				report = new TaskReport(config.getUniqueID(), task);
 			}
-			
+
 			if (report != null) {
 				reports.add(report);
 			}
@@ -247,10 +247,8 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 					Routes.DISCONNECT_NODE, null, null);
 			HttpPost post = new HttpPost(url);
 			post.setConfig(defaultRequestConfig);
-
 			// Send request, but don't mind the response
 			client.execute(post);
-
 		} catch (IOException e) {
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
@@ -305,7 +303,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 		return success;
 	}
 
@@ -435,9 +432,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		if (currentTasks.size() == 0) {
 			updateStatus(NodeState.FREE);
 		}
-		// if (task instanceof VideoEncodingTask) {
-		// updateStatus(NodeState.FREE);
-		// }
 	}
 
 	@Override

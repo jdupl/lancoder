@@ -48,7 +48,6 @@ public class VideoWorkThread extends Service {
 		}
 		// remove any previous temp files for this part
 		cleanTempPart();
-
 	}
 
 	/**
@@ -199,10 +198,7 @@ public class VideoWorkThread extends Service {
 				encodePass(startTimeStr, durationStr);
 				task.setCurrentPass(task.getCurrentPass() + 1);
 			}
-
-			// moveTempPartFile();
 			success = transcodeToMpegTs();
-
 		} catch (MissingFfmpegException | MissingDecoderException e) {
 			listener.nodeCrash(new Cause(e, "unknown", true));
 		} catch (WorkInterruptedException e) {
@@ -247,11 +243,9 @@ public class VideoWorkThread extends Service {
 			}
 			FileUtils.givePerms(destination, false);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}

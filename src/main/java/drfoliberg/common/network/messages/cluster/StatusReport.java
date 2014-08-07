@@ -11,13 +11,8 @@ public class StatusReport extends AuthMessage {
 	private static final long serialVersionUID = -844534455490561432L;
 	private long loadAverage;
 	private ArrayList<TaskReport> taskReports;
-	//public Node node;
 	public NodeState status;
 
-//	public StatusReport(Node n) {
-//		super(ClusterProtocol.STATUS_REPORT);
-//		this.node = n;
-//	}
 	public StatusReport(NodeState status, String unid) {
 		super(Routes.NODE_STATUS, unid);
 		this.status = status;
@@ -41,8 +36,8 @@ public class StatusReport extends AuthMessage {
 		return taskReports;
 	}
 
-	public void setTaskReports(ArrayList<TaskReport> taskReport) {
-		this.taskReports = taskReport;
+	public void setTaskReports(ArrayList<TaskReport> taskReports) {
+		this.taskReports = taskReports;
 	}
 
 }

@@ -31,7 +31,6 @@ public class AudioConverterPool extends ConverterPool {
 		}
 		AudioEncodingTask aTask = (AudioEncodingTask) task;
 		AudioWorkThread converter = new AudioWorkThread(aTask, this);
-		// converter.addListener(this);
 		converters.put(task, converter);
 		Thread t = new Thread(converter);
 		t.start();

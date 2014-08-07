@@ -63,7 +63,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private HashMap<String, Node> nodes;
 
 	private ArrayList<Service> services;
-	// private AudioConverterPool convertingPool;
 
 	private MasterConfig config;
 	private String configPath;
@@ -206,11 +205,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 * @return true if any work was dispatched
 	 */
 	public void updateNodesWork() {
-
-		// while (audioTask != null && convertingPool.hasFreeConverters()) {
-		// dispatch(audioTask, );
-		// audioTask = getNextAudioTask();
-		// }
 		System.out.println("MASTER: Checking dispatch");
 
 		Node node = null;
@@ -220,19 +214,12 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		while (((nextAudioTask = getNextAudioTask()) != null && (node = getBestAudioNode()) != null)) {
 			dispatch(nextAudioTask, node);
 		}
-
 		// Avoid looping through jobs as it might be cpu intensive in large projects
 		// Order of the while condition is important as looping through workers is faster
 		while ((node = getBestFreeNode()) != null && (nextVideoTask = getNextVideoTask()) != null) {
 			System.err.println("Trying to dispatch to " + node.getName() + " task " + nextVideoTask.getTaskId());
 			dispatch(nextVideoTask, node);
 		}
-		if (node == null) {
-			System.out.println("MASTER: No available nodes!");
-		} else if (nextVideoTask == null) {
-			System.out.println("MASTER: No available work!");
-		}
-
 		config.dump(configPath);
 	}
 
@@ -281,21 +268,19 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public void disconnectNode(Node n) {
 		try {
 			CloseableHttpClient client = HttpClients.createDefault();
-			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
-
+			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000)
+					.setConnectionRequestTimeout(2000).setConnectTimeout(2000).build();
 			URI url = new URI("http", null, n.getNodeAddress().getHostAddress(), n.getNodePort(),
 					Routes.DISCONNECT_NODE, null, null);
 			HttpPost post = new HttpPost(url);
 			post.setConfig(defaultRequestConfig);
-
-			// Send request, but don't mind the response
 			client.execute(post);
-			// remove node from list
-			removeNode(n);
 		} catch (IOException e) {
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			// remove node from list
+			removeNode(n);
 		}
 	}
 
@@ -324,9 +309,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		} else {
 			success = false;
 		}
-		// if (success) {
-		// updateNodesWork();
-		// }
 		return success;
 	}
 
@@ -412,8 +394,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 		if (absoluteSourceFile.isDirectory()) {
 			System.err.println("Directory given!");
-			Collection<File> given = FileUtils.listFiles(absoluteSourceFile, new String[] { "mkv", "mp4", "avi" },
-					false); // TODO include recursive ?
+			Collection<File> given = FileUtils
+					.listFiles(absoluteSourceFile, new String[] { "mkv", "mp4", "avi" }, true);
 			for (File file : given) {
 				inputs.add(file);
 			}
@@ -444,6 +426,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			RateControlType rateControlType = req.getRateControlType();
 
 			// Limit to 1 or 2 passes
+			// TODO If CRF only allow 1 pass
 			byte passes = req.getPasses() < 0 || req.getPasses() > 2 ? 1 : req.getPasses();
 
 			int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
@@ -510,7 +493,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	/**
-	 * Set disconnected status to node and cancel node's task. Use shutdownNode() to gracefully shutdown a node.
+	 * Set disconnected status to node and cancel node's tasks. Use shutdownNode() to gracefully shutdown a node.
 	 * 
 	 * 
 	 * @param n
@@ -518,7 +501,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 */
 	public synchronized void removeNode(Node n) {
 		if (n != null) {
-			// Cancel node's task status if any
+			// Cancel node's tasks status if any
 			for (Task t : n.getCurrentTasks()) {
 				t.reset();
 				n.getCurrentTasks().remove(t);
@@ -530,26 +513,16 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	public boolean updateNodeTask(Task task, Node n, TaskState updateStatus) {
-		// ArrayList<Task> tasks = n.getCurrentTask();
 		// TODO clean logic here
-
-		// Task task = null;
-
 		if (task == null) {
 			System.err.println("MASTER: no task was found for node " + n.getName());
 			return false;
 		}
-
-		// System.out.println("MASTER: the task " + task.getTaskId() + " is now " + updateStatus);
 		task.setTaskState(updateStatus);
 		if (updateStatus == TaskState.TASK_COMPLETED) {
-			// logger.info(String.format("Node %s completed task %d of job %s", n.getName(), n.getCurrentTask()
-			// .getTaskId(), n.getCurrentTask().getJobId()));
-			// n.setCurrentTask(null);
 			n.getCurrentTasks().remove(task);
 			Job job = this.jobs.get(task.getJobId());
 			boolean jobDone = true;
-
 			for (Task t : job.getTasks()) {
 				if (t.getTaskState() != TaskState.TASK_COMPLETED) {
 					jobDone = false;
