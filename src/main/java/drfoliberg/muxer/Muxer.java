@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import drfoliberg.common.Service;
+import drfoliberg.common.RunnableService;
 import drfoliberg.common.job.Job;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.VideoEncodingTask;
 
-public class Muxer extends Service {
+public class Muxer extends RunnableService {
 
 	private ArrayList<MuxerListener> listeners;
 	private Job job;
@@ -95,6 +95,13 @@ public class Muxer extends Service {
 		Exception e = new Exception("Unknown error");
 		for (MuxerListener l : this.listeners) {
 			l.muxingFailed(job, e);
+		}
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+		if (job != null) {
+			fireMuxingFailed(e);
 		}
 	}
 

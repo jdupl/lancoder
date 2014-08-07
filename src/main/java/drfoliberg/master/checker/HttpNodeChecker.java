@@ -8,7 +8,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import drfoliberg.common.Node;
-import drfoliberg.common.Service;
+import drfoliberg.common.RunnableService;
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.network.messages.cluster.StatusReport;
 
@@ -21,7 +21,7 @@ import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.Gson;
 
-public class HttpNodeChecker extends Service {
+public class HttpNodeChecker extends RunnableService {
 
 	private final static int MS_DELAY_BETWEEN_CHECKS = 5000;
 	private NodeCheckerListener listener;
@@ -83,6 +83,11 @@ public class HttpNodeChecker extends Service {
 			}
 		}
 		System.out.println("Closed node checker service!");
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+		e.printStackTrace();
 	}
 
 }

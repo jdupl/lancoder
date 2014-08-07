@@ -7,7 +7,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import drfoliberg.common.Service;
+import drfoliberg.common.RunnableService;
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.network.messages.cluster.ConnectMessage;
 
@@ -22,7 +22,7 @@ import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.Gson;
 
-public class ContactMasterHttp extends Service {
+public class ContactMasterHttp extends RunnableService {
 
 	ConctactMasterListener listener;
 	InetAddress masterAddress;
@@ -100,5 +100,10 @@ public class ContactMasterHttp extends Service {
 			}
 		}
 		System.out.println("Worker contacter closed");
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+		// TODO
 	}
 }

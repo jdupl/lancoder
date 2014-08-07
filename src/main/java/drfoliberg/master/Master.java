@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.Node;
 import drfoliberg.common.ServerListener;
-import drfoliberg.common.Service;
+import drfoliberg.common.RunnableService;
 import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.Job;
 import drfoliberg.common.job.JobConfig;
@@ -62,7 +62,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private HttpNodeChecker nodeChecker;
 	private HashMap<String, Node> nodes;
 
-	private ArrayList<Service> services;
+	private ArrayList<RunnableService> services;
 
 	private MasterConfig config;
 	private String configPath;
@@ -108,7 +108,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			disconnectNode(n);
 		}
 
-		for (Service s : services) {
+		for (RunnableService s : services) {
 			s.stop();
 		}
 	}
@@ -680,7 +680,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	public void run() {
-		for (Service s : this.services) {
+		for (RunnableService s : this.services) {
 			Thread t = new Thread(s);
 			t.start();
 		}
@@ -726,12 +726,12 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	@Override
-	public void serverShutdown(Service server) {
+	public void serverShutdown(RunnableService server) {
 		// TODO Auto-generated method stub
 	}
 
 	@Override
-	public void serverFailure(Exception e, Service server) {
+	public void serverFailure(Exception e, RunnableService server) {
 		// TODO Auto-generated method stub
 	}
 

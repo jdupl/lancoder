@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 
 import drfoliberg.common.ServerListener;
+import drfoliberg.common.RunnableService;
 import drfoliberg.common.Service;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.Routes;
@@ -45,15 +46,15 @@ import com.google.gson.Gson;
 public class Worker implements Runnable, ServerListener, WorkerServletListerner, ConctactMasterListener,
 		ConverterListener {
 
-	WorkerConfig config;
-
+	private WorkerConfig config;
 	private String configPath;
-	private ArrayList<Task> currentTasks;
 	private NodeState status;
-	private ArrayList<Service> services;
-	private WorkerHttpServer server;
-	private VideoWorkThread workThread;
 	private InetAddress address;
+	
+	private ArrayList<Task> currentTasks;
+	
+	private ArrayList<Service> services;
+	private VideoWorkThread workThread;
 	private AudioConverterPool audioPool;
 
 	public Worker(String configPath) {
@@ -68,11 +69,12 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			// this saves default configuration to disk
 			this.config = WorkerConfig.generate(configPath);
 		}
-		server = new WorkerHttpServer(config.getListenPort(), this, this);
-		services.add(server);
+		WorkerHttpServer httpServer = new WorkerHttpServer(config.getListenPort(), this, this);
+		services.add(httpServer);
 		audioPool = new AudioConverterPool(Runtime.getRuntime().availableProcessors(), this);
-		print("initialized not connected to a master server");
-
+		services.add(audioPool);
+		// Get local ip
+		// TODO allow options to override IP detection and enable ipv6
 		try {
 			Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
 			while (n.hasMoreElements()) {
@@ -87,13 +89,10 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 				}
 			}
 		} catch (SocketException e) {
-			// TODO Perhaps juste close worker
+			// TODO Perhaps just close worker
 			e.printStackTrace();
 		}
-	}
-
-	public Worker(WorkerConfig config) {
-		this.config = config;
+		print("initialized not connected to a master server");
 	}
 
 	public void shutdown() {
@@ -115,7 +114,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	public void taskDone(VideoEncodingTask t) {
-		// this.currentTask.setTaskState(TaskState.TASK_COMPLETED);
 		t.setTaskState(TaskState.TASK_COMPLETED);
 		this.updateStatus(NodeState.FREE);
 		services.remove(workThread);
@@ -177,7 +175,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			} else if (task instanceof AudioEncodingTask) {
 				report = new TaskReport(config.getUniqueID(), task);
 			}
-
 			if (report != null) {
 				reports.add(report);
 			}
@@ -191,13 +188,11 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	public synchronized void updateStatus(NodeState statusCode) {
-
 		if (this.status == NodeState.NOT_CONNECTED && statusCode != NodeState.NOT_CONNECTED) {
 			this.stopContactMaster();
 		}
 		print("changing worker status to " + statusCode);
 		this.status = statusCode;
-
 		switch (statusCode) {
 		case FREE:
 			notifyHttpMasterStatusChange();
@@ -267,7 +262,6 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 
 			// Send request, but don't mind the response
 			client.execute(post);
-
 		} catch (IOException e) {
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
@@ -328,8 +322,10 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 
 	public void run() {
 		for (Service s : services) {
-			Thread t = new Thread(s);
-			t.start();
+			if (s instanceof RunnableService) {
+				Thread t = new Thread((RunnableService) s);
+				t.start();
+			}
 		}
 		updateStatus(NodeState.NOT_CONNECTED);
 		System.err.println("Started all services");
@@ -352,12 +348,12 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	@Override
-	public void serverShutdown(Service server) {
+	public void serverShutdown(RunnableService server) {
 		this.services.remove(server);
 	}
 
 	@Override
-	public void serverFailure(Exception e, Service server) {
+	public void serverFailure(Exception e, RunnableService server) {
 		e.printStackTrace();
 	}
 

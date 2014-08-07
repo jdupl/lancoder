@@ -1,15 +1,10 @@
 package drfoliberg.common;
 
-public abstract class Service implements Runnable {
+public class Service {
 
 	protected volatile boolean close;
 
 	public void stop() {
 		this.close = true;
-	}
-
-	public void serviceFailure(Exception e) {
-		e.printStackTrace();
-		// TODO send to service listener
 	}
 }

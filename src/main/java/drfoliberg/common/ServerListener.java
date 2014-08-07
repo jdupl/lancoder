@@ -3,7 +3,7 @@ package drfoliberg.common;
 
 public interface ServerListener {
 
-	public void serverShutdown(Service server);
+	public void serverShutdown(RunnableService server);
 
-	public void serverFailure(Exception e, Service server);
+	public void serverFailure(Exception e, RunnableService server);
 }

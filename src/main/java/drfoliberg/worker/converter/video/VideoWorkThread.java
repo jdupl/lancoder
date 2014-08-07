@@ -9,7 +9,7 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import drfoliberg.common.Service;
+import drfoliberg.common.RunnableService;
 import drfoliberg.common.exceptions.MissingDecoderException;
 import drfoliberg.common.exceptions.MissingFfmpegException;
 import drfoliberg.common.exceptions.WorkInterruptedException;
@@ -18,7 +18,7 @@ import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
 import drfoliberg.worker.converter.ConverterListener;
 
-public class VideoWorkThread extends Service {
+public class VideoWorkThread extends RunnableService {
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
 	private VideoEncodingTask task;
@@ -251,5 +251,11 @@ public class VideoWorkThread extends Service {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+		this.listener.nodeCrash(null);
+		// TODO
 	}
 }

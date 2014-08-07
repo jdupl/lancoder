@@ -1,6 +1,6 @@
 package drfoliberg.master.api.web;
 
-import drfoliberg.common.Service;
+import drfoliberg.common.RunnableService;
 import drfoliberg.master.Master;
 
 import org.eclipse.jetty.server.Handler;
@@ -9,7 +9,7 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 
-public class ApiServer extends Service {
+public class ApiServer extends RunnableService {
 
 	private static final String webDir = "web_resources/";
 
@@ -62,6 +62,11 @@ public class ApiServer extends Service {
 			System.err.println("MASTER: Could not close api server !");
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+		master.serverFailure(e, this);
 	}
 
 }

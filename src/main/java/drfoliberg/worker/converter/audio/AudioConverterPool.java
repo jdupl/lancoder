@@ -1,21 +1,14 @@
 package drfoliberg.worker.converter.audio;
 
-import drfoliberg.common.Service;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioEncodingTask;
-import drfoliberg.worker.converter.ConverterPool;
 import drfoliberg.worker.converter.ConverterListener;
+import drfoliberg.worker.converter.ConverterPool;
 
 public class AudioConverterPool extends ConverterPool {
 
 	public AudioConverterPool(int threads, ConverterListener listener) {
 		super(threads, listener);
-	}
-
-	public void stop() {
-		for (Service converter : converters.values()) {
-			converter.stop();
-		}
 	}
 
 	@Override
@@ -36,5 +29,7 @@ public class AudioConverterPool extends ConverterPool {
 		t.start();
 		return true;
 	}
+
+
 
 }

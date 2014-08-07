@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import org.eclipse.jetty.server.Server;
 
-public class ServletServer extends Service implements ServerListener {
+public class ServletServer extends RunnableService implements ServerListener {
 
 	protected Server server;
 	protected ArrayList<ServerListener> listeners;
@@ -39,16 +39,23 @@ public class ServletServer extends Service implements ServerListener {
 	}
 
 	@Override
-	public void serverShutdown(Service server) {
+	public void serverShutdown(RunnableService server) {
 		for (ServerListener listener : listeners) {
 			listener.serverShutdown(server);
 		}
 	}
 
 	@Override
-	public void serverFailure(Exception e, Service server) {
+	public void serverFailure(Exception e, RunnableService server) {
 		for (ServerListener listener : listeners) {
 			listener.serverFailure(e, server);
+		}
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+		for (ServerListener listener : listeners) {
+			listener.serverFailure(e, this);
 		}
 	}
 }

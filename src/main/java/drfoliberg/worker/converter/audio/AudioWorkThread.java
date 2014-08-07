@@ -6,12 +6,12 @@ import java.util.Collections;
 
 import org.apache.commons.io.FileUtils;
 
-import drfoliberg.common.Service;
+import drfoliberg.common.RunnableService;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.worker.converter.ConverterListener;
 
-public class AudioWorkThread extends Service {
+public class AudioWorkThread extends RunnableService {
 
 	AudioEncodingTask task;
 	ConverterListener listener;
@@ -81,5 +81,11 @@ public class AudioWorkThread extends Service {
 		if (p != null) {
 			p.destroy();
 		}
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+		listener.nodeCrash(null);
+		// TODO
 	}
 }
