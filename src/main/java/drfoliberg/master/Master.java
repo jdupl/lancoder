@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.config.RequestConfig;
@@ -22,8 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.Node;
-import drfoliberg.common.ServerListener;
 import drfoliberg.common.RunnableService;
+import drfoliberg.common.ServerListener;
 import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.Job;
 import drfoliberg.common.job.JobConfig;
@@ -64,7 +63,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	private HashMap<String, Node> nodes;
 	private HashMap<String, Job> jobs;
-	private PriorityQueue<Job> jobQueue;
 	private ArrayList<RunnableService> services;
 	private MasterHttpNodeServer nodeServer;
 	private NodeChecker nodeChecker;
@@ -81,10 +79,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			// this saves default configuration to disk
 			this.config = MasterConfig.generate(configPath);
 		}
-
 		nodes = new HashMap<String, Node>();
 		jobs = new HashMap<String, Job>();
-		jobQueue = new PriorityQueue<>();
 
 		nodeServer = new MasterHttpNodeServer(getConfig().getNodeServerPort(), this, this);
 		nodeChecker = new NodeChecker(this);
@@ -105,12 +101,10 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			}
 		}
 		config.dump(configPath);
-
 		// say goodbye to nodes
 		for (Node n : getOnlineNodes()) {
 			disconnectNode(n);
 		}
-
 		for (RunnableService s : services) {
 			s.stop();
 		}
@@ -146,17 +140,17 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		int minTaskCount = Integer.MAX_VALUE;
 
 		for (Job j : this.getJobs()) {
-			int taskCount = j != null ? j.getCountTaskRemaining() : 0;
+			int taskCount = j != null ? j.getTaskRemainingCount() : 0;
 			if (taskCount != 0 && (min == null || minTaskCount > taskCount)) {
 				min = j;
 				minTaskCount = taskCount;
 			}
 		}
-
 		return min != null ? min.getNextTask() : null;
 	}
 
 	private AudioEncodingTask getNextAudioTask() {
+		// We should process all audio in no particular order
 		for (Job j : this.getJobs()) {
 			for (AudioEncodingTask task : j.getAudioTasks()) {
 				if (task.getTaskState() == TaskState.TASK_TODO) {
@@ -327,7 +321,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		if (this.jobs.put(j.getJobId(), j) != null) {
 			return false;
 		}
-		jobQueue.add(j);
 		updateNodesWork();
 		config.dump(configPath);
 		return true;
@@ -348,10 +341,10 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		if (j == null) {
 			return false;
 		}
-		
+
 		for (Node node : this.getNodes()) {
 			for (Task task : node.getCurrentTasks()) {
-				if (task.getJobId().equals(j.getJobId())){
+				if (task.getJobId().equals(j.getJobId())) {
 					updateNodeTask(task, node, TaskState.TASK_CANCELED);
 				}
 			}
@@ -360,7 +353,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		if (this.jobs.remove(j.getJobId()) == null) {
 			return false;
 		}
-		this.jobQueue.remove(j);
 		updateNodesWork();
 		config.dump(configPath);
 		return true;
@@ -653,7 +645,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			}
 		}
 	}
-
 
 	public void readCrashReport(CrashReport report) {
 		// TODO handle non fatal crashes (worker side first)

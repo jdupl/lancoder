@@ -21,16 +21,16 @@ import drfoliberg.common.task.video.VideoEncodingTask;
  * @author justin
  * 
  */
-public class Job extends JobConfig {
+public class Job extends JobConfig implements Comparable<Job> {
 
 	private static final long serialVersionUID = -3817299446490049451L;
-	private ArrayList<VideoEncodingTask> videoTasks;
-	private ArrayList<AudioEncodingTask> audioTasks;
+
 	private String jobId;
 	private String jobName;
 	private JobState jobStatus;
 	private int lengthOfTasks;
 	private long lengthOfJob;
+	private int priority;
 	private int frameCount;
 	private float frameRate;
 	/**
@@ -45,6 +45,9 @@ public class Job extends JobConfig {
 	 * The folder in which to store the parts before muxing
 	 */
 	private String partsFolderName;
+
+	private ArrayList<VideoEncodingTask> videoTasks;
+	private ArrayList<AudioEncodingTask> audioTasks;
 
 	public Job(JobConfig config, String jobName, int lengthOfTasks, long lengthOfJob, int frameCount, float frameRate,
 			String encodingOutputFolder) {
@@ -96,8 +99,7 @@ public class Job extends JobConfig {
 		// Get relative (to absolute shared directory) output folder for this job's tasks
 		File relativeTasksOutput = FileUtils.getFile(this.getOutputFolder(), this.partsFolderName);
 		while (remaining > 0) {
-			VideoEncodingTask t = new VideoEncodingTask(taskNo,jobId, this); // hackish but should work for now TODO clean
-//			t.setJobId(jobId);
+			VideoEncodingTask t = new VideoEncodingTask(taskNo, jobId, this); // hackish but should work for now TODO
 			t.setEncodingStartTime(currentMs);
 			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.15) {
 				t.setEncodingEndTime(lengthOfJob);
@@ -118,7 +120,6 @@ public class Job extends JobConfig {
 			this.videoTasks.add(t);
 			taskNo++;
 		}
-
 	}
 
 	/**
@@ -127,16 +128,13 @@ public class Job extends JobConfig {
 	 * @return The task or null if no task is available
 	 */
 	public synchronized VideoEncodingTask getNextTask() {
-
-		if (getCountTaskRemaining() == 0) {
+		if (getTaskRemainingCount() == 0) {
 			return null;
 		}
-
 		if (this.getJobStatus() == JobState.JOB_TODO) {
 			// TODO move this to job manager
 			this.setJobStatus(JobState.JOB_COMPUTING);
 		}
-
 		for (VideoEncodingTask task : this.videoTasks) {
 			if (task.getTaskState() == TaskState.TASK_TODO) {
 				return task;
@@ -150,8 +148,7 @@ public class Job extends JobConfig {
 	 * 
 	 * @return The count of tasks left to dispatch
 	 */
-	public synchronized int getCountTaskRemaining() {
-
+	public synchronized int getTaskRemainingCount() {
 		switch (this.getJobStatus()) {
 		case JOB_COMPLETED:
 			return 0;
@@ -168,13 +165,26 @@ public class Job extends JobConfig {
 		}
 	}
 
+	/**
+	 * Compare job accordingly to priority, tasks remaining and job length.
+	 * 
+	 * @return 1 if this is bigger, -1 otherwise
+	 */
+	public int compareTo(Job other) {
+		if (this.priority != other.priority) {
+			return Integer.compare(this.priority, other.priority);
+		} else if (this.getTaskRemainingCount() != other.getTaskRemainingCount()) {
+			return Integer.compare(this.getTaskRemainingCount(), other.getTaskRemainingCount());
+		} else {
+			return Long.compare(this.getLengthOfJob(), other.getLengthOfJob());
+		}
+	}
+
 	@Override
 	public boolean equals(Object obj) {
-
 		if (obj == null || !(obj instanceof Job)) {
 			return false;
 		}
-
 		Job other = (Job) obj;
 		return other.getJobId().equals(this.getJobId());
 	}
