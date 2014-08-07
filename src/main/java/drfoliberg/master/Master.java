@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.config.RequestConfig;
@@ -56,27 +57,24 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		MasterNodeServletListener, ServerListener {
 
 	public static final String ALGORITHM = "SHA-256";
+
 	Logger logger = LoggerFactory.getLogger(Master.class);
-
-	private MasterHttpNodeServer nodeServer;
-	private NodeChecker nodeChecker;
-	private HashMap<String, Node> nodes;
-
-	private ArrayList<RunnableService> services;
-
 	private MasterConfig config;
 	private String configPath;
 
-	public HashMap<String, Job> jobs; // change to private after tests
-
+	private HashMap<String, Node> nodes;
+	private HashMap<String, Job> jobs;
+	private PriorityQueue<Job> jobQueue;
+	private ArrayList<RunnableService> services;
+	private MasterHttpNodeServer nodeServer;
+	private NodeChecker nodeChecker;
 	private ApiServer apiServer;
 
 	public Master(String configPath) {
-		services = new ArrayList<>();
-		nodes = new HashMap<String, Node>();
-		jobs = new HashMap<String, Job>();
-		config = MasterConfig.load(configPath);
+
 		this.configPath = configPath;
+		config = MasterConfig.load(configPath);
+
 		if (config != null) {
 			System.err.println("Loaded config from disk !");
 		} else {
@@ -84,11 +82,16 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			this.config = MasterConfig.generate(configPath);
 		}
 
+		nodes = new HashMap<String, Node>();
+		jobs = new HashMap<String, Job>();
+		jobQueue = new PriorityQueue<>();
+
 		nodeServer = new MasterHttpNodeServer(getConfig().getNodeServerPort(), this, this);
 		nodeChecker = new NodeChecker(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
 
+		services = new ArrayList<>();
 		services.add(nodeChecker);
 		services.add(nodeServer);
 		services.add(apiServer);
@@ -324,6 +327,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		if (this.jobs.put(j.getJobId(), j) != null) {
 			return false;
 		}
+		jobQueue.add(j);
 		updateNodesWork();
 		config.dump(configPath);
 		return true;
@@ -344,13 +348,11 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		if (j == null) {
 			return false;
 		}
-		for (Task t : j.getTasks()) {
-			if (t.getTaskState() == TaskState.TASK_COMPUTING) {
-				// Find which node has this task
-				for (Node n : getNodes()) {
-					if (n.getCurrentTasks().equals(t)) {
-						updateNodeTask(t, n, TaskState.TASK_CANCELED);
-					}
+		
+		for (Node node : this.getNodes()) {
+			for (Task task : node.getCurrentTasks()) {
+				if (task.getJobId().equals(j.getJobId())){
+					updateNodeTask(task, node, TaskState.TASK_CANCELED);
 				}
 			}
 		}
@@ -358,6 +360,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		if (this.jobs.remove(j.getJobId()) == null) {
 			return false;
 		}
+		this.jobQueue.remove(j);
 		updateNodesWork();
 		config.dump(configPath);
 		return true;
@@ -626,7 +629,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			String nodeId = report.getUnid();
 			Node sender = identifySender(nodeId);
 
-			if (sender == null || !nodeHasTask(sender, reportTask)) {
+			if (sender == null || !sender.hasTask(reportTask)) {
 				System.err.printf("MASTER: Bad task update from node.");
 			} else {
 				for (Task t : sender.getCurrentTasks()) {
@@ -651,19 +654,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		}
 	}
 
-	// TODO move to node.hasTask
-	private boolean nodeHasTask(Node n, Task t) {
-		if (n == null) {
-			System.err.println("MASTER: Node is null !");
-			return false;
-		}
-		for (Task task : n.getCurrentTasks()) {
-			if (task.equals(task)) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	public void readCrashReport(CrashReport report) {
 		// TODO handle non fatal crashes (worker side first)

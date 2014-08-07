@@ -25,6 +25,15 @@ public class Node implements Serializable {
 		currentTasks = new ArrayList<>();
 	}
 
+	public boolean hasTask(Task task) {
+		for (Task nodeTask : this.getCurrentTasks()) {
+			if (nodeTask.equals(task)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		return "Node [nodeAddress=" + nodeAddress + ", nodePort=" + nodePort + ", status=" + status + ", name=" + name
