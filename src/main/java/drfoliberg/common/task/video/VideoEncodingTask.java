@@ -85,11 +85,11 @@ public class VideoEncodingTask extends Task implements Serializable {
 		return percentToComplete;
 	}
 
-	public byte getPasses() {
+	public int getPasses() {
 		return taskInfo.getPasses();
 	}
 
-	public void setPasses(byte passes) {
+	public void setPasses(int passes) {
 		taskInfo.setPasses(passes);
 	}
 

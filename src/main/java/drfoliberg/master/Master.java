@@ -425,12 +425,13 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			FFmpegPreset preset = req.getPreset();
 			RateControlType rateControlType = req.getRateControlType();
 
-			// Limit to 1 or 2 passes
-			// TODO If CRF only allow 1 pass
-			byte passes = req.getPasses() < 0 || req.getPasses() > 2 ? 1 : req.getPasses();
-
+			// Limit to max pass from the rate control
+			int passes = (req.getPasses() <= rateControlType.getMaxPass() ? req.getPasses() : rateControlType
+					.getMaxPass());
+			if (passes <= 0) {
+				passes = 1;
+			}
 			int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
-
 			ArrayList<String> extraArgs = new ArrayList<>(); // TODO get extra encoder args from api request
 
 			JobConfig conf = new JobConfig(relative, rateControlType, req.getRate(), passes, preset, extraArgs);

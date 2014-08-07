@@ -9,12 +9,12 @@ public class JobConfig implements Serializable {
 
 	protected String sourceFile;
 	protected RateControlType rateControlType;
-	protected int rate; // kbps or crf TODO use POO
-	protected byte passes;
+	protected int rate; // kbps or crf TODO use BiterateControl ?
+	protected int passes;
 	protected FFmpegPreset preset;
 	protected ArrayList<String> extraEncoderArgs; // TODO usage this to allow --slow-first-pass and other overrides
 
-	public JobConfig(String sourceFile, RateControlType rateControlType, int rate, byte passes, FFmpegPreset preset,
+	public JobConfig(String sourceFile, RateControlType rateControlType, int rate, int passes, FFmpegPreset preset,
 			ArrayList<String> extraEncoderArgs) {
 		super();
 		this.sourceFile = sourceFile;
@@ -34,11 +34,11 @@ public class JobConfig implements Serializable {
 		this.extraEncoderArgs = config.extraEncoderArgs;
 	}
 
-	public byte getPasses() {
+	public int getPasses() {
 		return passes;
 	}
 
-	public void setPasses(byte passes) {
+	public void setPasses(int passes) {
 		this.passes = passes;
 	}
 

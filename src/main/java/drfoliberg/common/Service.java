@@ -1,6 +1,6 @@
 package drfoliberg.common;
 
-public class Service {
+public abstract class Service {
 
 	protected volatile boolean close;
 
