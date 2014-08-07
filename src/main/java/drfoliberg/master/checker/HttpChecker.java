@@ -46,7 +46,6 @@ public class HttpChecker extends RunnableService implements Comparable<HttpCheck
 			CloseableHttpClient client = HttpClients.createDefault();
 			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).setConnectTimeout(2000)
 					.setConnectionRequestTimeout(2000).build();
-
 			URI url = new URI("http", null, n.getNodeAddress().getHostAddress(), n.getNodePort(), Routes.NODE_STATUS,
 					null, null);
 			HttpGet get = new HttpGet(url);
@@ -74,10 +73,8 @@ public class HttpChecker extends RunnableService implements Comparable<HttpCheck
 				Node next = tasks.take();
 				checkNode(next);
 			} catch (InterruptedException e) {
-				System.err.println("Node checker interupted while waiting for task."); // debug
 			}
 		}
-		System.err.println("Closing a node checker thread.");
 	}
 
 	@Override

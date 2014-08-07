@@ -29,24 +29,17 @@ public class NodeChecker extends RunnableService {
 	@Override
 	public void run() {
 		System.out.println("Starting node checker service!");
-		int count = 0;
 		while (!close) {
 			try {
 				checkNodes();
 				System.out.println("NODE CHECKER: checking back in 5 seconds");
 				Thread.currentThread();
 				Thread.sleep(MS_DELAY_BETWEEN_CHECKS);
-				
-				if (count++ > 2) {
-					this.close = true;
-					pool.stop();
-				}
-
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Closed node checker service!");
+		System.out.println("Closed node checker service !");
 	}
 
 	@Override

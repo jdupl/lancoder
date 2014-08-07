@@ -51,5 +51,4 @@ public class NodeCheckerPool extends Service {
 		}
 		threads.interrupt();
 	}
-
 }
