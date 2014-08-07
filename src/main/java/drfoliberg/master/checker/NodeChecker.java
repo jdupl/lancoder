@@ -1,0 +1,57 @@
+package drfoliberg.master.checker;
+
+import drfoliberg.common.Node;
+import drfoliberg.common.RunnableService;
+
+public class NodeChecker extends RunnableService {
+
+	private final static int MS_DELAY_BETWEEN_CHECKS = 5000;
+	private NodeCheckerListener listener;
+	NodeCheckerPool pool;
+
+	public NodeChecker(NodeCheckerListener listener) {
+		this.listener = listener;
+		this.pool = new NodeCheckerPool(listener);
+	}
+
+	private boolean checkNodes() {
+		if (listener.getNodes().size() == 0) {
+			System.out.println("MASTER NODE CHECKER: no nodes to check!");
+			return false;
+		}
+		System.out.println("MASTER NODE CHECKER: checking if nodes are still alive");
+		for (Node n : listener.getOnlineNodes()) {
+			pool.add(n);
+		}
+		return false;
+	}
+
+	@Override
+	public void run() {
+		System.out.println("Starting node checker service!");
+		int count = 0;
+		while (!close) {
+			try {
+				checkNodes();
+				System.out.println("NODE CHECKER: checking back in 5 seconds");
+				Thread.currentThread();
+				Thread.sleep(MS_DELAY_BETWEEN_CHECKS);
+				
+				if (count++ > 2) {
+					this.close = true;
+					pool.stop();
+				}
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("Closed node checker service!");
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+		e.printStackTrace();
+	}
+
+}

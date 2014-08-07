@@ -6,11 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import drfoliberg.common.Node;
-import drfoliberg.common.RunnableService;
-import drfoliberg.common.network.Routes;
-import drfoliberg.common.network.messages.cluster.StatusReport;
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;
@@ -18,31 +14,33 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.eclipse.jetty.util.BlockingArrayQueue;
 
 import com.google.gson.Gson;
 
-public class HttpNodeChecker extends RunnableService {
+import drfoliberg.common.Node;
+import drfoliberg.common.RunnableService;
+import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.cluster.StatusReport;
 
-	private final static int MS_DELAY_BETWEEN_CHECKS = 5000;
+public class HttpChecker extends RunnableService implements Comparable<HttpChecker> {
+
 	private NodeCheckerListener listener;
+	final BlockingQueue<Node> tasks = new BlockingArrayQueue<Node>(100);
 
-	public HttpNodeChecker(NodeCheckerListener listener) {
+	public HttpChecker(NodeCheckerListener listener) {
 		this.listener = listener;
 	}
 
-	private boolean checkNodes() {
-		if (listener.getNodes().size() == 0) {
-			System.out.println("MASTER NODE CHECKER: no nodes to check!");
-			return false;
-		}
-		System.out.println("MASTER NODE CHECKER: checking if nodes are still alive");
-		for (Node n : listener.getOnlineNodes()) {
-			checkNode(n);
-		}
-		return false;
+	public synchronized boolean add(Node n) {
+		return this.tasks.offer(n);
 	}
 
-	private void checkNode(Node n) {
+	public int getQueueSize() {
+		return this.tasks.size();
+	}
+
+	public void checkNode(Node n) {
 		try {
 			Gson gson = new Gson();
 			CloseableHttpClient client = HttpClients.createDefault();
@@ -71,23 +69,24 @@ public class HttpNodeChecker extends RunnableService {
 
 	@Override
 	public void run() {
-		System.out.println("Starting node checker service!");
 		while (!close) {
 			try {
-				checkNodes();
-				System.out.println("NODE CHECKER: checking back in 5 seconds");
-				Thread.currentThread();
-				Thread.sleep(MS_DELAY_BETWEEN_CHECKS);
+				Node next = tasks.take();
+				checkNode(next);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				System.err.println("Node checker interupted while waiting for task."); // debug
 			}
 		}
-		System.out.println("Closed node checker service!");
+		System.err.println("Closing a node checker thread.");
 	}
 
 	@Override
 	public void serviceFailure(Exception e) {
-		e.printStackTrace();
+		// TODO Auto-generated method stub
 	}
 
+	@Override
+	public int compareTo(HttpChecker o) {
+		return Integer.compare(getQueueSize(), o.getQueueSize());
+	}
 }

@@ -45,7 +45,7 @@ import drfoliberg.common.utils.FileUtils;
 import drfoliberg.master.api.node.MasterHttpNodeServer;
 import drfoliberg.master.api.node.MasterNodeServletListener;
 import drfoliberg.master.api.web.ApiServer;
-import drfoliberg.master.checker.HttpNodeChecker;
+import drfoliberg.master.checker.NodeChecker;
 import drfoliberg.master.checker.NodeCheckerListener;
 import drfoliberg.master.dispatcher.DispatcherListener;
 import drfoliberg.master.dispatcher.HttpDispatcher;
@@ -59,7 +59,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	Logger logger = LoggerFactory.getLogger(Master.class);
 
 	private MasterHttpNodeServer nodeServer;
-	private HttpNodeChecker nodeChecker;
+	private NodeChecker nodeChecker;
 	private HashMap<String, Node> nodes;
 
 	private ArrayList<RunnableService> services;
@@ -85,7 +85,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		}
 
 		nodeServer = new MasterHttpNodeServer(getConfig().getNodeServerPort(), this, this);
-		nodeChecker = new HttpNodeChecker(this);
+		nodeChecker = new NodeChecker(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
 
