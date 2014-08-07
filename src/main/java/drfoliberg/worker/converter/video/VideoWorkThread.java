@@ -16,12 +16,13 @@ import drfoliberg.common.exceptions.WorkInterruptedException;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
+import drfoliberg.worker.converter.ConverterListener;
 
 public class VideoWorkThread extends Service {
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
 	private VideoEncodingTask task;
-	WorkThreadListener listener;
+	ConverterListener listener;
 	Process process;
 
 	File taskFinalFolder;
@@ -29,7 +30,7 @@ public class VideoWorkThread extends Service {
 	File taskTempOutputFile;
 	File taskTempOutputFolder;
 
-	public VideoWorkThread(VideoEncodingTask t, WorkThreadListener listener) {
+	public VideoWorkThread(VideoEncodingTask t, ConverterListener listener) {
 		task = t;
 		this.listener = listener;
 	}

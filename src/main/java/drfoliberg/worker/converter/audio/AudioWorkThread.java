@@ -9,15 +9,15 @@ import org.apache.commons.io.FileUtils;
 import drfoliberg.common.Service;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.task.audio.AudioEncodingTask;
-import drfoliberg.worker.converter.video.WorkThreadListener;
+import drfoliberg.worker.converter.ConverterListener;
 
 public class AudioWorkThread extends Service {
 
 	AudioEncodingTask task;
-	WorkThreadListener listener;
+	ConverterListener listener;
 	Process p;
 
-	public AudioWorkThread(AudioEncodingTask task, WorkThreadListener listener) {
+	public AudioWorkThread(AudioEncodingTask task, ConverterListener listener) {
 		this.task = task;
 		this.listener = listener;
 	}

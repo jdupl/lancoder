@@ -1,13 +1,14 @@
-package drfoliberg.worker.converter.video;
+package drfoliberg.worker.converter;
 
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.task.Task;
 import drfoliberg.worker.WorkerConfig;
+
 /**
  * TODO Refactor to abstract class and inherit service class ?
  *
  */
-public interface WorkThreadListener {
+public interface ConverterListener {
 
 	public void workStarted(Task task);
 

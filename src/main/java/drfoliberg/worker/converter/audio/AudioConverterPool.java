@@ -4,11 +4,11 @@ import drfoliberg.common.Service;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.worker.converter.ConverterPool;
-import drfoliberg.worker.converter.video.WorkThreadListener;
+import drfoliberg.worker.converter.ConverterListener;
 
 public class AudioConverterPool extends ConverterPool {
 
-	public AudioConverterPool(int threads, WorkThreadListener listener) {
+	public AudioConverterPool(int threads, ConverterListener listener) {
 		super(threads, listener);
 	}
 

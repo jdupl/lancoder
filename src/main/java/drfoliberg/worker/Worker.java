@@ -24,9 +24,9 @@ import drfoliberg.common.task.video.TaskReport;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.worker.contacter.ConctactMasterListener;
 import drfoliberg.worker.contacter.ContactMasterHttp;
+import drfoliberg.worker.converter.ConverterListener;
 import drfoliberg.worker.converter.audio.AudioConverterPool;
 import drfoliberg.worker.converter.video.VideoWorkThread;
-import drfoliberg.worker.converter.video.WorkThreadListener;
 import drfoliberg.worker.server.WorkerHttpServer;
 import drfoliberg.worker.server.WorkerServletListerner;
 
@@ -43,7 +43,7 @@ import org.apache.http.impl.client.HttpClients;
 import com.google.gson.Gson;
 
 public class Worker implements Runnable, ServerListener, WorkerServletListerner, ConctactMasterListener,
-		WorkThreadListener {
+		ConverterListener {
 
 	WorkerConfig config;
 

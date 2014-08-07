@@ -6,15 +6,14 @@ import drfoliberg.common.Service;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.task.Task;
 import drfoliberg.worker.WorkerConfig;
-import drfoliberg.worker.converter.video.WorkThreadListener;
 
-public abstract class ConverterPool implements WorkThreadListener {
+public abstract class ConverterPool implements ConverterListener {
 
 	protected Hashtable<Task, Service> converters;
 	protected int threads;
-	protected WorkThreadListener parentListener;
+	protected ConverterListener parentListener;
 
-	public ConverterPool(int threads, WorkThreadListener listener) {
+	public ConverterPool(int threads, ConverterListener listener) {
 		this.threads = threads;
 		this.parentListener = listener;
 		converters = new Hashtable<>(threads);
