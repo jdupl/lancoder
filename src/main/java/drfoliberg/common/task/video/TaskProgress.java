@@ -2,7 +2,7 @@ package drfoliberg.common.task.video;
 
 import java.io.Serializable;
 
-public class TaskProgess implements Serializable {
+public class TaskProgress implements Serializable {
 
 	private static final long serialVersionUID = 7437966237627538221L;
 	protected long timeStarted;

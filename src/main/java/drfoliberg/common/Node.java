@@ -15,14 +15,13 @@ public class Node implements Serializable {
 	private NodeState status;
 	private String name;
 	private String unid;
-	private ArrayList<Task> currentTasks;
+	private ArrayList<Task> currentTasks = new ArrayList<>();
 
 	public Node(InetAddress nodeAddresse, int nodePort, String name) {
 		this.nodeAddress = nodeAddresse;
-		this.status = NodeState.NOT_CONNECTED;
 		this.nodePort = nodePort;
 		this.name = name;
-		currentTasks = new ArrayList<>();
+		this.status = NodeState.NOT_CONNECTED;
 	}
 
 	public boolean hasTask(Task task) {

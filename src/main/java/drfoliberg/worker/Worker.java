@@ -51,18 +51,15 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	private NodeState status;
 	private InetAddress address;
 	
-	private ArrayList<Task> currentTasks;
-	
-	private ArrayList<Service> services;
+	private ArrayList<Task> currentTasks = new ArrayList<>();
+	private ArrayList<Service> services = new ArrayList<>();
 	private VideoWorkThread workThread;
 	private AudioConverterPool audioPool;
 
 	public Worker(String configPath) {
 		this.configPath = configPath;
-		this.services = new ArrayList<>();
-		this.currentTasks = new ArrayList<>();
 
-		config = WorkerConfig.load(configPath);
+        config = WorkerConfig.load(configPath);
 		if (config != null) {
 			System.err.println("Loaded config from disk !");
 		} else {

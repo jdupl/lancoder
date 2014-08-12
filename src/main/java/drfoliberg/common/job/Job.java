@@ -46,21 +46,17 @@ public class Job extends JobConfig implements Comparable<Job> {
 	 */
 	private String partsFolderName;
 
-	private ArrayList<VideoEncodingTask> videoTasks;
-	private ArrayList<AudioEncodingTask> audioTasks;
+	private ArrayList<VideoEncodingTask> videoTasks = new ArrayList<>();
+	private ArrayList<AudioEncodingTask> audioTasks = new ArrayList<>();
 
 	public Job(JobConfig config, String jobName, int lengthOfTasks, long lengthOfJob, int frameCount, float frameRate,
 			String encodingOutputFolder) {
 		super(config);
-
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = lengthOfJob;
 		this.frameCount = frameCount;
 		this.frameRate = frameRate;
-
-		this.videoTasks = new ArrayList<>();
-		this.audioTasks = new ArrayList<>();
 		this.jobStatus = JobState.JOB_TODO;
 		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
 		// Get source' filename

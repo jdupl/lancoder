@@ -12,12 +12,11 @@ import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class Muxer extends RunnableService {
 
-	private ArrayList<MuxerListener> listeners;
+	private ArrayList<MuxerListener> listeners = new ArrayList<>();
 	private Job job;
 	private String absoluteJobFolder;
 
 	public Muxer(MuxerListener listener, Job job, String absoluteJobFolder) {
-		listeners = new ArrayList<>();
 		listeners.add(listener);
 		this.job = job;
 		this.absoluteJobFolder = absoluteJobFolder;

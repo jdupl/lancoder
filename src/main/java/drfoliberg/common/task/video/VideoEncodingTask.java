@@ -13,14 +13,14 @@ public class VideoEncodingTask extends Task implements Serializable {
 
 	private static final long serialVersionUID = -8705492902098705162L;
 	protected TaskInfo taskInfo;
-	protected TaskProgess taskProgress;
+	protected TaskProgress taskProgress;
 
 	public VideoEncodingTask(int taskId, String jobId, JobConfig config) {
 		super(jobId, taskId);
 		taskInfo = new TaskInfo(config);
 		taskInfo.setTaskId(taskId);
 		taskInfo.setJobId(jobId);
-		taskProgress = new TaskProgess();
+		taskProgress = new TaskProgress();
 	}
 
 	public ArrayList<String> getRateControlArgs() {
@@ -81,8 +81,7 @@ public class VideoEncodingTask extends Task implements Serializable {
 	}
 
 	public float getProgress() {
-		float percentToComplete = ((float) taskProgress.getFramesCompleted() / taskInfo.getEstimatedFramesCount()) * 100;
-		return percentToComplete;
+        return ((float) taskProgress.getFramesCompleted() / taskInfo.getEstimatedFramesCount()) * 100;
 	}
 
 	public int getPasses() {
@@ -117,11 +116,11 @@ public class VideoEncodingTask extends Task implements Serializable {
 		taskProgress.setFramesCompleted(framesCompleted);
 	}
 
-	public void setTaskStatus(TaskProgess taskStatus) {
+	public void setTaskStatus(TaskProgress taskStatus) {
 		this.taskProgress = taskStatus;
 	}
 
-	public TaskProgess getTaskStatus() {
+	public TaskProgress getTaskStatus() {
 		return taskProgress;
 	}
 

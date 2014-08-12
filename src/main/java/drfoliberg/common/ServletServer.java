@@ -7,10 +7,9 @@ import org.eclipse.jetty.server.Server;
 public class ServletServer extends RunnableService implements ServerListener {
 
 	protected Server server;
-	protected ArrayList<ServerListener> listeners;
+	protected ArrayList<ServerListener> listeners = new ArrayList<>();
 
 	public ServletServer(int port, ServletListener servletListener, ServerListener serverListener) {
-		this.listeners = new ArrayList<>();
 		this.listeners.add(serverListener);
 		this.server = new Server(port);
 	}

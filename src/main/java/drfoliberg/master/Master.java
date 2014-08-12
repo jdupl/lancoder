@@ -63,7 +63,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	private HashMap<String, Node> nodes;
 	private HashMap<String, Job> jobs;
-	private ArrayList<RunnableService> services;
+	private ArrayList<RunnableService> services = new ArrayList<>();
 	private MasterHttpNodeServer nodeServer;
 	private NodeChecker nodeChecker;
 	private ApiServer apiServer;
@@ -87,7 +87,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
 
-		services = new ArrayList<>();
+
 		services.add(nodeChecker);
 		services.add(nodeServer);
 		services.add(apiServer);

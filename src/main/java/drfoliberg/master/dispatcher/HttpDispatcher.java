@@ -26,15 +26,13 @@ import drfoliberg.common.task.video.VideoEncodingTask;
 public class HttpDispatcher implements Runnable, DispatcherListener {
 	Node node;
 	Task task;
-	ArrayList<DispatcherListener> listeners;
+	ArrayList<DispatcherListener> listeners = new ArrayList<>();
 	String route;
 
 	public HttpDispatcher(Node node, Task task, DispatcherListener mainListener) {
 		this.node = node;
 		this.task = task;
-		this.listeners = new ArrayList<>();
 		this.listeners.add(mainListener);
-
 		if (task instanceof VideoEncodingTask) {
 			route = Routes.ADD_VIDEO_TASK;
 		} else if (task instanceof AudioEncodingTask) {
