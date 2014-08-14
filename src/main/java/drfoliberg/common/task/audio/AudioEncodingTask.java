@@ -1,5 +1,6 @@
 package drfoliberg.common.task.audio;
 
+import drfoliberg.common.codecs.Codec;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.task.Task;
 
@@ -7,7 +8,7 @@ public class AudioEncodingTask extends Task {
 
 	private static final long serialVersionUID = 1319651638856267785L;
 
-	private AudioCodec codec;
+	private Codec codec;
 	private int channels;
 	private int sampleRate;
 	private int qualityRate;
@@ -26,7 +27,7 @@ public class AudioEncodingTask extends Task {
 	 * @param outputFile
 	 * @return
 	 */
-	public AudioEncodingTask(AudioCodec codec, int channels, int sampleRate, int qualityRate,
+	public AudioEncodingTask(Codec codec, int channels, int sampleRate, int qualityRate,
 			RateControlType rateControlType, String inputFile, String outputFile, String jobId, int taskId) {
 		super(jobId, taskId);
 		this.codec = codec;
@@ -38,11 +39,11 @@ public class AudioEncodingTask extends Task {
 		this.outputFile = String.format("%s.%s", outputFile, codec.getContainer());
 	}
 
-	public AudioCodec getCodec() {
+	public Codec getCodec() {
 		return codec;
 	}
 
-	public void setCodec(AudioCodec codec) {
+	public void setCodec(Codec codec) {
 		this.codec = codec;
 	}
 

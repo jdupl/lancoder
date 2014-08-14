@@ -10,12 +10,12 @@ import org.apache.commons.io.FilenameUtils;
 
 import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.RunnableService;
+import drfoliberg.common.codecs.Codec;
 import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.Job;
 import drfoliberg.common.job.JobConfig;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.network.messages.api.ApiJobRequest;
-import drfoliberg.common.task.audio.AudioCodec;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.utils.FileUtils;
 
@@ -62,7 +62,7 @@ public class JobInitiator extends RunnableService {
 		int nextTaskId = job.getTasks().size();
 		File output = FileUtils.getFile(job.getOutputFolder(), String.valueOf(nextTaskId));
 		job.getAudioTasks().add(
-				new AudioEncodingTask(AudioCodec.VORBIS, 2, 44100, 3, RateControlType.CRF, conf.getSourceFile(), output
+				new AudioEncodingTask(Codec.VORBIS, 2, 44100, 3, RateControlType.CRF, conf.getSourceFile(), output
 						.getPath(), job.getJobId(), nextTaskId));
 
 		prepareFileSystem(job);

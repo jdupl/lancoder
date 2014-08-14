@@ -16,7 +16,6 @@ public class JobConfig implements Serializable {
 
 	public JobConfig(String sourceFile, RateControlType rateControlType, int rate, int passes, FFmpegPreset preset,
 			ArrayList<String> extraEncoderArgs) {
-		super();
 		this.sourceFile = sourceFile;
 		this.rateControlType = rateControlType;
 		this.rate = rate;

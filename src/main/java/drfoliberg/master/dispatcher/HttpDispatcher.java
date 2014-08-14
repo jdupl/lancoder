@@ -26,16 +26,16 @@ import drfoliberg.common.task.video.VideoEncodingTask;
 
 public class HttpDispatcher extends RunnableService {
 
-	DispatcherListener listener;
-	BlockingArrayQueue<DispatchItem> items = new BlockingArrayQueue<>();
-	boolean running = false;
+	private DispatcherListener listener;
+	private BlockingArrayQueue<DispatchItem> items = new BlockingArrayQueue<>();
+	private boolean free = true;
 
 	public HttpDispatcher(DispatcherListener listener) {
 		this.listener = listener;
 	}
 
 	public boolean isFree() {
-		return !running;
+		return free;
 	}
 
 	public void queue(DispatchItem item) {
@@ -43,7 +43,7 @@ public class HttpDispatcher extends RunnableService {
 	}
 
 	private void dispatch(DispatchItem item) {
-		running = true;
+		free = false;
 		Task task = item.getTask();
 		Node node = item.getNode();
 		String route = "";
@@ -87,7 +87,7 @@ public class HttpDispatcher extends RunnableService {
 			} else {
 				listener.taskRefused(item);
 			}
-			running = false;
+			free = true;
 		}
 	}
 

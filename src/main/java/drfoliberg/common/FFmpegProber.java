@@ -5,7 +5,9 @@ import java.io.InputStream;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+/**
+ * TODO replace with json parsing of ffprobe -v quiet -print_format json -show_format -show_streams
+ */
 public class FFmpegProber {
 
 	/**
