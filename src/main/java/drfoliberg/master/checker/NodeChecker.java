@@ -7,7 +7,7 @@ public class NodeChecker extends RunnableService {
 
 	private final static int MS_DELAY_BETWEEN_CHECKS = 5000;
 	private NodeCheckerListener listener;
-	NodeCheckerPool pool;
+	private NodeCheckerPool pool;
 
 	public NodeChecker(NodeCheckerListener listener) {
 		this.listener = listener;

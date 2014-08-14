@@ -29,7 +29,4 @@ public class AudioConverterPool extends ConverterPool {
 		t.start();
 		return true;
 	}
-
-
-
 }

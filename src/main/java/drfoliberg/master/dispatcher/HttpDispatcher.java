@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
-import java.util.ArrayList;
 
 import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;
@@ -14,25 +13,41 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.eclipse.jetty.util.BlockingArrayQueue;
 
 import com.google.gson.Gson;
 
 import drfoliberg.common.Node;
+import drfoliberg.common.RunnableService;
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.VideoEncodingTask;
 
-public class HttpDispatcher implements Runnable, DispatcherListener {
-	Node node;
-	Task task;
-	ArrayList<DispatcherListener> listeners = new ArrayList<>();
-	String route;
+public class HttpDispatcher extends RunnableService {
 
-	public HttpDispatcher(Node node, Task task, DispatcherListener mainListener) {
-		this.node = node;
-		this.task = task;
-		this.listeners.add(mainListener);
+	DispatcherListener listener;
+	BlockingArrayQueue<DispatchItem> items = new BlockingArrayQueue<>();
+	boolean running = false;
+
+	public HttpDispatcher(DispatcherListener listener) {
+		this.listener = listener;
+	}
+
+	public boolean isFree() {
+		return !running;
+	}
+
+	public void queue(DispatchItem item) {
+		this.items.add(item);
+	}
+
+	private void dispatch(DispatchItem item) {
+		running = true;
+		Task task = item.getTask();
+		Node node = item.getNode();
+		String route = "";
+
 		if (task instanceof VideoEncodingTask) {
 			route = Routes.ADD_VIDEO_TASK;
 		} else if (task instanceof AudioEncodingTask) {
@@ -40,10 +55,6 @@ public class HttpDispatcher implements Runnable, DispatcherListener {
 		} else {
 			throw new InvalidParameterException("Task must be an audio task or a video task");
 		}
-	}
-
-	@Override
-	public void run() {
 		boolean success = false;
 		try {
 			Gson gson = new Gson();
@@ -72,24 +83,27 @@ public class HttpDispatcher implements Runnable, DispatcherListener {
 			e.printStackTrace();
 		} finally {
 			if (success) {
-				taskAccepted(task, node);
+				listener.taskAccepted(item);
 			} else {
-				taskRefused(task, node);
+				listener.taskRefused(item);
+			}
+			running = false;
+		}
+	}
+
+	@Override
+	public void run() {
+		while (!close) {
+			try {
+				dispatch(items.take());
+			} catch (InterruptedException e) {
 			}
 		}
 	}
 
 	@Override
-	public void taskRefused(Task t, Node n) {
-		for (DispatcherListener dispatcherListener : listeners) {
-			dispatcherListener.taskRefused(t, n);
-		}
+	public void serviceFailure(Exception e) {
+		// TODO Auto-generated method stub
 
-	}
-
-	public void taskAccepted(Task t, Node n) {
-		for (DispatcherListener dispatcherListener : listeners) {
-			dispatcherListener.taskAccepted(t, n);
-		}
 	}
 }

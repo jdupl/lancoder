@@ -10,13 +10,12 @@ public class NodeCheckerPool extends Service {
 
 	private static final int MAX_CHECKERS = 5;
 
-	final Queue<HttpChecker> checkers = new PriorityQueue<HttpChecker>(MAX_CHECKERS);
-	ThreadGroup threads;
+	private final Queue<HttpChecker> checkers = new PriorityQueue<HttpChecker>(MAX_CHECKERS);
+	private ThreadGroup threads = new ThreadGroup("checkerThreads");
 	private NodeCheckerListener listener;
 
 	public NodeCheckerPool(NodeCheckerListener listener) {
 		this.listener = listener;
-		threads = new ThreadGroup("checkerThreads");
 	}
 
 	private boolean addNewChecker() {

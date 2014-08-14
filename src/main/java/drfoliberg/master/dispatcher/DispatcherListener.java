@@ -1,12 +1,9 @@
 package drfoliberg.master.dispatcher;
 
-import drfoliberg.common.Node;
-import drfoliberg.common.task.Task;
-
 public interface DispatcherListener {
 
-	public void taskRefused(Task t, Node n);
+	public void taskRefused(DispatchItem item);
 
-	public void taskAccepted(Task t, Node n);
+	public void taskAccepted(DispatchItem item);
 
 }

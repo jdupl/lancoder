@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import drfoliberg.common.Node;
 import drfoliberg.common.RunnableService;
 import drfoliberg.common.ServerListener;
+import drfoliberg.common.Service;
 import drfoliberg.common.job.Job;
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.network.messages.api.ApiJobRequest;
@@ -40,8 +41,9 @@ import drfoliberg.master.api.node.MasterNodeServletListener;
 import drfoliberg.master.api.web.ApiServer;
 import drfoliberg.master.checker.NodeChecker;
 import drfoliberg.master.checker.NodeCheckerListener;
+import drfoliberg.master.dispatcher.DispatchItem;
 import drfoliberg.master.dispatcher.DispatcherListener;
-import drfoliberg.master.dispatcher.HttpDispatcher;
+import drfoliberg.master.dispatcher.DispatcherPool;
 import drfoliberg.muxer.Muxer;
 import drfoliberg.muxer.MuxerListener;
 
@@ -56,11 +58,12 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	private HashMap<String, Node> nodes = new HashMap<String, Node>();
 	private HashMap<String, Job> jobs = new HashMap<String, Job>();
-	private ArrayList<RunnableService> services = new ArrayList<>();
+	private ArrayList<Service> services = new ArrayList<>();
 	private JobInitiator jobInitiator;
 	private MasterHttpNodeServer nodeServer;
 	private NodeChecker nodeChecker;
 	private ApiServer apiServer;
+	private DispatcherPool dispatcher;
 
 	public Master(String configPath) {
 		this.configPath = configPath;
@@ -72,17 +75,18 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			// this saves default configuration to disk
 			this.config = MasterConfig.generate(configPath);
 		}
-
 		jobInitiator = new JobInitiator(this, config);
 		nodeServer = new MasterHttpNodeServer(getConfig().getNodeServerPort(), this, this);
 		nodeChecker = new NodeChecker(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
+		dispatcher = new DispatcherPool(this);
 
 		services.add(nodeChecker);
 		services.add(nodeServer);
 		services.add(apiServer);
 		services.add(jobInitiator);
+		services.add(dispatcher);
 	}
 
 	public void shutdown() {
@@ -97,7 +101,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		for (Node n : getOnlineNodes()) {
 			disconnectNode(n);
 		}
-		for (RunnableService s : services) {
+		for (Service s : services) {
 			s.stop();
 		}
 	}
@@ -195,7 +199,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 */
 	public void updateNodesWork() {
 		System.out.println("MASTER: Checking dispatch");
-
 		Node node = null;
 		VideoEncodingTask nextVideoTask = null;
 		AudioEncodingTask nextAudioTask = null;
@@ -217,9 +220,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			task.setTaskState(TaskState.TASK_COMPUTING);
 		}
 		node.setStatus(NodeState.LOCKED);
-		HttpDispatcher dispatcher = new HttpDispatcher(node, task, this);
-		Thread t = new Thread(dispatcher);
-		t.start();
+		dispatcher.dispatch(new DispatchItem(task, node));
 	}
 
 	private String getNewUNID(Node n) {
@@ -548,9 +549,11 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	public void run() {
-		for (RunnableService s : this.services) {
-			Thread t = new Thread(s);
-			t.start();
+		for (Service s : services) {
+			if (s instanceof RunnableService) {
+				Thread t = new Thread((RunnableService) s);
+				t.start();
+			}
 		}
 	}
 
@@ -573,7 +576,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	@Override
-	public synchronized void taskRefused(Task t, Node n) {
+	public synchronized void taskRefused(DispatchItem item) {
+		Task t = item.getTask();
+		Node n = item.getNode();
 		System.err.printf("Node %s refused task\n", n.getName());
 		t.setTaskState(TaskState.TASK_TODO);
 		n.setStatus(NodeState.FREE);
@@ -581,9 +586,10 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	@Override
-	public synchronized void taskAccepted(Task t, Node n) {
+	public synchronized void taskAccepted(DispatchItem item) {
+		Task t = item.getTask();
+		Node n = item.getNode();
 		System.err.printf("Node %s accepted task\n", n.getName());
-		// n.setCurrentTask(t);
 		n.addTask(t);
 		t.setTaskState(TaskState.TASK_ASSIGNED);
 	}
