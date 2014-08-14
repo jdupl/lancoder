@@ -7,11 +7,9 @@ import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -19,14 +17,10 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.Node;
 import drfoliberg.common.RunnableService;
 import drfoliberg.common.ServerListener;
-import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.Job;
-import drfoliberg.common.job.JobConfig;
-import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.network.messages.api.ApiJobRequest;
 import drfoliberg.common.network.messages.api.ApiResponse;
@@ -37,7 +31,6 @@ import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
-import drfoliberg.common.task.audio.AudioCodec;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.TaskReport;
 import drfoliberg.common.task.video.VideoEncodingTask;
@@ -53,7 +46,7 @@ import drfoliberg.muxer.Muxer;
 import drfoliberg.muxer.MuxerListener;
 
 public class Master implements Runnable, MuxerListener, DispatcherListener, NodeCheckerListener,
-		MasterNodeServletListener, ServerListener {
+		MasterNodeServletListener, ServerListener, JobInitiatorListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
@@ -61,15 +54,15 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private MasterConfig config;
 	private String configPath;
 
-	private HashMap<String, Node> nodes;
-	private HashMap<String, Job> jobs;
+	private HashMap<String, Node> nodes = new HashMap<String, Node>();
+	private HashMap<String, Job> jobs = new HashMap<String, Job>();
 	private ArrayList<RunnableService> services = new ArrayList<>();
+	private JobInitiator jobInitiator;
 	private MasterHttpNodeServer nodeServer;
 	private NodeChecker nodeChecker;
 	private ApiServer apiServer;
 
 	public Master(String configPath) {
-
 		this.configPath = configPath;
 		config = MasterConfig.load(configPath);
 
@@ -79,18 +72,17 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			// this saves default configuration to disk
 			this.config = MasterConfig.generate(configPath);
 		}
-		nodes = new HashMap<String, Node>();
-		jobs = new HashMap<String, Job>();
 
+		jobInitiator = new JobInitiator(this, config);
 		nodeServer = new MasterHttpNodeServer(getConfig().getNodeServerPort(), this, this);
 		nodeChecker = new NodeChecker(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
 
-
 		services.add(nodeChecker);
 		services.add(nodeServer);
 		services.add(apiServer);
+		services.add(jobInitiator);
 	}
 
 	public void shutdown() {
@@ -317,7 +309,12 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		return nodes;
 	}
 
+	public void addJob(ApiJobRequest j) {
+		this.jobInitiator.process(j);
+	}
+
 	public boolean addJob(Job j) {
+		System.out.println("job " + j.getJobName() + " added");
 		if (this.jobs.put(j.getJobId(), j) != null) {
 			return false;
 		}
@@ -356,117 +353,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		updateNodesWork();
 		config.dump(configPath);
 		return true;
-	}
-
-	public Job createJob(JobConfig jobConfig, String jobName, int lengthOfTasks, long lengthOfJob, int frameCount,
-			float frameRate) {
-		// TODO Move to factories (audio task, video task)
-		// (this part needs heavy refactor)
-		Job j = new Job(jobConfig, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate,
-				config.getFinalEncodingFolder());
-
-		// Create audio tasks
-		int nextTaskId = j.getTasks().size() + 1;
-		File output = FileUtils.getFile(j.getOutputFolder(), String.valueOf(nextTaskId));
-		j.getAudioTasks().add(
-				new AudioEncodingTask(AudioCodec.VORBIS, 2, 44100, 3, RateControlType.CRF, jobConfig.getSourceFile(),
-						output.getPath(), j.getJobId(), nextTaskId));
-		return j;
-	}
-
-	public ApiResponse addJob(ApiJobRequest req) {
-		System.err.println("Reading job request...");
-		boolean success = true;
-
-		if (req == null) {
-			return new ApiResponse(false, "Job request is probably missing fields !");
-		}
-
-		String relativeSourceFile = req.getInputFile();
-
-		ArrayList<File> inputs = new ArrayList<>();
-		File absoluteSourceFile = new File(new File(config.getAbsoluteSharedFolder()), relativeSourceFile);
-
-		if (absoluteSourceFile.isDirectory()) {
-			System.err.println("Directory given!");
-			Collection<File> given = FileUtils
-					.listFiles(absoluteSourceFile, new String[] { "mkv", "mp4", "avi" }, true);
-			for (File file : given) {
-				inputs.add(file);
-			}
-		} else if (absoluteSourceFile.isFile()) {
-			inputs.add(absoluteSourceFile);
-		} else {
-			return new ApiResponse(false, String.format(
-					"File or directory %s in %s does not exists or is not readable !", relativeSourceFile,
-					absoluteSourceFile));
-		}
-
-		for (File sourceFile : inputs) {
-			boolean jobSuccess = true;
-			String relative = new File(config.getAbsoluteSharedFolder()).toURI().relativize(sourceFile.toURI())
-					.getPath();
-			// Set job's name
-			String jobName = req.getName();
-			if (inputs.size() > 1) {
-				String fileName = FilenameUtils.removeExtension(sourceFile.getName());
-				jobName = String.format("%s - %s", req.getName(), fileName);
-			}
-			// Get meta-data from source file
-			long lengthOfJob = (long) (FFmpegProber.getSecondsDuration(sourceFile.getAbsolutePath()) * 1000);
-			float frameRate = FFmpegProber.getFrameRate(sourceFile.getAbsolutePath());
-			int frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
-
-			FFmpegPreset preset = req.getPreset();
-			RateControlType rateControlType = req.getRateControlType();
-
-			// Limit to max pass from the rate control
-			int passes = (req.getPasses() <= rateControlType.getMaxPass() ? req.getPasses() : rateControlType
-					.getMaxPass());
-			if (passes <= 0) {
-				passes = 1;
-			}
-			int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
-			ArrayList<String> extraArgs = new ArrayList<>(); // TODO get extra encoder args from api request
-
-			JobConfig conf = new JobConfig(relative, rateControlType, req.getRate(), passes, preset, extraArgs);
-			Job j = createJob(conf, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate);
-
-			// Create base folders
-			File absoluteOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getOutputFolder());
-			File absolutePartsOutput = FileUtils.getFile(absoluteOutput, j.getPartsFolderName());
-
-			if (absoluteOutput.exists()) {
-				try {
-					// Attempt to clean
-					System.err.printf("Directory is not empty. Attempting to clean %s\n", absoluteOutput.toString());
-					FileUtils.cleanDirectory(absoluteOutput);
-				} catch (IOException e) {
-					jobSuccess = false;
-					e.printStackTrace();
-				}
-			} else {
-				absoluteOutput.mkdirs();
-			}
-			FileUtils.givePerms(absoluteOutput, false);
-			absolutePartsOutput.mkdir();
-			FileUtils.givePerms(absolutePartsOutput, false);
-
-			if (jobSuccess) {
-				jobSuccess = addJob(j);
-			}
-			if (!jobSuccess) {
-				success = false;
-			}
-		}
-
-		if (success) {
-			System.err.println("Job(s) added");
-			updateNodesWork();
-			return new ApiResponse(true, "All jobs were successfully added.");
-		}
-		System.err.println("Error while adding job");
-		return new ApiResponse(false, "Some jobs could not be added.");
 	}
 
 	public ArrayList<Job> getJobs() {
@@ -733,5 +619,10 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public void disconnectRequest(ConnectMessage cm) {
 		Node n = identifySender(cm.getUnid());
 		this.removeNode(n);
+	}
+
+	@Override
+	public void newJob(Job job) {
+		this.addJob(job);
 	}
 }

@@ -46,10 +46,10 @@ public class ApiHandler extends AbstractHandler {
 			break;
 		case "/jobs/add":
 			br = request.getReader();
-
 			try {
 				ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
-				res = master.addJob(req);
+				master.addJob(req);
+				res = new ApiResponse(true);
 				response.setStatus(HttpServletResponse.SC_OK);
 			} catch (Exception e) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
