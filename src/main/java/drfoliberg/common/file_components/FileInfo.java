@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 
 import drfoliberg.common.file_components.streams.AudioStream;
 import drfoliberg.common.file_components.streams.Stream;
+import drfoliberg.common.file_components.streams.TextStream;
 import drfoliberg.common.file_components.streams.VideoStream;
 
 public class FileInfo {
@@ -35,6 +36,7 @@ public class FileInfo {
 				this.getStreams().add(new AudioStream(jsonObject));
 				break;
 			case "subtitle":
+				this.getStreams().add(new TextStream(jsonObject));
 				break;
 			default:
 				break;
