@@ -1,14 +1,36 @@
 package drfoliberg.common;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-/**
- * TODO replace with json parsing of ffprobe -v quiet -print_format json -show_format -show_streams
- */
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import drfoliberg.common.file_components.FileInfo;
+
 public class FFmpegProber {
+
+	public static FileInfo getFileInfo(File file) throws IOException {
+		Process process = null;
+		try {
+			ProcessBuilder pb = new ProcessBuilder("ffprobe", "-v", "quiet", "-print_format", "json", "-show_format",
+					"-show_streams", file.getAbsolutePath());
+			process = pb.start();
+		} catch (IOException e) {
+			return null;
+		}
+		InputStream stdout = process.getInputStream();
+		JsonParser parser = new JsonParser();
+		JsonObject pojo = parser.parse(new InputStreamReader(stdout)).getAsJsonObject();
+		stdout.close();
+
+		return new FileInfo(pojo);
+	}
 
 	/**
 	 * Get the duration in second of a media file
@@ -17,6 +39,7 @@ public class FFmpegProber {
 	 *            The file to parse
 	 * @return The number of seconds or -1 if not found
 	 */
+	@Deprecated
 	public static float getSecondsDuration(String filename) {
 		Process process = null;
 		boolean found = false;
@@ -60,6 +83,7 @@ public class FFmpegProber {
 	 *            The filename to parse
 	 * @return The frame per second rate or -1 if not found
 	 */
+	@Deprecated
 	public static float getFrameRate(String filename) {
 		boolean found = false;
 		Process process = null;

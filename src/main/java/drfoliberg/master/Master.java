@@ -56,8 +56,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private MasterConfig config;
 	private String configPath;
 
-	private HashMap<String, Node> nodes = new HashMap<String, Node>();
-	private HashMap<String, Job> jobs = new HashMap<String, Job>();
+	private HashMap<String, Node> nodes = new HashMap<>();
+	private HashMap<String, Job> jobs = new HashMap<>();
 	private ArrayList<Service> services = new ArrayList<>();
 	private JobInitiator jobInitiator;
 	private MasterHttpNodeServer nodeServer;
@@ -447,7 +447,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	/**
 	 * Check if all tasks are on the disk after encoding is done. Resets status of missing tasks.
 	 * 
-	 * @param j
+	 * @param job
 	 *            The job to check
 	 * 
 	 * @return true if all files are accessible
