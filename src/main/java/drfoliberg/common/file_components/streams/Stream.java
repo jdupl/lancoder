@@ -16,7 +16,7 @@ public abstract class Stream {
 	 * Parse a json object and instantiate a stream with it's properties.
 	 * 
 	 * @param json
-	 *            the object to parse
+	 *            the json stream object to parse 
 	 */
 	public Stream(JsonObject json) {
 		this.index = json.get("index").getAsInt();
