@@ -1,6 +1,8 @@
 package drfoliberg.common.codecs;
 
-public enum Codec {
+import java.io.Serializable;
+
+public enum Codec implements Serializable {
 
 	UNKNOWN("Unknown","none", "unknown", "unknown"),
 	// Audio codecs

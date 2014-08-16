@@ -116,13 +116,12 @@ public class Job extends JobConfig implements Comparable<Job> {
 		long currentMs = 0;
 		ArrayList<VideoEncodingTask> tasks = new ArrayList<>();
 
-		int taskNo = taskCount;
 		long remaining = fileInfo.getDuration();
 
 		// Get relative (to absolute shared directory) output folder for this job's tasks
 		File relativeTasksOutput = FileUtils.getFile(getOutputFolder(), getPartsFolderName());
 		while (remaining > 0) {
-			VideoEncodingTask task = new VideoEncodingTask(taskNo, getJobId(), this, stream);
+			VideoEncodingTask task = new VideoEncodingTask(taskCount++, getJobId(), this, stream);
 			task.setEncodingStartTime(currentMs);
 			if ((((double) remaining - getLengthOfTasks()) / getLengthOfJob()) <= 0.15) {
 				task.setEncodingEndTime(getLengthOfJob());
@@ -139,7 +138,6 @@ public class Job extends JobConfig implements Comparable<Job> {
 					String.format("part-%d.mpeg.ts", task.getTaskId())); // TODO get extension from codec
 			task.setOutputFile(relativeTaskOutputFile.getPath());
 			tasks.add(task);
-			taskNo++;
 		}
 		return tasks;
 	}
@@ -153,7 +151,7 @@ public class Job extends JobConfig implements Comparable<Job> {
 	 * @return The AudioEncodingTask
 	 */
 	private AudioEncodingTask createAudioTask(AudioStream stream) {
-		int nextTaskId = taskCount;
+		int nextTaskId = taskCount++;
 		File output = FileUtils.getFile(getOutputFolder(), String.valueOf(nextTaskId));
 		return new AudioEncodingTask(Codec.VORBIS, 2, 44100, 3, RateControlType.CRF, getSourceFile(), output.getPath(),
 				getJobId(), nextTaskId, stream);

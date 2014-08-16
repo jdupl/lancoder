@@ -1,11 +1,15 @@
 package drfoliberg.common.file_components.streams;
 
+import java.io.Serializable;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import drfoliberg.common.codecs.Codec;
 
-public abstract class Stream {
+public class Stream implements Serializable {
+
+	private static final long serialVersionUID = -1867430611531693710L;
 	protected int index;
 	protected Codec codec = Codec.UNKNOWN;
 	protected String title = "";

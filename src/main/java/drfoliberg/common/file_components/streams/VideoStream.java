@@ -4,6 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class VideoStream extends Stream {
+
+	private static final long serialVersionUID = -2445363550218345849L;
 	private double framerate = 0;
 	private int width = 0;
 	private int height = 0;

@@ -1,6 +1,8 @@
 package drfoliberg.common.job;
 
-public enum RateControlType {
+import java.io.Serializable;
+
+public enum RateControlType implements Serializable {
 
 	/**
 	 * Please refer to https://mailman.videolan.org/pipermail/x264-devel/2010-February/006933.html

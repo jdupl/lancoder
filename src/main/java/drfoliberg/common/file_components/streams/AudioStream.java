@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 
 public class AudioStream extends Stream {
 
+	private static final long serialVersionUID = 4813380418557482787L;
 	private float bitrate;
 	private int channels;
 	private int sampleRate;

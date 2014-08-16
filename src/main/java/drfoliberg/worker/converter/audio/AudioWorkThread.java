@@ -27,8 +27,10 @@ public class AudioWorkThread extends RunnableService {
 		String absoluteInput = FileUtils.getFile(absoluteFolder, task.getInputFile()).getAbsolutePath();
 		String absoluteOutput = FileUtils.getFile(absoluteFolder, task.getOutputFile()).getAbsolutePath();
 
+		String mapping = String.format("0:%d", task.getStream().getIndex());
+
 		ArrayList<String> args = new ArrayList<>();
-		String[] baseArgs = new String[] { "ffmpeg", "-i", absoluteInput, "-vn", "-sn", "-ac",
+		String[] baseArgs = new String[] { "ffmpeg", "-i", absoluteInput, "-vn", "-sn", "-map", mapping, "-ac",
 				String.valueOf(task.getChannels()), "-ar", String.valueOf(task.getSampleRate()), "-c:a",
 				task.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
@@ -53,12 +55,9 @@ public class AudioWorkThread extends RunnableService {
 	@Override
 	public void run() {
 		boolean success = false;
-
 		ArrayList<String> args = getArgs(task);
-		System.out.println(args.toString());
-
+		System.out.println(args.toString()); // DEBUG
 		ProcessBuilder pb = new ProcessBuilder(args);
-
 		try {
 			listener.workStarted(task);
 			p = pb.start();
