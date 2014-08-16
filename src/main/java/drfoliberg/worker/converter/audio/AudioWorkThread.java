@@ -3,12 +3,16 @@ package drfoliberg.worker.converter.audio;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 
 import drfoliberg.common.RunnableService;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.common.utils.TimeUtils;
 import drfoliberg.worker.converter.ConverterListener;
 
 public class AudioWorkThread extends RunnableService {
@@ -43,11 +47,13 @@ public class AudioWorkThread extends RunnableService {
 			args.add(rate);
 			break;
 		// TODO support other codecs
-
 		default:
 			// TODO unknown codec exception
 			break;
 		}
+		// Meta-data mapping
+		args.add("-map_metadata");
+		args.add(String.format("0:s:%d", task.getStream().getIndex())); // TODO map to stream insted of global
 		args.add(absoluteOutput);
 		return args;
 	}
@@ -58,14 +64,30 @@ public class AudioWorkThread extends RunnableService {
 		ArrayList<String> args = getArgs(task);
 		System.out.println(args.toString()); // DEBUG
 		ProcessBuilder pb = new ProcessBuilder(args);
+		Scanner s = null;
 		try {
+			Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
+			Matcher m = null;
 			listener.workStarted(task);
 			p = pb.start();
-			p.waitFor();
+			s = new Scanner(p.getErrorStream());
+			while (s.hasNext() && !close) {
+				m = timePattern.matcher(s.nextLine());
+				if (m.find()) {
+					System.out.println(TimeUtils.getMsFromString(m.group(1)));
+				}
+			}
+
 			success = p.exitValue() == 0 ? true : false;
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
+			if (close) {
+				p.destroy();
+			}
+			if (s != null) {
+				s.close();
+			}
 			if (success) {
 				listener.workCompleted(task);
 			} else {

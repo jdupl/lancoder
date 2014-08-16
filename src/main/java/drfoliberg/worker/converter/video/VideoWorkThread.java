@@ -16,6 +16,7 @@ import drfoliberg.common.exceptions.WorkInterruptedException;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
+import drfoliberg.common.utils.TimeUtils;
 import drfoliberg.worker.converter.ConverterListener;
 
 public class VideoWorkThread extends RunnableService {
@@ -49,25 +50,6 @@ public class VideoWorkThread extends RunnableService {
 		}
 		// remove any previous temp files for this part
 		cleanTempPart();
-	}
-
-	/**
-	 * Convert ms count to hh:mm:ss.xxx format
-	 * 
-	 * @param ms
-	 *            The ms count to convert
-	 * @return The string in the right format for ffmpeg
-	 */
-	private String getDurationString(long ms) {
-		int hours = (int) (ms / (3600 * 1000));
-		int remaining = (int) (ms - hours * 3600 * 1000);
-		int minutes = (int) (remaining / (60 * 1000));
-
-		remaining -= minutes * 60 * 1000;
-
-		int seconds = remaining / 1000;
-		int decimals = remaining % 1000;
-		return String.format("%d:%d:%d.%d", hours, minutes, seconds, decimals);
 	}
 
 	private static boolean isWindows() {
@@ -162,14 +144,17 @@ public class VideoWorkThread extends RunnableService {
 				e.printStackTrace();
 				close = true;
 			}
+		} finally {
+			if (s != null) {
+				s.close();
+			}
+			if (close) {
+				System.err.println("Destroying ffmpeg process");
+				process.destroy();
+				throw new WorkInterruptedException();
+			}
 		}
-		s.close();
 
-		if (close) {
-			System.err.println("Destroying ffmpeg process");
-			process.destroy();
-			throw new WorkInterruptedException();
-		}
 	}
 
 	@Override
@@ -179,8 +164,8 @@ public class VideoWorkThread extends RunnableService {
 			System.out.println("WORKER WORK THREAD: Executing task " + task.getTaskId());
 			// use start and duration for ffmpeg legacy support
 			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
-			String startTimeStr = getDurationString(task.getEncodingStartTime());
-			String durationStr = getDurationString(durationMs);
+			String startTimeStr = TimeUtils.getStringFromMs(task.getEncodingStartTime());
+			String durationStr = TimeUtils.getStringFromMs(durationMs);
 
 			this.taskFinalFolder = FileUtils.getFile(listener.getConfig().getAbsoluteSharedFolder(),
 					task.getOutputFile()).getParentFile();
