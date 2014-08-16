@@ -13,8 +13,8 @@ WebUI controlled
 * x264 encoding (x265 in test) 
 * 2 pass VBR encoding or CRF encoding
 * Batch processing of directory
-* Audio processing with many tracks (dev)
-* Subtitles automuxing (dev)
+* Audio processing with many tracks
+* Subtitles automuxing from source (dev)
 
 
 ---
