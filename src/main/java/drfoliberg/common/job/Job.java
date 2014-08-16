@@ -8,6 +8,11 @@ import java.util.ArrayList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
+import drfoliberg.common.codecs.Codec;
+import drfoliberg.common.file_components.FileInfo;
+import drfoliberg.common.file_components.streams.AudioStream;
+import drfoliberg.common.file_components.streams.Stream;
+import drfoliberg.common.file_components.streams.VideoStream;
 import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
@@ -27,12 +32,12 @@ public class Job extends JobConfig implements Comparable<Job> {
 
 	private String jobId;
 	private String jobName;
-	private JobState jobStatus;
+	private JobState jobStatus = JobState.JOB_TODO;
 	private int lengthOfTasks;
 	private long lengthOfJob;
-	private int priority;
 	private int frameCount;
-	private float frameRate;
+	private double frameRate;
+	private int priority;
 	/**
 	 * Output path of this job, relative to absolute shared directory
 	 */
@@ -46,19 +51,23 @@ public class Job extends JobConfig implements Comparable<Job> {
 	 */
 	private String partsFolderName;
 
+	private FileInfo fileInfo;
+
 	private ArrayList<VideoEncodingTask> videoTasks = new ArrayList<>();
 	private ArrayList<AudioEncodingTask> audioTasks = new ArrayList<>();
+	private int taskCount = 0;
 
-	public Job(JobConfig config, String jobName, int lengthOfTasks, long lengthOfJob, int frameCount, float frameRate,
-			String encodingOutputFolder) {
+	public Job(JobConfig config, String jobName, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo) {
 		super(config);
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
-		this.lengthOfJob = lengthOfJob;
-		this.frameCount = frameCount;
-		this.frameRate = frameRate;
-		this.jobStatus = JobState.JOB_TODO;
+		this.lengthOfJob = fileInfo.getDuration();
+		this.frameRate = fileInfo.getMainVideoStream().getFramerate();
+		this.fileInfo = fileInfo;
 		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
+
+		// Estimate the frame count from the frame rate and length
+		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 		// Get source' filename
 		File source = new File(config.getSourceFile());
 		// Set output's filename
@@ -84,38 +93,70 @@ public class Job extends JobConfig implements Comparable<Job> {
 	}
 
 	/**
-	 * Creates tasks of the job with good handling of paths.
-	 * 
+	 * Creates tasks of the job with good handling of paths. TODO add subtitles to the job
 	 */
 	private void createTasks() {
+		for (Stream stream : this.fileInfo.getStreams()) {
+			if (stream instanceof VideoStream) {
+				this.videoTasks.addAll(createVideoTasks((VideoStream) stream));
+			} else if (stream instanceof AudioStream) {
+				this.audioTasks.add(createAudioTask((AudioStream) stream));
+			}
+		}
+	}
+
+	/**
+	 * Process a VideoStream and split into multiple VideoEncodingTasks
+	 * 
+	 * @param stream
+	 *            The stream to process
+	 * @return The VideoEncodingTasks that will be encoded
+	 */
+	private ArrayList<VideoEncodingTask> createVideoTasks(VideoStream stream) {
 		long currentMs = 0;
-		int taskNo = 0;
-		long remaining = lengthOfJob;
+		ArrayList<VideoEncodingTask> tasks = new ArrayList<>();
+
+		int taskNo = taskCount;
+		long remaining = fileInfo.getDuration();
 
 		// Get relative (to absolute shared directory) output folder for this job's tasks
-		File relativeTasksOutput = FileUtils.getFile(this.getOutputFolder(), this.partsFolderName);
+		File relativeTasksOutput = FileUtils.getFile(getOutputFolder(), getPartsFolderName());
 		while (remaining > 0) {
-			VideoEncodingTask t = new VideoEncodingTask(taskNo, jobId, this); // hackish but should work for now TODO
-			t.setEncodingStartTime(currentMs);
-			if ((((double) remaining - this.lengthOfTasks) / this.lengthOfJob) <= 0.15) {
-				t.setEncodingEndTime(lengthOfJob);
+			VideoEncodingTask task = new VideoEncodingTask(taskNo, getJobId(), this, stream);
+			task.setEncodingStartTime(currentMs);
+			if ((((double) remaining - getLengthOfTasks()) / getLengthOfJob()) <= 0.15) {
+				task.setEncodingEndTime(getLengthOfJob());
 				remaining = 0;
 			} else {
-				t.setEncodingEndTime(currentMs + lengthOfTasks);
+				task.setEncodingEndTime(currentMs + lengthOfTasks);
 				remaining -= lengthOfTasks;
 				currentMs += lengthOfTasks;
 			}
-			long ms = t.getEncodingEndTime() - t.getEncodingStartTime();
-			t.setEstimatedFramesCount((long) Math.floor((ms / 1000 * frameRate)));
-
+			long ms = task.getEncodingEndTime() - task.getEncodingStartTime();
+			task.setEstimatedFramesCount((long) Math.floor((ms / 1000 * stream.getFramerate())));
 			// Set task output file
 			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
-					String.format("part-%d.mpeg.ts", t.getTaskId())); // TODO check for extension
-			t.setOutputFile(relativeTaskOutputFile.getPath());
-
-			this.videoTasks.add(t);
+					String.format("part-%d.mpeg.ts", task.getTaskId())); // TODO get extension from codec
+			task.setOutputFile(relativeTaskOutputFile.getPath());
+			tasks.add(task);
 			taskNo++;
 		}
+		return tasks;
+	}
+
+	/**
+	 * Process an AudioStream and create an AudioEncodingTask (with hardcoded vorbis settings). TODO handle multiple
+	 * audio codec.
+	 * 
+	 * @param stream
+	 *            The stream to encode
+	 * @return The AudioEncodingTask
+	 */
+	private AudioEncodingTask createAudioTask(AudioStream stream) {
+		int nextTaskId = taskCount;
+		File output = FileUtils.getFile(getOutputFolder(), String.valueOf(nextTaskId));
+		return new AudioEncodingTask(Codec.VORBIS, 2, 44100, 3, RateControlType.CRF, getSourceFile(), output.getPath(),
+				getJobId(), nextTaskId, stream);
 	}
 
 	/**
@@ -185,6 +226,10 @@ public class Job extends JobConfig implements Comparable<Job> {
 		return other.getJobId().equals(this.getJobId());
 	}
 
+	public FileInfo getFileInfo() {
+		return fileInfo;
+	}
+
 	public JobState getJobStatus() {
 		return jobStatus;
 	}
@@ -197,7 +242,7 @@ public class Job extends JobConfig implements Comparable<Job> {
 		return frameCount;
 	}
 
-	public float getFrameRate() {
+	public double getFrameRate() {
 		return frameRate;
 	}
 

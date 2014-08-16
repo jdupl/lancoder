@@ -2,19 +2,25 @@ package drfoliberg.common.task;
 
 import java.io.Serializable;
 
+import drfoliberg.common.file_components.streams.Stream;
 import drfoliberg.common.status.TaskState;
 
 public class Task implements Serializable {
 
 	private static final long serialVersionUID = 1570513115706156687L;
-	protected TaskState taskState;
+	protected TaskState taskState = TaskState.TASK_TODO;
 	protected int taskId;
 	protected String jobId;
+	protected Stream stream;
 
-	public Task(String jobId, int taskId) {
+	public Task(String jobId, int taskId, Stream stream) {
 		this.jobId = jobId;
 		this.taskId = taskId;
-		this.taskState = TaskState.TASK_TODO;
+		this.stream = stream;
+	}
+
+	public Stream getStream() {
+		return stream;
 	}
 
 	public TaskState getTaskState() {

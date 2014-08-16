@@ -1,5 +1,6 @@
 package drfoliberg.common.file_components;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import com.google.gson.JsonElement;
@@ -10,12 +11,28 @@ import drfoliberg.common.file_components.streams.Stream;
 import drfoliberg.common.file_components.streams.TextStream;
 import drfoliberg.common.file_components.streams.VideoStream;
 
-public class FileInfo {
+public class FileInfo implements Serializable {
 
+	private static final long serialVersionUID = 5643049239410419603L;
+	/**
+	 * Duration of the file in ms
+	 */
 	private long duration;
+	/**
+	 * Size of the file in bytes
+	 */
 	private long size;
+	/**
+	 * Overall bitrate of the file in kbps
+	 */
 	private int bitrate;
+	/**
+	 * Format of the file
+	 */
 	private String format;
+	/**
+	 * Streams of the file
+	 */
 	private ArrayList<Stream> streams = new ArrayList<>();
 
 	public FileInfo(JsonObject json) {
@@ -42,6 +59,50 @@ public class FileInfo {
 				break;
 			}
 		}
+	}
+
+	public VideoStream getMainVideoStream() {
+		ArrayList<VideoStream> vStreams = new ArrayList<>();
+		for (Stream stream : streams) {
+			if (stream instanceof VideoStream) {
+				vStreams.add((VideoStream) stream);
+			}
+		}
+		if (vStreams.size() > 0) {
+			return vStreams.get(0);
+		} else {
+			return null;
+		}
+	}
+	
+	public ArrayList<VideoStream> getVideoStreams() {
+		ArrayList<VideoStream> vStreams = new ArrayList<>();
+		for (Stream stream : streams) {
+			if (stream instanceof VideoStream) {
+				vStreams.add((VideoStream) stream);
+			}
+		}
+		return vStreams;
+	}
+
+	public ArrayList<AudioStream> getAudioStreams() {
+		ArrayList<AudioStream> aStreams = new ArrayList<>();
+		for (Stream stream : streams) {
+			if (stream instanceof AudioStream) {
+				aStreams.add((AudioStream) stream);
+			}
+		}
+		return aStreams;
+	}
+
+	public ArrayList<TextStream> getTextStreams() {
+		ArrayList<TextStream> tStreams = new ArrayList<>();
+		for (Stream stream : streams) {
+			if (stream instanceof TextStream) {
+				tStreams.add((TextStream) stream);
+			}
+		}
+		return tStreams;
 	}
 
 	public long getDuration() {

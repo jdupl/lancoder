@@ -10,13 +10,12 @@ import org.apache.commons.io.FilenameUtils;
 
 import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.RunnableService;
-import drfoliberg.common.codecs.Codec;
+import drfoliberg.common.file_components.FileInfo;
 import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.Job;
 import drfoliberg.common.job.JobConfig;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.network.messages.api.ApiJobRequest;
-import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.utils.FileUtils;
 
 public class JobInitiator extends RunnableService {
@@ -29,18 +28,16 @@ public class JobInitiator extends RunnableService {
 		this.listener = listener;
 		this.config = config;
 	}
-	
-	public void process(ApiJobRequest request){
+
+	public void process(ApiJobRequest request) {
 		this.requests.add(request);
 	}
 
 	private void createJob(ApiJobRequest req, File sourceFile, String jobName) {
-		System.out.println("Creating job for file "+ sourceFile); // DEBUG
+		System.out.println("Creating job for file " + sourceFile); // DEBUG
 		String absoluteSourceFile = new File(config.getAbsoluteSharedFolder(), sourceFile.getPath()).getAbsolutePath();
 		// Get meta-data from source file
-		long lengthOfJob = (long) (FFmpegProber.getSecondsDuration(absoluteSourceFile) * 1000);
-		float frameRate = FFmpegProber.getFrameRate(absoluteSourceFile);
-		int frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
+		FileInfo fileInfo = FFmpegProber.getFileInfo(new File(absoluteSourceFile));
 
 		FFmpegPreset preset = req.getPreset();
 		RateControlType rateControlType = req.getRateControlType();
@@ -55,18 +52,8 @@ public class JobInitiator extends RunnableService {
 
 		JobConfig conf = new JobConfig(sourceFile.getPath(), rateControlType, req.getRate(), passes, preset, extraArgs);
 
-		// TODO Move to factories (audio task, video task)
-		Job job = new Job(conf, jobName, lengthOfTasks, lengthOfJob, frameCount, frameRate,
-				config.getFinalEncodingFolder());
-		// Create audio tasks
-		int nextTaskId = job.getTasks().size();
-		File output = FileUtils.getFile(job.getOutputFolder(), String.valueOf(nextTaskId));
-		job.getAudioTasks().add(
-				new AudioEncodingTask(Codec.VORBIS, 2, 44100, 3, RateControlType.CRF, conf.getSourceFile(), output
-						.getPath(), job.getJobId(), nextTaskId));
-
+		Job job = new Job(conf, jobName, lengthOfTasks, config.getFinalEncodingFolder(), fileInfo);
 		prepareFileSystem(job);
-
 		listener.newJob(job);
 	}
 
@@ -113,7 +100,6 @@ public class JobInitiator extends RunnableService {
 		FileUtils.givePerms(absoluteOutput, false);
 		absolutePartsOutput.mkdir();
 		FileUtils.givePerms(absolutePartsOutput, false);
-
 	}
 
 	@Override

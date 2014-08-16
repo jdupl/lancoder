@@ -1,6 +1,7 @@
 package drfoliberg.common.task.audio;
 
 import drfoliberg.common.codecs.Codec;
+import drfoliberg.common.file_components.streams.AudioStream;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.task.Task;
 
@@ -28,8 +29,8 @@ public class AudioEncodingTask extends Task {
 	 * @return
 	 */
 	public AudioEncodingTask(Codec codec, int channels, int sampleRate, int qualityRate,
-			RateControlType rateControlType, String inputFile, String outputFile, String jobId, int taskId) {
-		super(jobId, taskId);
+			RateControlType rateControlType, String inputFile, String outputFile, String jobId, int taskId, AudioStream stream) {
+		super(jobId, taskId, stream);
 		this.codec = codec;
 		this.channels = channels;
 		this.sampleRate = sampleRate;

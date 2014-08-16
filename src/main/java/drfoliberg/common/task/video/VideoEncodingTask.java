@@ -3,6 +3,7 @@ package drfoliberg.common.task.video;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import drfoliberg.common.file_components.streams.VideoStream;
 import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.JobConfig;
 import drfoliberg.common.job.RateControlType;
@@ -15,8 +16,8 @@ public class VideoEncodingTask extends Task implements Serializable {
 	protected TaskInfo taskInfo;
 	protected TaskProgress taskProgress;
 
-	public VideoEncodingTask(int taskId, String jobId, JobConfig config) {
-		super(jobId, taskId);
+	public VideoEncodingTask(int taskId, String jobId, JobConfig config, VideoStream stream) {
+		super(jobId, taskId, stream);
 		taskInfo = new TaskInfo(config);
 		taskInfo.setTaskId(taskId);
 		taskInfo.setJobId(jobId);

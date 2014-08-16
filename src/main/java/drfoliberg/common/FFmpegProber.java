@@ -15,21 +15,27 @@ import drfoliberg.common.file_components.FileInfo;
 
 public class FFmpegProber {
 
-	public static FileInfo getFileInfo(File file) throws IOException {
+	public static FileInfo getFileInfo(File file) {
+		FileInfo fileInfo = null;
 		Process process = null;
 		try {
 			ProcessBuilder pb = new ProcessBuilder("ffprobe", "-v", "quiet", "-print_format", "json", "-show_format",
 					"-show_streams", file.getAbsolutePath());
 			process = pb.start();
+			InputStream stdout = process.getInputStream();
+			JsonParser parser = new JsonParser();
+			JsonObject pojo = parser.parse(new InputStreamReader(stdout)).getAsJsonObject();
+			stdout.close();
+			fileInfo = new FileInfo(pojo);
 		} catch (IOException e) {
-			return null;
+			System.err.printf("Error while probing file %s\n", file.getAbsoluteFile());
+			e.printStackTrace();
+		} finally {
+			if (process != null) {
+				process.destroy();
+			}
 		}
-		InputStream stdout = process.getInputStream();
-		JsonParser parser = new JsonParser();
-		JsonObject pojo = parser.parse(new InputStreamReader(stdout)).getAsJsonObject();
-		stdout.close();
-
-		return new FileInfo(pojo);
+		return fileInfo;
 	}
 
 	/**
