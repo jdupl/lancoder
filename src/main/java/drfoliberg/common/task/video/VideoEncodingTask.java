@@ -7,6 +7,7 @@ import drfoliberg.common.file_components.streams.VideoStream;
 import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.JobConfig;
 import drfoliberg.common.job.RateControlType;
+import drfoliberg.common.progress.TaskProgress;
 import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 
@@ -15,18 +16,17 @@ public class VideoEncodingTask extends Task implements Serializable {
 	private static final long serialVersionUID = -8705492902098705162L;
 	protected TaskInfo taskInfo;
 	protected TaskProgress taskProgress;
+	protected JobConfig jobConfig;
 
-	public VideoEncodingTask(int taskId, String jobId, JobConfig config, VideoStream stream) {
-		super(jobId, taskId, stream);
-		taskInfo = new TaskInfo(config);
-		taskInfo.setTaskId(taskId);
-		taskInfo.setJobId(jobId);
-		taskProgress = new TaskProgress();
+	public VideoEncodingTask(JobConfig config, TaskInfo taskInfo, VideoStream stream) {
+		super(config, taskInfo, stream);
+		this.jobConfig = config;
+		taskProgress = new TaskProgress(taskInfo.estimatedFramesCount, config.getPasses());
 	}
 
 	public ArrayList<String> getRateControlArgs() {
 		ArrayList<String> args = new ArrayList<>();
-		switch (taskInfo.getRateControlType()) {
+		switch (jobConfig.getRateControlType()) {
 		case VBR:
 			args.add("-b:v");
 			args.add(String.format("%dk", this.getRate()));
@@ -44,31 +44,16 @@ public class VideoEncodingTask extends Task implements Serializable {
 
 	public ArrayList<String> getPresetArg() {
 		ArrayList<String> args = new ArrayList<>();
-		if (taskInfo.getPreset() != null) {
+		if (jobConfig.getPreset() != null) {
 			args.add("-preset");
-			args.add(taskInfo.getPreset().toString());
+			args.add(jobConfig.getPreset().toString());
 		}
 		return args;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof VideoEncodingTask)) {
-			return false;
-		}
-		VideoEncodingTask other = (VideoEncodingTask) obj;
-		if (other.getJobId() == null || this.getJobId() == null) {
-			return false;
-		}
-		return other.getTaskId() == this.getTaskId() && other.getJobId().equals(this.getJobId());
-	}
-
 	public void reset() {
 		taskProgress.setFramesCompleted(0);
-		setTaskState(TaskState.TASK_TODO);
+		taskProgress.setTaskState(TaskState.TASK_TODO);
 	}
 
 	public void start() {
@@ -86,28 +71,18 @@ public class VideoEncodingTask extends Task implements Serializable {
 	}
 
 	public int getPasses() {
-		return taskInfo.getPasses();
-	}
-
-	public void setPasses(int passes) {
-		taskInfo.setPasses(passes);
+		return jobConfig.getPasses();
 	}
 
 	public RateControlType getRateControlType() {
-		return taskInfo.getRateControlType();
+		return jobConfig.getRateControlType();
 	}
 
-	public void setRateControlType(RateControlType rateControlType) {
-		taskInfo.setRateControlType(rateControlType);
-	}
 
 	public int getRate() {
-		return taskInfo.getRate();
+		return jobConfig.getRate();
 	}
 
-	public void setRate(int rate) {
-		taskInfo.setRate(rate);
-	}
 
 	public long getFramesCompleted() {
 		return taskProgress.getFramesCompleted();
@@ -150,19 +125,7 @@ public class VideoEncodingTask extends Task implements Serializable {
 	}
 
 	public String getSourceFile() {
-		return taskInfo.getSourceFile();
-	}
-
-	public void setSourceFile(String sourceFile) {
-		taskInfo.setSourceFile(sourceFile);
-	}
-
-	public int getTaskId() {
-		return taskInfo.getTaskId();
-	}
-
-	public void setTaskId(int taskId) {
-		taskInfo.setTaskId(taskId);
+		return jobConfig.getSourceFile();
 	}
 
 	public String getJobId() {
@@ -209,16 +172,8 @@ public class VideoEncodingTask extends Task implements Serializable {
 		taskProgress.setTimeStarted(timeStarted);
 	}
 
-	public void setPreset(FFmpegPreset preset) {
-		taskInfo.setPreset(preset);
-	}
-
 	public ArrayList<String> getExtraEncoderArgs() {
-		return taskInfo.getExtraEncoderArgs();
-	}
-
-	public void setExtraEncoderArgs(ArrayList<String> extraEncoderArgs) {
-		taskInfo.setExtraEncoderArgs(extraEncoderArgs);
+		return jobConfig.getExtraEncoderArgs();
 	}
 
 	public int getCurrentPass() {
@@ -238,7 +193,12 @@ public class VideoEncodingTask extends Task implements Serializable {
 	}
 
 	public FFmpegPreset getPreset() {
-		return taskInfo.getPreset();
+		return jobConfig.getPreset();
+	}
+
+	public TaskState getTaskState() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

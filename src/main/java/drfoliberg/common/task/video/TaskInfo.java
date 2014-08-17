@@ -1,8 +1,8 @@
 package drfoliberg.common.task.video;
 
-import drfoliberg.common.job.JobConfig;
+import java.io.Serializable;
 
-public class TaskInfo extends JobConfig {
+public class TaskInfo implements Serializable {
 
 	private static final long serialVersionUID = -7347337372025478193L;
 	protected int taskId;
@@ -14,10 +14,19 @@ public class TaskInfo extends JobConfig {
 
 	protected long encodingStartTime;
 	protected long encodingEndTime;
+	/**
+	 * Frame count per pass (step)
+	 */
 	protected long estimatedFramesCount;
-
-	public TaskInfo(JobConfig config) {
-		super(config);
+	
+	public TaskInfo(int taskId, String jobId, String outputFile, long encodingStartTime, long encodingEndTime,
+			long estimatedFramesCount) {
+		this.taskId = taskId;
+		this.jobId = jobId;
+		this.outputFile = outputFile;
+		this.encodingStartTime = encodingStartTime;
+		this.encodingEndTime = encodingEndTime;
+		this.estimatedFramesCount = estimatedFramesCount;
 	}
 
 	public int getTaskId() {

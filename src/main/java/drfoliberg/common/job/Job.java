@@ -17,6 +17,7 @@ import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.common.task.video.TaskInfo;
 import drfoliberg.common.task.video.VideoEncodingTask;
 
 /**
@@ -121,22 +122,27 @@ public class Job extends JobConfig implements Comparable<Job> {
 		// Get relative (to absolute shared directory) output folder for this job's tasks
 		File relativeTasksOutput = FileUtils.getFile(getOutputFolder(), getPartsFolderName());
 		while (remaining > 0) {
-			VideoEncodingTask task = new VideoEncodingTask(taskCount++, getJobId(), this, stream);
-			task.setEncodingStartTime(currentMs);
+			long start = currentMs;
+			long end = 0;
+
 			if ((((double) remaining - getLengthOfTasks()) / getLengthOfJob()) <= 0.15) {
-				task.setEncodingEndTime(getLengthOfJob());
+				end = getLengthOfJob();
 				remaining = 0;
 			} else {
-				task.setEncodingEndTime(currentMs + lengthOfTasks);
+				end = currentMs + lengthOfTasks;
 				remaining -= lengthOfTasks;
 				currentMs += lengthOfTasks;
 			}
-			long ms = task.getEncodingEndTime() - task.getEncodingStartTime();
-			task.setEstimatedFramesCount((long) Math.floor((ms / 1000 * stream.getFramerate())));
-			// Set task output file
+			int taskId = taskCount++;
 			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
-					String.format("part-%d.mpeg.ts", task.getTaskId())); // TODO get extension from codec
-			task.setOutputFile(relativeTaskOutputFile.getPath());
+					String.format("part-%d.mpeg.ts", taskId)); // TODO get extension from codec
+
+			long ms = end - start;
+			long frameCount = (long) Math.floor((ms / 1000 * stream.getFramerate()));
+
+			TaskInfo info = new TaskInfo(taskId, getJobId(), relativeTaskOutputFile.getPath(), start, end, frameCount);
+			VideoEncodingTask task = new VideoEncodingTask(this, info, stream);
+
 			tasks.add(task);
 		}
 		return tasks;
