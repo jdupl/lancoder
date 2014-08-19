@@ -10,7 +10,7 @@ public class NodeCheckerPool extends Service {
 
 	private static final int MAX_CHECKERS = 5;
 
-	private final Queue<HttpChecker> checkers = new PriorityQueue<HttpChecker>(MAX_CHECKERS);
+	private final Queue<ObjectChecker> checkers = new PriorityQueue<ObjectChecker>(MAX_CHECKERS);
 	private ThreadGroup threads = new ThreadGroup("checkerThreads");
 	private NodeCheckerListener listener;
 
@@ -20,7 +20,7 @@ public class NodeCheckerPool extends Service {
 
 	private boolean addNewChecker() {
 		System.err.println("Creating new node checker thread");
-		HttpChecker checker = new HttpChecker(listener);
+		ObjectChecker checker = new ObjectChecker(listener);
 		Thread t = new Thread(threads, checker);
 		t.start();
 		return this.checkers.offer(checker);
@@ -32,7 +32,7 @@ public class NodeCheckerPool extends Service {
 			addNewChecker();
 		}
 		while (!accepted) {
-			HttpChecker checker = checkers.peek();
+			ObjectChecker checker = checkers.peek();
 			if (checker.getQueueSize() > 1 && checkers.size() < MAX_CHECKERS) {
 				addNewChecker();
 			}
