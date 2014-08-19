@@ -36,7 +36,7 @@ import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.TaskReport;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
-import drfoliberg.master.api.node.MasterNodeServletListener;
+import drfoliberg.master.api.node.MasterNodeServerListener;
 import drfoliberg.master.api.node.MasterObjectServer;
 import drfoliberg.master.api.web.ApiServer;
 import drfoliberg.master.checker.NodeChecker;
@@ -48,7 +48,7 @@ import drfoliberg.muxer.Muxer;
 import drfoliberg.muxer.MuxerListener;
 
 public class Master implements Runnable, MuxerListener, DispatcherListener, NodeCheckerListener,
-		MasterNodeServletListener, ServerListener, JobInitiatorListener {
+		MasterNodeServerListener, ServerListener, JobInitiatorListener {
 
 	public static final String ALGORITHM = "SHA-256";
 

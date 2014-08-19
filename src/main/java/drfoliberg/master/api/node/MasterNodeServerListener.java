@@ -1,10 +1,9 @@
 package drfoliberg.master.api.node;
 
-import drfoliberg.common.ServletListener;
 import drfoliberg.common.network.messages.cluster.ConnectMessage;
 import drfoliberg.common.network.messages.cluster.StatusReport;
 
-public interface MasterNodeServletListener extends ServletListener {
+public interface MasterNodeServerListener {
 
 	public String connectRequest(ConnectMessage cm);
 

@@ -7,10 +7,10 @@ import drfoliberg.common.RunnableService;
 
 public class MasterObjectServer extends RunnableService {
 
-	private MasterNodeServletListener listener;
+	private MasterNodeServerListener listener;
 	private int port;
 	
-	public MasterObjectServer(MasterNodeServletListener listener, int port) {
+	public MasterObjectServer(MasterNodeServerListener listener, int port) {
 		this.port = port;
 		this.listener = listener;
 	}

@@ -7,10 +7,10 @@ import drfoliberg.common.RunnableService;
 
 public class WorkerObjectServer extends RunnableService {
 
-	private WorkerServletListener listener;
+	private WorkerServerListener listener;
 	private int port;
 	
-	public WorkerObjectServer(WorkerServletListener listener, int port) {
+	public WorkerObjectServer(WorkerServerListener listener, int port) {
 		this.port = port;
 		this.listener = listener;
 	}
@@ -29,13 +29,10 @@ public class WorkerObjectServer extends RunnableService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
 	@Override
 	public void serviceFailure(Exception e) {
 		// TODO Auto-generated method stub
-		
 	}
-
 }

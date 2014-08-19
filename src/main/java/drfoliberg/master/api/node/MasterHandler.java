@@ -12,10 +12,10 @@ import drfoliberg.common.network.messages.cluster.StatusReport;
 
 public class MasterHandler implements Runnable {
 
-	private MasterNodeServletListener listener;
+	private MasterNodeServerListener listener;
 	private Socket s;
 
-	public MasterHandler(Socket s, MasterNodeServletListener listener) {
+	public MasterHandler(Socket s, MasterNodeServerListener listener) {
 		this.listener = listener;
 		this.s = s;
 	}

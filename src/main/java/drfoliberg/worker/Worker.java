@@ -39,9 +39,9 @@ import drfoliberg.worker.converter.ConverterListener;
 import drfoliberg.worker.converter.audio.AudioConverterPool;
 import drfoliberg.worker.converter.video.VideoWorkThread;
 import drfoliberg.worker.server.WorkerObjectServer;
-import drfoliberg.worker.server.WorkerServletListener;
+import drfoliberg.worker.server.WorkerServerListener;
 
-public class Worker implements Runnable, ServerListener, WorkerServletListener, ConctactMasterListener,
+public class Worker implements Runnable, ServerListener, WorkerServerListener, ConctactMasterListener,
 		ConverterListener {
 
 	private WorkerConfig config;

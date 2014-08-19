@@ -11,10 +11,10 @@ import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 
 public class WorkerHandler implements Runnable {
 
-	private WorkerServletListener listener;
+	private WorkerServerListener listener;
 	private Socket s;
 
-	public WorkerHandler(Socket s, WorkerServletListener listener) {
+	public WorkerHandler(Socket s, WorkerServerListener listener) {
 		this.s = s;
 		this.listener = listener;
 	}
