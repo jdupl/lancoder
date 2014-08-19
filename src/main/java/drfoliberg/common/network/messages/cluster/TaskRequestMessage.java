@@ -19,4 +19,8 @@ public class TaskRequestMessage extends Message {
 		super(Routes.ADD_VIDEO_TASK);
 		this.task = task;
 	}
+
+	public Task getTask() {
+		return task;
+	}
 }

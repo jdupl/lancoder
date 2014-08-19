@@ -18,6 +18,7 @@ import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.VideoEncodingTask;
 
+@Deprecated
 public class WorkerServlet extends HttpServlet implements WorkerServletListerner {
 
 	private static final long serialVersionUID = 6070828632381509848L;

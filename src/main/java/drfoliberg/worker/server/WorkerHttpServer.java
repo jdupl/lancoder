@@ -8,6 +8,7 @@ import drfoliberg.common.ServletServer;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
+@Deprecated
 public class WorkerHttpServer extends ServletServer {
 
 	public WorkerHttpServer(int port, WorkerServletListerner servletListener, ServerListener serverListener) {

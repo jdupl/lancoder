@@ -11,7 +11,7 @@ public class DispatcherPool extends Service implements DispatcherListener {
 	private static final int MAX_DISPATCHERS = 5;
 
 	private BlockingArrayQueue<DispatchItem> toDispatch = new BlockingArrayQueue<>();
-	private ArrayList<HttpDispatcher> dispatchers = new ArrayList<>();
+	private ArrayList<ObjectDispatcher> dispatchers = new ArrayList<>();
 	private DispatcherListener listener;
 	private ThreadGroup threads = new ThreadGroup("dispatcherThreads");
 
@@ -19,17 +19,17 @@ public class DispatcherPool extends Service implements DispatcherListener {
 		this.listener = listener;
 	}
 
-	private HttpDispatcher createNewDispatcher() {
+	private ObjectDispatcher createNewDispatcher() {
 		System.err.println("Creating new dispatcher");
-		HttpDispatcher dispatcher = new HttpDispatcher(listener);
+		ObjectDispatcher dispatcher = new ObjectDispatcher(listener);
 		dispatchers.add(dispatcher);
 		Thread t = new Thread(threads, dispatcher);
 		t.start();
 		return dispatcher;
 	}
 
-	private HttpDispatcher getFreeDispatcher() {
-		for (HttpDispatcher dispatcher : dispatchers) {
+	private ObjectDispatcher getFreeDispatcher() {
+		for (ObjectDispatcher dispatcher : dispatchers) {
 			if (dispatcher.isFree()) {
 				return dispatcher;
 			}
@@ -42,7 +42,7 @@ public class DispatcherPool extends Service implements DispatcherListener {
 	}
 
 	public synchronized void dispatch(DispatchItem item) {
-		HttpDispatcher dispatcher = getFreeDispatcher();
+		ObjectDispatcher dispatcher = getFreeDispatcher();
 		if (dispatcher != null) {
 			dispatcher.queue(item);
 		} else {
@@ -52,7 +52,7 @@ public class DispatcherPool extends Service implements DispatcherListener {
 
 	private synchronized void update() {
 		DispatchItem item = null;
-		HttpDispatcher dispatcher = null;
+		ObjectDispatcher dispatcher = null;
 		if ((item = toDispatch.poll()) != null && (dispatcher = getFreeDispatcher()) != null) {
 			dispatcher.queue(item);
 		}

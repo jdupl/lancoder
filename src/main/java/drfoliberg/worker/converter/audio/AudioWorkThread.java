@@ -28,7 +28,7 @@ public class AudioWorkThread extends RunnableService {
 
 	private ArrayList<String> getArgs(AudioEncodingTask task) {
 		String absoluteFolder = this.listener.getConfig().getAbsoluteSharedFolder();
-		String absoluteInput = FileUtils.getFile(absoluteFolder, task.getInputFile()).getAbsolutePath();
+		String absoluteInput = FileUtils.getFile(absoluteFolder, task.getSourceFile()).getAbsolutePath();
 		String absoluteOutput = FileUtils.getFile(absoluteFolder, task.getOutputFile()).getAbsolutePath();
 
 		String mapping = String.format("0:%d", task.getStream().getIndex());
@@ -41,8 +41,8 @@ public class AudioWorkThread extends RunnableService {
 		switch (task.getCodec()) {
 		case VORBIS:
 			String rateControlString = task.getRateControlType() == RateControlType.CRF ? "-q:a" : "-b:a";
-			String rate = task.getRateControlType() == RateControlType.CRF ? String.valueOf(task.getQualityRate())
-					: String.format("%dk", task.getQualityRate());
+			String rate = task.getRateControlType() == RateControlType.CRF ? String.valueOf(task.getRate()) : String
+					.format("%dk", task.getRate());
 			args.add(rateControlString);
 			args.add(rate);
 			break;

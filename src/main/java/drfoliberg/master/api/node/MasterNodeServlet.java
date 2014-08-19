@@ -16,6 +16,7 @@ import org.apache.http.entity.ContentType;
 
 import com.google.gson.Gson;
 
+@Deprecated
 public class MasterNodeServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 8887369974516325892L;

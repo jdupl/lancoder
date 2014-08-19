@@ -10,12 +10,14 @@ import org.apache.commons.io.FilenameUtils;
 
 import drfoliberg.common.FFmpegProber;
 import drfoliberg.common.RunnableService;
+import drfoliberg.common.codecs.Codec;
 import drfoliberg.common.file_components.FileInfo;
 import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.job.Job;
-import drfoliberg.common.job.JobConfig;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.network.messages.api.ApiJobRequest;
+import drfoliberg.common.task.audio.AudioTaskConfig;
+import drfoliberg.common.task.video.VideoTaskConfig;
 import drfoliberg.common.utils.FileUtils;
 
 public class JobInitiator extends RunnableService {
@@ -50,9 +52,12 @@ public class JobInitiator extends RunnableService {
 		int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
 		ArrayList<String> extraArgs = new ArrayList<>(); // TODO get extra encoder args from api request
 
-		JobConfig conf = new JobConfig(sourceFile.getPath(), rateControlType, req.getRate(), passes, preset, extraArgs);
-
-		Job job = new Job(conf, jobName, lengthOfTasks, config.getFinalEncodingFolder(), fileInfo);
+		VideoTaskConfig vconfig = new VideoTaskConfig(sourceFile.getPath(), rateControlType, req.getRate(), passes,
+				extraArgs, preset);
+		AudioTaskConfig aconfig = new AudioTaskConfig(sourceFile.getPath(), RateControlType.CRF, 3, extraArgs,
+				Codec.VORBIS, 2, 48000);
+		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo,
+				vconfig, aconfig);
 		prepareFileSystem(job);
 		listener.newJob(job);
 	}

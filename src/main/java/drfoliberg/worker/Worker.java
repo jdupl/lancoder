@@ -10,8 +10,20 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
-import drfoliberg.common.ServerListener;
+import org.apache.commons.io.Charsets;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+
+import com.google.gson.Gson;
+
 import drfoliberg.common.RunnableService;
+import drfoliberg.common.ServerListener;
 import drfoliberg.common.Service;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.Routes;
@@ -28,20 +40,8 @@ import drfoliberg.worker.contacter.ContactMasterHttp;
 import drfoliberg.worker.converter.ConverterListener;
 import drfoliberg.worker.converter.audio.AudioConverterPool;
 import drfoliberg.worker.converter.video.VideoWorkThread;
-import drfoliberg.worker.server.WorkerHttpServer;
+import drfoliberg.worker.server.WorkerObjectServer;
 import drfoliberg.worker.server.WorkerServletListerner;
-
-import org.apache.commons.io.Charsets;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-
-import com.google.gson.Gson;
 
 public class Worker implements Runnable, ServerListener, WorkerServletListerner, ConctactMasterListener,
 		ConverterListener {
@@ -50,7 +50,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	private String configPath;
 	private NodeState status;
 	private InetAddress address;
-	
+
 	private ArrayList<Task> currentTasks = new ArrayList<>();
 	private ArrayList<Service> services = new ArrayList<>();
 	private VideoWorkThread workThread;
@@ -59,15 +59,16 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	public Worker(String configPath) {
 		this.configPath = configPath;
 
-        config = WorkerConfig.load(configPath);
+		config = WorkerConfig.load(configPath);
 		if (config != null) {
 			System.err.println("Loaded config from disk !");
 		} else {
 			// this saves default configuration to disk
 			this.config = WorkerConfig.generate(configPath);
 		}
-		WorkerHttpServer httpServer = new WorkerHttpServer(config.getListenPort(), this, this);
-		services.add(httpServer);
+//		WorkerHttpServer httpServer = new WorkerHttpServer(config.getListenPort(), this, this);
+		WorkerObjectServer objectServer = new WorkerObjectServer(this, config.getListenPort());
+		services.add(objectServer);
 		audioPool = new AudioConverterPool(Runtime.getRuntime().availableProcessors(), this);
 		services.add(audioPool);
 		// Get local ip
@@ -207,7 +208,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			notifyHttpMasterStatusChange();
 			break;
 		default:
-			System.err.println("WORKER: Unhandlded status code while" + " updating status");
+			System.err.println("WORKER: Unhandlded status code while updating status");
 			break;
 		}
 	}
@@ -230,6 +231,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		}
 	}
 
+	@Deprecated
 	private void gracefulShutdown() {
 		try {
 			CloseableHttpClient client = HttpClients.createDefault();
@@ -247,6 +249,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		}
 	}
 
+	@Deprecated
 	public synchronized void sendCrashReport(CrashReport report) {
 		try {
 			CloseableHttpClient client = HttpClients.createDefault();
@@ -265,6 +268,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 		}
 	}
 
+	@Deprecated
 	public boolean notifyHttpMasterStatusChange() {
 		boolean success = false;
 		CloseableHttpClient client = HttpClientBuilder.create().build();

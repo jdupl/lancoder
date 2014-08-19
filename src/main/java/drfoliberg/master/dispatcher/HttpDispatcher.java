@@ -24,6 +24,7 @@ import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.VideoEncodingTask;
 
+@Deprecated
 public class HttpDispatcher extends RunnableService {
 
 	private DispatcherListener listener;
@@ -67,6 +68,7 @@ public class HttpDispatcher extends RunnableService {
 			put.setConfig(defaultRequestConfig);
 
 			StringEntity entity = new StringEntity(gson.toJson(task));
+			System.err.println(gson.toJson(task));
 			entity.setContentEncoding(Charsets.UTF_8.toString());
 			entity.setContentType(ContentType.APPLICATION_JSON.toString());
 			put.setEntity(entity);

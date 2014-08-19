@@ -7,7 +7,7 @@ import drfoliberg.common.ServletServer;
 
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-
+@Deprecated
 public class MasterHttpNodeServer extends ServletServer {
 
 	public MasterHttpNodeServer(int port, MasterNodeServletListener servletListener, ServerListener serverListener) {

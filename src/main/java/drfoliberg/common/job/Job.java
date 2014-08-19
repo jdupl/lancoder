@@ -1,6 +1,7 @@
 package drfoliberg.common.job;
 
 import java.io.File;
+import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -8,7 +9,6 @@ import java.util.ArrayList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
-import drfoliberg.common.codecs.Codec;
 import drfoliberg.common.file_components.FileInfo;
 import drfoliberg.common.file_components.streams.AudioStream;
 import drfoliberg.common.file_components.streams.Stream;
@@ -17,8 +17,10 @@ import drfoliberg.common.status.JobState;
 import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioEncodingTask;
+import drfoliberg.common.task.audio.AudioTaskConfig;
 import drfoliberg.common.task.video.TaskInfo;
 import drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.task.video.VideoTaskConfig;
 
 /**
  * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all
@@ -27,7 +29,7 @@ import drfoliberg.common.task.video.VideoEncodingTask;
  * @author justin
  * 
  */
-public class Job extends JobConfig implements Comparable<Job> {
+public class Job implements Comparable<Job>, Serializable {
 
 	private static final long serialVersionUID = -3817299446490049451L;
 
@@ -51,15 +53,15 @@ public class Job extends JobConfig implements Comparable<Job> {
 	 * The folder in which to store the parts before muxing
 	 */
 	private String partsFolderName;
-
 	private FileInfo fileInfo;
+	// private JobConfig jobConfig;
 
 	private ArrayList<VideoEncodingTask> videoTasks = new ArrayList<>();
 	private ArrayList<AudioEncodingTask> audioTasks = new ArrayList<>();
 	private int taskCount = 0;
 
-	public Job(JobConfig config, String jobName, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo) {
-		super(config);
+	public Job(String jobName, String inputFile, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo,
+			VideoTaskConfig vconfig, AudioTaskConfig aconfig) {
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
@@ -70,7 +72,7 @@ public class Job extends JobConfig implements Comparable<Job> {
 		// Estimate the frame count from the frame rate and length
 		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 		// Get source' filename
-		File source = new File(config.getSourceFile());
+		File source = new File(inputFile);
 		// Set output's filename
 		this.outputFileName = String.format("%s.mkv", FilenameUtils.removeExtension(source.getName()));
 		// Get /sharedFolder/LANcoder/jobsOutput/jobName/ (without the shared folder)
@@ -79,7 +81,7 @@ public class Job extends JobConfig implements Comparable<Job> {
 
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
-			byte[] byteArray = md.digest((sourceFile + jobName + System.currentTimeMillis()).getBytes());
+			byte[] byteArray = md.digest((inputFile + jobName + System.currentTimeMillis()).getBytes());
 			String result = "";
 			for (int i = 0; i < byteArray.length; i++) {
 				result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
@@ -90,18 +92,18 @@ public class Job extends JobConfig implements Comparable<Job> {
 			// even if the algorithm is not available, don't crash
 			this.jobId = String.valueOf(System.currentTimeMillis());
 		}
-		createTasks();
+		createTasks(aconfig, vconfig);
 	}
 
 	/**
 	 * Creates tasks of the job with good handling of paths. TODO add subtitles to the job
 	 */
-	private void createTasks() {
+	private void createTasks(AudioTaskConfig aconfig, VideoTaskConfig vconfig) {
 		for (Stream stream : this.fileInfo.getStreams()) {
 			if (stream instanceof VideoStream) {
-				this.videoTasks.addAll(createVideoTasks((VideoStream) stream));
+				this.videoTasks.addAll(createVideoTasks((VideoStream) stream, vconfig));
 			} else if (stream instanceof AudioStream) {
-				this.audioTasks.add(createAudioTask((AudioStream) stream));
+				this.audioTasks.add(createAudioTask((AudioStream) stream, aconfig));
 			}
 		}
 	}
@@ -113,7 +115,7 @@ public class Job extends JobConfig implements Comparable<Job> {
 	 *            The stream to process
 	 * @return The VideoEncodingTasks that will be encoded
 	 */
-	private ArrayList<VideoEncodingTask> createVideoTasks(VideoStream stream) {
+	private ArrayList<VideoEncodingTask> createVideoTasks(VideoStream stream, VideoTaskConfig config) {
 		long currentMs = 0;
 		ArrayList<VideoEncodingTask> tasks = new ArrayList<>();
 
@@ -141,7 +143,7 @@ public class Job extends JobConfig implements Comparable<Job> {
 			long frameCount = (long) Math.floor((ms / 1000 * stream.getFramerate()));
 
 			TaskInfo info = new TaskInfo(taskId, getJobId(), relativeTaskOutputFile.getPath(), start, end, frameCount);
-			VideoEncodingTask task = new VideoEncodingTask(this, info, stream);
+			VideoEncodingTask task = new VideoEncodingTask(info, stream, config);
 
 			tasks.add(task);
 		}
@@ -156,11 +158,15 @@ public class Job extends JobConfig implements Comparable<Job> {
 	 *            The stream to encode
 	 * @return The AudioEncodingTask
 	 */
-	private AudioEncodingTask createAudioTask(AudioStream stream) {
+	private AudioEncodingTask createAudioTask(AudioStream stream, AudioTaskConfig config) {
 		int nextTaskId = taskCount++;
 		File output = FileUtils.getFile(getOutputFolder(), String.valueOf(nextTaskId));
-		return new AudioEncodingTask(Codec.VORBIS, 2, 44100, 3, RateControlType.CRF, getSourceFile(), output.getPath(),
-				getJobId(), nextTaskId, stream);
+		TaskInfo info = new TaskInfo(nextTaskId, getJobId(), output.getPath(), 0, fileInfo.getDuration(),
+				fileInfo.getDuration() / 1000);
+		// AudioJobConfig aconfig = new AudioJobConfig(jobConfig.getSourceFile(), RateControlType.CRF, 3, extraArgs,
+		// Codec.VORBIS, 2, 48000);
+		AudioEncodingTask task = new AudioEncodingTask(info, stream, config);
+		return task;
 	}
 
 	/**
@@ -291,14 +297,6 @@ public class Job extends JobConfig implements Comparable<Job> {
 
 	public void setJobName(String jobName) {
 		this.jobName = jobName;
-	}
-
-	public RateControlType getRateContolType() {
-		return rateControlType;
-	}
-
-	public void setRateContolType(RateControlType rateContolType) {
-		this.rateControlType = rateContolType;
 	}
 
 	public String getOutputFolder() {
