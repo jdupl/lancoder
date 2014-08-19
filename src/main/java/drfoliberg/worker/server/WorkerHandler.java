@@ -11,10 +11,10 @@ import drfoliberg.common.network.messages.cluster.TaskRequestMessage;
 
 public class WorkerHandler implements Runnable {
 
-	private WorkerServletListerner listener;
+	private WorkerServletListener listener;
 	private Socket s;
 
-	public WorkerHandler(Socket s, WorkerServletListerner listener) {
+	public WorkerHandler(Socket s, WorkerServletListener listener) {
 		this.s = s;
 		this.listener = listener;
 	}
@@ -47,6 +47,7 @@ public class WorkerHandler implements Runnable {
 						out.writeObject(listener.statusRequest());
 						out.flush();
 						s.close();
+						break;
 					default:
 						out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
 						out.flush();

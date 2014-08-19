@@ -36,14 +36,14 @@ import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.TaskReport;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.worker.contacter.ConctactMasterListener;
-import drfoliberg.worker.contacter.ContactMasterHttp;
+import drfoliberg.worker.contacter.ContactMasterObject;
 import drfoliberg.worker.converter.ConverterListener;
 import drfoliberg.worker.converter.audio.AudioConverterPool;
 import drfoliberg.worker.converter.video.VideoWorkThread;
 import drfoliberg.worker.server.WorkerObjectServer;
-import drfoliberg.worker.server.WorkerServletListerner;
+import drfoliberg.worker.server.WorkerServletListener;
 
-public class Worker implements Runnable, ServerListener, WorkerServletListerner, ConctactMasterListener,
+public class Worker implements Runnable, ServerListener, WorkerServletListener, ConctactMasterListener,
 		ConverterListener {
 
 	private WorkerConfig config;
@@ -66,7 +66,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 			// this saves default configuration to disk
 			this.config = WorkerConfig.generate(configPath);
 		}
-//		WorkerHttpServer httpServer = new WorkerHttpServer(config.getListenPort(), this, this);
+		// WorkerHttpServer httpServer = new WorkerHttpServer(config.getListenPort(), this, this);
 		WorkerObjectServer objectServer = new WorkerObjectServer(this, config.getListenPort());
 		services.add(objectServer);
 		audioPool = new AudioConverterPool(Runtime.getRuntime().availableProcessors(), this);
@@ -214,7 +214,8 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	}
 
 	private void startContactMaster() {
-		ContactMasterHttp contact = new ContactMasterHttp(getMasterIpAddress(), getMasterPort(), this);
+		// ContactMasterHttp contact = new ContactMasterHttp(getMasterIpAddress(), getMasterPort(), this);
+		ContactMasterObject contact = new ContactMasterObject(getMasterIpAddress(), getMasterPort(), this);
 		Thread mastercontactThread = new Thread(contact);
 		mastercontactThread.start();
 		this.services.add(contact);
@@ -223,7 +224,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListerner,
 	public void stopContactMaster() {
 		System.out.println("Trying to stop contact service");
 		for (Service s : this.services) {
-			if (s instanceof ContactMasterHttp) {
+			if (s instanceof ContactMasterObject) {
 				System.out.println("Found service. Sending stop request.");
 				s.stop();
 				break;

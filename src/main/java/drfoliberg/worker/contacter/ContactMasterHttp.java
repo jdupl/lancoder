@@ -22,6 +22,7 @@ import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.Gson;
 
+@Deprecated
 public class ContactMasterHttp extends RunnableService {
 
 	ConctactMasterListener listener;

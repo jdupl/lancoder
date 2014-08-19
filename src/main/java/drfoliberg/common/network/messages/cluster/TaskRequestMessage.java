@@ -1,6 +1,6 @@
 package drfoliberg.common.network.messages.cluster;
 
-import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.ClusterProtocol;
 import drfoliberg.common.task.Task;
 
 public class TaskRequestMessage extends Message {
@@ -16,7 +16,7 @@ public class TaskRequestMessage extends Message {
 	 *            The task to request to the worker
 	 */
 	public TaskRequestMessage(Task task) {
-		super(Routes.ADD_VIDEO_TASK);
+		super(ClusterProtocol.TASK_REQUEST);
 		this.task = task;
 	}
 

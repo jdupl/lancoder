@@ -1,7 +1,7 @@
 package drfoliberg.common.network.messages.cluster;
 
 import drfoliberg.common.network.Cause;
-import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.ClusterProtocol;
 
 public class CrashReport extends AuthMessage {
 
@@ -21,7 +21,7 @@ public class CrashReport extends AuthMessage {
 	 *            A status report of the node at the crash
 	 */
 	public CrashReport(String unid, Cause cause, StatusReport statusReport) {
-		super(Routes.NODE_CRASH, unid);
+		super(ClusterProtocol.CRASH_REPORT, unid);
 		this.cause = cause;
 		this.statusReport = statusReport;
 	}

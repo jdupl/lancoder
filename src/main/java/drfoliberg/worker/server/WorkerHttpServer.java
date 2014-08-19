@@ -11,7 +11,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 @Deprecated
 public class WorkerHttpServer extends ServletServer {
 
-	public WorkerHttpServer(int port, WorkerServletListerner servletListener, ServerListener serverListener) {
+	public WorkerHttpServer(int port, WorkerServletListener servletListener, ServerListener serverListener) {
 		super(port, servletListener, serverListener);
 
 		HttpServlet servlet = new WorkerServlet(servletListener);

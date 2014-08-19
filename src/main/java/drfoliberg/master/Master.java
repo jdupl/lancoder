@@ -36,8 +36,8 @@ import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.TaskReport;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
-import drfoliberg.master.api.node.MasterHttpNodeServer;
 import drfoliberg.master.api.node.MasterNodeServletListener;
+import drfoliberg.master.api.node.MasterObjectServer;
 import drfoliberg.master.api.web.ApiServer;
 import drfoliberg.master.checker.NodeChecker;
 import drfoliberg.master.checker.NodeCheckerListener;
@@ -60,7 +60,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private HashMap<String, Job> jobs = new HashMap<>();
 	private ArrayList<Service> services = new ArrayList<>();
 	private JobInitiator jobInitiator;
-	private MasterHttpNodeServer nodeServer;
+	private MasterObjectServer nodeServer;
 	private NodeChecker nodeChecker;
 	private ApiServer apiServer;
 	private DispatcherPool dispatcher;
@@ -76,7 +76,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			this.config = MasterConfig.generate(configPath);
 		}
 		jobInitiator = new JobInitiator(this, config);
-		nodeServer = new MasterHttpNodeServer(getConfig().getNodeServerPort(), this, this);
+		nodeServer = new MasterObjectServer(this, getConfig().getNodeServerPort());
 		nodeChecker = new NodeChecker(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);

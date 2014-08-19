@@ -1,11 +1,10 @@
 package drfoliberg.common.network.messages.cluster;
 
-import java.io.Serializable;
 import java.net.InetAddress;
 
-import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.ClusterProtocol;
 
-public class ConnectMessage extends AuthMessage implements Serializable {
+public class ConnectMessage extends AuthMessage {
 
 	private static final long serialVersionUID = 831513295350691753L;
 
@@ -28,7 +27,7 @@ public class ConnectMessage extends AuthMessage implements Serializable {
 	 *            the node address
 	 */
 	public ConnectMessage(String unid, int localPort, String name, InetAddress address) {
-		super(Routes.CONNECT_NODE, unid);
+		super(ClusterProtocol.CONNECT_ME, unid);
 		this.unid = unid;
 		this.localPort = localPort;
 		this.name = name;

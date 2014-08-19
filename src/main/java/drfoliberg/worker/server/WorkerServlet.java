@@ -19,13 +19,13 @@ import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.VideoEncodingTask;
 
 @Deprecated
-public class WorkerServlet extends HttpServlet implements WorkerServletListerner {
+public class WorkerServlet extends HttpServlet implements WorkerServletListener {
 
 	private static final long serialVersionUID = 6070828632381509848L;
 
-	WorkerServletListerner servletListener;
+	WorkerServletListener servletListener;
 
-	public WorkerServlet(WorkerServletListerner servletListener) {
+	public WorkerServlet(WorkerServletListener servletListener) {
 		this.servletListener = servletListener;
 	}
 

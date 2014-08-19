@@ -1,16 +1,16 @@
-package drfoliberg.worker.server;
+package drfoliberg.master.api.node;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 
 import drfoliberg.common.RunnableService;
 
-public class WorkerObjectServer extends RunnableService {
+public class MasterObjectServer extends RunnableService {
 
-	private WorkerServletListener listener;
+	private MasterNodeServletListener listener;
 	private int port;
 	
-	public WorkerObjectServer(WorkerServletListener listener, int port) {
+	public MasterObjectServer(MasterNodeServletListener listener, int port) {
 		this.port = port;
 		this.listener = listener;
 	}
@@ -21,7 +21,7 @@ public class WorkerObjectServer extends RunnableService {
 		try {
 			server = new ServerSocket(port);
 			while(!close){
-				WorkerHandler handler = new WorkerHandler(server.accept(), listener);
+				MasterHandler handler = new MasterHandler(server.accept(), listener);
 				Thread t = new Thread(handler);
 				t.start();
 			}

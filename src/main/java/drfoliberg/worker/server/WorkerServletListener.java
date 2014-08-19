@@ -4,7 +4,7 @@ import drfoliberg.common.ServletListener;
 import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.task.Task;
 
-public interface WorkerServletListerner extends ServletListener {
+public interface WorkerServletListener extends ServletListener {
 
 	public boolean taskRequest(Task tqm);
 

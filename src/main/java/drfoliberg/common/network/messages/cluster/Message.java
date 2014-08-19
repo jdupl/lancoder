@@ -8,9 +8,11 @@ public class Message implements Serializable {
 
 	private static final long serialVersionUID = -483657531000641905L;
 
+	@Deprecated
 	protected String path;
 	protected ClusterProtocol code;
 
+	@Deprecated
 	public Message(String path) {
 		this.path = path;
 	}
