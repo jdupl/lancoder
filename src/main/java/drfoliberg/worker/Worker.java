@@ -1,33 +1,31 @@
 package drfoliberg.worker;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
-import org.apache.commons.io.Charsets;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
-
-import com.google.gson.Gson;
 
 import drfoliberg.common.RunnableService;
 import drfoliberg.common.ServerListener;
 import drfoliberg.common.Service;
 import drfoliberg.common.network.Cause;
 import drfoliberg.common.network.Routes;
+import drfoliberg.common.network.messages.ClusterProtocol;
 import drfoliberg.common.network.messages.cluster.CrashReport;
+import drfoliberg.common.network.messages.cluster.Message;
 import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.status.NodeState;
 import drfoliberg.common.status.TaskState;
@@ -182,7 +180,7 @@ public class Worker implements Runnable, ServerListener, WorkerServletListener, 
 
 	public synchronized void updateTaskStatus(Task t, TaskState newState) {
 		t.setTaskState(newState);
-		notifyHttpMasterStatusChange();
+		notifyMasterStatusChange();
 	}
 
 	public synchronized void updateStatus(NodeState statusCode) {
@@ -193,19 +191,19 @@ public class Worker implements Runnable, ServerListener, WorkerServletListener, 
 		this.status = statusCode;
 		switch (statusCode) {
 		case FREE:
-			notifyHttpMasterStatusChange();
+			notifyMasterStatusChange();
 			// this.currentTask = null;
 			break;
 		case WORKING:
 		case PAUSED:
-			notifyHttpMasterStatusChange();
+			notifyMasterStatusChange();
 			break;
 		case NOT_CONNECTED:
 			// start thread to try to contact master
 			startContactMaster();
 			break;
 		case CRASHED:
-			notifyHttpMasterStatusChange();
+			notifyMasterStatusChange();
 			break;
 		default:
 			System.err.println("WORKER: Unhandlded status code while updating status");
@@ -269,34 +267,24 @@ public class Worker implements Runnable, ServerListener, WorkerServletListener, 
 		}
 	}
 
-	@Deprecated
-	public boolean notifyHttpMasterStatusChange() {
+	public boolean notifyMasterStatusChange() {
 		boolean success = false;
-		CloseableHttpClient client = HttpClientBuilder.create().build();
-		System.out.println("Creating status report");
 		StatusReport report = this.getStatusReport();
-		Gson gson = new Gson();
-		try {
-			StringEntity entity = new StringEntity(gson.toJson(report));
-			entity.setContentEncoding(Charsets.UTF_8.toString());
-			entity.setContentType(ContentType.APPLICATION_JSON.toString());
-			URI url = new URI("http", null, config.getMasterIpAddress().getHostAddress(), config.getMasterPort(),
-					Routes.NODE_STATUS, null, null);
-			HttpPost post = new HttpPost(url);
-			post.setEntity(entity);
-			System.out.println("Sending status to master!");
-			CloseableHttpResponse response = client.execute(post);
-			if (response.getStatusLine().getStatusCode() == 200) {
-				success = true;
-			} else {
-				System.err.println("Master responded " + response.getStatusLine().getStatusCode()
-						+ " when notifying for new status");
+
+		try (Socket s = new Socket(getMasterIpAddress(), getMasterPort())) {
+			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+			out.flush();
+			out.writeObject(report);
+			out.flush();
+			Object o = in.readObject();
+			if (o instanceof Message) {
+				Message m = (Message) o;
+				success = m.getCode() == ClusterProtocol.BYE;
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
+		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 		return success;

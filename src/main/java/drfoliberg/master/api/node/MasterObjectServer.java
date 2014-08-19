@@ -29,7 +29,6 @@ public class MasterObjectServer extends RunnableService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
 	@Override

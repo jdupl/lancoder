@@ -23,6 +23,7 @@ import drfoliberg.common.RunnableService;
 import drfoliberg.common.network.Routes;
 import drfoliberg.common.network.messages.cluster.StatusReport;
 
+@Deprecated
 public class HttpChecker extends RunnableService implements Comparable<HttpChecker> {
 
 	private NodeCheckerListener listener;

@@ -23,6 +23,7 @@ public class WorkerHandler implements Runnable {
 	public void run() {
 		try {
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+			out.flush();
 			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
 			while (!s.isClosed()) {
 				Object request = in.readObject();
