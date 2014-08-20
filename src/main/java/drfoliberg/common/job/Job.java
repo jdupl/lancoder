@@ -160,11 +160,11 @@ public class Job implements Comparable<Job>, Serializable {
 	 */
 	private AudioEncodingTask createAudioTask(AudioStream stream, AudioTaskConfig config) {
 		int nextTaskId = taskCount++;
-		File output = FileUtils.getFile(getOutputFolder(), String.valueOf(nextTaskId));
+
+		File output = FileUtils.getFile(getOutputFolder(),
+				String.format("%d.%s", nextTaskId, config.getCodec().getContainer()));
 		TaskInfo info = new TaskInfo(nextTaskId, getJobId(), output.getPath(), 0, fileInfo.getDuration(),
 				fileInfo.getDuration() / 1000);
-		// AudioJobConfig aconfig = new AudioJobConfig(jobConfig.getSourceFile(), RateControlType.CRF, 3, extraArgs,
-		// Codec.VORBIS, 2, 48000);
 		AudioEncodingTask task = new AudioEncodingTask(info, stream, config);
 		return task;
 	}

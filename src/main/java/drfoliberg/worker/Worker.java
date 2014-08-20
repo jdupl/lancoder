@@ -148,7 +148,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	 * 
 	 * @return the StatusReport object
 	 */
-	public StatusReport getStatusReport() {
+	public synchronized StatusReport getStatusReport() {
 		return new StatusReport(getStatus(), config.getUniqueID(), getTaskReports());
 	}
 

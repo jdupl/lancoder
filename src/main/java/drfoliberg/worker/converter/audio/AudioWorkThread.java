@@ -63,12 +63,12 @@ public class AudioWorkThread extends RunnableService {
 		boolean success = false;
 		ArrayList<String> args = getArgs(task);
 		System.out.println(args.toString()); // DEBUG
+		listener.workStarted(task);
 		ProcessBuilder pb = new ProcessBuilder(args);
 		Scanner s = null;
 		try {
 			Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
 			Matcher m = null;
-			listener.workStarted(task);
 			p = pb.start();
 			s = new Scanner(p.getErrorStream());
 			while (s.hasNext() && !close) {

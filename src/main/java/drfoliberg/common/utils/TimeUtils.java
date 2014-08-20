@@ -18,10 +18,7 @@ public class TimeUtils {
 
 		int seconds = remaining / 1000;
 		int decimals = remaining % 1000;
-		while (decimals % 10 == 0) {
-			decimals /= 10;
-		}
-		return String.format("%02d:%02d:%02d.%d", hours, minutes, seconds, decimals);
+		return String.format("%02d:%02d:%02d.%03d", hours, minutes, seconds, decimals);
 	}
 
 	/**
