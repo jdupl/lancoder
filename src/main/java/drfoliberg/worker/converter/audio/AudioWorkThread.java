@@ -1,5 +1,6 @@
 package drfoliberg.worker.converter.audio;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,32 +10,38 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 
-import drfoliberg.common.RunnableService;
 import drfoliberg.common.job.RateControlType;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.utils.TimeUtils;
+import drfoliberg.worker.converter.Converter;
 import drfoliberg.worker.converter.ConverterListener;
 
-public class AudioWorkThread extends RunnableService {
+public class AudioWorkThread extends Converter {
 
 	AudioEncodingTask task;
 	ConverterListener listener;
 	Process p;
+	File taskFinalFile;
 
 	public AudioWorkThread(AudioEncodingTask task, ConverterListener listener) {
 		this.task = task;
 		this.listener = listener;
+
+		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
+		String extension = task.getCodec().getContainer();
+		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getJobId(),
+				String.valueOf(task.getTaskId()));
+		taskTempOutputFile = new File(taskTempOutputFolder, String.format("%d.%s", task.getTaskId(), extension));
+		taskFinalFolder = FileUtils.getFile(absoluteSharedDir, task.getOutputFile()).getParentFile();
+		taskFinalFile = FileUtils.getFile(absoluteSharedDir, task.getOutputFile());
 	}
 
 	private ArrayList<String> getArgs(AudioEncodingTask task) {
-		String absoluteFolder = this.listener.getConfig().getAbsoluteSharedFolder();
-		String absoluteInput = FileUtils.getFile(absoluteFolder, task.getSourceFile()).getAbsolutePath();
-		String absoluteOutput = FileUtils.getFile(absoluteFolder, task.getOutputFile()).getAbsolutePath();
+		String absoluteInput = FileUtils.getFile(absoluteSharedDir, task.getSourceFile()).getAbsolutePath();
 
-		String mapping = String.format("0:%d", task.getStream().getIndex());
-
+		String streamMapping = String.format("0:%d", task.getStream().getIndex());
 		ArrayList<String> args = new ArrayList<>();
-		String[] baseArgs = new String[] { "ffmpeg", "-i", absoluteInput, "-vn", "-sn", "-map", mapping, "-ac",
+		String[] baseArgs = new String[] { "ffmpeg", "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping, "-ac",
 				String.valueOf(task.getChannels()), "-ar", String.valueOf(task.getSampleRate()), "-c:a",
 				task.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
@@ -54,16 +61,12 @@ public class AudioWorkThread extends RunnableService {
 		// Meta-data mapping
 		args.add("-map_metadata");
 		args.add(String.format("0:s:%d", task.getStream().getIndex())); // TODO map to stream insted of global
-		args.add(absoluteOutput);
+		args.add(taskTempOutputFile.getPath());
 		return args;
 	}
 
-	@Override
-	public void run() {
+	private boolean encode(ArrayList<String> args) {
 		boolean success = false;
-		ArrayList<String> args = getArgs(task);
-		System.out.println(args.toString()); // DEBUG
-		listener.workStarted(task);
 		ProcessBuilder pb = new ProcessBuilder(args);
 		Scanner s = null;
 		try {
@@ -77,9 +80,10 @@ public class AudioWorkThread extends RunnableService {
 					System.out.println(TimeUtils.getMsFromString(m.group(1)));
 				}
 			}
-
-			success = p.exitValue() == 0 ? true : false;
+			success = p.waitFor() == 0 ? true : false;
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} finally {
 			if (close) {
@@ -88,11 +92,32 @@ public class AudioWorkThread extends RunnableService {
 			if (s != null) {
 				s.close();
 			}
-			if (success) {
-				listener.workCompleted(task);
-			} else {
-				listener.workFailed(task);
-			}
+		}
+		return success;
+	}
+
+	private boolean moveFile() {
+		try {
+			FileUtils.moveFile(taskTempOutputFile, taskFinalFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public void run() {
+		ArrayList<String> args = getArgs(task);
+		System.out.println(args.toString()); // DEBUG
+		listener.workStarted(task);
+		createDirs();
+		if (encode(args) && moveFile()) {
+			listener.workCompleted(task);
+			cleanTempPart();
+		} else {
+			listener.workFailed(task);
+			cleanTempPart();
 		}
 	}
 

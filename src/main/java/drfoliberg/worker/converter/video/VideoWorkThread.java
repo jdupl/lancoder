@@ -9,7 +9,6 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import drfoliberg.common.RunnableService;
 import drfoliberg.common.exceptions.MissingDecoderException;
 import drfoliberg.common.exceptions.MissingFfmpegException;
 import drfoliberg.common.exceptions.WorkInterruptedException;
@@ -17,39 +16,26 @@ import drfoliberg.common.network.Cause;
 import drfoliberg.common.task.video.VideoEncodingTask;
 import drfoliberg.common.utils.FileUtils;
 import drfoliberg.common.utils.TimeUtils;
+import drfoliberg.worker.converter.Converter;
 import drfoliberg.worker.converter.ConverterListener;
 
-public class VideoWorkThread extends RunnableService {
+public class VideoWorkThread extends Converter {
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
-	private VideoEncodingTask task;
-	ConverterListener listener;
-	Process process;
 
-	File taskFinalFolder;
-	File absoluteSharedDir;
-	File taskTempOutputFile;
-	File taskTempOutputFolder;
+	private Process process;
+	private VideoEncodingTask task;
 
 	public VideoWorkThread(VideoEncodingTask t, ConverterListener listener) {
 		task = t;
 		this.listener = listener;
-	}
-
-	private void createDirs() {
-
-		if (!taskFinalFolder.exists()) {
-			taskFinalFolder.mkdirs();
-			FileUtils.givePerms(taskFinalFolder, false);
-		}
 		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getJobId(),
 				String.valueOf(task.getTaskId()));
-		if (!taskTempOutputFolder.exists()) {
-			taskTempOutputFolder.mkdirs();
-			FileUtils.givePerms(taskTempOutputFolder, false);
-		}
-		// remove any previous temp files for this part
-		cleanTempPart();
+		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
+		String extension = "mkv";
+		taskTempOutputFile = new File(taskTempOutputFolder, String.format("%d.%s", task.getTaskId(), extension));
+		taskFinalFolder = FileUtils.getFile(listener.getConfig().getAbsoluteSharedFolder(), task.getOutputFile())
+				.getParentFile();
 	}
 
 	private static boolean isWindows() {
@@ -58,12 +44,9 @@ public class VideoWorkThread extends RunnableService {
 
 	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
 			MissingDecoderException, WorkInterruptedException {
-		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
 		task.setTimeStarted(System.currentTimeMillis());
 		File inputFile = new File(absoluteSharedDir, task.getSourceFile());
-
 		String mapping = String.format("0:%d", task.getStream().getIndex());
-
 		// Get parameters from the task and bind parameters to process
 		try {
 			String[] baseArgs = new String[] { "ffmpeg", "-ss", startTimeStr, "-t", durationStr, "-i",
@@ -154,7 +137,6 @@ public class VideoWorkThread extends RunnableService {
 				throw new WorkInterruptedException();
 			}
 		}
-
 	}
 
 	@Override
@@ -167,15 +149,7 @@ public class VideoWorkThread extends RunnableService {
 			String startTimeStr = TimeUtils.getStringFromMs(task.getEncodingStartTime());
 			String durationStr = TimeUtils.getStringFromMs(durationMs);
 
-			this.taskFinalFolder = FileUtils.getFile(listener.getConfig().getAbsoluteSharedFolder(),
-					task.getOutputFile()).getParentFile();
-
-			String extension = "mkv";
-			String filename = String.format("%d.%s", task.getTaskId(), extension);
-
 			createDirs();
-
-			taskTempOutputFile = new File(taskTempOutputFolder, filename);
 
 			task.setCurrentPass(1);
 			while (task.getCurrentPass() <= task.getPasses()) {
@@ -193,17 +167,6 @@ public class VideoWorkThread extends RunnableService {
 				listener.workCompleted(task);
 			} else {
 				listener.workFailed(task);
-			}
-		}
-	}
-
-	private void cleanTempPart() {
-		System.out.println("WORKER: Deleting temp task folder content.");
-		if (taskTempOutputFolder.exists()) {
-			try {
-				FileUtils.cleanDirectory(taskTempOutputFolder);
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		}
 	}
