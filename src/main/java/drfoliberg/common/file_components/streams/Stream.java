@@ -51,6 +51,18 @@ public class Stream implements Serializable {
 		}
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (super.equals(obj)) {
+			return true;
+		}
+		if (obj != null && obj instanceof Stream) {
+			Stream other = (Stream) obj;
+			return other.index == this.index && other.codec.equals(this.codec);
+		}
+		return false;
+	}
+
 	public int getIndex() {
 		return index;
 	}
