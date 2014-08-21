@@ -17,6 +17,10 @@ public class TestTimeUtils {
 		format = "00:04:24.530";
 		ms = TimeUtils.getMsFromString(format);
 		assertEquals(264530, ms);
+		
+		format = "00:04:24.53";
+		ms = TimeUtils.getMsFromString(format);
+		assertEquals(264530, ms);
 
 		format = "00:04:24.053";
 		ms = TimeUtils.getMsFromString(format);
