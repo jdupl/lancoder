@@ -61,7 +61,7 @@ public class TaskProgress implements Serializable {
 
 	public void completeStep() {
 		this.getCurrentStep().complete();
-		if (this.currentPassIndex + 1 < this.steps.size()) {
+		if (this.currentPassIndex < this.steps.size()) {
 			this.currentPassIndex++;
 			this.getCurrentStep().start();
 		}

@@ -149,7 +149,6 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	 * @return null if no current task
 	 */
 	public ArrayList<TaskReport> getTaskReports() {
-		// if worker has no task, return null report
 		ArrayList<TaskReport> reports = new ArrayList<TaskReport>();
 		for (Task task : currentTasks) {
 			 TaskReport report = new TaskReport(config.getUniqueID(), task);
@@ -370,6 +369,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	@Override
 	public synchronized void workStarted(Task task) {
 		task.start();
+		this.currentTasks.add(task);
 		if (this.status != NodeState.WORKING) {
 			updateStatus(NodeState.WORKING);
 		}
