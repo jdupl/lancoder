@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 
 import drfoliberg.common.RunnableService;
+import drfoliberg.common.file_components.streams.Stream;
 import drfoliberg.common.job.Job;
-import drfoliberg.common.task.audio.AudioEncodingTask;
-import drfoliberg.common.task.video.VideoEncodingTask;
+import drfoliberg.common.task.Task;
 
 public class Muxer extends RunnableService {
 
@@ -25,28 +26,30 @@ public class Muxer extends RunnableService {
 	@Override
 	public void run() {
 		boolean success = false;
-		File muxedFile = new File(absoluteJobFolder, job.getOutputFileName());
+		File muxOutputFile = new File(absoluteJobFolder, job.getOutputFileName());
 		ArrayList<String> args = new ArrayList<>();
-		Collections.addAll(args, new String[] { "mkvmerge", "-o", muxedFile.getAbsolutePath() });
-		// Video
-		args.add("--forced-track");
-		args.add("0:no");
-		for (int i = 0; i < job.getVideoTasks().size(); i++) {
-			Collections.addAll(args, new String[] { "-d", "0", "-A", "-S", "-T", "--no-global-tags", "--no-chapters" });
-			if (i != 0) {
-				args.add("+");
+		Collections.addAll(args, new String[] { "mkvmerge", "-o", muxOutputFile.getAbsolutePath() });
+
+		// Iterate through streams
+		Iterator<Stream> streamIterator = job.getFileInfo().getStreams().iterator();
+		while (streamIterator.hasNext()) {
+			// Add stream arguments 
+			args.add("--forced-track");
+			args.add("0:no");
+			Stream stream = streamIterator.next();
+			Iterator<Task> taskIterator = job.getTasksForStream(stream).iterator();
+			// Iterate through tasks of the stream and concatenate if necessary
+			while (taskIterator.hasNext()) {
+				Task t = taskIterator.next();
+				// Add file arguments
+				Collections.addAll(args, new String[] { "-d", "0", "-A", "-S", "-T", "--no-global-tags",
+						"--no-chapters" });
+				args.add(t.getOutputFile());
+				if (taskIterator.hasNext()) {
+					// Concatenate to the next task
+					args.add("+");
+				}
 			}
-			VideoEncodingTask t = job.getVideoTasks().get(i);
-			File path = new File(t.getOutputFile());
-			path = new File(job.getPartsFolderName(), path.getName());
-			args.add(path.getPath());
-		}
-		// Audio
-		for (int i = 0; i < job.getAudioTasks().size(); i++) {
-			Collections.addAll(args, new String[] { "--forced-track", "0:no", "-a", "0", "-D", "-S", "-T",
-					"--no-global-tags", "--no-chapters" });
-			AudioEncodingTask task = job.getAudioTasks().get(i);
-			args.add(task.getOutputFile());
 		}
 
 		ProcessBuilder pb = new ProcessBuilder(args);

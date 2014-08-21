@@ -62,7 +62,6 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			// this saves default configuration to disk
 			this.config = WorkerConfig.generate(configPath);
 		}
-		// WorkerHttpServer httpServer = new WorkerHttpServer(config.getListenPort(), this, this);
 		WorkerObjectServer objectServer = new WorkerObjectServer(this, config.getListenPort());
 		services.add(objectServer);
 		audioPool = new AudioConverterPool(Runtime.getRuntime().availableProcessors(), this);
