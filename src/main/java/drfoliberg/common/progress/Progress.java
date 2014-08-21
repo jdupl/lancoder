@@ -48,13 +48,6 @@ public class Progress implements Serializable {
 		this.unitsTotal = units;
 	}
 
-	@Override
-	public String toString() {
-		return "Progress [unitsTotal=" + unitsTotal + ", unitsCompleted=" + unitsCompleted + ", speed=" + speed
-				+ ", timeStarted=" + timeStarted + ", timeElapsed=" + timeElapsed + ", timeEstimated=" + timeEstimated
-				+ ", progress=" + progress + ", taskState=" + taskState + ", lastUpdate=" + lastUpdate + "]";
-	}
-
 	/**
 	 * Update progress and estimate speed with the units completed since the last update.
 	 * 
@@ -86,7 +79,6 @@ public class Progress implements Serializable {
 		long remainingUnits = unitsTotal - unitsCompleted;
 		this.timeEstimated = ((long) (remainingUnits / this.speed)) * 1000;
 		this.progress = (unitsCompleted * 100.0) / unitsTotal;
-		System.out.println(progress);
 	}
 
 	public void start() {

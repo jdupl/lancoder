@@ -1,7 +1,7 @@
 package drfoliberg.common.progress;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 import drfoliberg.common.status.TaskState;
 
@@ -10,14 +10,12 @@ public class TaskProgress implements Serializable {
 	private static final long serialVersionUID = 7437966237627538221L;
 
 	private int currentPassIndex = 1;
-	private ArrayList<Progress> steps = new ArrayList<>();
+	private LinkedHashMap<Integer, Progress> steps = new LinkedHashMap<>();
 	private TaskState taskState = TaskState.TASK_TODO;
 
 	public TaskProgress(long units, int steps) {
-		// TODO change to dictionnary
-		this.steps.add(0, null);
 		for (int i = 1; i <= steps; i++) {
-			this.steps.add(i, new Progress(units));
+			this.steps.put(i, new Progress(units));
 		}
 	}
 

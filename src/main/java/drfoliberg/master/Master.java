@@ -506,7 +506,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 */
 	@Override
 	public void readTaskReports(ArrayList<TaskReport> reports) {
-		System.out.println(reports.size());
 		for (TaskReport report : reports) {
 			Task reportTask = report.getTask();
 			Task actualTask = null;
@@ -522,7 +521,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 					}
 				}
 				TaskState oldState = actualTask.getTaskState();
-				System.out.println(reportTask.getTaskProgress().getCurrentStep().toString());
 				actualTask.setTaskProgress(reportTask.getTaskProgress());
 				if (!oldState.equals(actualTask.getTaskState())) {
 					System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(), oldState,
