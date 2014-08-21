@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import drfoliberg.common.file_components.streams.VideoStream;
 import drfoliberg.common.job.FFmpegPreset;
 import drfoliberg.common.progress.TaskProgress;
-import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 
 public class VideoEncodingTask extends Task implements Serializable {
@@ -48,31 +47,31 @@ public class VideoEncodingTask extends Task implements Serializable {
 		return args;
 	}
 
-	public void reset() {
-		taskProgress.setFramesCompleted(0);
-		taskProgress.setTaskState(TaskState.TASK_TODO);
-	}
-
-	public void start() {
-		setTimeStarted(System.currentTimeMillis());
-		setTaskState(TaskState.TASK_COMPUTING);
-	}
-
-	public long getETA() {
-		long elapsedMs = System.currentTimeMillis() - getTimeStarted();
-		return (long) (elapsedMs / (getProgress() / 100));
-	}
-
-	public float getProgress() {
-        return ((float) taskProgress.getFramesCompleted() / taskInfo.getEstimatedFramesCount()) * 100;
-	}
+//	public void reset() {
+//		taskProgress.setUnitsCompleted(0);
+//		taskProgress.setTaskState(TaskState.TASK_TODO);
+//	}
+//
+//	public void start() {
+//		setTimeStarted(System.currentTimeMillis());
+//		setTaskState(TaskState.TASK_COMPUTING);
+//	}
+//
+//	public long getETA() {
+//		long elapsedMs = System.currentTimeMillis() - getTimeStarted();
+//		return (long) (elapsedMs / (getProgress() / 100));
+//	}
+//
+//	public float getProgress() {
+//        return ((float) taskProgress.getUnitsCompleted() / taskInfo.getEstimatedFramesCount()) * 100;
+//	}
 
 	public FFmpegPreset getPreset() {
 		return this.preset;
 	}
 
-	public TaskState getTaskState() {
-		return this.taskProgress.getTaskState();
-	}
+//	public TaskState getTaskState() {
+//		return this.taskProgress.getTaskState();
+//	}
 
 }

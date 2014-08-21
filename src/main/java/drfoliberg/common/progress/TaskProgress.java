@@ -8,106 +8,76 @@ import drfoliberg.common.status.TaskState;
 public class TaskProgress implements Serializable {
 
 	private static final long serialVersionUID = 7437966237627538221L;
-	protected long timeStarted;
-	protected long timeElapsed;
-	protected long timeEstimated;
 
-	protected long unitsCompleted;
-	protected long unitsTotal;
-	protected double speed;
-
-	protected int currentPass;
-	/**
-	 * Progress is always calculated in Task object itself. We still need this field here for serialization.
-	 */
-	protected double progress;
-	protected TaskState taskState = TaskState.TASK_TODO;
-	protected ArrayList<Step> steps = new ArrayList<>();
+	private int currentPassIndex = 1;
+	private ArrayList<Progress> steps = new ArrayList<>();
+	private TaskState taskState = TaskState.TASK_TODO;
 
 	public TaskProgress(long units, int steps) {
-		this.unitsTotal = units;
+		// TODO change to dictionnary
+		this.steps.add(0, null);
 		for (int i = 1; i <= steps; i++) {
-			this.steps.add(new Step(units));
+			this.steps.add(i, new Progress(units));
 		}
 	}
 
-	public void update(long units, int step) {
-
+	public Progress getCurrentStep() {
+		return this.steps.get(currentPassIndex);
 	}
 
 	public void start() {
+		this.taskState = TaskState.TASK_COMPUTING;
+		this.getCurrentStep().start();
+	}
 
+	/**
+	 * Update current task to specified units.
+	 * 
+	 * @param units
+	 *            The unit count currently completed
+	 */
+	public void update(long units) {
+		this.getCurrentStep().update(units);
+	}
+
+	/**
+	 * Update current task to specified units and speed.
+	 * 
+	 * @param units
+	 *            The unit count currently completed
+	 * 
+	 * @param speed
+	 *            The speed in units / second
+	 */
+	public void update(long units, double speed) {
+		this.getCurrentStep().update(units, speed);
 	}
 
 	public void reset() {
+		this.taskState = TaskState.TASK_TODO;
+		this.currentPassIndex = 1;
+		for (int i = 1; i < steps.size(); i++) {
+			steps.get(i).reset();
+		}
+	}
 
+	public void completeStep() {
+		this.getCurrentStep().complete();
+		if (this.currentPassIndex + 1 < this.steps.size()) {
+			this.currentPassIndex++;
+			this.getCurrentStep().start();
+		}
 	}
 
 	public void complete() {
-
+		this.taskState = TaskState.TASK_COMPLETED;
 	}
 
-	public double getProgress() {
-		return progress;
-	}
-
-	public void setProgress(double progress) {
-		this.progress = progress;
-	}
-
-	public long getTimeStarted() {
-		return timeStarted;
-	}
-
-	public void setTimeStarted(long timeStarted) {
-		this.timeStarted = timeStarted;
-	}
-
-	public long getFramesCompleted() {
-		return unitsCompleted;
-	}
-
-	public void setFramesCompleted(long framesCompleted) {
-		this.unitsCompleted = framesCompleted;
-	}
-
-	public long getTimeElapsed() {
-		return timeElapsed;
-	}
-
-	public void setTimeElapsed(long timeElapsed) {
-		this.timeElapsed = timeElapsed;
-	}
-
-	public long getTimeEstimated() {
-		return timeEstimated;
-	}
-
-	public void setTimeEstimated(long timeEstimated) {
-		this.timeEstimated = timeEstimated;
-	}
-
-	public double getFps() {
-		return speed;
-	}
-
-	public void setFps(double fps) {
-		this.speed = fps;
-	}
-
-	public int getCurrentPass() {
-		return currentPass;
-	}
-
-	public void setCurrentPass(int currentPass) {
-		this.currentPass = currentPass;
+	public int getCurrentPassIndex() {
+		return currentPassIndex;
 	}
 
 	public TaskState getTaskState() {
 		return this.taskState;
-	}
-
-	public void setTaskState(TaskState taskState) {
-		this.taskState = taskState;
 	}
 }

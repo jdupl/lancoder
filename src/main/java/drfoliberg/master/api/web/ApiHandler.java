@@ -27,7 +27,6 @@ public class ApiHandler extends AbstractHandler {
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-
 		Gson gson = new Gson();
 		ApiResponse res = new ApiResponse(false, "Unknown error");
 		BufferedReader br = null;

@@ -217,7 +217,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	public void dispatch(Task task, Node node) {
 		if (task.getTaskState() == TaskState.TASK_TODO) {
-			task.setTaskState(TaskState.TASK_COMPUTING);
+			// task.setTaskState(TaskState.TASK_COMPUTING);
+			task.start();
 		}
 		node.setStatus(NodeState.LOCKED);
 		dispatcher.dispatch(new DispatchItem(task, node));
@@ -397,12 +398,11 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	public boolean updateNodeTask(Task task, Node n, TaskState updateStatus) {
 		// TODO clean logic here
-		if (task == null) {
-			System.err.println("MASTER: no task was found for node " + n.getName());
-			return false;
-		}
-		task.setTaskState(updateStatus);
-		if (updateStatus == TaskState.TASK_COMPLETED) {
+		switch (updateStatus) {
+		case TASK_ASSIGNED:
+			task.start();
+			break;
+		case TASK_COMPLETED:
 			n.getCurrentTasks().remove(task);
 			Job job = this.jobs.get(task.getJobId());
 			boolean jobDone = true;
@@ -415,13 +415,17 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			if (jobDone) {
 				jobEncodingCompleted(job);
 			}
-			// TODO implement task.complete() ?
-		} else if (updateStatus == TaskState.TASK_CANCELED) {
-			dispatch(task, n);
+			break;
+		case TASK_TODO:
+		case TASK_CANCELED:
+			task.reset();
 			n.getCurrentTasks().remove(task);
+			break;
+		default:
+			System.err.println("Unhandled status change");
+			break;
 		}
 		updateNodesWork();
-
 		return false;
 	}
 
@@ -462,7 +466,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 						job.getJobName());
 				System.err.printf("BTW I was looking for file '%s'\n", absoluteTaskFile);
 				integrity = false;
-				task.setTaskState(TaskState.TASK_TODO);
+				task.reset();
 			}
 		}
 		return integrity;
@@ -502,6 +506,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 */
 	@Override
 	public void readTaskReports(ArrayList<TaskReport> reports) {
+		System.out.println(reports.size());
 		for (TaskReport report : reports) {
 			Task reportTask = report.getTask();
 			Task actualTask = null;
@@ -516,18 +521,12 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 						actualTask = t;
 					}
 				}
-				if (reportTask.getTaskState() == TaskState.TASK_COMPLETED) {
-					updateNodeTask(actualTask, sender, TaskState.TASK_COMPLETED);
-				} else {
-					System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(),
-							actualTask.getTaskState(), reportTask.getTaskState());
-					actualTask.setTaskState(report.getTask().getTaskState());
-					if (reportTask instanceof VideoEncodingTask) {
-						VideoEncodingTask vTask = (VideoEncodingTask) reportTask;
-						float progress = vTask.getProgress();
-						System.out.printf("MASTER: Updating the task %d to %f%% \n", reportTask.getTaskId(), progress);
-						vTask.setTaskStatus(vTask.getTaskStatus());
-					}
+				TaskState oldState = actualTask.getTaskState();
+				System.out.println(reportTask.getTaskProgress().getCurrentStep().toString());
+				actualTask.setTaskProgress(reportTask.getTaskProgress());
+				if (!oldState.equals(actualTask.getTaskState())) {
+					System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(), oldState,
+							actualTask.getTaskState());
 				}
 			}
 		}
@@ -580,7 +579,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		Task t = item.getTask();
 		Node n = item.getNode();
 		System.err.printf("Node %s refused task\n", n.getName());
-		t.setTaskState(TaskState.TASK_TODO);
+		t.reset();
 		n.setStatus(NodeState.FREE);
 		updateNodesWork();
 	}
@@ -591,7 +590,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		Node n = item.getNode();
 		System.err.printf("Node %s accepted task\n", n.getName());
 		n.addTask(t);
-		t.setTaskState(TaskState.TASK_ASSIGNED);
+		t.start();
 	}
 
 	@Override

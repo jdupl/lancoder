@@ -77,7 +77,7 @@ public class AudioWorkThread extends Converter {
 			while (s.hasNext() && !close) {
 				m = timePattern.matcher(s.nextLine());
 				if (m.find()) {
-					System.out.println(TimeUtils.getMsFromString(m.group(1)));
+					task.update(TimeUtils.getMsFromString(m.group(1)) / 1000);
 				}
 			}
 			success = p.waitFor() == 0 ? true : false;

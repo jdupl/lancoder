@@ -1,9 +1,12 @@
 package drfoliberg.common.progress;
 
+import java.io.Serializable;
+
 import drfoliberg.common.status.TaskState;
 
-public class Progress {
+public class Progress implements Serializable {
 
+	private static final long serialVersionUID = -671719004619100038L;
 	/**
 	 * Total count of units
 	 */
@@ -45,6 +48,13 @@ public class Progress {
 		this.unitsTotal = units;
 	}
 
+	@Override
+	public String toString() {
+		return "Progress [unitsTotal=" + unitsTotal + ", unitsCompleted=" + unitsCompleted + ", speed=" + speed
+				+ ", timeStarted=" + timeStarted + ", timeElapsed=" + timeElapsed + ", timeEstimated=" + timeEstimated
+				+ ", progress=" + progress + ", taskState=" + taskState + ", lastUpdate=" + lastUpdate + "]";
+	}
+
 	/**
 	 * Update progress and estimate speed with the units completed since the last update.
 	 * 
@@ -52,10 +62,12 @@ public class Progress {
 	 *            The current count of units completed
 	 */
 	public void update(long units) {
-		long unitsSinceLast = units - unitsCompleted;
+		double unitsSinceLast = units - unitsCompleted;
 		long msElapsed = System.currentTimeMillis() - this.lastUpdate;
-		double estimatedSpeed = unitsSinceLast / msElapsed / 1000;
-		update(units, estimatedSpeed);
+		double estimatedSpeed = unitsSinceLast / msElapsed * 1000.0;
+		if (!Double.isInfinite(estimatedSpeed)) {
+			update(units, estimatedSpeed);
+		}
 	}
 
 	/**
@@ -74,6 +86,7 @@ public class Progress {
 		long remainingUnits = unitsTotal - unitsCompleted;
 		this.timeEstimated = ((long) (remainingUnits / this.speed)) * 1000;
 		this.progress = (unitsCompleted * 100.0) / unitsTotal;
+		System.out.println(progress);
 	}
 
 	public void start() {
@@ -84,15 +97,15 @@ public class Progress {
 	}
 
 	/**
-	 * Reset the progress but keep the count of total units 
+	 * Reset the progress but keep the count of total units
 	 */
 	public void reset() {
 		this.taskState = TaskState.TASK_TODO;
 		this.progress = 0;
 		this.lastUpdate = 0;
 		this.timeElapsed = 0;
-		this.timeEstimated =0;
-		this.timeStarted =0;
+		this.timeEstimated = 0;
+		this.timeStarted = 0;
 		this.unitsCompleted = 0;
 	}
 

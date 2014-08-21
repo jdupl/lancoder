@@ -44,7 +44,6 @@ public class VideoWorkThread extends Converter {
 
 	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
 			MissingDecoderException, WorkInterruptedException {
-		task.setTimeStarted(System.currentTimeMillis());
 		File inputFile = new File(absoluteSharedDir, task.getSourceFile());
 		String mapping = String.format("0:%d", task.getStream().getIndex());
 		// Get parameters from the task and bind parameters to process
@@ -74,7 +73,6 @@ public class VideoWorkThread extends Converter {
 				}
 			}
 			ffmpegArgs.add(outFile);
-
 			// build the process
 			ProcessBuilder pb = new ProcessBuilder(ffmpegArgs);
 			System.out.println(pb.command().toString()); // DEBUG
@@ -96,29 +94,28 @@ public class VideoWorkThread extends Converter {
 		Pattern missingDecoder = Pattern.compile("Error while opening encoder for output stream");
 		try {
 			while (s.hasNext() && !close) {
+				double speed = -1;
+				long units = -1;
 				// TODO better scanning (avoid regexing the same line multiple times if result)
 				line = s.nextLine();
 				Matcher m = currentFramePattern.matcher(line);
-
 				if (m.find()) {
-					long currentFrame = Long.parseLong(m.group(1));
-					task.setFramesCompleted(currentFrame);
-					System.err.printf("frame: %d out of %d (%f%%) \n", currentFrame, task.getEstimatedFramesCount(),
-							task.getProgress());
+					units = Long.parseLong(m.group(1));
 				}
 				m = fpsPattern.matcher(line);
 				if (m.find()) {
-					float fps = Float.parseFloat(m.group(1));
-					task.setFps(fps);
-					System.err.printf("fps: %s \n", fps);
+					speed = Double.parseDouble(m.group(1));
 				}
 				m = missingDecoder.matcher(line);
 				if (m.find()) {
 					s.close();
 					System.err.println("Missing decoder !");
 					throw new MissingDecoderException();
+				} else if (units != -1 && speed != -1) {
+					task.update(units, speed);
+				} else if (units != -1) {
+					task.update(units);
 				}
-
 			}
 		} catch (NullPointerException e) {
 			// If task is interrupted, current task might become null
@@ -143,21 +140,25 @@ public class VideoWorkThread extends Converter {
 	public void run() {
 		boolean success = false;
 		try {
+			listener.workStarted(task);
 			System.out.println("WORKER WORK THREAD: Executing task " + task.getTaskId());
 			// use start and duration for ffmpeg legacy support
 			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
 			String startTimeStr = TimeUtils.getStringFromMs(task.getEncodingStartTime());
 			String durationStr = TimeUtils.getStringFromMs(durationMs);
-
 			createDirs();
 
-			task.setCurrentPass(1);
-			while (task.getCurrentPass() <= task.getPasses()) {
+			task.start();
+			int currentStep = 1;
+			while (currentStep <= task.getPasses()) {
 				System.err.printf("Encoding pass %d of %d\n", task.getCurrentPass(), task.getPasses());
 				encodePass(startTimeStr, durationStr);
-				task.setCurrentPass(task.getCurrentPass() + 1);
+				task.completeStep();
+				currentStep++;
 			}
+			System.err.println("transcoding");
 			success = transcodeToMpegTs();
+			System.err.println("transcoding finished");
 		} catch (MissingFfmpegException | MissingDecoderException e) {
 			listener.nodeCrash(new Cause(e, "unknown", true));
 		} catch (WorkInterruptedException e) {

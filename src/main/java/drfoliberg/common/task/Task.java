@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import drfoliberg.common.file_components.streams.Stream;
 import drfoliberg.common.job.RateControlType;
+import drfoliberg.common.progress.Progress;
 import drfoliberg.common.progress.TaskProgress;
 import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.video.TaskInfo;
@@ -26,7 +27,6 @@ public abstract class Task implements Serializable {
 	public Task(TaskInfo taskInfo, Stream stream, TaskConfig config) {
 		this.stream = stream;
 		this.taskInfo = taskInfo;
-
 		this.sourceFile = config.getSourceFile();
 		this.rateControlType = config.getRateControlType();
 		this.rate = config.getRate();
@@ -35,12 +35,40 @@ public abstract class Task implements Serializable {
 		taskProgress = new TaskProgress(taskInfo.getEstimatedFramesCount(), passes);
 	}
 
-	public TaskState getTaskState() {
-		return taskProgress.getTaskState();
+	public void setTaskProgress(TaskProgress taskProgress) {
+		this.taskProgress = taskProgress;
 	}
 
-	public void setTaskState(TaskState taskState) {
-		taskProgress.setTaskState(taskState);
+	public Progress getCurrentStep() {
+		return taskProgress.getCurrentStep();
+	}
+
+	public void start() {
+		taskProgress.start();
+	}
+
+	public void update(long units) {
+		taskProgress.update(units);
+	}
+
+	public void update(long units, double speed) {
+		taskProgress.update(units, speed);
+	}
+
+	public void completeStep() {
+		taskProgress.completeStep();
+	}
+
+	public void complete() {
+		taskProgress.complete();
+	}
+
+	public int getCurrentPassIndex() {
+		return taskProgress.getCurrentPassIndex();
+	}
+
+	public TaskState getTaskState() {
+		return taskProgress.getTaskState();
 	}
 
 	public void reset() {
@@ -63,44 +91,8 @@ public abstract class Task implements Serializable {
 		return taskInfo.getTaskId();
 	}
 
-	public long getFramesCompleted() {
-		return taskProgress.getFramesCompleted();
-	}
-
-	public void setFramesCompleted(long framesCompleted) {
-		taskProgress.setFramesCompleted(framesCompleted);
-	}
-
-	public void setTaskStatus(TaskProgress taskStatus) {
-		this.taskProgress = taskStatus;
-	}
-
 	public TaskProgress getTaskStatus() {
 		return taskProgress;
-	}
-
-	public long getTimeElapsed() {
-		return taskProgress.getTimeElapsed();
-	}
-
-	public void setTimeElapsed(long timeElapsed) {
-		taskProgress.setTimeElapsed(timeElapsed);
-	}
-
-	public long getTimeEstimated() {
-		return taskProgress.getTimeEstimated();
-	}
-
-	public void setTimeEstimated(long timeEstimated) {
-		taskProgress.setTimeEstimated(timeEstimated);
-	}
-
-	public double getFps() {
-		return taskProgress.getFps();
-	}
-
-	public void setFps(double fps) {
-		taskProgress.setFps(fps);
 	}
 
 	public String getSourceFile() {
@@ -119,10 +111,6 @@ public abstract class Task implements Serializable {
 		return taskInfo.getEncodingStartTime();
 	}
 
-	public void setEncodingStartTime(long encodingStartTime) {
-		taskInfo.setEncodingStartTime(encodingStartTime);
-	}
-
 	public long getEncodingEndTime() {
 		return taskInfo.getEncodingEndTime();
 	}
@@ -139,28 +127,12 @@ public abstract class Task implements Serializable {
 		taskInfo.setEstimatedFramesCount(estimatedFramesCount);
 	}
 
-	public long getTimeStarted() {
-		return taskProgress.getTimeStarted();
-	}
-
-	public void setProgress(float progress) {
-		taskProgress.setProgress(progress);
-	}
-
-	public void setTimeStarted(long timeStarted) {
-		taskProgress.setTimeStarted(timeStarted);
-	}
-
 	public ArrayList<String> getExtraEncoderArgs() {
 		return extraEncoderArgs;
 	}
 
 	public int getCurrentPass() {
-		return taskProgress.getCurrentPass();
-	}
-
-	public void setCurrentPass(int currentPass) {
-		taskProgress.setCurrentPass(currentPass);
+		return taskProgress.getCurrentPassIndex();
 	}
 
 	public String getOutputFile() {

@@ -28,7 +28,6 @@ import drfoliberg.common.network.messages.cluster.CrashReport;
 import drfoliberg.common.network.messages.cluster.Message;
 import drfoliberg.common.network.messages.cluster.StatusReport;
 import drfoliberg.common.status.NodeState;
-import drfoliberg.common.status.TaskState;
 import drfoliberg.common.task.Task;
 import drfoliberg.common.task.audio.AudioEncodingTask;
 import drfoliberg.common.task.video.TaskReport;
@@ -56,7 +55,6 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 
 	public Worker(String configPath) {
 		this.configPath = configPath;
-
 		config = WorkerConfig.load(configPath);
 		if (config != null) {
 			System.err.println("Loaded config from disk !");
@@ -109,13 +107,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		System.out.println((getWorkerName().toUpperCase()) + ": " + s);
 	}
 
-	public void taskDone(VideoEncodingTask t) {
-		t.setTaskState(TaskState.TASK_COMPLETED);
-		this.updateStatus(NodeState.FREE);
-		services.remove(workThread);
-	}
-
-	public void stopWork(Task t) {
+	public synchronized void stopWork(Task t) {
 		// TODO check which task to stop (if many tasks are implemented)
 		this.workThread.stop();
 		System.err.println("Setting current task to null");
@@ -138,7 +130,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		} else {
 			return false;
 		}
-		t.setTaskState(TaskState.TASK_COMPUTING);
+		t.start();
 		updateStatus(NodeState.WORKING);
 		return true;
 	}
@@ -161,16 +153,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		// if worker has no task, return null report
 		ArrayList<TaskReport> reports = new ArrayList<TaskReport>();
 		for (Task task : currentTasks) {
-			TaskReport report = null;
-			if (task instanceof VideoEncodingTask) {
-				VideoEncodingTask currentTask = (VideoEncodingTask) task;
-				currentTask.setTimeElapsed(System.currentTimeMillis() - currentTask.getTimeStarted());
-				currentTask.setTimeEstimated(currentTask.getETA());
-				currentTask.setProgress(currentTask.getProgress());
-				report = new TaskReport(config.getUniqueID(), currentTask);
-			} else if (task instanceof AudioEncodingTask) {
-				report = new TaskReport(config.getUniqueID(), task);
-			}
+			 TaskReport report = new TaskReport(config.getUniqueID(), task);
 			if (report != null) {
 				reports.add(report);
 			}
@@ -178,12 +161,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		return reports;
 	}
 
-	public synchronized void updateTaskStatus(Task t, TaskState newState) {
-		t.setTaskState(newState);
-		notifyMasterStatusChange();
-	}
-
-	public synchronized void updateStatus(NodeState statusCode) {
+	public void updateStatus(NodeState statusCode) {
 		if (this.status == NodeState.NOT_CONNECTED && statusCode != NodeState.NOT_CONNECTED) {
 			this.stopContactMaster();
 		}
@@ -391,19 +369,18 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public void workStarted(Task task) {
-		System.err.println("Worker starting task");
-		updateTaskStatus(task, TaskState.TASK_COMPUTING);
-		this.currentTasks.add(task);
+	public synchronized void workStarted(Task task) {
+		task.start();
 		if (this.status != NodeState.WORKING) {
 			updateStatus(NodeState.WORKING);
 		}
 	}
 
 	@Override
-	public void workCompleted(Task task) {
+	public synchronized void workCompleted(Task task) {
 		System.err.println("Worker completed task");
-		updateTaskStatus(task, TaskState.TASK_COMPLETED);
+		task.complete();
+		notifyMasterStatusChange();
 		this.currentTasks.remove(task);
 		if (currentTasks.size() == 0) {
 			updateStatus(NodeState.FREE);
@@ -411,9 +388,10 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public void workFailed(Task task) {
+	public synchronized void workFailed(Task task) {
 		System.err.println("Worker failed task " + task.getTaskId());
-		updateTaskStatus(task, TaskState.TASK_CANCELED);
+		task.reset();
+		notifyMasterStatusChange();
 		this.currentTasks.remove(task);
 		if (currentTasks.size() == 0) {
 			updateStatus(NodeState.FREE);
