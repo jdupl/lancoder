@@ -96,6 +96,24 @@ public class Job implements Comparable<Job>, Serializable {
 	}
 
 	/**
+	 * Get the tasks associated to this stream.
+	 * 
+	 * @param stream
+	 *            The stream to look for
+	 * @return An ArrayList of related tasks
+	 */
+	public ArrayList<Task> getTasksForStream(Stream stream) {
+		ArrayList<Task> tasks = new ArrayList<>();
+		for (int i = 0; i < this.getTasks().size(); i++) {
+			Task task = tasks.get(i);
+			if (task.getStream().equals(stream)) {
+				tasks.add(task);
+			}
+		}
+		return tasks;
+	}
+
+	/**
 	 * Creates tasks of the job with good handling of paths. TODO add subtitles to the job
 	 */
 	private void createTasks(AudioTaskConfig aconfig, VideoTaskConfig vconfig) {
