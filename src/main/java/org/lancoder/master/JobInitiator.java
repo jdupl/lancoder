@@ -68,11 +68,15 @@ public class JobInitiator extends RunnableService {
 	private void processBatchRequest(ApiJobRequest req) {
 		System.out.println("Directory given");
 		File absoluteFolder = new File(new File(config.getAbsoluteSharedFolder()), req.getInputFile());
-		Collection<File> toProcess = FileUtils.listFiles(absoluteFolder, new String[] { "mkv", "mp4", "avi" }, true);
-		for (File file : toProcess) {
-			String fileName = FilenameUtils.removeExtension(file.getName());
+		Collection<File> toProcess = FileUtils.listFiles(absoluteFolder, new String[] { "mkv", "mp4", "avi", "mov" },
+				true);
+		for (File absoluteFile : toProcess) {
+			String relativePath = new File(config.getAbsoluteSharedFolder()).toURI().relativize(absoluteFile.toURI())
+					.getPath();
+			File relativeFile = new File(relativePath);
+			String fileName = FilenameUtils.removeExtension(relativeFile.getName());
 			String jobName = String.format("%s - %s", req.getName(), fileName);
-			createJob(req, file, jobName);
+			createJob(req, relativeFile, jobName);
 		}
 	}
 
