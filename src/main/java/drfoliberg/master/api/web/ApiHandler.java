@@ -47,8 +47,12 @@ public class ApiHandler extends AbstractHandler {
 			br = request.getReader();
 			try {
 				ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
-				master.addJob(req);
-				res = new ApiResponse(true);
+				if (master.addJob(req)) {
+					res = new ApiResponse(true);
+				} else {
+					res = new ApiResponse(false, "The file or directory does not exist.");
+				}
+
 				response.setStatus(HttpServletResponse.SC_OK);
 			} catch (Exception e) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

@@ -311,8 +311,13 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		return nodes;
 	}
 
-	public void addJob(ApiJobRequest j) {
-		this.jobInitiator.process(j);
+	public boolean addJob(ApiJobRequest j) {
+		boolean success = false;
+		if (new File(this.getConfig().getAbsoluteSharedFolder(), j.getInputFile()).exists()) {
+			success = true;
+			this.jobInitiator.process(j);
+		}
+		return success;
 	}
 
 	public boolean addJob(Job j) {
