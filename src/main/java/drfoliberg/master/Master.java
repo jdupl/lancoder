@@ -526,6 +526,11 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 					System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(), oldState,
 							actualTask.getTaskState());
 				}
+				if (actualTask.getTaskState().equals(TaskState.TASK_COMPLETED)) {
+					System.out.printf("Task id %d is completed. Removing from current tasks of node %s.\n",
+							reportTask.getTaskId(), sender.getName());
+					sender.getCurrentTasks().remove(actualTask);
+				}
 			}
 		}
 	}
@@ -542,7 +547,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		} else {
 			System.out.printf("Node %s crashed but not fatally.\n", node.getName());
 		}
-		// updateNodeTask(node, TaskState.TASK_CANCELED);
 	}
 
 	public void run() {
