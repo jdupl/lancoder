@@ -8,31 +8,46 @@ angular.module('lancoder.controllers', []).
           var refreshNodes = $scope.refreshNodes = function() {
             // Get nodes
             $http({method: 'GET', url: '/api/nodes'})
-                    .success(function(data, status, headers, config) {
-                      for (var i = 0; i < data.length; i++) {
-                        switch (data[i].status) {
-                          case "WORKING":
-                            data[i].panel = "panel-success";
-                            break;
-                          case "CRASHED":
-                            data[i].panel = "panel-danger";
-                            break;
-                          case "FREE":
-                            data[i].panel = "panel-primary";
-                            break;
-                          case "PAUSED":
-                            data[i].panel = "panel-warning";
-                            break;
-                          case "NOT_CONNECTED":
-                            data[i].panel = "panel-info";
-                            break;
-                          default:
-                            data[i].panel = "panel-default";
-                        }
+              .success(function(data, status, headers, config) {
+                for (var i = 0; i < data.length; i++) {
+                  switch (data[i].status) {
+                    case "WORKING":
+                      data[i].panel = "panel-success";
+                      break;
+                    case "CRASHED":
+                      data[i].panel = "panel-danger";
+                      break;
+                    case "FREE":
+                      data[i].panel = "panel-primary";
+                      break;
+                    case "PAUSED":
+                      data[i].panel = "panel-warning";
+                      break;
+                    case "NOT_CONNECTED":
+                      data[i].panel = "panel-info";
+                      break;
+                    default:
+                      data[i].panel = "panel-default";
+                  }
+                }
+                $scope.nodes = data;
+                //stepCount
+                for (var i = 0; i < $scope.nodes.length; i++) {
+                  var node = $scope.nodes[i];
+                  for (var j = 0; j < node.currentTasks.length; j++) {
+                    var task = node.currentTasks[j];
+                    $scope.nodes[i].currentTasks[j].taskProgress.stepCount = Object.keys(task.taskProgress.steps).length;
+                    $scope.nodes[i].currentTasks[j].taskProgress.currentStep = $scope.nodes[i].currentTasks[j].taskProgress.steps[1];
+                    for (var k = 1; k < $scope.nodes[i].currentTasks[j].taskProgress.stepCount; k++) {
+                      var step = $scope.nodes[i].currentTasks[j].taskProgress.steps[k]
+                      if (step.taskState == "TASK_COMPUTING" ) {
+                        $scope.nodes[i].currentTasks[j].taskProgress.currentStep = step;
                       }
-                      $scope.nodes = data;
-                    }).error(function() {
-              $scope.nodes.error = "Could not reach master server.";
+                    }
+                  }
+                }
+              }).error(function() {
+                $scope.nodes.error = "Cannot not reach master server.";
             });
           };
 
@@ -42,12 +57,10 @@ angular.module('lancoder.controllers', []).
               $scope.nodesAutoRefresh();
             }, 5000);
           };
-
           refreshNodes();
           $scope.nodesAutoRefresh();
         })
         .controller('jobs', function($scope, $http, $timeout) {
-
           $scope.presets = ['ULTRAFAST', 'SUPERFAST', 'VERYFAST', 'FASTER', 'FAST', 'MEDIUM', 'SLOW', 'SLOWER', 'VERYSLOW', 'PLACEBO'];
           $scope.controlTypes = [
             { value: 'VBR', name: 'Variable Bitrate' },
@@ -58,45 +71,45 @@ angular.module('lancoder.controllers', []).
           var refreshJobs = $scope.refreshJobs = function() {
             // Get jobs
             $http({method: 'GET', url: '/api/jobs'})
-                    .success(function(data, status, headers, config) {
-                      for (var i = 0; i < data.length; i++) {
-                        switch (data[i].jobStatus) {
-                          case "JOB_COMPLETED":
-                            data[i].panel = "panel-success";
-                            break;
-                          case "JOB_CRASHED":
-                            data[i].panel = "panel-danger";
-                            break;
-                          case "JOB_COMPUTING":
-                            data[i].panel = "panel-primary";
-                            break;
-                          case "JOB_PAUSED":
-                            data[i].panel = "panel-warning";
-                            break;
-                          case "JOB_TODO":
-                            data[i].panel = "panel-info";
-                            break;
-                          default:
-                            data[i].panel = "panel-default";
-                        }
-                        data[i].completedTasks = 0;
-                        data[i].totalTasks = data[i].tasks.length;
-                        data[i].totalFps = 0;
-                        for (var j = 0; j < data[i].totalTasks; j++) {
-                          switch (data[i].tasks[j].taskState) {
-                            case "TASK_COMPLETED":
-                              data[i].completedTasks++;
-                              break;
-                            case "TASK_COMPUTING":
-                              data[i].totalFps += data[i].tasks[j].taskProgress.fps;
-                              break;
-                          }
-                        }
-                      }
-                      $scope.jobs = data;
-                    }).error(function() {
-              $scope.jobs = [];
-              $scope.jobs.error = "Could not reach master server.";
+              .success(function(data, status, headers, config) {
+                for (var i = 0; i < data.length; i++) {
+                  switch (data[i].jobStatus) {
+                    case "JOB_COMPLETED":
+                      data[i].panel = "panel-success";
+                      break;
+                    case "JOB_CRASHED":
+                      data[i].panel = "panel-danger";
+                      break;
+                    case "JOB_COMPUTING":
+                      data[i].panel = "panel-primary";
+                      break;
+                    case "JOB_PAUSED":
+                      data[i].panel = "panel-warning";
+                      break;
+                    case "JOB_TODO":
+                      data[i].panel = "panel-info";
+                      break;
+                    default:
+                      data[i].panel = "panel-default";
+                  }
+                  data[i].completedTasks = 0;
+                  data[i].totalTasks = data[i].tasks.length;
+                  data[i].totalFps = 0;
+                  for (var j = 0; j < data[i].totalTasks; j++) {
+                    switch (data[i].tasks[j].taskState) {
+                      case "TASK_COMPLETED":
+                        data[i].completedTasks++;
+                        break;
+                      case "TASK_COMPUTING":
+                        data[i].totalFps += data[i].tasks[j].taskProgress.fps;
+                        break;
+                    }
+                  }
+                }
+                $scope.jobs = data;
+              }).error(function() {
+                $scope.jobs = [];
+                $scope.jobs.error = "Cannot not reach master server.";
             });
           };
 
@@ -109,29 +122,29 @@ angular.module('lancoder.controllers', []).
 
           $scope.addjob = function(newjob) {
             $http({method: 'POST', url: '/api/jobs/add', data: newjob})
-                    .success(function(data) {
-                      if (data.success) {
-                        refreshJobs();
-                        $scope.showAddJobPanel = false;
-                      } else {
-                        alert(data.message);
-                      }
-                    }).error(function() {
-              alert('Network failure');
+              .success(function(data) {
+                if (data.success) {
+                  refreshJobs();
+                  $scope.showAddJobPanel = false;
+                } else {
+                  alert(data.message);
+                }
+              }).error(function() {
+                alert('Network failure');
             });
           };
 
           $scope.deletejob = function(oldjob) {
             $http({method: 'POST', url: '/api/jobs/delete', data: oldjob})
-                    .success(function(data) {
-                      if (data.success) {
-                        refreshJobs();
-                      } else {
-                        alert(data.message);
-                      }
-                    }).error(function() {
-              alert('Network failure');
-            });
+              .success(function(data) {
+                if (data.success) {
+                  refreshJobs();
+                } else {
+                  alert(data.message);
+                }
+              }).error(function() {
+                alert('Network failure');
+              });
           };
           refreshJobs();
           $scope.jobsAutoRefresh();

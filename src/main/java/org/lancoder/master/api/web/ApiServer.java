@@ -29,7 +29,8 @@ public class ApiServer extends RunnableService {
 		// static resources handler
 		ResourceHandler staticHandler = new ResourceHandler();
 		
-		staticHandler.setResourceBase(this.getClass().getClassLoader().getResource(webDir).toExternalForm());
+//		staticHandler.setResourceBase(this.getClass().getClassLoader().getResource(webDir).toExternalForm());
+		staticHandler.setResourceBase("/home/justin/gitRepos/LANcoder3000/src/main/web/web_resources");
 		staticHandler.setDirectoriesListed(true);
 		ctxStatic.setHandler(staticHandler);
 

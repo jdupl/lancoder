@@ -11,27 +11,33 @@
             <h3 class="panel-title">{{node.name}} | {{node.nodeAddress}}:{{node.nodePort}} | {{node.status}}</h3>
         </div>
         <div class="panel-body">
-            <div class="animate-if" ng-if="node.currentTask">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p>Encoding part {{node.currentTask.taskInfo.taskId}} of file {{node.currentTask.taskInfo.sourceFile}}</p>
-                        <p>Pass {{node.currentTask.taskProgress.currentPass}} of {{node.currentTask.taskInfo.passes}}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{node.currentTask.taskProgress.progress}}" aria-valuemin="0" aria-valuemax="100" style="width: {{node.currentTask.taskProgress.progress}}%">
+            <div class="animate-repeat" ng-repeat="currentTask in node.currentTasks">
+              <div class="panel {{node.panel}}">
+                  <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                          <p>Encoding part {{currentTask.taskInfo.taskId}} of file {{currentTask.sourceFile}}</p>
+                            <div ng-if="currentTask.taskProgress.stepCount > 1">
+                              <p>Pass {{currentTask.taskProgress.currentPassIndex}} of {{currentTask.taskProgress.stepCount}}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{currentTask.taskProgress.currentStep.progress}}" aria-valuemin="0" aria-valuemax="100" style="width: {{currentTask.taskProgress.currentStep.progress}}%">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p>Encoding at {{node.currentTask.taskProgress.fps}}FPS. Estimated time to finish this pass: {{node.currentTask.taskProgress.timeEstimated / 1000}}s</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p>Encoding at {{currentTask.taskProgress.currentStep.speed}}FPS. Estimated time to finish this pass: {{node.currentTasks.taskProgress.timeEstimated / 1000}}s</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p style="text-align: right">{{currentTask.taskProgress.currentStep.progress}}% Complete</p>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <p style="text-align: right">{{node.currentTask.taskProgress.progress}}% Complete</p>
-                    </div>
-                </div>
+                  </div>
+              </div>
             </div>
             <div class="btn-group">
                 <button type="button" class="btn btn-warning">
