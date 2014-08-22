@@ -1,7 +1,9 @@
 package drfoliberg.common.utils;
 
 import static org.junit.Assert.*;
+
 import org.junit.Test;
+import org.lancoder.common.utils.TimeUtils;
 
 public class TestTimeUtils {
 
