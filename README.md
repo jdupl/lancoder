@@ -1,4 +1,4 @@
-LANcoder3000
+lancoder
 ============
 
 A cross-platform render farm for x264-x265 encodings using FFmpeg. Designed for portability and ease of set-up.
@@ -20,7 +20,7 @@ WebUI controlled
 ---
 
 ## How to use
-Please use the [wiki](https://github.com/jdupl/LANcoder3000/wiki/How-to-setup-LANcoder).
+Please use the [wiki](https://github.com/jdupl/LANcoder3000/wiki/How-to-setup-lancoder).
 
 #### Test environment
 Currently tested on 6 workers nodes and 1 master including 
