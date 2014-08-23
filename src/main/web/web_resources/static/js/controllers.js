@@ -37,13 +37,8 @@ angular.module('lancoder.controllers', []).
                   for (var j = 0; j < node.currentTasks.length; j++) {
                     var task = node.currentTasks[j];
                     $scope.nodes[i].currentTasks[j].taskProgress.stepCount = Object.keys(task.taskProgress.steps).length;
-                    $scope.nodes[i].currentTasks[j].taskProgress.currentStep = $scope.nodes[i].currentTasks[j].taskProgress.steps[1];
-                    for (var k = 1; k < $scope.nodes[i].currentTasks[j].taskProgress.stepCount; k++) {
-                      var step = $scope.nodes[i].currentTasks[j].taskProgress.steps[k]
-                      if (step.taskState == "TASK_COMPUTING" ) {
-                        $scope.nodes[i].currentTasks[j].taskProgress.currentStep = step;
-                      }
-                    }
+                    var index = task.taskProgress.currentPassIndex;
+                    $scope.nodes[i].currentTasks[j].taskProgress.currentStep = $scope.nodes[i].currentTasks[j].taskProgress.steps[index];
                   }
                 }
               }).error(function() {
