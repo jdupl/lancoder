@@ -35,10 +35,20 @@ angular.module('lancoder.controllers', []).
                 for (var i = 0; i < $scope.nodes.length; i++) {
                   var node = $scope.nodes[i];
                   for (var j = 0; j < node.currentTasks.length; j++) {
-                    var task = node.currentTasks[j];
-                    $scope.nodes[i].currentTasks[j].taskProgress.stepCount = Object.keys(task.taskProgress.steps).length;
-                    var index = task.taskProgress.currentPassIndex;
-                    $scope.nodes[i].currentTasks[j].taskProgress.currentStep = $scope.nodes[i].currentTasks[j].taskProgress.steps[index];
+                    // Get and set task step count
+                    var currentTask = node.currentTasks[j];
+                    $scope.nodes[i].currentTasks[j].taskProgress.stepCount = Object.keys(currentTask.taskProgress.steps).length;
+                    // Get current step
+                    var index = currentTask.taskProgress.currentPassIndex;
+                    var currentStep = $scope.nodes[i].currentTasks[j].taskProgress.steps[index];
+                    // Convert the unit type from enum constant to pretty string
+                    if (currentStep.unit == 'SECONDS') {
+                      currentStep.prettyUnit = 'times playback speed';
+                    } else if (currentStep.unit == 'FRAMES') {
+                      currentStep.prettyUnit = 'FPS';
+                    }
+                    // Add reference to the currentStep
+                    $scope.nodes[i].currentTasks[j].taskProgress.currentStep = currentStep;
                   }
                 }
               }).error(function() {
