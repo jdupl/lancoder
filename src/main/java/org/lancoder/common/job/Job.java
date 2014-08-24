@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.file_components.streams.Stream;
@@ -70,7 +71,7 @@ public class Job implements Comparable<Job>, Serializable {
 
 		// Estimate the frame count from the frame rate and length
 		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
-		// Get source' filename
+		// Get source's filename
 		File source = new File(inputFile);
 		// Set output's filename
 		this.outputFileName = String.format("%s.mkv", FilenameUtils.removeExtension(source.getName()));
@@ -153,15 +154,17 @@ public class Job implements Comparable<Job>, Serializable {
 				currentMs += lengthOfTasks;
 			}
 			int taskId = taskCount++;
-			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
-					String.format("part-%d.mpeg.ts", taskId)); // TODO get extension from codec
-
+			File relativeTaskOutputFile = null;
+			if (config.getCodec() == Codec.COPY) {
+				relativeTaskOutputFile = new File(config.getSourceFile());
+			} else {
+				relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
+						String.format("part-%d.mpeg.ts", taskId)); // TODO get extension from codec
+			}
 			long ms = end - start;
 			long frameCount = (long) Math.floor((ms / 1000 * stream.getFramerate()));
-
 			TaskInfo info = new TaskInfo(taskId, getJobId(), relativeTaskOutputFile.getPath(), start, end, frameCount);
 			VideoEncodingTask task = new VideoEncodingTask(info, stream, config);
-
 			tasks.add(task);
 		}
 		return tasks;

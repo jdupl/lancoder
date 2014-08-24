@@ -44,11 +44,9 @@ public class Muxer extends RunnableService {
 			Iterator<Task> taskIterator = tasks.iterator();
 			while (taskIterator.hasNext()) {
 				Task t = taskIterator.next();
-				File partFile = null;
+				File partFile = FileUtils.getFile(listener.getSharedFolder(), t.getOutputFile());
 				if (t.getCodec() == Codec.COPY) {
 					ArrayList<String> streamCopyMapping = new ArrayList<>();
-					// Set source file as the partFile
-					partFile = FileUtils.getFile(listener.getSharedFolder(), t.getSourceFile());
 					if (t instanceof AudioEncodingTask) {
 						streamCopyMapping.add("-a");
 						streamCopyMapping.add(String.format("0:%d", t.getStream().getIndex()));
@@ -58,9 +56,7 @@ public class Muxer extends RunnableService {
 						streamCopyMapping.add(String.format("0:%d", t.getStream().getIndex()));
 						streamCopyMapping.add("-A");
 					}
-					Collections.addAll(streamCopyMapping, "-S", "-B", "--no-chapters", "-M", "--no-global-tags" );
-				} else {
-					partFile = FileUtils.getFile(listener.getSharedFolder(), t.getOutputFile());
+					Collections.addAll(streamCopyMapping, "-S", "-B", "--no-chapters", "-M", "--no-global-tags");
 				}
 				args.add(partFile.getAbsolutePath());
 				if (taskIterator.hasNext()) {
