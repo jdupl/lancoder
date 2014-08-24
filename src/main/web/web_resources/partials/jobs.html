@@ -33,13 +33,13 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label>Rate control type</label>
-                        <select class="form-control" ng-model="newJob.rateControlType" ng-options="ct.value as ct.name for ct in controlTypes"></select>
+                        <select class="form-control" ng-model="newJob.rateControlType" ng-init="newJob.rateControlType = 'VBR'" ng-options="ct.value as ct.name for ct in controlTypes"></select>
                     </div>
                 </div>
                 <div class="col-md-3" ng-show="newJob.rateControlType === 'VBR'">
                     <div class="form-group">
                         <label>Passes</label>
-                        <select class="form-control" ng-model="newJob.passes" ng-options="pass for pass in passes"></select>
+                        <select class="form-control" ng-model="newJob.passes" ng-init="newJob.passes = 1" ng-options="pass for pass in passes"></select>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -49,26 +49,71 @@
                                 <label>Rate factor (18~23)</label>
                             </div>
                             <div ng-switch-default>
-                                <label>Job Bitrate (kbit/s)</label>
+                                <label>Video Bitrate (kbit/s)</label>
                             </div>
                         </div>
-                        <input type="number" class="form-control" ng-model="newJob.rate">
+                        <input type="number" class="form-control" ng-model="newJob.rate" ng-init="newJob.rate = 1500">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label>Job Preset</label>
-                        <select class="form-control" ng-model="newJob.preset" ng-options="preset for preset in presets"></select>
+                        <label>Video Preset</label>
+                        <select class="form-control" ng-model="newJob.preset" ng-init="newJob.preset = 'MEDIUM'" ng-options="preset for preset in presets"></select>
                     </div>
                 </div>
             </div>
 
-            <div class="btn-group">
-                <button type="button" class="btn btn-success" ng-click="addjob(newJob)">Save and add</button>
-                <button type="button" class="btn btn-danger" ng-click="showAddJobPanel = false">Cancel</button>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Audio codec</label>
+                        <select class="form-control" ng-model="newJob.audioCodec" ng-init="newJob.audioCodec = 'VORBIS'" ng-options="codec.value as codec.name for codec in audioCodecs"></select>
+                    </div>
+                </div>
+                <div class="col-md-3" ng-hide="newJob.audioCodec === 'COPY'">
+                    <div class="form-group">
+                        <label>Audio rate control type</label>
+                        <select class="form-control" ng-model="newJob.audioRateControlType" ng-init="newJob.audioRateControlType = 'AUTO'" ng-options="ct.value as ct.name for ct in audioControlTypes"></select>
+                    </div>
+                </div>
             </div>
-        </form>
+            <div class="row" ng-hide="newJob.audioRateControlType === 'AUTO'">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <div ng-switch on="newJob.audioRateControlType">
+                            <div ng-switch-when="CRF">
+                                <label>Rate factor (0~9)</label>
+                            </div>
+                            <div ng-switch-default>
+                                <label>Audio Bitrate (kbit/s)</label>
+                            </div>
+                        </div>
+                        <input type="number" class="form-control" ng-model="newJob.audioRate" ng-init="newJob.audioRate = 128">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Audio channels</label>
+                        <select class="form-control" ng-model="newJob.audioChannels" ng-init="newJob.audioChannels = '2'" ng-options="channel.value as channel.name for channel in audioChannels"></select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Audio sample rate</label>
+                        <select class="form-control" ng-model="newJob.audioSampleRate" ng-init="newJob.audioSampleRate = 48000" ng-options="s as s for s in audioSampleRates"></select>
+                    </div>
+                </div>
+
+            </div>
+
     </div>
+
+    <div class="btn-group">
+        <button type="button" class="btn btn-success" ng-click="addjob(newJob)">Save and add</button>
+        <button type="button" class="btn btn-danger" ng-click="showAddJobPanel = false">Cancel</button>
+    </div>
+</form>
+</div>
 </div>
 
 <div ng-repeat="job in jobs" class="row">
