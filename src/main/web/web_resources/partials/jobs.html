@@ -13,8 +13,9 @@
     </div>
 </div>
 <div ng-show="showAddJobPanel" class="row">
-    <div class="col-md-12">
-        <form role="form">
+    <form role="form">
+        <div class="col-md-12">
+
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -106,14 +107,13 @@
 
             </div>
 
-    </div>
+        </div>
 
-    <div class="btn-group">
-        <button type="button" class="btn btn-success" ng-click="addjob(newJob)">Save and add</button>
-        <button type="button" class="btn btn-danger" ng-click="showAddJobPanel = false">Cancel</button>
-    </div>
-</form>
-</div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success" ng-click="addjob(newJob)">Save and add</button>
+            <button type="button" class="btn btn-danger" ng-click="showAddJobPanel = false">Cancel</button>
+        </div>
+    </form>
 </div>
 
 <div ng-repeat="job in jobs" class="row">
