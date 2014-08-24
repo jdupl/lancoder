@@ -181,8 +181,13 @@ public class Job implements Comparable<Job>, Serializable {
 	private AudioEncodingTask createAudioTask(AudioStream stream, AudioTaskConfig config) {
 		int nextTaskId = taskCount++;
 		File relativeTasksOutput = FileUtils.getFile(getOutputFolder(), getPartsFolderName());
-		File output = FileUtils.getFile(relativeTasksOutput,
-				String.format("%d.%s", nextTaskId, config.getCodec().getContainer()));
+		File output = null;
+		if (config.getCodec() == Codec.COPY) {
+			output = new File(config.getSourceFile());
+		} else {
+			output = FileUtils.getFile(relativeTasksOutput,
+					String.format("%d.%s", nextTaskId, config.getCodec().getContainer()));
+		}
 		TaskInfo info = new TaskInfo(nextTaskId, getJobId(), output.getPath(), 0, fileInfo.getDuration(),
 				fileInfo.getDuration() / 1000);
 		AudioEncodingTask task = new AudioEncodingTask(info, stream, config);
