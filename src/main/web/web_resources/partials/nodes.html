@@ -30,10 +30,10 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <p>Encoding at {{currentTask.taskProgress.currentStep.speed}}FPS. Estimated time to finish this pass: {{node.currentTasks.taskProgress.timeEstimated / 1000}}s</p>
+                            <p>Encoding at {{currentTask.taskProgress.currentStep.speed | number:1}}FPS. Estimated time to finish this pass: {{currentTask.taskProgress.currentStep.timeEstimated / 1000 | number:0}}s</p>
                         </div>
                         <div class="col-md-6">
-                            <p style="text-align: right">{{currentTask.taskProgress.currentStep.progress}}% Complete</p>
+                            <p style="text-align: right">{{currentTask.taskProgress.currentStep.progress | number:2}}% complete</p>
                         </div>
                     </div>
                   </div>
