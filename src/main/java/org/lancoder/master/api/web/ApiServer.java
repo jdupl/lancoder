@@ -10,7 +10,7 @@ import org.lancoder.master.Master;
 
 public class ApiServer extends RunnableService {
 
-	private static final String webDir = "web_resources/";
+	private static final String WEB_DIR = "web_resources/";
 
 	private Master master;
 	Server server;
@@ -29,7 +29,7 @@ public class ApiServer extends RunnableService {
 		// static resources handler
 		ResourceHandler staticHandler = new ResourceHandler();
 
-		//staticHandler.setResourceBase(this.getClass().getClassLoader().getResource(webDir).toExternalForm());
+		//staticHandler.setResourceBase(this.getClass().getClassLoader().getResource(WEB_DIR).toExternalForm());
 		staticHandler.setResourceBase("src/main/web/web_resources"); // avoid repackaging jar and rerun application on
 																		// web files change
 		staticHandler.setDirectoriesListed(true);
