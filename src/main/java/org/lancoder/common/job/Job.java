@@ -104,7 +104,7 @@ public class Job implements Comparable<Job>, Serializable {
 	public ArrayList<Task> getTasksForStream(Stream stream) {
 		ArrayList<Task> tasks = new ArrayList<>();
 		for (int i = 0; i < this.getTasks().size(); i++) {
-			Task task = tasks.get(i);
+			Task task = this.getTasks().get(i);
 			if (task.getStream().equals(stream)) {
 				tasks.add(task);
 			}
