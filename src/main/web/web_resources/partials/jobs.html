@@ -15,7 +15,6 @@
 <div ng-show="showAddJobPanel" class="row">
     <form role="form">
         <div class="col-md-12">
-
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -63,7 +62,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
@@ -95,7 +93,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label>Audio channels</label>
-                        <select class="form-control" ng-model="newJob.audioChannels" ng-init="newJob.audioChannels = '2'" ng-options="channel.value as channel.name for channel in audioChannels"></select>
+                        <select class="form-control" ng-model="newJob.audioChannels" ng-init="newJob.audioChannels = 'ORIGINAL'" ng-options="channel.value as channel.name for channel in audioChannels"></select>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -104,11 +102,8 @@
                         <select class="form-control" ng-model="newJob.audioSampleRate" ng-init="newJob.audioSampleRate = 48000" ng-options="s as s for s in audioSampleRates"></select>
                     </div>
                 </div>
-
             </div>
-
         </div>
-
         <div class="btn-group">
             <button type="button" class="btn btn-success" ng-click="addjob(newJob)">Save and add</button>
             <button type="button" class="btn btn-danger" ng-click="showAddJobPanel = false">Cancel</button>
@@ -127,7 +122,6 @@
                     <div class="col-md-12">
                         <p>{{job.completedTasks}} of out {{job.totalTasks}} tasks completed</p>
                         <p>Encoding at {{job.totalFps}} fps</p>
-
                         <div class="progress">
                             <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{job.completedTasks}}" aria-valuemin="0" aria-valuemax="{{job.totalTasks}}" style="width: {{job.completedTasks / job.totalTasks * 100}}%" >
                             </div>
