@@ -13,9 +13,9 @@ public class TaskProgress implements Serializable {
 	private LinkedHashMap<Integer, Progress> steps = new LinkedHashMap<>();
 	private TaskState taskState = TaskState.TASK_TODO;
 
-	public TaskProgress(long units, int steps) {
+	public TaskProgress(long units, int steps, Unit unit) {
 		for (int i = 1; i <= steps; i++) {
-			this.steps.put(i, new Progress(units));
+			this.steps.put(i, new Progress(units, unit));
 		}
 	}
 

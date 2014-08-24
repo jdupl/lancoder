@@ -16,6 +16,10 @@ public class Progress implements Serializable {
 	 */
 	protected long unitsCompleted;
 	/**
+	 * The kind of unit (used for webui)
+	 */
+	protected Unit unit;
+	/**
 	 * Speed in units/sec
 	 */
 	protected double speed;
@@ -44,8 +48,9 @@ public class Progress implements Serializable {
 	 */
 	protected long lastUpdate;
 
-	public Progress(long units) {
+	public Progress(long units, Unit unit) {
 		this.unitsTotal = units;
+		this.unit = unit;
 	}
 
 	/**

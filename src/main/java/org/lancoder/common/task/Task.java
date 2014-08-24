@@ -7,6 +7,7 @@ import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.progress.Progress;
 import org.lancoder.common.progress.TaskProgress;
+import org.lancoder.common.progress.Unit;
 import org.lancoder.common.status.TaskState;
 import org.lancoder.common.task.video.TaskInfo;
 
@@ -24,7 +25,7 @@ public abstract class Task implements Serializable {
 	protected int passes;
 	protected ArrayList<String> extraEncoderArgs; // TODO usage this to allow --slow-first-pass and other overrides
 
-	public Task(TaskInfo taskInfo, Stream stream, TaskConfig config) {
+	public Task(TaskInfo taskInfo, Stream stream, TaskConfig config, Unit unit) {
 		this.stream = stream;
 		this.taskInfo = taskInfo;
 		this.sourceFile = config.getSourceFile();
@@ -32,7 +33,7 @@ public abstract class Task implements Serializable {
 		this.rate = config.getRate();
 		this.passes = config.getPasses();
 		this.extraEncoderArgs = config.getExtraEncoderArgs();
-		taskProgress = new TaskProgress(taskInfo.getEstimatedFramesCount(), passes);
+		taskProgress = new TaskProgress(taskInfo.getEstimatedFramesCount(), passes, unit);
 	}
 
 	public void setTaskProgress(TaskProgress taskProgress) {
