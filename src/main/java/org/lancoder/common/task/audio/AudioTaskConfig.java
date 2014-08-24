@@ -9,8 +9,6 @@ import org.lancoder.common.task.TaskConfig;
 public class AudioTaskConfig extends TaskConfig {
 
 	private static final long serialVersionUID = 6772908801015911315L;
-
-	private Codec codec;
 	private int channels;
 	private int sampleRate;
 

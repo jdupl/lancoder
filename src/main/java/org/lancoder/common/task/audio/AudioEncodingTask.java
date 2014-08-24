@@ -11,7 +11,6 @@ public class AudioEncodingTask extends Task {
 	private static final long serialVersionUID = 1319651638856267785L;
 	private static final Unit DEFAULT_UNIT = Unit.SECONDS;
 
-	private Codec codec;
 	private int channels;
 	private int sampleRate;
 

@@ -37,9 +37,6 @@ public abstract class Task implements Serializable {
 		this.codec = config.getCodec();
 		this.extraEncoderArgs = config.getExtraEncoderArgs();
 		taskProgress = new TaskProgress(taskInfo.getEstimatedFramesCount(), passes, unit);
-		if (this.codec == Codec.COPY) {
-			this.taskProgress.complete();
-		}
 	}
 
 	public Codec getCodec() {

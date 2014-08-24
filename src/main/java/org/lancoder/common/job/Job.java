@@ -12,6 +12,7 @@ import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.file_components.streams.Stream;
+import org.lancoder.common.file_components.streams.TextStream;
 import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.TaskState;
@@ -54,7 +55,7 @@ public class Job implements Comparable<Job>, Serializable {
 	 */
 	private String partsFolderName;
 	private FileInfo fileInfo;
-	// private JobConfig jobConfig;
+	private String sourceFile;
 
 	private ArrayList<VideoEncodingTask> videoTasks = new ArrayList<>();
 	private ArrayList<AudioEncodingTask> audioTasks = new ArrayList<>();
@@ -72,9 +73,9 @@ public class Job implements Comparable<Job>, Serializable {
 		// Estimate the frame count from the frame rate and length
 		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 		// Get source's filename
-		File source = new File(inputFile);
+		sourceFile = inputFile;
 		// Set output's filename
-		this.outputFileName = String.format("%s.mkv", FilenameUtils.removeExtension(source.getName()));
+		this.outputFileName = String.format("%s.mkv", FilenameUtils.removeExtension(sourceFile));
 		// Get /sharedFolder/LANcoder/jobsOutput/jobName/ (without the shared folder)
 		File relativeEncodingOutput = FileUtils.getFile(encodingOutputFolder, jobName);
 		this.outputFolder = relativeEncodingOutput.getPath();
@@ -93,6 +94,10 @@ public class Job implements Comparable<Job>, Serializable {
 			this.jobId = String.valueOf(System.currentTimeMillis());
 		}
 		createTasks(aconfig, vconfig);
+	}
+
+	public String getSourceFile() {
+		return sourceFile;
 	}
 
 	/**
@@ -119,9 +124,19 @@ public class Job implements Comparable<Job>, Serializable {
 	private void createTasks(AudioTaskConfig aconfig, VideoTaskConfig vconfig) {
 		for (Stream stream : this.fileInfo.getStreams()) {
 			if (stream instanceof VideoStream) {
-				this.videoTasks.addAll(createVideoTasks((VideoStream) stream, vconfig));
+				if (vconfig.getCodec() != Codec.COPY) {
+					this.videoTasks.addAll(createVideoTasks((VideoStream) stream, vconfig));
+				} else {
+					stream.setCopyToOutput(true);
+				}
 			} else if (stream instanceof AudioStream) {
-				this.audioTasks.add(createAudioTask((AudioStream) stream, aconfig));
+				if (aconfig.getCodec() != Codec.COPY) {
+					this.audioTasks.add(createAudioTask((AudioStream) stream, aconfig));
+				} else {
+					stream.setCopyToOutput(true);
+				}
+			} else if (stream instanceof TextStream) {
+				stream.setCopyToOutput(true);
 			}
 		}
 	}

@@ -1,5 +1,8 @@
 package org.lancoder.common.file_components.streams;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -37,4 +40,10 @@ public class AudioStream extends Stream {
 		return sampleRate;
 	}
 
+	@Override
+	public ArrayList<String> getStreamCopyMapping() {
+		ArrayList<String> args = new ArrayList<>();
+		Collections.addAll(args, "-D", "-S", "-B", "--no-chapters", "-M", "--no-global-tags");
+		return args;
+	}
 }

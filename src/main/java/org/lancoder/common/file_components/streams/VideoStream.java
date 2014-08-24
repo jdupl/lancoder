@@ -1,5 +1,8 @@
 package org.lancoder.common.file_components.streams;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -29,6 +32,13 @@ public class VideoStream extends Stream {
 		if ((element = json.get("height")) != null) {
 			this.height = element.getAsInt();
 		}
+	}
+
+	@Override
+	public ArrayList<String> getStreamCopyMapping() {
+		ArrayList<String> args = new ArrayList<>();
+		Collections.addAll(args, "-A", "-S", "-B", "-M", "--no-global-tags");
+		return args;
 	}
 
 	public double getFramerate() {

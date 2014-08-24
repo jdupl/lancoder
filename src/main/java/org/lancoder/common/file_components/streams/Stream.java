@@ -1,13 +1,14 @@
 package org.lancoder.common.file_components.streams;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import org.lancoder.common.codecs.Codec;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class Stream implements Serializable {
+public abstract class Stream implements Serializable {
 
 	private static final long serialVersionUID = -1867430611531693710L;
 	protected int index;
@@ -15,6 +16,7 @@ public class Stream implements Serializable {
 	protected String title = "";
 	protected String language = "und";
 	protected boolean isDefault = false;
+	protected boolean copyToOutput = false;
 
 	/**
 	 * Parse a json object and instantiate a stream with it's properties.
@@ -51,6 +53,8 @@ public class Stream implements Serializable {
 		}
 	}
 
+	public abstract ArrayList<String> getStreamCopyMapping();
+
 	@Override
 	public boolean equals(Object obj) {
 		if (super.equals(obj)) {
@@ -61,6 +65,14 @@ public class Stream implements Serializable {
 			return other.index == this.index && other.codec.equals(this.codec);
 		}
 		return false;
+	}
+
+	public boolean isCopyToOutput() {
+		return copyToOutput;
+	}
+
+	public void setCopyToOutput(boolean copyToOutput) {
+		this.copyToOutput = copyToOutput;
 	}
 
 	public int getIndex() {

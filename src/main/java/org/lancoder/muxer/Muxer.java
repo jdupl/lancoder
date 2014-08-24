@@ -7,12 +7,9 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import org.lancoder.common.RunnableService;
-import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.task.Task;
-import org.lancoder.common.task.audio.AudioEncodingTask;
-import org.lancoder.common.task.video.VideoEncodingTask;
 import org.lancoder.common.utils.FileUtils;
 
 public class Muxer extends RunnableService {
@@ -39,29 +36,22 @@ public class Muxer extends RunnableService {
 			args.add("--forced-track");
 			args.add("0:no");
 			Stream stream = streamIterator.next();
-			ArrayList<Task> tasks = job.getTasksForStream(stream);
-			// Iterate through tasks of the stream and concatenate if necessary
-			Iterator<Task> taskIterator = tasks.iterator();
-			while (taskIterator.hasNext()) {
-				Task t = taskIterator.next();
-				File partFile = FileUtils.getFile(listener.getSharedFolder(), t.getOutputFile());
-				if (t.getCodec() == Codec.COPY) {
-					ArrayList<String> streamCopyMapping = new ArrayList<>();
-					if (t instanceof AudioEncodingTask) {
-						streamCopyMapping.add("-a");
-						streamCopyMapping.add(String.format("0:%d", t.getStream().getIndex()));
-						streamCopyMapping.add("-D");
-					} else if (t instanceof VideoEncodingTask) {
-						streamCopyMapping.add("-d");
-						streamCopyMapping.add(String.format("0:%d", t.getStream().getIndex()));
-						streamCopyMapping.add("-A");
+
+			if (stream.isCopyToOutput()) {
+				args.addAll(stream.getStreamCopyMapping());
+				args.add(job.getSourceFile());
+			} else {
+				ArrayList<Task> tasks = job.getTasksForStream(stream);
+				// Iterate through tasks of the stream and concatenate if necessary
+				Iterator<Task> taskIterator = tasks.iterator();
+				while (taskIterator.hasNext()) {
+					Task t = taskIterator.next();
+					File partFile = FileUtils.getFile(listener.getSharedFolder(), t.getOutputFile());
+					args.add(partFile.getAbsolutePath());
+					if (taskIterator.hasNext()) {
+						// Concatenate to the next task
+						args.add("+");
 					}
-					Collections.addAll(streamCopyMapping, "-S", "-B", "--no-chapters", "-M", "--no-global-tags");
-				}
-				args.add(partFile.getAbsolutePath());
-				if (taskIterator.hasNext()) {
-					// Concatenate to the next task
-					args.add("+");
 				}
 			}
 		}
