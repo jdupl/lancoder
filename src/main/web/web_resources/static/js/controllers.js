@@ -81,9 +81,9 @@ angular.module('lancoder.controllers', []).
         {value: 'COPY', name: 'Copy original stream'}
       ];
       $scope.audioChannels = [
-        {value: '1', name: 'Mono'},
-        {value: '2', name: 'Stereo'},
-        {value: 'original', name: 'Keep original'}
+        {value: 'MONO', name: 'Mono'},
+        {value: 'STEREO', name: 'Stereo'},
+        {value: 'ORIGINAL', name: 'Keep original'}
       ];
       $scope.audioSampleRates = [8000, 11025, 22050, 44100, 48000, 88200, 96000];
       $scope.passes = [1, 2];
