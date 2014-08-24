@@ -344,11 +344,11 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		if (j == null) {
 			return false;
 		}
-
 		for (Node node : this.getNodes()) {
 			for (Task task : node.getCurrentTasks()) {
 				if (task.getJobId().equals(j.getJobId())) {
-					updateNodeTask(task, node, TaskState.TASK_CANCELED);
+					task.reset();
+					taskUpdated(task, node);
 				}
 			}
 		}
@@ -400,12 +400,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		}
 	}
 
-	public boolean updateNodeTask(Task task, Node n, TaskState updateStatus) {
-		// TODO clean logic here
+	public boolean taskUpdated(Task task, Node n) {
+		TaskState updateStatus = task.getTaskState();
 		switch (updateStatus) {
-		case TASK_ASSIGNED:
-			task.start();
-			break;
 		case TASK_COMPLETED:
 			n.getCurrentTasks().remove(task);
 			Job job = this.jobs.get(task.getJobId());
@@ -426,7 +423,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			n.getCurrentTasks().remove(task);
 			break;
 		default:
-			System.err.println("Unhandled status change");
 			break;
 		}
 		updateNodesWork();
@@ -462,7 +458,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 */
 	private boolean checkJobIntegrity(Job job) {
 		boolean integrity = true;
-
 		for (VideoEncodingTask task : job.getVideoTasks()) {
 			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getOutputFile());
 			if (!absoluteTaskFile.exists()) {
@@ -530,11 +525,12 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 					System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(), oldState,
 							actualTask.getTaskState());
 				}
-				if (actualTask.getTaskState().equals(TaskState.TASK_COMPLETED)) {
-					System.out.printf("Task id %d is completed. Removing from current tasks of node %s.\n",
-							reportTask.getTaskId(), sender.getName());
-					sender.getCurrentTasks().remove(actualTask);
-				}
+				taskUpdated(actualTask, sender);
+				// if (actualTask.getTaskState().equals(TaskState.TASK_COMPLETED)) {
+				// System.out.printf("Task id %d is completed. Removing from current tasks of node %s.\n",
+				// reportTask.getTaskId(), sender.getName());
+				// sender.getCurrentTasks().remove(actualTask);
+				// }
 			}
 		}
 	}
