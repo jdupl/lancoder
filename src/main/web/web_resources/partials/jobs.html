@@ -36,7 +36,7 @@
                         <select class="form-control" ng-model="newJob.rateControlType" ng-options="ct.value as ct.name for ct in controlTypes"></select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3" ng-show="newJob.rateControlType === 'VBR'">
                     <div class="form-group">
                         <label>Passes</label>
                         <select class="form-control" ng-model="newJob.passes" ng-options="pass for pass in passes"></select>

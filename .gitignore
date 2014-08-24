@@ -14,9 +14,9 @@ doc
 *.ear
 .idea
 *.iml
-/nbproject/
+nbproject/
 /target
 
 # logs
 *.log
-/src/nbproject/
+
