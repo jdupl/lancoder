@@ -30,7 +30,6 @@ public class ApiHandler extends AbstractHandler {
 		ApiResponse res = new ApiResponse(false, "Unknown error");
 		BufferedReader br = null;
 		response.setContentType("text/json;charset=utf-8");
-
 		switch (target) {
 		case "/nodes":
 			response.setStatus(HttpServletResponse.SC_OK);
@@ -51,7 +50,6 @@ public class ApiHandler extends AbstractHandler {
 				} else {
 					res = new ApiResponse(false, "The file or directory does not exist.");
 				}
-
 				response.setStatus(HttpServletResponse.SC_OK);
 			} catch (Exception e) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

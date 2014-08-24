@@ -10,4 +10,7 @@ public interface MuxerListener {
 
 	public void muxingFailed(Job job, Exception e);
 
+	public String getSharedFolder();
+
+	public String getEncodingFolder();
 }

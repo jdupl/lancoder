@@ -10,30 +10,29 @@ import org.lancoder.common.RunnableService;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.task.Task;
+import org.lancoder.common.utils.FileUtils;
 
 public class Muxer extends RunnableService {
 
-	private ArrayList<MuxerListener> listeners = new ArrayList<>();
+	private MuxerListener listener;
 	private Job job;
-	private String absoluteJobFolder;
 
-	public Muxer(MuxerListener listener, Job job, String absoluteJobFolder) {
-		listeners.add(listener);
+	public Muxer(MuxerListener listener, Job job) {
+		this.listener = listener;
 		this.job = job;
-		this.absoluteJobFolder = absoluteJobFolder;
 	}
 
 	@Override
 	public void run() {
 		boolean success = false;
-		File muxOutputFile = new File(absoluteJobFolder, job.getOutputFileName());
+		File muxOutputFile = FileUtils.getFile(listener.getSharedFolder(), job.getOutputFolder(),
+				job.getOutputFileName());
 		ArrayList<String> args = new ArrayList<>();
 		Collections.addAll(args, new String[] { "mkvmerge", "-o", muxOutputFile.getAbsolutePath() });
-
 		// Iterate through streams
 		Iterator<Stream> streamIterator = job.getFileInfo().getStreams().iterator();
 		while (streamIterator.hasNext()) {
-			// Add stream arguments 
+			// Add stream arguments
 			args.add("--forced-track");
 			args.add("0:no");
 			Stream stream = streamIterator.next();
@@ -41,10 +40,8 @@ public class Muxer extends RunnableService {
 			// Iterate through tasks of the stream and concatenate if necessary
 			while (taskIterator.hasNext()) {
 				Task t = taskIterator.next();
-				// Add file arguments
-				Collections.addAll(args, new String[] { "-d", "0", "-A", "-S", "-T", "--no-global-tags",
-						"--no-chapters" });
-				args.add(t.getOutputFile());
+				File partFile = FileUtils.getFile(listener.getSharedFolder(), t.getOutputFile());
+				args.add(partFile.getAbsolutePath());
 				if (taskIterator.hasNext()) {
 					// Concatenate to the next task
 					args.add("+");
@@ -54,57 +51,24 @@ public class Muxer extends RunnableService {
 
 		ProcessBuilder pb = new ProcessBuilder(args);
 		System.out.println("MUXER: " + args.toString());
-		pb.directory(new File(absoluteJobFolder));
-		System.out.println("MUXER: trying to mux in path " + absoluteJobFolder);
-		fireMuxingStarting();
-
+		listener.muxingStarting(job);
 		try {
 			Process m = pb.start();
 			m.waitFor();
 			success = m.exitValue() == 0 ? true : false;
-		} catch (IOException e) {
-			fireMuxingFailed(e);
-		} catch (InterruptedException e) {
-			fireMuxingFailed(e);
+		} catch (IOException | InterruptedException e) {
+			serviceFailure(e);
 		} finally {
 			if (success) {
-				fireMuxingCompleted();
-			} else {
-				fireMuxingFailed();
+				listener.muxingCompleted(job);
 			}
-		}
-	}
-
-	private void fireMuxingStarting() {
-		for (MuxerListener l : this.listeners) {
-			l.muxingStarting(job);
-		}
-	}
-
-	private void fireMuxingCompleted() {
-		for (MuxerListener l : this.listeners) {
-			l.muxingCompleted(job);
-		}
-	}
-
-	private void fireMuxingFailed(Exception e) {
-		for (MuxerListener l : this.listeners) {
-			l.muxingFailed(job, e);
-		}
-	}
-
-	private void fireMuxingFailed() {
-		Exception e = new Exception("Unknown error");
-		for (MuxerListener l : this.listeners) {
-			l.muxingFailed(job, e);
 		}
 	}
 
 	@Override
 	public void serviceFailure(Exception e) {
 		if (job != null) {
-			fireMuxingFailed(e);
+			listener.muxingFailed(job, e);
 		}
 	}
-
 }

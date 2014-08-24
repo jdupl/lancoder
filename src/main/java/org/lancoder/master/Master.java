@@ -440,8 +440,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			job.setJobStatus(JobState.JOB_COMPUTING);
 		} else {
 			// start muxing
-			File absoltuteJobOutputFolder = new File(config.getAbsoluteSharedFolder(), job.getOutputFolder());
-			Muxer m = new Muxer(this, job, absoltuteJobOutputFolder.getAbsolutePath());
+			Muxer m = new Muxer(this, job);
 			// this.services.add(m); TODO add muxer to services
 			Thread t = new Thread(m);
 			t.start();
@@ -526,11 +525,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 							actualTask.getTaskState());
 				}
 				taskUpdated(actualTask, sender);
-				// if (actualTask.getTaskState().equals(TaskState.TASK_COMPLETED)) {
-				// System.out.printf("Task id %d is completed. Removing from current tasks of node %s.\n",
-				// reportTask.getTaskId(), sender.getName());
-				// sender.getCurrentTasks().remove(actualTask);
-				// }
 			}
 		}
 	}
@@ -631,5 +625,15 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	@Override
 	public void newJob(Job job) {
 		this.addJob(job);
+	}
+
+	@Override
+	public String getSharedFolder() {
+		return this.config.getAbsoluteSharedFolder();
+	}
+
+	@Override
+	public String getEncodingFolder() {
+		return this.config.getFinalEncodingFolder();
 	}
 }
