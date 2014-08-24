@@ -3,6 +3,7 @@ package org.lancoder.common.task;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.progress.Progress;
@@ -23,6 +24,7 @@ public abstract class Task implements Serializable {
 	protected RateControlType rateControlType;
 	protected int rate; // kbps or crf TODO use BiterateControl ?
 	protected int passes;
+	protected Codec codec;
 	protected ArrayList<String> extraEncoderArgs; // TODO usage this to allow --slow-first-pass and other overrides
 
 	public Task(TaskInfo taskInfo, Stream stream, TaskConfig config, Unit unit) {
@@ -34,6 +36,10 @@ public abstract class Task implements Serializable {
 		this.passes = config.getPasses();
 		this.extraEncoderArgs = config.getExtraEncoderArgs();
 		taskProgress = new TaskProgress(taskInfo.getEstimatedFramesCount(), passes, unit);
+	}
+
+	public Codec getCodec() {
+		return codec;
 	}
 
 	public void setTaskProgress(TaskProgress taskProgress) {

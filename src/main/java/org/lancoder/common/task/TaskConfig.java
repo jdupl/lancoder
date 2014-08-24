@@ -3,6 +3,7 @@ package org.lancoder.common.task;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.job.RateControlType;
 
 public class TaskConfig implements Serializable {
@@ -13,24 +14,22 @@ public class TaskConfig implements Serializable {
 	protected RateControlType rateControlType;
 	protected int rate; // kbps or crf TODO use BiterateControl ?
 	protected int passes;
+	protected Codec codec;
 	protected ArrayList<String> extraEncoderArgs; // TODO usage this to allow --slow-first-pass and other overrides
 
-	public TaskConfig(String sourceFile, RateControlType rateControlType, int rate, int passes,
+	public TaskConfig(String sourceFile, RateControlType rateControlType, int rate, int passes, Codec codec,
 			ArrayList<String> extraEncoderArgs) {
 		this.sourceFile = sourceFile;
 		this.rateControlType = rateControlType;
 		this.rate = rate;
 		this.passes = passes;
+		this.codec = codec;
 		this.extraEncoderArgs = extraEncoderArgs;
 	}
 
-//	public JobConfig(JobConfig config) {
-//		this.sourceFile = config.sourceFile;
-//		this.rateControlType = config.rateControlType;
-//		this.rate = config.rate;
-//		this.passes = config.passes;
-//		this.extraEncoderArgs = config.extraEncoderArgs;
-//	}
+	public Codec getCodec() {
+		return codec;
+	}
 
 	public int getPasses() {
 		return passes;

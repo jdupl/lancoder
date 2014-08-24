@@ -3,6 +3,7 @@ package org.lancoder.common.task.video;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.task.TaskConfig;
@@ -13,9 +14,9 @@ public class VideoTaskConfig extends TaskConfig implements Serializable {
 
 	protected FFmpegPreset preset;
 
-	public VideoTaskConfig(String sourceFile, RateControlType rateControlType, int rate, int passes,
+	public VideoTaskConfig(String sourceFile, RateControlType rateControlType, int rate, int passes, Codec codec,
 			ArrayList<String> extraEncoderArgs, FFmpegPreset preset) {
-		super(sourceFile, rateControlType, rate, passes, extraEncoderArgs);
+		super(sourceFile, rateControlType, rate, passes, codec, extraEncoderArgs);
 		this.preset = preset;
 	}
 

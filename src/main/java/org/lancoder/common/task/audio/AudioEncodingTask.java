@@ -17,7 +17,6 @@ public class AudioEncodingTask extends Task {
 
 	public AudioEncodingTask(TaskInfo info, AudioStream stream, AudioTaskConfig config) {
 		super(info, stream, config, DEFAULT_UNIT);
-		this.codec = config.getCodec();
 		this.channels = config.getChannels();
 		this.sampleRate = config.getSampleRate();
 	}

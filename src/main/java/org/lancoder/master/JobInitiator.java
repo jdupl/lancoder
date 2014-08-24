@@ -52,7 +52,7 @@ public class JobInitiator extends RunnableService {
 		ArrayList<String> extraArgs = new ArrayList<>(); // TODO get extra encoder args from api request
 
 		VideoTaskConfig vconfig = new VideoTaskConfig(sourceFile.getPath(), rateControlType, req.getRate(), passes,
-				extraArgs, preset);
+				Codec.H264, extraArgs, preset);
 		AudioTaskConfig aconfig = new AudioTaskConfig(sourceFile.getPath(), RateControlType.CRF, 3, extraArgs,
 				Codec.VORBIS, 2, 48000);
 		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo,
