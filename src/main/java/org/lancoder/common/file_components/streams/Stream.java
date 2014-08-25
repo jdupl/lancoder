@@ -12,7 +12,7 @@ public abstract class Stream implements Serializable {
 
 	private static final long serialVersionUID = -1867430611531693710L;
 
-	protected String sourceFile;
+	protected String relativeFile;
 	protected int index;
 	protected Codec codec = Codec.UNKNOWN;
 	protected String title = "";
@@ -20,17 +20,22 @@ public abstract class Stream implements Serializable {
 	protected boolean isDefault = false;
 	protected boolean copyToOutput = false;
 
+	public Stream(int index, Codec codec) {
+		this.index = index;
+		this.codec = codec;
+	}
+
 	/**
 	 * Parse a json object and instantiate a stream with it's properties.
 	 * 
 	 * @param json
 	 *            the json stream object to parse
-	 * @param relativeSource
+	 * @param relativeFile
 	 *            The relative source file of this stream
 	 * 
 	 */
-	public Stream(JsonObject json, String relativeSource) {
-		this.sourceFile = relativeSource;
+	public Stream(JsonObject json, String relativeFile) {
+		this.relativeFile = relativeFile;
 		this.index = json.get("index").getAsInt();
 		String unknownCodec = json.get("codec_name").getAsString();
 		for (Codec codec : Codec.values()) {
@@ -73,8 +78,8 @@ public abstract class Stream implements Serializable {
 		return false;
 	}
 
-	public String getSourceFile() {
-		return sourceFile;
+	public String getRelativeFile() {
+		return relativeFile;
 	}
 
 	public boolean isCopyToOutput() {
@@ -104,5 +109,4 @@ public abstract class Stream implements Serializable {
 	public boolean isDefault() {
 		return isDefault;
 	}
-
 }

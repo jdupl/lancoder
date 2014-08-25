@@ -61,7 +61,7 @@ public class JobInitiator extends RunnableService {
 		ChannelDisposition audioChannels = req.getAudioChannels();
 		int audioSampleRate = req.getAudioSampleRate();
 		int audioRate = req.getRate();
-		
+
 		if (audioRCT == RateControlType.AUTO) {
 			audioRCT = RateControlType.CRF;
 			audioRate = 5;
@@ -69,11 +69,10 @@ public class JobInitiator extends RunnableService {
 			audioCodec = Codec.VORBIS;
 			audioChannels = ChannelDisposition.STEREO;
 		}
-		
-		// TODO Sanitize channel disposition (upmix protection)
-		
-		// TODO Sanitize channel disposition (codec max channel protection)
 
+		// TODO Sanitize channel disposition (upmix protection)
+
+		// TODO Sanitize channel disposition (codec max channel protection)
 		AudioTaskConfig aconfig = new AudioTaskConfig(sourceFile.getPath(), audioRCT, audioRate, extraArgs, audioCodec,
 				audioChannels, audioSampleRate);
 		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo,

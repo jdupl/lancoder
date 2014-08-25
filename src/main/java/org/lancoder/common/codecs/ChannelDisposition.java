@@ -16,4 +16,13 @@ public enum ChannelDisposition {
 		return count;
 	}
 
+	public static ChannelDisposition getDispositionFromCount(int count) {
+		for (ChannelDisposition disposition : ChannelDisposition.values()) {
+			if (count == disposition.getCount()) {
+				return disposition;
+			}
+		}
+		return ORIGINAL;
+	}
+
 }

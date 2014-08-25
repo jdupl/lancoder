@@ -3,14 +3,18 @@ package org.lancoder.common.file_components.streams;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.lancoder.common.codecs.ChannelDisposition;
+import org.lancoder.common.job.RateControlType;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class AudioStream extends Stream {
 
 	private static final long serialVersionUID = 4813380418557482787L;
-	private float bitrate;
-	private int channels;
+	private int rate;
+	private RateControlType rateControlType = RateControlType.AUTO;
+	private ChannelDisposition channels = ChannelDisposition.ORIGINAL;
 	private int sampleRate;
 
 	public AudioStream(JsonObject json, String relativeSource) {
@@ -18,21 +22,26 @@ public class AudioStream extends Stream {
 		JsonElement element = null;
 		if ((element = json.get("bit_rate")) != null) {
 			// convert from bit/s to kbps
-			this.bitrate = element.getAsInt() / 1000;
+			this.rateControlType = RateControlType.VBR;
+			this.rate = element.getAsInt() / 1000;
 		}
 		if ((element = json.get("channels")) != null) {
-			this.channels = element.getAsInt();
+			this.channels = ChannelDisposition.getDispositionFromCount(element.getAsInt());
 		}
 		if ((element = json.get("sample_rate")) != null) {
 			this.sampleRate = element.getAsInt();
 		}
 	}
 
-	public float getBitrate() {
-		return bitrate;
+	public float getRate() {
+		return rate;
 	}
 
-	public int getChannels() {
+	public RateControlType getRateControlType() {
+		return rateControlType;
+	}
+
+	public ChannelDisposition getChannels() {
 		return channels;
 	}
 

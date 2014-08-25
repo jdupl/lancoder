@@ -30,7 +30,7 @@ public abstract class Task implements Serializable {
 	public Task(TaskInfo taskInfo, Stream stream, TaskConfig config, Unit unit) {
 		this.stream = stream;
 		this.taskInfo = taskInfo;
-		this.sourceFile = stream.getSourceFile();
+		this.sourceFile = stream.getRelativeFile();
 		this.rateControlType = config.getRateControlType();
 		this.rate = config.getRate();
 		this.passes = config.getPasses();

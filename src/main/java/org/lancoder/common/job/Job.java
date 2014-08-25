@@ -171,7 +171,7 @@ public class Job implements Comparable<Job>, Serializable {
 			int taskId = taskCount++;
 			File relativeTaskOutputFile = null;
 			if (config.getCodec() == Codec.COPY) {
-				relativeTaskOutputFile = new File(stream.getSourceFile());
+				relativeTaskOutputFile = new File(stream.getRelativeFile());
 			} else {
 				relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
 						String.format("part-%d.mpeg.ts", taskId)); // TODO get extension from codec
@@ -198,7 +198,7 @@ public class Job implements Comparable<Job>, Serializable {
 		File relativeTasksOutput = FileUtils.getFile(getOutputFolder(), getPartsFolderName());
 		File output = null;
 		if (config.getCodec() == Codec.COPY) {
-			output = new File(stream.getSourceFile());
+			output = new File(stream.getRelativeFile());
 		} else {
 			output = FileUtils.getFile(relativeTasksOutput,
 					String.format("%d.%s", nextTaskId, config.getCodec().getContainer()));
