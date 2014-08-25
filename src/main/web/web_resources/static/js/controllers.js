@@ -4,7 +4,6 @@
 
 angular.module('lancoder.controllers', []).
     controller('nodes', function($scope, $http, $timeout) {
-
       var refreshNodes = $scope.refreshNodes = function() {
         // Get nodes
         $http({method: 'GET', url: '/api/nodes'})
@@ -74,7 +73,7 @@ angular.module('lancoder.controllers', []).
       $scope.audioControlTypes = [
         {value: 'VBR', name: 'Variable Bitrate'},
         {value: 'CRF', name: 'Constant rate factor'},
-        {value: 'AUTO', name: 'Auto q5 audio downminx to stereo'}
+        {value: 'AUTO', name: 'Vorbis q5 audio downmix to stereo'}
       ];
       $scope.audioCodecs = [
         {value: 'VORBIS', name: 'Vorbis'},
