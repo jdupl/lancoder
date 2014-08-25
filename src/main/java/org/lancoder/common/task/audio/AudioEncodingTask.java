@@ -1,5 +1,6 @@
 package org.lancoder.common.task.audio;
 
+import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.progress.Unit;
@@ -11,7 +12,7 @@ public class AudioEncodingTask extends Task {
 	private static final long serialVersionUID = 1319651638856267785L;
 	private static final Unit DEFAULT_UNIT = Unit.SECONDS;
 
-	private int channels;
+	private ChannelDisposition channels;
 	private int sampleRate;
 
 	public AudioEncodingTask(TaskInfo info, AudioStream stream, AudioTaskConfig config) {
@@ -29,7 +30,7 @@ public class AudioEncodingTask extends Task {
 		return codec;
 	}
 
-	public int getChannels() {
+	public ChannelDisposition getChannelDisposition() {
 		return channels;
 	}
 

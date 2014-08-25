@@ -74,7 +74,7 @@ angular.module('lancoder.controllers', []).
       $scope.audioControlTypes = [
         {value: 'VBR', name: 'Variable Bitrate'},
         {value: 'CRF', name: 'Constant rate factor'},
-        {value: 'AUTO', name: 'Auto 128 kbit/s stereo'}
+        {value: 'AUTO', name: 'Auto q5 audio downminx to stereo'}
       ];
       $scope.audioCodecs = [
         {value: 'VORBIS', name: 'Vorbis'},

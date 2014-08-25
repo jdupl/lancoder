@@ -9,6 +9,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.FFmpegProber;
 import org.lancoder.common.RunnableService;
+import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.job.FFmpegPreset;
@@ -35,26 +36,46 @@ public class JobInitiator extends RunnableService {
 	}
 
 	private void createJob(ApiJobRequest req, File sourceFile, String jobName) {
-		System.out.println("Creating job for file " + sourceFile); // DEBUG
 		// Get meta-data from source file
 		File absoluteFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), sourceFile.getPath());
 		FileInfo fileInfo = FFmpegProber.getFileInfo(absoluteFile);
 
 		FFmpegPreset preset = req.getPreset();
-		RateControlType rateControlType = req.getRateControlType();
+		RateControlType videoRateControlType = req.getRateControlType();
 
 		// Limit to max pass from the rate control
-		int passes = (req.getPasses() <= rateControlType.getMaxPass() ? req.getPasses() : rateControlType.getMaxPass());
+		int passes = (req.getPasses() <= videoRateControlType.getMaxPass() ? req.getPasses() : videoRateControlType
+				.getMaxPass());
 		if (passes <= 0) {
 			passes = 1;
 		}
 		int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
 		ArrayList<String> extraArgs = new ArrayList<>(); // TODO get extra encoder args from api request
 
-		VideoTaskConfig vconfig = new VideoTaskConfig(sourceFile.getPath(), rateControlType, req.getRate(), passes,
-				Codec.H264, extraArgs, preset);
-		AudioTaskConfig aconfig = new AudioTaskConfig(sourceFile.getPath(), RateControlType.CRF, 3, extraArgs,
-				Codec.VORBIS, 2, 48000);
+		VideoTaskConfig vconfig = new VideoTaskConfig(sourceFile.getPath(), videoRateControlType, req.getRate(),
+				passes, Codec.H264, extraArgs, preset);
+
+		// Audio parameters
+		RateControlType audioRCT = req.getAudioRateControlType();
+		Codec audioCodec = req.getAudioCodec();
+		ChannelDisposition audioChannels = req.getAudioChannels();
+		int audioSampleRate = req.getAudioSampleRate();
+		int audioRate = req.getRate();
+		
+		if (audioRCT == RateControlType.AUTO) {
+			audioRCT = RateControlType.CRF;
+			audioRate = 5;
+			audioSampleRate = 48000;
+			audioCodec = Codec.VORBIS;
+			audioChannels = ChannelDisposition.STEREO;
+		}
+		
+		// TODO Sanitize channel disposition (upmix protection)
+		
+		// TODO Sanitize channel disposition (codec max channel protection)
+
+		AudioTaskConfig aconfig = new AudioTaskConfig(sourceFile.getPath(), audioRCT, audioRate, extraArgs, audioCodec,
+				audioChannels, audioSampleRate);
 		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo,
 				vconfig, aconfig);
 		prepareFileSystem(job);

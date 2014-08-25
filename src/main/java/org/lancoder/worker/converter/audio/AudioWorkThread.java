@@ -41,7 +41,7 @@ public class AudioWorkThread extends Converter {
 		String streamMapping = String.format("0:%d", task.getStream().getIndex());
 		ArrayList<String> args = new ArrayList<>();
 		String[] baseArgs = new String[] { "ffmpeg", "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping, "-ac",
-				String.valueOf(task.getChannels()), "-ar", String.valueOf(task.getSampleRate()), "-c:a",
+				String.valueOf(task.getChannelDisposition().getCount()), "-ar", String.valueOf(task.getSampleRate()), "-c:a",
 				task.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
 		switch (task.getCodec()) {

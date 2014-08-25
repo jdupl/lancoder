@@ -6,14 +6,14 @@ public enum ChannelDisposition {
 	 */
 	ORIGINAL(0), MONO(1), STEREO(2), SURROUND_51(6), SURROUND_71(8);
 
-	protected int channels;
+	protected int count;
 
-	ChannelDisposition(int channels) {
-		this.channels = channels;
+	ChannelDisposition(int channelCount) {
+		this.count = channelCount;
 	}
 
-	public int getChannels() {
-		return channels;
+	public int getCount() {
+		return count;
 	}
 
 }

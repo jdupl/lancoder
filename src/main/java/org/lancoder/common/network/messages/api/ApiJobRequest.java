@@ -1,5 +1,7 @@
 package org.lancoder.common.network.messages.api;
 
+import org.lancoder.common.codecs.ChannelDisposition;
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.RateControlType;
 
@@ -7,10 +9,57 @@ public class ApiJobRequest {
 
 	private String name;
 	private String inputFile;
+	// Video
 	private int rate;
 	private int passes;
 	private FFmpegPreset preset;
 	private RateControlType rateControlType;
+	// Audio
+	private Codec audioCodec;
+	private RateControlType audioRateControlType;
+	private int audioRate;
+	private ChannelDisposition audioChannels;
+	private int audioSampleRate;
+
+	public RateControlType getAudioRateControlType() {
+		return audioRateControlType;
+	}
+
+	public int getAudioRate() {
+		return audioRate;
+	}
+
+	public void setAudioRate(int audioRate) {
+		this.audioRate = audioRate;
+	}
+
+	public void setAudioRateControlType(RateControlType audioRateControlType) {
+		this.audioRateControlType = audioRateControlType;
+	}
+
+	public ChannelDisposition getAudioChannels() {
+		return audioChannels;
+	}
+
+	public void setAudioChannels(ChannelDisposition audioChannels) {
+		this.audioChannels = audioChannels;
+	}
+
+	public int getAudioSampleRate() {
+		return audioSampleRate;
+	}
+
+	public void setAudioSampleRate(int audioSampleRate) {
+		this.audioSampleRate = audioSampleRate;
+	}
+
+	public Codec getAudioCodec() {
+		return audioCodec;
+	}
+
+	public void setAudioCodec(Codec audioCodec) {
+		this.audioCodec = audioCodec;
+	}
 
 	public int getPasses() {
 		return passes;
