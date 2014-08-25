@@ -16,7 +16,7 @@ public class VideoTaskConfig extends TaskConfig implements Serializable {
 
 	public VideoTaskConfig(String sourceFile, RateControlType rateControlType, int rate, int passes, Codec codec,
 			ArrayList<String> extraEncoderArgs, FFmpegPreset preset) {
-		super(sourceFile, rateControlType, rate, passes, codec, extraEncoderArgs);
+		super(rateControlType, rate, passes, codec, extraEncoderArgs);
 		this.preset = preset;
 	}
 

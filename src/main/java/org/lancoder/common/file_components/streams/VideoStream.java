@@ -13,8 +13,8 @@ public class VideoStream extends Stream {
 	private int width = 0;
 	private int height = 0;
 
-	public VideoStream(JsonObject json) {
-		super(json);
+	public VideoStream(JsonObject json, String relativeSource) {
+		super(json, relativeSource);
 		JsonElement element = null;
 		if ((element = json.get("r_frame_rate")) != null) {
 			// raw frame rate is noted as 24000/1001 or 24/1

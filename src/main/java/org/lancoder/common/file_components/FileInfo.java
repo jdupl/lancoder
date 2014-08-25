@@ -33,9 +33,14 @@ public class FileInfo implements Serializable {
 	/**
 	 * Streams of the file
 	 */
-	private ArrayList<Stream> streams = new ArrayList<>();
+	private final ArrayList<Stream> streams = new ArrayList<>();
+	/**
+	 * Relative path of this file
+	 */
+	private String relativeSource;
 
-	public FileInfo(JsonObject json) {
+	public FileInfo(JsonObject json, String relativeSource) {
+		this.relativeSource = relativeSource;
 		JsonObject format = json.get("format").getAsJsonObject();
 		this.setBitrate(format.get("bit_rate").getAsInt());
 		this.setSize(format.get("size").getAsLong());
@@ -47,13 +52,13 @@ public class FileInfo implements Serializable {
 			JsonObject jsonObject = jsonStream.getAsJsonObject();
 			switch (jsonObject.get("codec_type").getAsString()) {
 			case "video":
-				this.getStreams().add(new VideoStream(jsonObject));
+				this.getStreams().add(new VideoStream(jsonObject, relativeSource));
 				break;
 			case "audio":
-				this.getStreams().add(new AudioStream(jsonObject));
+				this.getStreams().add(new AudioStream(jsonObject, relativeSource));
 				break;
 			case "subtitle":
-				this.getStreams().add(new TextStream(jsonObject));
+				this.getStreams().add(new TextStream(jsonObject, relativeSource));
 				break;
 			default:
 				break;
@@ -74,7 +79,7 @@ public class FileInfo implements Serializable {
 			return null;
 		}
 	}
-	
+
 	public ArrayList<VideoStream> getVideoStreams() {
 		ArrayList<VideoStream> vStreams = new ArrayList<>();
 		for (Stream stream : streams) {
@@ -103,6 +108,10 @@ public class FileInfo implements Serializable {
 			}
 		}
 		return tStreams;
+	}
+
+	public String getRelativeSource() {
+		return relativeSource;
 	}
 
 	public long getDuration() {

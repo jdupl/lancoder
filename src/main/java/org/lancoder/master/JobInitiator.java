@@ -38,7 +38,7 @@ public class JobInitiator extends RunnableService {
 	private void createJob(ApiJobRequest req, File sourceFile, String jobName) {
 		// Get meta-data from source file
 		File absoluteFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), sourceFile.getPath());
-		FileInfo fileInfo = FFmpegProber.getFileInfo(absoluteFile);
+		FileInfo fileInfo = FFmpegProber.getFileInfo(absoluteFile, sourceFile.getPath());
 
 		FFmpegPreset preset = req.getPreset();
 		RateControlType videoRateControlType = req.getRateControlType();

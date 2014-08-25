@@ -11,6 +11,8 @@ import com.google.gson.JsonObject;
 public abstract class Stream implements Serializable {
 
 	private static final long serialVersionUID = -1867430611531693710L;
+
+	protected String sourceFile;
 	protected int index;
 	protected Codec codec = Codec.UNKNOWN;
 	protected String title = "";
@@ -23,8 +25,12 @@ public abstract class Stream implements Serializable {
 	 * 
 	 * @param json
 	 *            the json stream object to parse
+	 * @param relativeSource
+	 *            The relative source file of this stream
+	 * 
 	 */
-	public Stream(JsonObject json) {
+	public Stream(JsonObject json, String relativeSource) {
+		this.sourceFile = relativeSource;
 		this.index = json.get("index").getAsInt();
 		String unknownCodec = json.get("codec_name").getAsString();
 		for (Codec codec : Codec.values()) {
@@ -65,6 +71,10 @@ public abstract class Stream implements Serializable {
 			return other.index == this.index && other.codec.equals(this.codec);
 		}
 		return false;
+	}
+
+	public String getSourceFile() {
+		return sourceFile;
 	}
 
 	public boolean isCopyToOutput() {

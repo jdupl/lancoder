@@ -12,20 +12,20 @@ import com.google.gson.JsonParser;
 
 public class FFmpegProber {
 
-	public static FileInfo getFileInfo(File file) {
+	public static FileInfo getFileInfo(File absoluteFile, String relativePath) {
 		FileInfo fileInfo = null;
 		Process process = null;
 		try {
 			ProcessBuilder pb = new ProcessBuilder("ffprobe", "-v", "quiet", "-print_format", "json", "-show_format",
-					"-show_streams", file.getPath());
+					"-show_streams", absoluteFile.getPath());
 			process = pb.start();
 			InputStream stdout = process.getInputStream();
 			JsonParser parser = new JsonParser();
 			JsonObject json = parser.parse(new InputStreamReader(stdout)).getAsJsonObject();
 			stdout.close();
-			fileInfo = new FileInfo(json);
+			fileInfo = new FileInfo(json, relativePath);
 		} catch (IOException e) {
-			System.err.printf("Error while probing file %s\n", file.getAbsoluteFile());
+			System.err.printf("Error while probing file %s\n", absoluteFile.getAbsoluteFile());
 			e.printStackTrace();
 		} finally {
 			if (process != null) {

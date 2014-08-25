@@ -13,8 +13,8 @@ public class AudioStream extends Stream {
 	private int channels;
 	private int sampleRate;
 
-	public AudioStream(JsonObject json) {
-		super(json);
+	public AudioStream(JsonObject json, String relativeSource) {
+		super(json, relativeSource);
 		JsonElement element = null;
 		if ((element = json.get("bit_rate")) != null) {
 			// convert from bit/s to kbps

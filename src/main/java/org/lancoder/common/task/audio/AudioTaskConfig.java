@@ -15,7 +15,7 @@ public class AudioTaskConfig extends TaskConfig {
 
 	public AudioTaskConfig(String sourceFile, RateControlType rateControlType, int rate,
 			ArrayList<String> extraEncoderArgs, Codec codec, ChannelDisposition channels, int sampleRate) {
-		super(sourceFile, rateControlType, rate, 1, codec, extraEncoderArgs);
+		super(rateControlType, rate, 1, codec, extraEncoderArgs);
 		this.channels = channels;
 		this.sampleRate = sampleRate;
 	}

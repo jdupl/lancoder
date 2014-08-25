@@ -10,16 +10,13 @@ public class TaskConfig implements Serializable {
 
 	private static final long serialVersionUID = -8201664961243820323L;
 
-	protected String sourceFile;
 	protected RateControlType rateControlType;
 	protected int rate; // kbps or crf TODO use BiterateControl ?
 	protected int passes;
 	protected Codec codec;
 	protected ArrayList<String> extraEncoderArgs; // TODO usage this to allow --slow-first-pass and other overrides
 
-	public TaskConfig(String sourceFile, RateControlType rateControlType, int rate, int passes, Codec codec,
-			ArrayList<String> extraEncoderArgs) {
-		this.sourceFile = sourceFile;
+	public TaskConfig(RateControlType rateControlType, int rate, int passes, Codec codec, ArrayList<String> extraEncoderArgs) {
 		this.rateControlType = rateControlType;
 		this.rate = rate;
 		this.passes = passes;
@@ -45,14 +42,6 @@ public class TaskConfig implements Serializable {
 
 	public void setRateControlType(RateControlType rateControlType) {
 		this.rateControlType = rateControlType;
-	}
-
-	public String getSourceFile() {
-		return sourceFile;
-	}
-
-	public void setSourceFile(String sourceFile) {
-		this.sourceFile = sourceFile;
 	}
 
 	public int getRate() {
