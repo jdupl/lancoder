@@ -9,6 +9,7 @@ public class Task implements Serializable {
 
 	private static final long serialVersionUID = 6687973244041343482L;
 	protected int taskId;
+	protected String jobId;
 	protected int stepCount;
 	protected long encodingStartTime;
 	protected long encodingEndTime;
@@ -16,9 +17,10 @@ public class Task implements Serializable {
 	protected Unit unit;
 	protected TaskProgress taskProgress;
 
-	public Task(int taskId, int stepCount, long encodingStartTime, long encodingEndTime, long unitCount,
+	public Task(int taskId, String jobId, int stepCount, long encodingStartTime, long encodingEndTime, long unitCount,
 			Unit unit) {
 		this.taskId = taskId;
+		this.jobId = jobId;
 		this.stepCount = stepCount;
 		this.encodingStartTime = encodingStartTime;
 		this.encodingEndTime = encodingEndTime;
@@ -60,7 +62,6 @@ public class Task implements Serializable {
 	}
 
 	public String getJobId() {
-		// TODO add the job id reference to object
-		return null;
+		return this.jobId;
 	}
 }
