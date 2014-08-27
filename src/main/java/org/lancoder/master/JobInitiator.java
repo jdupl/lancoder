@@ -17,8 +17,6 @@ import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.network.messages.api.ApiJobRequest;
-import org.lancoder.common.task.audio.AudioTaskConfig;
-import org.lancoder.common.task.video.VideoTaskConfig;
 import org.lancoder.common.utils.FileUtils;
 
 public class JobInitiator extends RunnableService {
@@ -53,9 +51,6 @@ public class JobInitiator extends RunnableService {
 		int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
 		ArrayList<String> extraArgs = new ArrayList<>(); // TODO get extra encoder args from api request
 
-		VideoTaskConfig vconfig = new VideoTaskConfig(sourceFile.getPath(), videoRateControlType, req.getRate(),
-				passes, Codec.H264, extraArgs, preset);
-
 		// Audio parameters
 		RateControlType audioRCT = req.getAudioRateControlType();
 		Codec audioCodec = req.getAudioCodec();
@@ -71,18 +66,16 @@ public class JobInitiator extends RunnableService {
 			audioChannels = ChannelDisposition.STEREO;
 		}
 		
-		AudioTaskConfig defaultAudio = new AudioTaskConfig(sourceFile.getPath(), audioRCT, audioRate, extraArgs, audioCodec,
-				audioChannels, audioSampleRate);
+
 		for (AudioStream stream : fileInfo.getAudioStreams()) {
 			// Sanitize channel disposition (upmix protection)
-			if (stream.getChannels().getCount() < defaultAudio.getChannels().getCount()){
-				
-			}
+//			if (stream.getChannels().getCount() < defaultAudio.getChannels().getCount()){
+//				
+//			}
 
 		}
 
-		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo,
-				vconfig, defaultAudio);
+		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo);
 		prepareFileSystem(job);
 		listener.newJob(job);
 	}

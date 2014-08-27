@@ -9,7 +9,7 @@ import java.util.Iterator;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.Job;
-import org.lancoder.common.task.Task;
+import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.utils.FileUtils;
 
 public class Muxer extends RunnableService {
@@ -41,12 +41,14 @@ public class Muxer extends RunnableService {
 				args.addAll(stream.getStreamCopyMapping());
 				args.add(job.getSourceFile());
 			} else {
-				ArrayList<Task> tasks = job.getTasksForStream(stream);
+				ArrayList<ClientTask> tasks = job.getTasksForStream(stream);
+				
 				// Iterate through tasks of the stream and concatenate if necessary
-				Iterator<Task> taskIterator = tasks.iterator();
+				Iterator<ClientTask> taskIterator = tasks.iterator();
 				while (taskIterator.hasNext()) {
-					Task t = taskIterator.next();
-					File partFile = FileUtils.getFile(listener.getSharedFolder(), t.getOutputFile());
+					ClientTask t = taskIterator.next();
+					File partFile = FileUtils.getFile(listener.getSharedFolder(), t.getStreamConfig().getOutStream()
+							.getRelativeFile());
 					args.add(partFile.getAbsolutePath());
 					if (taskIterator.hasNext()) {
 						// Concatenate to the next task

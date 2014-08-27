@@ -12,9 +12,7 @@ import org.apache.commons.io.FileUtils;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.task.ClientAudioTask;
-import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.PrototypeTask;
-import org.lancoder.common.task.audio.AudioEncodingTask;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.worker.converter.Converter;
 import org.lancoder.worker.converter.ConverterListener;
@@ -31,10 +29,9 @@ public class AudioWorkThread extends Converter {
 		this.listener = listener;
 
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
-		AudioStream sourceStream = task.getStreamConfig().getOrignalStream();
 		AudioStream destinationStream = task.getStreamConfig().getOutStream();
 		PrototypeTask taskConfig = task.getTask();
-		
+
 		String extension = destinationStream.getCodec().getContainer();
 		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), taskConfig.getJobId(),
 				String.valueOf(taskConfig.getTaskId()));
@@ -43,33 +40,36 @@ public class AudioWorkThread extends Converter {
 		taskFinalFile = FileUtils.getFile(absoluteSharedDir, destinationStream.getRelativeFile());
 	}
 
-	private ArrayList<String> getArgs(ClientTask task) {
+	private ArrayList<String> getArgs(ClientAudioTask task) {
 		ArrayList<String> args = new ArrayList<>();
-//		String absoluteInput = FileUtils.getFile(absoluteSharedDir, task.getSourceFile()).getAbsolutePath();
-//
-//		String streamMapping = String.format("0:%d", task.getStream().getIndex());
-//		
-//		String[] baseArgs = new String[] { "ffmpeg", "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping, "-ac",
-//				String.valueOf(task.getChannelDisposition().getCount()), "-ar", String.valueOf(task.getSampleRate()), "-c:a",
-//				task.getCodec().getEncoder() };
-//		Collections.addAll(args, baseArgs);
-//		switch (task.getCodec()) {
-//		case VORBIS:
-//			String rateControlString = task.getRateControlType() == RateControlType.CRF ? "-q:a" : "-b:a";
-//			String rate = task.getRateControlType() == RateControlType.CRF ? String.valueOf(task.getRate()) : String
-//					.format("%dk", task.getRate());
-//			args.add(rateControlString);
-//			args.add(rate);
-//			break;
-//		// TODO support other codecs
-//		default:
-//			// TODO unknown codec exception
-//			break;
-//		}
-//		// Meta-data mapping
-//		args.add("-map_metadata");
-//		args.add(String.format("0:s:%d", task.getStream().getIndex())); // TODO map to stream insted of global
-//		args.add(taskTempOutputFile.getPath());
+		AudioStream outStream = task.getStreamConfig().getOutStream();
+		AudioStream inStream = task.getStreamConfig().getOrignalStream();
+
+		String absoluteInput = FileUtils.getFile(absoluteSharedDir, inStream.getRelativeFile()).getAbsolutePath();
+		String streamMapping = String.format("0:%d", inStream.getIndex());
+		String channelDisposition = String.valueOf(outStream.getChannels().getCount());
+		String sampleRate = String.valueOf(outStream.getSampleRate());
+
+		String[] baseArgs = new String[] { "ffmpeg", "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping, "-ac",
+				channelDisposition, "-ar", sampleRate, "-c:a", outStream.getCodec().getEncoder() };
+		Collections.addAll(args, baseArgs);
+		switch (outStream.getCodec()) {
+		case VORBIS:
+			String rateControlString = outStream.getRateControlType() == RateControlType.CRF ? "-q:a" : "-b:a";
+			String rate = outStream.getRateControlType() == RateControlType.CRF ? String
+					.valueOf(outStream.getRate()) : String.format("%dk", outStream.getRate());
+			args.add(rateControlString);
+			args.add(rate);
+			break;
+		// TODO support other codecs
+		default:
+			// TODO unknown codec exception
+			break;
+		}
+		// Meta-data mapping
+		args.add("-map_metadata");
+		args.add(String.format("0:s:%d", inStream.getIndex()));
+		args.add(taskTempOutputFile.getPath());
 		return args;
 	}
 
@@ -85,7 +85,7 @@ public class AudioWorkThread extends Converter {
 			while (s.hasNext() && !close) {
 				m = timePattern.matcher(s.nextLine());
 				if (m.find()) {
-					task.getTask().getProgress().update(TimeUtils.getMsFromString(m.group(1)) / 1000);
+					task.getProgress().update(TimeUtils.getMsFromString(m.group(1)) / 1000);
 				}
 			}
 			success = p.waitFor() == 0 ? true : false;

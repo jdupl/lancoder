@@ -8,6 +8,7 @@ import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.progress.Unit;
 import org.lancoder.common.task.Task;
 
+@Deprecated
 public class VideoEncodingTask extends Task implements Serializable {
 
 	private static final long serialVersionUID = -8705492902098705162L;

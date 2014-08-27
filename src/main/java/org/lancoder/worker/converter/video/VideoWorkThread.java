@@ -15,7 +15,6 @@ import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.network.Cause;
 import org.lancoder.common.task.ClientVideoTask;
-import org.lancoder.common.task.video.VideoEncodingTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.worker.converter.Converter;
@@ -47,7 +46,6 @@ public class VideoWorkThread extends Converter {
 	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
 			MissingDecoderException, WorkInterruptedException {
 		VideoStream inStream = task.getStreamConfig().getOrignalStream();
-		VideoStream outStream = task.getStreamConfig().getOutStream();
 
 		File inputFile = new File(absoluteSharedDir, inStream.getRelativeFile());
 		String mapping = String.format("0:%d", inStream.getIndex());

@@ -8,22 +8,13 @@ import java.util.ArrayList;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.FileInfo;
-import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.file_components.streams.Stream;
-import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.TaskState;
 import org.lancoder.common.task.ClientAudioTask;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.ClientVideoTask;
-import org.lancoder.common.task.Task;
-import org.lancoder.common.task.audio.AudioEncodingTask;
-import org.lancoder.common.task.audio.AudioTaskConfig;
-import org.lancoder.common.task.video.TaskInfo;
-import org.lancoder.common.task.video.VideoEncodingTask;
-import org.lancoder.common.task.video.VideoTaskConfig;
 
 /**
  * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all
@@ -61,10 +52,8 @@ public class Job implements Comparable<Job>, Serializable {
 
 	private ArrayList<ClientVideoTask> videoTasks = new ArrayList<>();
 	private ArrayList<ClientAudioTask> audioTasks = new ArrayList<>();
-	private int taskCount = 0;
 
-	public Job(String jobName, String inputFile, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo,
-			VideoTaskConfig vconfig, AudioTaskConfig aconfig) {
+	public Job(String jobName, String inputFile, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo) {
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
@@ -95,7 +84,6 @@ public class Job implements Comparable<Job>, Serializable {
 			// even if the algorithm is not available, don't crash
 			this.jobId = String.valueOf(System.currentTimeMillis());
 		}
-		createTasks(aconfig, vconfig);
 	}
 
 	public String getSourceFile() {
@@ -109,107 +97,15 @@ public class Job implements Comparable<Job>, Serializable {
 	 *            The stream to look for
 	 * @return An ArrayList of related tasks
 	 */
-	public ArrayList<Task> getTasksForStream(Stream stream) {
-		ArrayList<Task> tasks = new ArrayList<>();
+	public ArrayList<ClientTask> getTasksForStream(Stream stream) {
+		ArrayList<ClientTask> tasks = new ArrayList<>();
 //		for (int i = 0; i < this.getTasks().size(); i++) {
-//			Task task = this.getTasks().get(i);
+//			ClientTask task = this.getTasks().get(i);
 //			if (task.getStream().equals(stream)) {
 //				tasks.add(task);
 //			}
 //		}
 		return tasks;
-	}
-
-	/**
-	 * Creates tasks of the job with good handling of paths. TODO add subtitles to the job
-	 */
-	private void createTasks(AudioTaskConfig aconfig, VideoTaskConfig vconfig) {
-//		for (Stream stream : this.fileInfo.getStreams()) {
-//			if (stream instanceof VideoStream) {
-//				if (vconfig.getCodec() != Codec.COPY) {
-//					this.videoTasks.addAll(createVideoTasks((VideoStream) stream, vconfig));
-//				} else {
-//					stream.setCopyToOutput(true);
-//				}
-//			} else if (stream instanceof AudioStream) {
-//				if (aconfig.getCodec() != Codec.COPY) {
-//					this.audioTasks.add(createAudioTask((AudioStream) stream, aconfig));
-//				} else {
-//					stream.setCopyToOutput(true);
-//				}
-//			} else if (stream instanceof TextStream) {
-//				stream.setCopyToOutput(true);
-//			}
-//		}
-	}
-
-	/**
-	 * Process a VideoStream and split into multiple VideoEncodingTasks
-	 * 
-	 * @param stream
-	 *            The stream to process
-	 * @return The VideoEncodingTasks that will be encoded
-	 */
-	private ArrayList<VideoEncodingTask> createVideoTasks(VideoStream stream, VideoTaskConfig config) {
-		long currentMs = 0;
-		ArrayList<VideoEncodingTask> tasks = new ArrayList<>();
-
-		long remaining = fileInfo.getDuration();
-
-		// Get relative (to absolute shared directory) output folder for this job's tasks
-		File relativeTasksOutput = FileUtils.getFile(getOutputFolder(), getPartsFolderName());
-		while (remaining > 0) {
-			long start = currentMs;
-			long end = 0;
-
-			if ((((double) remaining - getLengthOfTasks()) / getLengthOfJob()) <= 0.15) {
-				end = getLengthOfJob();
-				remaining = 0;
-			} else {
-				end = currentMs + lengthOfTasks;
-				remaining -= lengthOfTasks;
-				currentMs += lengthOfTasks;
-			}
-			int taskId = taskCount++;
-			File relativeTaskOutputFile = null;
-			if (config.getCodec() == Codec.COPY) {
-				relativeTaskOutputFile = new File(stream.getRelativeFile());
-			} else {
-				relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
-						String.format("part-%d.mpeg.ts", taskId)); // TODO get extension from codec
-			}
-			long ms = end - start;
-			long frameCount = (long) Math.floor((ms / 1000 * stream.getFramerate()));
-			TaskInfo info = new TaskInfo(taskId, getJobId(), relativeTaskOutputFile.getPath(), start, end, frameCount);
-			VideoEncodingTask task = new VideoEncodingTask(info, stream, config);
-			tasks.add(task);
-		}
-		return tasks;
-	}
-
-	/**
-	 * Process an AudioStream and create an AudioEncodingTask (with hardcoded vorbis settings). TODO handle multiple
-	 * audio codec.
-	 * 
-	 * @param stream
-	 *            The stream to encode
-	 * @return The AudioEncodingTask
-	 */
-	private AudioEncodingTask createAudioTask(AudioStream stream, AudioTaskConfig config) {
-//		int nextTaskId = taskCount++;
-//		File relativeTasksOutput = FileUtils.getFile(getOutputFolder(), getPartsFolderName());
-//		File output = null;
-//		if (config.getCodec() == Codec.COPY) {
-//			output = new File(stream.getRelativeFile());
-//		} else {
-//			output = FileUtils.getFile(relativeTasksOutput,
-//					String.format("%d.%s", nextTaskId, config.getCodec().getContainer()));
-//		}
-//		TaskInfo info = new TaskInfo(nextTaskId, getJobId(), output.getPath(), 0, fileInfo.getDuration(),
-//				fileInfo.getDuration() / 1000);
-//		AudioEncodingTask task = new AudioEncodingTask(info, stream, config);
-//		return task;
-		return null;
 	}
 
 	/**

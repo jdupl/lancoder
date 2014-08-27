@@ -2,8 +2,6 @@ package org.lancoder.worker.converter.audio;
 
 import org.lancoder.common.task.ClientAudioTask;
 import org.lancoder.common.task.ClientTask;
-import org.lancoder.common.task.Task;
-import org.lancoder.common.task.audio.AudioEncodingTask;
 import org.lancoder.worker.converter.ConverterListener;
 import org.lancoder.worker.converter.ConverterPool;
 
