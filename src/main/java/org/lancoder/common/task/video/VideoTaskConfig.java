@@ -7,7 +7,7 @@ import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.task.TaskConfig;
-
+@Deprecated
 public class VideoTaskConfig extends TaskConfig implements Serializable {
 
 	private static final long serialVersionUID = -8201664961243820323L;

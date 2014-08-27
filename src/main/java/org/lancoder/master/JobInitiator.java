@@ -12,6 +12,7 @@ import org.lancoder.common.RunnableService;
 import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.FileInfo;
+import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.job.RateControlType;
@@ -69,14 +70,19 @@ public class JobInitiator extends RunnableService {
 			audioCodec = Codec.VORBIS;
 			audioChannels = ChannelDisposition.STEREO;
 		}
-
-		// TODO Sanitize channel disposition (upmix protection)
-
-		// TODO Sanitize channel disposition (codec max channel protection)
-		AudioTaskConfig aconfig = new AudioTaskConfig(sourceFile.getPath(), audioRCT, audioRate, extraArgs, audioCodec,
+		
+		AudioTaskConfig defaultAudio = new AudioTaskConfig(sourceFile.getPath(), audioRCT, audioRate, extraArgs, audioCodec,
 				audioChannels, audioSampleRate);
+		for (AudioStream stream : fileInfo.getAudioStreams()) {
+			// Sanitize channel disposition (upmix protection)
+			if (stream.getChannels().getCount() < defaultAudio.getChannels().getCount()){
+				
+			}
+
+		}
+
 		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo,
-				vconfig, aconfig);
+				vconfig, defaultAudio);
 		prepareFileSystem(job);
 		listener.newJob(job);
 	}

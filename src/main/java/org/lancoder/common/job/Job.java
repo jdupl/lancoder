@@ -12,10 +12,12 @@ import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.file_components.streams.Stream;
-import org.lancoder.common.file_components.streams.TextStream;
 import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.TaskState;
+import org.lancoder.common.task.ClientAudioTask;
+import org.lancoder.common.task.ClientTask;
+import org.lancoder.common.task.ClientVideoTask;
 import org.lancoder.common.task.Task;
 import org.lancoder.common.task.audio.AudioEncodingTask;
 import org.lancoder.common.task.audio.AudioTaskConfig;
@@ -57,8 +59,8 @@ public class Job implements Comparable<Job>, Serializable {
 	private FileInfo fileInfo;
 	private String sourceFile;
 
-	private ArrayList<VideoEncodingTask> videoTasks = new ArrayList<>();
-	private ArrayList<AudioEncodingTask> audioTasks = new ArrayList<>();
+	private ArrayList<ClientVideoTask> videoTasks = new ArrayList<>();
+	private ArrayList<ClientAudioTask> audioTasks = new ArrayList<>();
 	private int taskCount = 0;
 
 	public Job(String jobName, String inputFile, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo,
@@ -109,12 +111,12 @@ public class Job implements Comparable<Job>, Serializable {
 	 */
 	public ArrayList<Task> getTasksForStream(Stream stream) {
 		ArrayList<Task> tasks = new ArrayList<>();
-		for (int i = 0; i < this.getTasks().size(); i++) {
-			Task task = this.getTasks().get(i);
-			if (task.getStream().equals(stream)) {
-				tasks.add(task);
-			}
-		}
+//		for (int i = 0; i < this.getTasks().size(); i++) {
+//			Task task = this.getTasks().get(i);
+//			if (task.getStream().equals(stream)) {
+//				tasks.add(task);
+//			}
+//		}
 		return tasks;
 	}
 
@@ -122,23 +124,23 @@ public class Job implements Comparable<Job>, Serializable {
 	 * Creates tasks of the job with good handling of paths. TODO add subtitles to the job
 	 */
 	private void createTasks(AudioTaskConfig aconfig, VideoTaskConfig vconfig) {
-		for (Stream stream : this.fileInfo.getStreams()) {
-			if (stream instanceof VideoStream) {
-				if (vconfig.getCodec() != Codec.COPY) {
-					this.videoTasks.addAll(createVideoTasks((VideoStream) stream, vconfig));
-				} else {
-					stream.setCopyToOutput(true);
-				}
-			} else if (stream instanceof AudioStream) {
-				if (aconfig.getCodec() != Codec.COPY) {
-					this.audioTasks.add(createAudioTask((AudioStream) stream, aconfig));
-				} else {
-					stream.setCopyToOutput(true);
-				}
-			} else if (stream instanceof TextStream) {
-				stream.setCopyToOutput(true);
-			}
-		}
+//		for (Stream stream : this.fileInfo.getStreams()) {
+//			if (stream instanceof VideoStream) {
+//				if (vconfig.getCodec() != Codec.COPY) {
+//					this.videoTasks.addAll(createVideoTasks((VideoStream) stream, vconfig));
+//				} else {
+//					stream.setCopyToOutput(true);
+//				}
+//			} else if (stream instanceof AudioStream) {
+//				if (aconfig.getCodec() != Codec.COPY) {
+//					this.audioTasks.add(createAudioTask((AudioStream) stream, aconfig));
+//				} else {
+//					stream.setCopyToOutput(true);
+//				}
+//			} else if (stream instanceof TextStream) {
+//				stream.setCopyToOutput(true);
+//			}
+//		}
 	}
 
 	/**
@@ -194,19 +196,20 @@ public class Job implements Comparable<Job>, Serializable {
 	 * @return The AudioEncodingTask
 	 */
 	private AudioEncodingTask createAudioTask(AudioStream stream, AudioTaskConfig config) {
-		int nextTaskId = taskCount++;
-		File relativeTasksOutput = FileUtils.getFile(getOutputFolder(), getPartsFolderName());
-		File output = null;
-		if (config.getCodec() == Codec.COPY) {
-			output = new File(stream.getRelativeFile());
-		} else {
-			output = FileUtils.getFile(relativeTasksOutput,
-					String.format("%d.%s", nextTaskId, config.getCodec().getContainer()));
-		}
-		TaskInfo info = new TaskInfo(nextTaskId, getJobId(), output.getPath(), 0, fileInfo.getDuration(),
-				fileInfo.getDuration() / 1000);
-		AudioEncodingTask task = new AudioEncodingTask(info, stream, config);
-		return task;
+//		int nextTaskId = taskCount++;
+//		File relativeTasksOutput = FileUtils.getFile(getOutputFolder(), getPartsFolderName());
+//		File output = null;
+//		if (config.getCodec() == Codec.COPY) {
+//			output = new File(stream.getRelativeFile());
+//		} else {
+//			output = FileUtils.getFile(relativeTasksOutput,
+//					String.format("%d.%s", nextTaskId, config.getCodec().getContainer()));
+//		}
+//		TaskInfo info = new TaskInfo(nextTaskId, getJobId(), output.getPath(), 0, fileInfo.getDuration(),
+//				fileInfo.getDuration() / 1000);
+//		AudioEncodingTask task = new AudioEncodingTask(info, stream, config);
+//		return task;
+		return null;
 	}
 
 	/**
@@ -214,7 +217,7 @@ public class Job implements Comparable<Job>, Serializable {
 	 * 
 	 * @return The task or null if no task is available
 	 */
-	public synchronized VideoEncodingTask getNextTask() {
+	public synchronized ClientVideoTask getNextTask() {
 		if (getTaskRemainingCount() == 0) {
 			return null;
 		}
@@ -222,8 +225,8 @@ public class Job implements Comparable<Job>, Serializable {
 			// TODO move this to job manager
 			this.setJobStatus(JobState.JOB_COMPUTING);
 		}
-		for (VideoEncodingTask task : this.videoTasks) {
-			if (task.getTaskState() == TaskState.TASK_TODO) {
+		for (ClientVideoTask task : this.videoTasks) {
+			if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 				return task;
 			}
 		}
@@ -243,8 +246,8 @@ public class Job implements Comparable<Job>, Serializable {
 			return this.videoTasks.size();
 		default:
 			int count = 0;
-			for (VideoEncodingTask task : this.videoTasks) {
-				if (task.getTaskState() == TaskState.TASK_TODO) {
+			for (ClientVideoTask task : this.videoTasks) {
+				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 					++count;
 				}
 			}
@@ -312,14 +315,14 @@ public class Job implements Comparable<Job>, Serializable {
 		this.lengthOfJob = lengthOfJob;
 	}
 
-	public ArrayList<Task> getTasks() {
-		ArrayList<Task> tasks = new ArrayList<>();
+	public ArrayList<ClientTask> getTasks() {
+		ArrayList<ClientTask> tasks = new ArrayList<>();
 		tasks.addAll(audioTasks);
 		tasks.addAll(videoTasks);
 		return tasks;
 	}
 
-	public void setTasks(ArrayList<VideoEncodingTask> tasks) {
+	public void setTasks(ArrayList<ClientVideoTask> tasks) {
 		this.videoTasks = tasks;
 	}
 
@@ -363,11 +366,11 @@ public class Job implements Comparable<Job>, Serializable {
 		this.partsFolderName = partsFolderName;
 	}
 
-	public ArrayList<AudioEncodingTask> getAudioTasks() {
+	public ArrayList<ClientAudioTask> getAudioTasks() {
 		return audioTasks;
 	}
 
-	public ArrayList<VideoEncodingTask> getVideoTasks() {
+	public ArrayList<ClientVideoTask> getVideoTasks() {
 		return videoTasks;
 	}
 

@@ -1,23 +1,23 @@
 package org.lancoder.master.dispatcher;
 
 import org.lancoder.common.Node;
-import org.lancoder.common.task.Task;
+import org.lancoder.common.task.ClientTask;
 
 public class DispatchItem {
-	private Task task;
+	private ClientTask task;
 
 	private Node node;
 
-	public DispatchItem(Task task, Node node) {
+	public DispatchItem(ClientTask task, Node node) {
 		this.task = task;
 		this.node = node;
 	}
 
-	public Task getTask() {
+	public ClientTask getTask() {
 		return task;
 	}
 
-	public void setTask(Task task) {
+	public void setTask(ClientTask task) {
 		this.task = task;
 	}
 

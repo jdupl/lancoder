@@ -1,5 +1,7 @@
 package org.lancoder.worker.converter.audio;
 
+import org.lancoder.common.task.ClientAudioTask;
+import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.Task;
 import org.lancoder.common.task.audio.AudioEncodingTask;
 import org.lancoder.worker.converter.ConverterListener;
@@ -18,11 +20,11 @@ public class AudioConverterPool extends ConverterPool {
 	}
 
 	@Override
-	public synchronized boolean encode(Task task) {
-		if (!(task instanceof AudioEncodingTask) || !hasFree()) {
+	public synchronized boolean encode(ClientTask task) {
+		if (!(task instanceof ClientAudioTask) || !hasFree()) {
 			return false;
 		}
-		AudioEncodingTask aTask = (AudioEncodingTask) task;
+		ClientAudioTask aTask = (ClientAudioTask) task;
 		AudioWorkThread converter = new AudioWorkThread(aTask, this);
 		converters.put(task, converter);
 		Thread t = new Thread(converter);

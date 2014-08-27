@@ -28,10 +28,10 @@ import org.lancoder.common.network.messages.cluster.StatusReport;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.status.TaskState;
-import org.lancoder.common.task.Task;
-import org.lancoder.common.task.audio.AudioEncodingTask;
+import org.lancoder.common.task.ClientAudioTask;
+import org.lancoder.common.task.ClientTask;
+import org.lancoder.common.task.ClientVideoTask;
 import org.lancoder.common.task.video.TaskReport;
-import org.lancoder.common.task.video.VideoEncodingTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.master.api.node.MasterNodeServerListener;
 import org.lancoder.master.api.node.MasterObjectServer;
@@ -91,8 +91,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public void shutdown() {
 		// save config and make sure current tasks are reset
 		for (Node n : getNodes()) {
-			for (Task task : n.getCurrentTasks()) {
-				task.reset();
+			for (ClientTask task : n.getCurrentTasks()) {
+				task.getProgress().reset();
 			}
 		}
 		config.dump(configPath);
@@ -130,7 +130,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 * 
 	 * @return The task to dispatch next or null is none available
 	 */
-	private VideoEncodingTask getNextVideoTask() {
+	private ClientVideoTask getNextVideoTask() {
 		Job min = null;
 		int minTaskCount = Integer.MAX_VALUE;
 
@@ -144,11 +144,11 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		return min != null ? min.getNextTask() : null;
 	}
 
-	private AudioEncodingTask getNextAudioTask() {
+	private ClientAudioTask getNextAudioTask() {
 		// We should process all audio in no particular order
 		for (Job j : this.getJobs()) {
-			for (AudioEncodingTask task : j.getAudioTasks()) {
-				if (task.getTaskState() == TaskState.TASK_TODO) {
+			for (ClientAudioTask task : j.getAudioTasks()) {
+				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 					return task;
 				}
 			}
@@ -199,8 +199,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public void updateNodesWork() {
 		System.out.println("MASTER: Checking dispatch");
 		Node node = null;
-		VideoEncodingTask nextVideoTask = null;
-		AudioEncodingTask nextAudioTask = null;
+		ClientVideoTask nextVideoTask = null;
+		ClientAudioTask nextAudioTask = null;
 
 		while (((nextAudioTask = getNextAudioTask()) != null && (node = getBestAudioNode()) != null)) {
 			dispatch(nextAudioTask, node);
@@ -214,10 +214,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		config.dump(configPath);
 	}
 
-	public void dispatch(Task task, Node node) {
-		if (task.getTaskState() == TaskState.TASK_TODO) {
-			// task.setTaskState(TaskState.TASK_COMPUTING);
-			task.start();
+	public void dispatch(ClientTask task, Node node) {
+		if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
+			task.getProgress().start();
 		}
 		node.setStatus(NodeState.LOCKED);
 		dispatcher.dispatch(new DispatchItem(task, node));
@@ -345,9 +344,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			return false;
 		}
 		for (Node node : this.getNodes()) {
-			for (Task task : node.getCurrentTasks()) {
+			for (ClientTask task : node.getCurrentTasks()) {
 				if (task.getJobId().equals(j.getJobId())) {
-					task.reset();
+					task.getProgress().reset();
 					taskUpdated(task, node);
 				}
 			}
@@ -390,8 +389,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public synchronized void removeNode(Node n) {
 		if (n != null) {
 			// Cancel node's tasks status if any
-			for (Task t : n.getCurrentTasks()) {
-				t.reset();
+			for (ClientTask t : n.getCurrentTasks()) {
+				t.getProgress().reset();
 				n.getCurrentTasks().remove(t);
 			}
 			n.setStatus(NodeState.NOT_CONNECTED);
@@ -400,15 +399,15 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		}
 	}
 
-	public boolean taskUpdated(Task task, Node n) {
-		TaskState updateStatus = task.getTaskState();
+	public boolean taskUpdated(ClientTask task, Node n) {
+		TaskState updateStatus = task.getProgress().getTaskState();
 		switch (updateStatus) {
 		case TASK_COMPLETED:
 			n.getCurrentTasks().remove(task);
 			Job job = this.jobs.get(task.getJobId());
 			boolean jobDone = true;
-			for (Task t : job.getTasks()) {
-				if (t.getTaskState() != TaskState.TASK_COMPLETED) {
+			for (ClientTask t : job.getTasks()) {
+				if (t.getProgress().getTaskState() != TaskState.TASK_COMPLETED) {
 					jobDone = false;
 					break;
 				}
@@ -419,7 +418,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			break;
 		case TASK_TODO:
 		case TASK_CANCELED:
-			task.reset();
+			task.getProgress().reset();
 			n.getCurrentTasks().remove(task);
 			break;
 		default:
@@ -457,14 +456,15 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 */
 	private boolean checkJobIntegrity(Job job) {
 		boolean integrity = true;
-		for (VideoEncodingTask task : job.getVideoTasks()) {
-			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getOutputFile());
+		for (ClientVideoTask task : job.getVideoTasks()) {
+			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getStreamConfig()
+					.getOutStream().getRelativeFile());
 			if (!absoluteTaskFile.exists()) {
 				System.err.printf("Cannot start muxing ! Task %d of job %s is not found!\n", task.getTaskId(),
 						job.getJobName());
 				System.err.printf("BTW I was looking for file '%s'\n", absoluteTaskFile);
 				integrity = false;
-				task.reset();
+				task.getProgress().reset();
 			}
 		}
 		return integrity;
@@ -505,24 +505,24 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	@Override
 	public void readTaskReports(ArrayList<TaskReport> reports) {
 		for (TaskReport report : reports) {
-			Task reportTask = report.getTask();
-			Task actualTask = null;
+			ClientTask reportTask = report.getTask();
+			ClientTask actualTask = null;
 			String nodeId = report.getUnid();
 			Node sender = identifySender(nodeId);
 
 			if (sender == null || !sender.hasTask(reportTask)) {
 				System.err.printf("MASTER: Bad task update from node.");
 			} else {
-				for (Task t : sender.getCurrentTasks()) {
+				for (ClientTask t : sender.getCurrentTasks()) {
 					if (t.equals(reportTask)) {
 						actualTask = t;
 					}
 				}
-				TaskState oldState = actualTask.getTaskState();
-				actualTask.setTaskProgress(reportTask.getTaskProgress());
-				if (!oldState.equals(actualTask.getTaskState())) {
+				TaskState oldState = actualTask.getProgress().getTaskState();
+				actualTask.setProgress(reportTask.getProgress());
+				if (!oldState.equals(actualTask.getProgress().getTaskState())) {
 					System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(), oldState,
-							actualTask.getTaskState());
+							actualTask.getProgress().getTaskState());
 				}
 				taskUpdated(actualTask, sender);
 			}
@@ -572,21 +572,21 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	@Override
 	public synchronized void taskRefused(DispatchItem item) {
-		Task t = item.getTask();
+		ClientTask t = item.getTask();
 		Node n = item.getNode();
 		System.err.printf("Node %s refused task\n", n.getName());
-		t.reset();
-		n.setStatus(NodeState.FREE);
+		t.getProgress().reset();
+		// n.setStatus(NodeState.FREE); TODO check this
 		updateNodesWork();
 	}
 
 	@Override
 	public synchronized void taskAccepted(DispatchItem item) {
-		Task t = item.getTask();
+		ClientTask t = item.getTask();
 		Node n = item.getNode();
 		System.err.printf("Node %s accepted task\n", n.getName());
 		n.addTask(t);
-		t.start();
+		t.getProgress().reset();
 	}
 
 	@Override

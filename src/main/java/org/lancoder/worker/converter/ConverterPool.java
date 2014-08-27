@@ -5,12 +5,12 @@ import java.util.Hashtable;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.Service;
 import org.lancoder.common.network.Cause;
-import org.lancoder.common.task.Task;
+import org.lancoder.common.task.ClientTask;
 import org.lancoder.worker.WorkerConfig;
 
 public abstract class ConverterPool extends Service implements ConverterListener {
 
-	protected Hashtable<Task, RunnableService> converters;
+	protected Hashtable<ClientTask, RunnableService> converters;
 	protected int threads;
 	protected ConverterListener parentListener;
 
@@ -22,23 +22,23 @@ public abstract class ConverterPool extends Service implements ConverterListener
 
 	protected abstract boolean hasFree();
 
-	public abstract boolean encode(Task task);
+	public abstract boolean encode(ClientTask task);
 
 	public synchronized boolean hasFreeConverters() {
 		return hasFree();
 	}
 
-	public void workCompleted(Task t) {
+	public void workCompleted(ClientTask t) {
 		parentListener.workCompleted(t);
 		this.converters.remove(t);
 	}
 
-	public void workFailed(Task t) {
+	public void workFailed(ClientTask t) {
 		parentListener.workFailed(t);
 		this.converters.remove(t);
 	}
 
-	public void workStarted(Task task) {
+	public void workStarted(ClientTask task) {
 		parentListener.workStarted(task);
 	}
 

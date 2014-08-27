@@ -39,7 +39,7 @@ public abstract class Stream implements Serializable {
 		this.index = json.get("index").getAsInt();
 		String unknownCodec = json.get("codec_name").getAsString();
 		for (Codec codec : Codec.values()) {
-			if (codec.getFfMpegName().equalsIgnoreCase(unknownCodec)) {
+			if (codec.getFFMpegName().equalsIgnoreCase(unknownCodec)) {
 				this.codec = codec;
 				break;
 			}

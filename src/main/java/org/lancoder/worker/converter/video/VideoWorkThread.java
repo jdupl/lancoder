@@ -12,7 +12,9 @@ import java.util.regex.Pattern;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.common.exceptions.WorkInterruptedException;
+import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.network.Cause;
+import org.lancoder.common.task.ClientVideoTask;
 import org.lancoder.common.task.video.VideoEncodingTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.common.utils.TimeUtils;
@@ -24,9 +26,9 @@ public class VideoWorkThread extends Converter {
 	private static String OS = System.getProperty("os.name").toLowerCase();
 
 	private Process process;
-	private VideoEncodingTask task;
+	private ClientVideoTask task;
 
-	public VideoWorkThread(VideoEncodingTask t, ConverterListener listener) {
+	public VideoWorkThread(ClientVideoTask t, ConverterListener listener) {
 		task = t;
 		this.listener = listener;
 		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getJobId(),
@@ -34,8 +36,8 @@ public class VideoWorkThread extends Converter {
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
 		String extension = "mkv";
 		taskTempOutputFile = new File(taskTempOutputFolder, String.format("%d.%s", task.getTaskId(), extension));
-		taskFinalFolder = FileUtils.getFile(listener.getConfig().getAbsoluteSharedFolder(), task.getOutputFile())
-				.getParentFile();
+		taskFinalFolder = FileUtils.getFile(listener.getConfig().getAbsoluteSharedFolder(),
+				task.getStreamConfig().getOutStream().getRelativeFile()).getParentFile();
 	}
 
 	private static boolean isWindows() {
@@ -44,8 +46,11 @@ public class VideoWorkThread extends Converter {
 
 	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
 			MissingDecoderException, WorkInterruptedException {
-		File inputFile = new File(absoluteSharedDir, task.getSourceFile());
-		String mapping = String.format("0:%d", task.getStream().getIndex());
+		VideoStream inStream = task.getStreamConfig().getOrignalStream();
+		VideoStream outStream = task.getStreamConfig().getOutStream();
+
+		File inputFile = new File(absoluteSharedDir, inStream.getRelativeFile());
+		String mapping = String.format("0:%d", inStream.getIndex());
 		// Get parameters from the task and bind parameters to process
 		try {
 			String[] baseArgs = new String[] { "ffmpeg", "-ss", startTimeStr, "-t", durationStr, "-i",
@@ -60,11 +65,11 @@ public class VideoWorkThread extends Converter {
 
 			// output file and pass arguments
 			String outFile = taskTempOutputFile.getAbsoluteFile().toString();
-			if (task.getPasses() > 1) {
+			if (task.getStepCount() > 1) {
 				// Add pass arguments
 				ffmpegArgs.add("-pass");
-				ffmpegArgs.add(String.valueOf(task.getCurrentPass()));
-				if (task.getCurrentPass() != task.getPasses()) {
+				ffmpegArgs.add(String.valueOf(task.getProgress().getCurrentStep()));
+				if (task.getProgress().getCurrentStepIndex() != task.getStepCount()) {
 					ffmpegArgs.add("-f");
 					ffmpegArgs.add("rawvideo");
 					ffmpegArgs.add("-y");
@@ -112,9 +117,9 @@ public class VideoWorkThread extends Converter {
 					System.err.println("Missing decoder !");
 					throw new MissingDecoderException();
 				} else if (units != -1 && speed != -1) {
-					task.update(units, speed);
+					task.getProgress().update(units, speed);
 				} else if (units != -1) {
-					task.update(units);
+					task.getProgress().update(units);
 				}
 			}
 		} catch (NullPointerException e) {
@@ -148,12 +153,12 @@ public class VideoWorkThread extends Converter {
 			String durationStr = TimeUtils.getStringFromMs(durationMs);
 			createDirs();
 
-			task.start();
+			task.getProgress().start();
 			int currentStep = 1;
-			while (currentStep <= task.getPasses()) {
-				System.err.printf("Encoding pass %d of %d\n", task.getCurrentPass(), task.getPasses());
+			while (currentStep <= task.getStepCount()) {
+				System.err.printf("Encoding pass %d of %d\n", task.getProgress().getCurrentStep(), task.getStepCount());
 				encodePass(startTimeStr, durationStr);
-				task.completeStep();
+				task.getProgress().completeStep();
 				currentStep++;
 			}
 			System.err.println("transcoding");
@@ -173,7 +178,7 @@ public class VideoWorkThread extends Converter {
 	}
 
 	private boolean transcodeToMpegTs() {
-		File destination = new File(absoluteSharedDir, task.getOutputFile());
+		File destination = new File(absoluteSharedDir, task.getStreamConfig().getOutStream().getRelativeFile());
 		// TODO handle robust handling of progress and errors
 		try {
 			ProcessBuilder ffmpeg = new ProcessBuilder();

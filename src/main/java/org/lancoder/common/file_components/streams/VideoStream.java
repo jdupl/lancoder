@@ -3,6 +3,9 @@ package org.lancoder.common.file_components.streams;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.lancoder.common.job.FFmpegPreset;
+import org.lancoder.common.job.RateControlType;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -10,6 +13,9 @@ public class VideoStream extends Stream {
 
 	private static final long serialVersionUID = -2445363550218345849L;
 	private double framerate = 0;
+	private int rate;
+	private RateControlType rateControlType = RateControlType.AUTO;
+	private FFmpegPreset preset = FFmpegPreset.MEDIUM;
 	private int width = 0;
 	private int height = 0;
 
@@ -39,6 +45,18 @@ public class VideoStream extends Stream {
 		ArrayList<String> args = new ArrayList<>();
 		Collections.addAll(args, "-A", "-S", "-B", "-M", "--no-global-tags");
 		return args;
+	}
+
+	public FFmpegPreset getPreset() {
+		return preset;
+	}
+
+	public int getRate() {
+		return rate;
+	}
+
+	public RateControlType getRateControlType() {
+		return rateControlType;
 	}
 
 	public double getFramerate() {

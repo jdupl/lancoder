@@ -11,7 +11,7 @@ import org.lancoder.common.RunnableService;
 import org.lancoder.common.network.messages.ClusterProtocol;
 import org.lancoder.common.network.messages.cluster.Message;
 import org.lancoder.common.network.messages.cluster.TaskRequestMessage;
-import org.lancoder.common.task.Task;
+import org.lancoder.common.task.ClientTask;
 
 public class ObjectDispatcher extends RunnableService {
 
@@ -33,7 +33,7 @@ public class ObjectDispatcher extends RunnableService {
 
 	private void dispatch(DispatchItem item) {
 		free = false;
-		Task task = item.getTask();
+		ClientTask task = item.getTask();
 		Node node = item.getNode();
 
 		TaskRequestMessage trm = new TaskRequestMessage(task);

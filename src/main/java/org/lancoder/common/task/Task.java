@@ -12,6 +12,7 @@ import org.lancoder.common.progress.Unit;
 import org.lancoder.common.status.TaskState;
 import org.lancoder.common.task.video.TaskInfo;
 
+@Deprecated
 public abstract class Task implements Serializable {
 
 	private static final long serialVersionUID = 1570513115706156687L;
@@ -72,7 +73,7 @@ public abstract class Task implements Serializable {
 	}
 
 	public int getCurrentPassIndex() {
-		return taskProgress.getCurrentPassIndex();
+		return taskProgress.getCurrentStepIndex();
 	}
 
 	public TaskState getTaskState() {
@@ -140,7 +141,7 @@ public abstract class Task implements Serializable {
 	}
 
 	public int getCurrentPass() {
-		return taskProgress.getCurrentPassIndex();
+		return taskProgress.getCurrentStepIndex();
 	}
 
 	public String getOutputFile() {

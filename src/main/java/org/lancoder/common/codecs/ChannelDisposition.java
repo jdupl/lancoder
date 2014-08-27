@@ -1,10 +1,10 @@
 package org.lancoder.common.codecs;
 
-public enum ChannelDisposition {
+public enum ChannelDisposition implements Comparable<ChannelDisposition> {
 	/**
 	 * ORIGINAL is used only to keep original channel arrangement
 	 */
-	ORIGINAL(0), MONO(1), STEREO(2), SURROUND_51(6), SURROUND_71(8);
+	ORIGINAL(0), UNSUPPORTED(0), MONO(1), STEREO(2), SURROUND_51(6), SURROUND_71(8);
 
 	protected int count;
 
@@ -24,5 +24,4 @@ public enum ChannelDisposition {
 		}
 		return ORIGINAL;
 	}
-
 }

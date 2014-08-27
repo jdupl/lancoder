@@ -1,7 +1,7 @@
 package org.lancoder.worker.converter;
 
 import org.lancoder.common.network.Cause;
-import org.lancoder.common.task.Task;
+import org.lancoder.common.task.ClientTask;
 import org.lancoder.worker.WorkerConfig;
 
 /**
@@ -10,11 +10,11 @@ import org.lancoder.worker.WorkerConfig;
  */
 public interface ConverterListener {
 
-	public void workStarted(Task task);
+	public void workStarted(ClientTask task);
 
-	public void workCompleted(Task task);
+	public void workCompleted(ClientTask task);
 
-	public void workFailed(Task task);
+	public void workFailed(ClientTask task);
 
 	public void nodeCrash(Cause cause);
 

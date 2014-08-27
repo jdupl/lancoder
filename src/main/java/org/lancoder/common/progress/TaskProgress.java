@@ -71,7 +71,7 @@ public class TaskProgress implements Serializable {
 		this.taskState = TaskState.TASK_COMPLETED;
 	}
 
-	public int getCurrentPassIndex() {
+	public int getCurrentStepIndex() {
 		return currentPassIndex;
 	}
 

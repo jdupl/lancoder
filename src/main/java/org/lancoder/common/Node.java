@@ -5,7 +5,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 
 import org.lancoder.common.status.NodeState;
-import org.lancoder.common.task.Task;
+import org.lancoder.common.task.ClientTask;
 
 public class Node implements Serializable {
 
@@ -15,7 +15,7 @@ public class Node implements Serializable {
 	private NodeState status;
 	private String name;
 	private String unid;
-	private ArrayList<Task> currentTasks = new ArrayList<>();
+	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
 
 	public Node(InetAddress nodeAddresse, int nodePort, String name) {
 		this.nodeAddress = nodeAddresse;
@@ -24,8 +24,8 @@ public class Node implements Serializable {
 		this.status = NodeState.NOT_CONNECTED;
 	}
 
-	public boolean hasTask(Task task) {
-		for (Task nodeTask : this.getCurrentTasks()) {
+	public boolean hasTask(ClientTask task) {
+		for (ClientTask nodeTask : this.getCurrentTasks()) {
 			if (nodeTask.equals(task)) {
 				return true;
 			}
@@ -82,11 +82,11 @@ public class Node implements Serializable {
 		this.name = name;
 	}
 
-	public ArrayList<Task> getCurrentTasks() {
+	public ArrayList<ClientTask> getCurrentTasks() {
 		return currentTasks;
 	}
 
-	public void addTask(Task currentTask) {
+	public void addTask(ClientTask currentTask) {
 		this.currentTasks.add(currentTask);
 	}
 

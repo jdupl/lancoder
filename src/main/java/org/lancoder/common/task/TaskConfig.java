@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.job.RateControlType;
 
+@Deprecated
 public class TaskConfig implements Serializable {
 
 	private static final long serialVersionUID = -8201664961243820323L;
@@ -16,7 +17,8 @@ public class TaskConfig implements Serializable {
 	protected Codec codec;
 	protected ArrayList<String> extraEncoderArgs; // TODO usage this to allow --slow-first-pass and other overrides
 
-	public TaskConfig(RateControlType rateControlType, int rate, int passes, Codec codec, ArrayList<String> extraEncoderArgs) {
+	public TaskConfig(RateControlType rateControlType, int rate, int passes, Codec codec,
+			ArrayList<String> extraEncoderArgs) {
 		this.rateControlType = rateControlType;
 		this.rate = rate;
 		this.passes = passes;

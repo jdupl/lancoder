@@ -27,10 +27,10 @@ import org.lancoder.common.network.messages.cluster.CrashReport;
 import org.lancoder.common.network.messages.cluster.Message;
 import org.lancoder.common.network.messages.cluster.StatusReport;
 import org.lancoder.common.status.NodeState;
-import org.lancoder.common.task.Task;
-import org.lancoder.common.task.audio.AudioEncodingTask;
+import org.lancoder.common.task.ClientAudioTask;
+import org.lancoder.common.task.ClientTask;
+import org.lancoder.common.task.ClientVideoTask;
 import org.lancoder.common.task.video.TaskReport;
-import org.lancoder.common.task.video.VideoEncodingTask;
 import org.lancoder.worker.contacter.ConctactMasterListener;
 import org.lancoder.worker.contacter.ContactMasterObject;
 import org.lancoder.worker.converter.ConverterListener;
@@ -47,7 +47,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	private NodeState status;
 	private InetAddress address;
 
-	private ArrayList<Task> currentTasks = new ArrayList<>();
+	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
 	private ArrayList<Service> services = new ArrayList<>();
 	private VideoWorkThread workThread;
 	private AudioConverterPool audioPool;
@@ -105,30 +105,30 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		System.out.println((getWorkerName().toUpperCase()) + ": " + s);
 	}
 
-	public synchronized void stopWork(Task t) {
+	public synchronized void stopWork(ClientTask t) {
 		// TODO check which task to stop (if many tasks are implemented)
 		this.workThread.stop();
 		System.err.println("Setting current task to null");
 		this.currentTasks.remove(t);
-		if (t instanceof VideoEncodingTask) {
+		if (t instanceof ClientVideoTask) {
 			this.updateStatus(NodeState.FREE);
 		}
 	}
 
-	public synchronized boolean startWork(Task t) {
-		if (t instanceof VideoEncodingTask && this.status == NodeState.FREE) {
-			VideoEncodingTask vTask = (VideoEncodingTask) t;
+	public synchronized boolean startWork(ClientTask t) {
+		if (t instanceof ClientVideoTask && this.status == NodeState.FREE) {
+			ClientVideoTask vTask = (ClientVideoTask) t;
 			this.workThread = new VideoWorkThread(vTask, this);
 			Thread wt = new Thread(workThread);
 			wt.start();
 			services.add(workThread);
-		} else if (t instanceof AudioEncodingTask && this.audioPool.hasFreeConverters()) {
-			AudioEncodingTask aTask = (AudioEncodingTask) t;
+		} else if (t instanceof ClientAudioTask && this.audioPool.hasFreeConverters()) {
+			ClientAudioTask aTask = (ClientAudioTask) t;
 			audioPool.encode(aTask);
 		} else {
 			return false;
 		}
-		t.start();
+		t.getProgress().start();
 		updateStatus(NodeState.WORKING);
 		return true;
 	}
@@ -149,8 +149,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	 */
 	public ArrayList<TaskReport> getTaskReports() {
 		ArrayList<TaskReport> reports = new ArrayList<TaskReport>();
-		for (Task task : currentTasks) {
-			 TaskReport report = new TaskReport(config.getUniqueID(), task);
+		for (ClientTask task : currentTasks) {
+			TaskReport report = new TaskReport(config.getUniqueID(), task);
 			if (report != null) {
 				reports.add(report);
 			}
@@ -303,7 +303,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public boolean taskRequest(Task tqm) {
+	public boolean taskRequest(ClientTask tqm) {
 		return startWork(tqm);
 	}
 
@@ -323,8 +323,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public boolean deleteTask(Task t) {
-		for (Task task : currentTasks) {
+	public boolean deleteTask(ClientTask t) {
+		for (ClientTask task : currentTasks) {
 			if (task.equals(t)) {
 				stopWork(task);
 				return true;
@@ -366,8 +366,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public synchronized void workStarted(Task task) {
-		task.start();
+	public synchronized void workStarted(ClientTask task) {
+		task.getProgress().start();
 		this.currentTasks.add(task);
 		if (this.status != NodeState.WORKING) {
 			updateStatus(NodeState.WORKING);
@@ -375,9 +375,9 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public synchronized void workCompleted(Task task) {
+	public synchronized void workCompleted(ClientTask task) {
 		System.err.println("Worker completed task");
-		task.complete();
+		task.getProgress().complete();
 		notifyMasterStatusChange();
 		this.currentTasks.remove(task);
 		if (currentTasks.size() == 0) {
@@ -386,9 +386,9 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public synchronized void workFailed(Task task) {
+	public synchronized void workFailed(ClientTask task) {
 		System.err.println("Worker failed task " + task.getTaskId());
-		task.reset();
+		task.getProgress().reset();
 		notifyMasterStatusChange();
 		this.currentTasks.remove(task);
 		if (currentTasks.size() == 0) {

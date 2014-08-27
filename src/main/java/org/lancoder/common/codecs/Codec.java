@@ -74,7 +74,7 @@ public enum Codec implements Serializable {
 		return container;
 	}
 
-	public String getFfMpegName() {
+	public String getFFMpegName() {
 		return ffMpegName;
 	}
 

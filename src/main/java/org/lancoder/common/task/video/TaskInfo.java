@@ -1,7 +1,7 @@
 package org.lancoder.common.task.video;
 
 import java.io.Serializable;
-
+@Deprecated
 public class TaskInfo implements Serializable {
 
 	private static final long serialVersionUID = -7347337372025478193L;
