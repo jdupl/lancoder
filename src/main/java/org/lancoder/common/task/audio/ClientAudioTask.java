@@ -1,10 +1,13 @@
-package org.lancoder.common.task;
+package org.lancoder.common.task.audio;
+
+import org.lancoder.common.task.ClientTask;
+import org.lancoder.common.task.Task;
 
 public class ClientAudioTask extends ClientTask {
 
 	private static final long serialVersionUID = 5247269871999772761L;
 
-	public ClientAudioTask(PrototypeTask prototypeTaskConfig, AudioStreamConfig prototypeStreamConfig) {
+	public ClientAudioTask(Task prototypeTaskConfig, AudioStreamConfig prototypeStreamConfig) {
 		super(prototypeTaskConfig, prototypeStreamConfig);
 	}
 

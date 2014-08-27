@@ -1,14 +1,16 @@
-package org.lancoder.common.task;
+package org.lancoder.common.task.video;
 
 import java.util.ArrayList;
 
 import org.lancoder.common.file_components.streams.VideoStream;
+import org.lancoder.common.task.ClientTask;
+import org.lancoder.common.task.Task;
 
 public class ClientVideoTask extends ClientTask {
 
 	private static final long serialVersionUID = 4705790541885491703L;
 
-	public ClientVideoTask(PrototypeTask prototypeTaskConfig, VideoStreamConfig prototypeStreamConfig) {
+	public ClientVideoTask(Task prototypeTaskConfig, VideoStreamConfig prototypeStreamConfig) {
 		super(prototypeTaskConfig, prototypeStreamConfig);
 	}
 

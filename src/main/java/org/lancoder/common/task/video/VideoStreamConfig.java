@@ -1,8 +1,9 @@
-package org.lancoder.common.task;
+package org.lancoder.common.task.video;
 
 import java.util.ArrayList;
 
 import org.lancoder.common.file_components.streams.VideoStream;
+import org.lancoder.common.task.StreamConfig;
 
 public class VideoStreamConfig extends StreamConfig {
 

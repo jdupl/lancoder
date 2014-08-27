@@ -8,15 +8,15 @@ import org.lancoder.common.progress.Unit;
 public class ClientTask implements Serializable {
 
 	private static final long serialVersionUID = 7072947025021592662L;
-	protected PrototypeTask task;
+	protected Task task;
 	protected StreamConfig streamConfig;
 
-	public ClientTask(PrototypeTask task, StreamConfig streamConfig) {
+	public ClientTask(Task task, StreamConfig streamConfig) {
 		this.task = task;
 		this.streamConfig = streamConfig;
 	}
 
-	public PrototypeTask getTask() {
+	public Task getTask() {
 		return task;
 	}
 

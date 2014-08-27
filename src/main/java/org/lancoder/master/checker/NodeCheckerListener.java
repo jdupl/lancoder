@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import org.lancoder.common.Node;
 import org.lancoder.common.network.messages.cluster.StatusReport;
-import org.lancoder.common.task.video.TaskReport;
+import org.lancoder.common.task.TaskReport;
 
 public interface NodeCheckerListener {
 

@@ -1,176 +1,66 @@
 package org.lancoder.common.task;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
-import org.lancoder.common.codecs.Codec;
-import org.lancoder.common.file_components.streams.Stream;
-import org.lancoder.common.job.RateControlType;
-import org.lancoder.common.progress.Progress;
 import org.lancoder.common.progress.TaskProgress;
 import org.lancoder.common.progress.Unit;
-import org.lancoder.common.status.TaskState;
-import org.lancoder.common.task.video.TaskInfo;
 
-@Deprecated
-public abstract class Task implements Serializable {
+public class Task implements Serializable {
 
-	private static final long serialVersionUID = 1570513115706156687L;
-
-	protected Stream stream;
-	protected TaskInfo taskInfo;
+	private static final long serialVersionUID = 6687973244041343482L;
+	protected int taskId;
+	protected int stepCount;
+	protected long encodingStartTime;
+	protected long encodingEndTime;
+	protected long unitCount;
+	protected Unit unit;
 	protected TaskProgress taskProgress;
 
-	protected String sourceFile;
-	protected RateControlType rateControlType;
-	protected int rate; // kbps or crf TODO use BiterateControl ?
-	protected int passes;
-	protected Codec codec;
-	protected ArrayList<String> extraEncoderArgs; // TODO usage this to allow --slow-first-pass and other overrides
-
-	public Task(TaskInfo taskInfo, Stream stream, TaskConfig config, Unit unit) {
-		this.stream = stream;
-		this.taskInfo = taskInfo;
-		this.sourceFile = stream.getRelativeFile();
-		this.rateControlType = config.getRateControlType();
-		this.rate = config.getRate();
-		this.passes = config.getPasses();
-		this.codec = config.getCodec();
-		this.extraEncoderArgs = config.getExtraEncoderArgs();
-		taskProgress = new TaskProgress(taskInfo.getEstimatedFramesCount(), passes, unit);
-	}
-
-	public Codec getCodec() {
-		return codec;
-	}
-
-	public void setTaskProgress(TaskProgress taskProgress) {
-		this.taskProgress = taskProgress;
-	}
-
-	public Progress getCurrentStep() {
-		return taskProgress.getCurrentStep();
-	}
-
-	public void start() {
-		taskProgress.start();
-	}
-
-	public void update(long units) {
-		taskProgress.update(units);
-	}
-
-	public void update(long units, double speed) {
-		taskProgress.update(units, speed);
-	}
-
-	public void completeStep() {
-		taskProgress.completeStep();
-	}
-
-	public void complete() {
-		taskProgress.complete();
-	}
-
-	public int getCurrentPassIndex() {
-		return taskProgress.getCurrentStepIndex();
-	}
-
-	public TaskState getTaskState() {
-		return taskProgress.getTaskState();
-	}
-
-	public void reset() {
-		taskProgress.reset();
-	}
-
-	public Stream getStream() {
-		return stream;
-	}
-
-	public TaskInfo getTaskInfo() {
-		return this.taskInfo;
-	}
-
-	public TaskProgress getTaskProgress() {
-		return taskProgress;
+	public Task(int taskId, int stepCount, long encodingStartTime, long encodingEndTime, long unitCount,
+			Unit unit) {
+		this.taskId = taskId;
+		this.stepCount = stepCount;
+		this.encodingStartTime = encodingStartTime;
+		this.encodingEndTime = encodingEndTime;
+		this.unitCount = unitCount;
+		this.unit = unit;
+		this.taskProgress = new TaskProgress(unitCount, stepCount, unit);
 	}
 
 	public int getTaskId() {
-		return taskInfo.getTaskId();
+		return taskId;
 	}
 
-	public TaskProgress getTaskStatus() {
-		return taskProgress;
-	}
-
-	public String getSourceFile() {
-		return sourceFile;
-	}
-
-	public String getJobId() {
-		return taskInfo.getJobId();
-	}
-
-	public void setJobId(String jobId) {
-		taskInfo.setJobId(jobId);
+	public int getStepCount() {
+		return stepCount;
 	}
 
 	public long getEncodingStartTime() {
-		return taskInfo.getEncodingStartTime();
+		return encodingStartTime;
 	}
 
 	public long getEncodingEndTime() {
-		return taskInfo.getEncodingEndTime();
+		return encodingEndTime;
 	}
 
-	public void setEncodingEndTime(long encodingEndTime) {
-		taskInfo.setEncodingEndTime(encodingEndTime);
+	public long getUnitCount() {
+		return unitCount;
 	}
 
-	public long getEstimatedFramesCount() {
-		return taskInfo.getEstimatedFramesCount();
+	public Unit getUnit() {
+		return unit;
 	}
 
-	public void setEstimatedFramesCount(long estimatedFramesCount) {
-		taskInfo.setEstimatedFramesCount(estimatedFramesCount);
+	public TaskProgress getProgress() {
+		return taskProgress;
 	}
 
-	public ArrayList<String> getExtraEncoderArgs() {
-		return extraEncoderArgs;
+	public void setProgress(TaskProgress taskProgress) {
+		this.taskProgress = taskProgress;
 	}
 
-	public int getCurrentPass() {
-		return taskProgress.getCurrentStepIndex();
-	}
-
-	public String getOutputFile() {
-		return taskInfo.getOutputFile();
-	}
-
-	public void setOutputFile(String outputFile) {
-		taskInfo.setOutputFile(outputFile);
-	}
-
-	public RateControlType getRateControlType() {
-		return rateControlType;
-	}
-
-	public int getRate() {
-		return rate;
-	}
-
-	public int getPasses() {
-		return passes;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj != null && obj instanceof Task) {
-			Task other = (Task) obj;
-			return other.getTaskInfo().getTaskId() == this.getTaskInfo().getTaskId()
-					&& other.getTaskInfo().getJobId().equals(this.getTaskInfo().getJobId());
-		}
-		return false;
+	public String getJobId() {
+		// TODO add the job id reference to object
+		return null;
 	}
 }

@@ -12,9 +12,9 @@ import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.TaskState;
-import org.lancoder.common.task.ClientAudioTask;
 import org.lancoder.common.task.ClientTask;
-import org.lancoder.common.task.ClientVideoTask;
+import org.lancoder.common.task.audio.ClientAudioTask;
+import org.lancoder.common.task.video.ClientVideoTask;
 
 /**
  * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all

@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
-import org.lancoder.common.task.ClientAudioTask;
-import org.lancoder.common.task.PrototypeTask;
+import org.lancoder.common.task.Task;
+import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.worker.converter.Converter;
 import org.lancoder.worker.converter.ConverterListener;
@@ -30,7 +30,7 @@ public class AudioWorkThread extends Converter {
 
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
 		AudioStream destinationStream = task.getStreamConfig().getOutStream();
-		PrototypeTask taskConfig = task.getTask();
+		Task taskConfig = task.getTask();
 
 		String extension = destinationStream.getCodec().getContainer();
 		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), taskConfig.getJobId(),

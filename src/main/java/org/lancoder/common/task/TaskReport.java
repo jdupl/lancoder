@@ -1,8 +1,6 @@
-package org.lancoder.common.task.video;
+package org.lancoder.common.task;
 
 import java.io.Serializable;
-
-import org.lancoder.common.task.ClientTask;
 
 public class TaskReport implements Serializable {
 

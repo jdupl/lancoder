@@ -1,8 +1,9 @@
-package org.lancoder.common.task;
+package org.lancoder.common.task.audio;
 
 import java.util.ArrayList;
 
 import org.lancoder.common.file_components.streams.AudioStream;
+import org.lancoder.common.task.StreamConfig;
 
 public class AudioStreamConfig extends StreamConfig {
 
