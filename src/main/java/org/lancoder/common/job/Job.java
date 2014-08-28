@@ -13,8 +13,11 @@ import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.TaskState;
 import org.lancoder.common.task.ClientTask;
+import org.lancoder.common.task.Task;
+import org.lancoder.common.task.audio.AudioTask;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
+import org.lancoder.common.task.video.VideoTask;
 
 /**
  * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all
@@ -47,18 +50,16 @@ public class Job implements Comparable<Job>, Serializable {
 	 * The folder in which to store the parts before muxing
 	 */
 	private String partsFolderName;
-	private FileInfo fileInfo;
 	private String sourceFile;
 
-	private ArrayList<ClientVideoTask> videoTasks = new ArrayList<>();
-	private ArrayList<ClientAudioTask> audioTasks = new ArrayList<>();
+	private ArrayList<Task> tasks = new ArrayList<>();
+	private ArrayList<ClientTask> clientTasks = new ArrayList<>();
 
 	public Job(String jobName, String inputFile, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo) {
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
 		this.frameRate = fileInfo.getMainVideoStream().getFramerate();
-		this.fileInfo = fileInfo;
 		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
 
 		// Estimate the frame count from the frame rate and length
@@ -90,6 +91,10 @@ public class Job implements Comparable<Job>, Serializable {
 		return sourceFile;
 	}
 
+	public int getTaskCount() {
+		return this.tasks.size();
+	}
+
 	/**
 	 * Get the tasks associated to this stream.
 	 * 
@@ -99,12 +104,12 @@ public class Job implements Comparable<Job>, Serializable {
 	 */
 	public ArrayList<ClientTask> getTasksForStream(Stream stream) {
 		ArrayList<ClientTask> tasks = new ArrayList<>();
-//		for (int i = 0; i < this.getTasks().size(); i++) {
-//			ClientTask task = this.getTasks().get(i);
-//			if (task.getStream().equals(stream)) {
-//				tasks.add(task);
-//			}
-//		}
+		// for (int i = 0; i < this.getTasks().size(); i++) {
+		// ClientTask task = this.getTasks().get(i);
+		// if (task.getStream().equals(stream)) {
+		// tasks.add(task);
+		// }
+		// }
 		return tasks;
 	}
 
@@ -113,7 +118,7 @@ public class Job implements Comparable<Job>, Serializable {
 	 * 
 	 * @return The task or null if no task is available
 	 */
-	public synchronized ClientVideoTask getNextTask() {
+	public synchronized ClientVideoTask getNextVideoTask() {
 		if (getTaskRemainingCount() == 0) {
 			return null;
 		}
@@ -121,7 +126,7 @@ public class Job implements Comparable<Job>, Serializable {
 			// TODO move this to job manager
 			this.setJobStatus(JobState.JOB_COMPUTING);
 		}
-		for (ClientVideoTask task : this.videoTasks) {
+		for (ClientVideoTask task : this.getClientVideoTasks()) {
 			if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 				return task;
 			}
@@ -139,16 +144,64 @@ public class Job implements Comparable<Job>, Serializable {
 		case JOB_COMPLETED:
 			return 0;
 		case JOB_TODO:
-			return this.videoTasks.size();
+			return this.tasks.size();
 		default:
 			int count = 0;
-			for (ClientVideoTask task : this.videoTasks) {
+			for (Task task : this.tasks) {
 				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 					++count;
 				}
 			}
 			return count;
 		}
+	}
+
+	public ArrayList<AudioTask> getAudioTasks() {
+		ArrayList<AudioTask> tasks = new ArrayList<>();
+		for (Task task : this.tasks) {
+			if (task instanceof AudioTask) {
+				tasks.add((AudioTask) task);
+			}
+		}
+		return tasks;
+	}
+
+	public ArrayList<VideoTask> getVideoTasks() {
+		ArrayList<VideoTask> tasks = new ArrayList<>();
+		for (Task task : this.tasks) {
+			if (task instanceof VideoTask) {
+				tasks.add((VideoTask) task);
+			}
+		}
+		return tasks;
+	}
+
+	public ArrayList<ClientAudioTask> getClientAudioTasks() {
+		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
+		for (ClientTask task : this.clientTasks) {
+			if (task instanceof ClientAudioTask) {
+				tasks.add((ClientAudioTask) task);
+			}
+		}
+		return tasks;
+	}
+
+	public ArrayList<ClientVideoTask> getClientVideoTasks() {
+		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
+		for (ClientTask task : this.clientTasks) {
+			if (task instanceof ClientVideoTask) {
+				tasks.add((ClientVideoTask) task);
+			}
+		}
+		return tasks;
+	}
+
+	public ArrayList<ClientTask> getClientTasks() {
+		return clientTasks;
+	}
+
+	public ArrayList<Task> getTasks() {
+		return tasks;
 	}
 
 	/**
@@ -173,10 +226,6 @@ public class Job implements Comparable<Job>, Serializable {
 		}
 		Job other = (Job) obj;
 		return other.getJobId().equals(this.getJobId());
-	}
-
-	public FileInfo getFileInfo() {
-		return fileInfo;
 	}
 
 	public JobState getJobStatus() {
@@ -209,17 +258,6 @@ public class Job implements Comparable<Job>, Serializable {
 
 	public void setLengthOfJob(long lengthOfJob) {
 		this.lengthOfJob = lengthOfJob;
-	}
-
-	public ArrayList<ClientTask> getTasks() {
-		ArrayList<ClientTask> tasks = new ArrayList<>();
-		tasks.addAll(audioTasks);
-		tasks.addAll(videoTasks);
-		return tasks;
-	}
-
-	public void setTasks(ArrayList<ClientVideoTask> tasks) {
-		this.videoTasks = tasks;
 	}
 
 	public String getJobId() {
@@ -262,12 +300,8 @@ public class Job implements Comparable<Job>, Serializable {
 		this.partsFolderName = partsFolderName;
 	}
 
-	public ArrayList<ClientAudioTask> getAudioTasks() {
-		return audioTasks;
+	public ArrayList<Stream> getStreams() {
+		// TODO Auto-generated method stub
+		return null;
 	}
-
-	public ArrayList<ClientVideoTask> getVideoTasks() {
-		return videoTasks;
-	}
-
 }

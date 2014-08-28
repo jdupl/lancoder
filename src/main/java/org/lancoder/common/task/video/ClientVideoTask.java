@@ -10,8 +10,15 @@ public class ClientVideoTask extends ClientTask {
 
 	private static final long serialVersionUID = 4705790541885491703L;
 
-	public ClientVideoTask(Task prototypeTaskConfig, VideoStreamConfig prototypeStreamConfig) {
-		super(prototypeTaskConfig, prototypeStreamConfig);
+	private String tempFile;
+
+	public ClientVideoTask(Task task, VideoStreamConfig streamConfig, String tempFile) {
+		super(task, streamConfig);
+		this.tempFile = tempFile;
+	}
+
+	public String getTempFile() {
+		return tempFile;
 	}
 
 	@Override
@@ -46,6 +53,11 @@ public class ClientVideoTask extends ClientTask {
 			args.add(stream.getPreset().toString());
 		}
 		return args;
+	}
+
+	@Override
+	public VideoTask getTask() {
+		return (VideoTask) this.task;
 	}
 
 }

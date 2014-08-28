@@ -30,7 +30,7 @@ public class Muxer extends RunnableService {
 		ArrayList<String> args = new ArrayList<>();
 		Collections.addAll(args, new String[] { "mkvmerge", "-o", muxOutputFile.getAbsolutePath() });
 		// Iterate through original streams
-		Iterator<Stream> streamIterator = job.getFileInfo().getStreams().iterator();
+		Iterator<Stream> streamIterator = job.getStreams().iterator();
 		while (streamIterator.hasNext()) {
 			// Add stream arguments
 			args.add("--forced-track");

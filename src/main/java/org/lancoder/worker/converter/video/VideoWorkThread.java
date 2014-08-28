@@ -30,13 +30,12 @@ public class VideoWorkThread extends Converter {
 	public VideoWorkThread(ClientVideoTask t, ConverterListener listener) {
 		task = t;
 		this.listener = listener;
-		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getJobId(),
-				String.valueOf(task.getTaskId()));
+		VideoStream destinationStream = task.getStreamConfig().getOutStream();
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
-		String extension = "mkv";
-		taskTempOutputFile = new File(taskTempOutputFolder, String.format("%d.%s", task.getTaskId(), extension));
-		taskFinalFolder = FileUtils.getFile(listener.getConfig().getAbsoluteSharedFolder(),
-				task.getStreamConfig().getOutStream().getRelativeFile()).getParentFile();
+		taskTempOutputFile = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getTempFile());
+		taskTempOutputFolder = new File(taskTempOutputFile.getParent());
+		taskFinalFolder = FileUtils.getFile(absoluteSharedDir, destinationStream.getRelativeFile()).getParentFile();
+
 	}
 
 	private static boolean isWindows() {
@@ -46,7 +45,6 @@ public class VideoWorkThread extends Converter {
 	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
 			MissingDecoderException, WorkInterruptedException {
 		VideoStream inStream = task.getStreamConfig().getOrignalStream();
-
 		File inputFile = new File(absoluteSharedDir, inStream.getRelativeFile());
 		String mapping = String.format("0:%d", inStream.getIndex());
 		// Get parameters from the task and bind parameters to process

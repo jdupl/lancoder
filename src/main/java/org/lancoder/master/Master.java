@@ -141,13 +141,13 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 				minTaskCount = taskCount;
 			}
 		}
-		return min != null ? min.getNextTask() : null;
+		return min != null ? min.getNextVideoTask() : null;
 	}
 
 	private ClientAudioTask getNextAudioTask() {
 		// We should process all audio in no particular order
 		for (Job j : this.getJobs()) {
-			for (ClientAudioTask task : j.getAudioTasks()) {
+			for (ClientAudioTask task : j.getClientAudioTasks()) {
 				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 					return task;
 				}
@@ -219,6 +219,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			task.getProgress().start();
 		}
 		node.setStatus(NodeState.LOCKED);
+
 		dispatcher.dispatch(new DispatchItem(task, node));
 	}
 
@@ -406,7 +407,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			n.getCurrentTasks().remove(task);
 			Job job = this.jobs.get(task.getJobId());
 			boolean jobDone = true;
-			for (ClientTask t : job.getTasks()) {
+			for (ClientTask t : job.getClientTasks()) {
 				if (t.getProgress().getTaskState() != TaskState.TASK_COMPLETED) {
 					jobDone = false;
 					break;
@@ -456,7 +457,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 */
 	private boolean checkJobIntegrity(Job job) {
 		boolean integrity = true;
-		for (ClientVideoTask task : job.getVideoTasks()) {
+		for (ClientVideoTask task : job.getClientVideoTasks()) {
 			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getStreamConfig()
 					.getOutStream().getRelativeFile());
 			if (!absoluteTaskFile.exists()) {

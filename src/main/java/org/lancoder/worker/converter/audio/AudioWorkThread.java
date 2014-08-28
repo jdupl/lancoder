@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
-import org.lancoder.common.task.Task;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.worker.converter.Converter;
@@ -27,15 +26,10 @@ public class AudioWorkThread extends Converter {
 	public AudioWorkThread(ClientAudioTask task, ConverterListener listener) {
 		this.task = task;
 		this.listener = listener;
-
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
 		AudioStream destinationStream = task.getStreamConfig().getOutStream();
-		Task taskConfig = task.getTask();
-
-		String extension = destinationStream.getCodec().getContainer();
-		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), taskConfig.getJobId(),
-				String.valueOf(taskConfig.getTaskId()));
-		taskTempOutputFile = new File(taskTempOutputFolder, String.format("%d.%s", taskConfig.getTaskId(), extension));
+		taskTempOutputFile = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getTempFile());
+		taskTempOutputFolder = new File(taskTempOutputFile.getParent());
 		taskFinalFolder = FileUtils.getFile(absoluteSharedDir, destinationStream.getRelativeFile()).getParentFile();
 		taskFinalFile = FileUtils.getFile(absoluteSharedDir, destinationStream.getRelativeFile());
 	}
@@ -56,8 +50,8 @@ public class AudioWorkThread extends Converter {
 		switch (outStream.getCodec()) {
 		case VORBIS:
 			String rateControlString = outStream.getRateControlType() == RateControlType.CRF ? "-q:a" : "-b:a";
-			String rate = outStream.getRateControlType() == RateControlType.CRF ? String
-					.valueOf(outStream.getRate()) : String.format("%dk", outStream.getRate());
+			String rate = outStream.getRateControlType() == RateControlType.CRF ? String.valueOf(outStream.getRate())
+					: String.format("%dk", outStream.getRate());
 			args.add(rateControlString);
 			args.add(rate);
 			break;

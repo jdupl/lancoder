@@ -15,14 +15,17 @@ public abstract class Stream implements Serializable {
 	protected String relativeFile;
 	protected int index;
 	protected Codec codec = Codec.UNKNOWN;
+
 	protected String title = "";
 	protected String language = "und";
 	protected boolean isDefault = false;
 	protected boolean copyToOutput = false;
+	protected long unitCount;
 
-	public Stream(int index, Codec codec) {
+	public Stream(int index, Codec codec, long units) {
 		this.index = index;
 		this.codec = codec;
+		this.unitCount = units;
 	}
 
 	/**
@@ -32,9 +35,10 @@ public abstract class Stream implements Serializable {
 	 *            the json stream object to parse
 	 * @param relativeFile
 	 *            The relative source file of this stream
+	 * @param duration
 	 * 
 	 */
-	public Stream(JsonObject json, String relativeFile) {
+	public Stream(JsonObject json, String relativeFile, long duration) {
 		this.relativeFile = relativeFile;
 		this.index = json.get("index").getAsInt();
 		String unknownCodec = json.get("codec_name").getAsString();
@@ -64,8 +68,6 @@ public abstract class Stream implements Serializable {
 		}
 	}
 
-	public abstract ArrayList<String> getStreamCopyMapping();
-
 	@Override
 	public boolean equals(Object obj) {
 		if (super.equals(obj)) {
@@ -76,6 +78,12 @@ public abstract class Stream implements Serializable {
 			return other.index == this.index && other.codec.equals(this.codec);
 		}
 		return false;
+	}
+
+	public abstract ArrayList<String> getStreamCopyMapping();
+
+	public long getUnitCount() {
+		return unitCount;
 	}
 
 	public String getRelativeFile() {

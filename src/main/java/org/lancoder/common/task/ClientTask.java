@@ -5,7 +5,7 @@ import java.io.Serializable;
 import org.lancoder.common.progress.TaskProgress;
 import org.lancoder.common.progress.Unit;
 
-public class ClientTask implements Serializable {
+public abstract class ClientTask implements Serializable {
 
 	private static final long serialVersionUID = 7072947025021592662L;
 	protected Task task;
@@ -16,9 +16,7 @@ public class ClientTask implements Serializable {
 		this.streamConfig = streamConfig;
 	}
 
-	public Task getTask() {
-		return task;
-	}
+	public abstract Task getTask();
 
 	public StreamConfig getStreamConfig() {
 		return streamConfig;

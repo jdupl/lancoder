@@ -5,6 +5,7 @@ import java.util.Collections;
 
 import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.job.RateControlType;
+import org.lancoder.common.progress.Unit;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -16,10 +17,13 @@ public class AudioStream extends Stream {
 	private RateControlType rateControlType = RateControlType.AUTO;
 	private ChannelDisposition channels = ChannelDisposition.ORIGINAL;
 	private int sampleRate;
+	protected Unit unit = Unit.SECONDS;
+	
 
-	public AudioStream(JsonObject json, String relativeSource) {
-		super(json, relativeSource);
+	public AudioStream(JsonObject json, String relativeSource, long unitCount) {
+		super(json, relativeSource, unitCount);
 		JsonElement element = null;
+		this.unitCount = unitCount;
 		if ((element = json.get("bit_rate")) != null) {
 			// convert from bit/s to kbps
 			this.rateControlType = RateControlType.VBR;

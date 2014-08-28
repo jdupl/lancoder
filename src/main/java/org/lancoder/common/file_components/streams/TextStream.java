@@ -10,7 +10,7 @@ public class TextStream extends Stream {
 	private static final long serialVersionUID = -5962727176951376293L;
 
 	public TextStream(JsonObject json, String relativeSource) {
-		super(json, relativeSource);
+		super(json, relativeSource, 1);
 	}
 
 	@Override

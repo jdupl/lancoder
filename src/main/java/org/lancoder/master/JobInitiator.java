@@ -13,10 +13,15 @@ import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.file_components.streams.AudioStream;
+import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.network.messages.api.ApiJobRequest;
+import org.lancoder.common.progress.Unit;
+import org.lancoder.common.task.video.ClientVideoTask;
+import org.lancoder.common.task.video.VideoStreamConfig;
+import org.lancoder.common.task.video.VideoTask;
 import org.lancoder.common.utils.FileUtils;
 
 public class JobInitiator extends RunnableService {
@@ -41,6 +46,12 @@ public class JobInitiator extends RunnableService {
 
 		FFmpegPreset preset = req.getPreset();
 		RateControlType videoRateControlType = req.getRateControlType();
+		Codec videoCodec = Codec.H264;
+		double frameRate = 0;
+		int width = 0;
+		int height = 0;
+
+		ArrayList<String> extraEncoderArgs = new ArrayList<>();
 
 		// Limit to max pass from the rate control
 		int passes = (req.getPasses() <= videoRateControlType.getMaxPass() ? req.getPasses() : videoRateControlType
@@ -65,19 +76,82 @@ public class JobInitiator extends RunnableService {
 			audioCodec = Codec.VORBIS;
 			audioChannels = ChannelDisposition.STEREO;
 		}
-		
 
-		for (AudioStream stream : fileInfo.getAudioStreams()) {
-			// Sanitize channel disposition (upmix protection)
-//			if (stream.getChannels().getCount() < defaultAudio.getChannels().getCount()){
-//				
-//			}
+		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo);
+
+		for (VideoStream stream : fileInfo.getVideoStreams()) {
+			VideoStream streamToEncode = new VideoStream(stream.getIndex(), videoCodec, frameRate, req.getRate(),
+					videoRateControlType, preset, width, height, fileInfo.getDuration(), Unit.SECONDS, 0);
+			stream.getDuration();
+			// Check width and frame rate
+			VideoStreamConfig config = new VideoStreamConfig(job.getJobId(), extraEncoderArgs, passes, stream,
+					streamToEncode);
+			ArrayList<ClientVideoTask> clientVideoTasks = readStream(config, job);
+			ArrayList<VideoTask> tasks = new ArrayList<>();
+			for (ClientVideoTask clientTask : clientVideoTasks) {
+				tasks.add(clientTask.getTask());
+			}
+			// TODO send client video tasks to master (to job)
 
 		}
 
-		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo);
+		for (AudioStream stream : fileInfo.getAudioStreams()) {
+			// Sanitize channel disposition (upmix protection)
+			// if (stream.getChannels().getCount() < defaultAudio.getChannels().getCount()){
+			//
+			// }
+		}
+
 		prepareFileSystem(job);
 		listener.newJob(job);
+	}
+
+	/**
+	 * Create tasks of
+	 * 
+	 * @param config
+	 * @return
+	 */
+	private ArrayList<ClientVideoTask> readStream(VideoStreamConfig config, Job job) {
+
+		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
+
+		VideoStream outStream = config.getOutStream();
+		VideoStream inStream = config.getOrignalStream();
+		// exclude copy streams from task creation
+		if (outStream.getCodec() != Codec.COPY) {
+			long remaining = config.getOrignalStream().getDuration();
+			long currentMs = 0;
+			File relativeTasksOutput = FileUtils.getFile(job.getOutputFolder(), job.getPartsFolderName());
+			while (remaining > 0) {
+				long start = currentMs;
+				long end = 0;
+				if ((((double) remaining - job.getLengthOfTasks()) / job.getLengthOfJob()) <= 0.15) {
+					end = job.getLengthOfJob();
+					remaining = 0;
+				} else {
+					end = currentMs + job.getLengthOfTasks();
+					remaining -= job.getLengthOfTasks();
+					currentMs += job.getLengthOfTasks();
+				}
+				int taskId = job.getTaskCount();
+				File relativeTaskOutputFile = null;
+				relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
+						String.format("part-%d.mpeg.ts", taskId)); // TODO get extension from codec
+				long ms = end - start;
+				long unitCount = (long) Math.floor((ms / 1000 * outStream.getFramerate()));
+
+				VideoTask task = new VideoTask(taskId, job.getJobId(), outStream.getStepCount(), start, end, unitCount,
+						Unit.FRAMES);
+
+				ClientVideoTask clientVideoTask = new ClientVideoTask(task, config,relativeTaskOutputFile.getPath());
+				tasks.add(clientVideoTask);
+			}
+		}
+		return tasks;
+
+		// Get relative (to absolute shared directory) output folder for this job's tasks
+
 	}
 
 	private void createJob(ApiJobRequest req, File sourcefile) {
