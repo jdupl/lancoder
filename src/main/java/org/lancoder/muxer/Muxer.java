@@ -42,13 +42,11 @@ public class Muxer extends RunnableService {
 				args.add(job.getSourceFile());
 			} else {
 				ArrayList<ClientTask> tasks = job.getTasksForStream(stream);
-				
 				// Iterate through tasks of the stream and concatenate if necessary
 				Iterator<ClientTask> taskIterator = tasks.iterator();
 				while (taskIterator.hasNext()) {
 					ClientTask t = taskIterator.next();
-					File partFile = FileUtils.getFile(listener.getSharedFolder(), t.getStreamConfig().getOutStream()
-							.getRelativeFile());
+					File partFile = FileUtils.getFile(listener.getSharedFolder(), t.getTempFile());
 					args.add(partFile.getAbsolutePath());
 					if (taskIterator.hasNext()) {
 						// Concatenate to the next task
@@ -57,7 +55,6 @@ public class Muxer extends RunnableService {
 				}
 			}
 		}
-
 		ProcessBuilder pb = new ProcessBuilder(args);
 		System.out.println("MUXER: " + args.toString());
 		listener.muxingStarting(job);

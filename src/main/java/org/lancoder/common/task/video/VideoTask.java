@@ -6,16 +6,9 @@ import org.lancoder.common.task.Task;
 public class VideoTask extends Task {
 
 	private static final long serialVersionUID = 3834075993276994157L;
-	private String tempFile;
 
 	public VideoTask(int taskId, String jobId, int stepCount, long encodingStartTime, long encodingEndTime,
 			long unitCount, Unit unit, String tempFile) {
-		super(taskId, jobId, stepCount, encodingStartTime, encodingEndTime, unitCount, unit);
-		this.tempFile = tempFile;
+		super(taskId, jobId, stepCount, encodingStartTime, encodingEndTime, unitCount, unit, tempFile);
 	}
-
-	public String getTempFile() {
-		return tempFile;
-	}
-
 }

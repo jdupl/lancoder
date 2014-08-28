@@ -174,7 +174,7 @@ public class VideoWorkThread extends Converter {
 	}
 
 	private boolean transcodeToMpegTs() {
-		File destination = new File(absoluteSharedDir, task.getStreamConfig().getOutStream().getRelativeFile());
+		File destination = new File(absoluteSharedDir, task.getTempFile());
 		// TODO handle robust handling of progress and errors
 		try {
 			ProcessBuilder ffmpeg = new ProcessBuilder();

@@ -16,9 +16,10 @@ public class Task implements Serializable {
 	protected long unitCount;
 	protected Unit unit;
 	protected TaskProgress taskProgress;
+	protected String tempFile;
 
 	public Task(int taskId, String jobId, int stepCount, long encodingStartTime, long encodingEndTime, long unitCount,
-			Unit unit) {
+			Unit unit, String tempFile) {
 		this.taskId = taskId;
 		this.jobId = jobId;
 		this.stepCount = stepCount;
@@ -27,6 +28,11 @@ public class Task implements Serializable {
 		this.unitCount = unitCount;
 		this.unit = unit;
 		this.taskProgress = new TaskProgress(unitCount, stepCount, unit);
+		this.tempFile = tempFile;
+	}
+
+	public String getTempFile() {
+		return tempFile;
 	}
 
 	public int getTaskId() {

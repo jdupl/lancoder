@@ -53,8 +53,4 @@ public class ClientVideoTask extends ClientTask {
 		return (VideoTask) this.task;
 	}
 
-	public String getTempFile() {
-		return this.getTask().getTempFile();
-	}
-
 }

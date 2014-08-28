@@ -57,4 +57,8 @@ public abstract class ClientTask implements Serializable {
 	public String getJobId() {
 		return task.getJobId();
 	}
+
+	public String getTempFile() {
+		return this.task.getTempFile();
+	}
 }
