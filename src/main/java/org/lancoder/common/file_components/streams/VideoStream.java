@@ -21,7 +21,6 @@ public class VideoStream extends Stream {
 	private FFmpegPreset preset = FFmpegPreset.MEDIUM;
 	private int width = 0;
 	private int height = 0;
-	private long unitCount;
 	private Unit unit = Unit.SECONDS;
 	private int stepCount = 1;
 
@@ -36,14 +35,14 @@ public class VideoStream extends Stream {
 		this.height = height;
 		this.unit = unit;
 		this.stepCount = stepCount;
-		if (unit == Unit.SECONDS) {
+		if (unit == Unit.SECONDS && this.frameRate > 0) {
 			unitCount = (long) (this.frameRate * unitCount);
 			this.unit = Unit.FRAMES;
 		}
 	}
 
-	public VideoStream(JsonObject json, String relativeSource, long duration) {
-		super(json, relativeSource, duration);
+	public VideoStream(JsonObject json, String relativeSource, long unitCount) {
+		super(json, relativeSource, unitCount);
 		this.unit = Unit.SECONDS;
 		JsonElement element = null;
 		if ((element = json.get("r_frame_rate")) != null) {
@@ -55,7 +54,6 @@ public class VideoStream extends Stream {
 				this.frameRate = (Double.parseDouble(values[0]) / Double.parseDouble(values[1]));
 				this.frameRate = Math.floor(this.frameRate * Math.pow(10, decimals)) / Math.pow(10, decimals);
 			}
-
 		}
 		if ((element = json.get("width")) != null) {
 			this.width = element.getAsInt();
@@ -100,10 +98,6 @@ public class VideoStream extends Stream {
 		return rateControlType;
 	}
 
-	public double getFramerate() {
-		return frameRate;
-	}
-
 	public int getWidth() {
 		return width;
 	}
@@ -112,7 +106,7 @@ public class VideoStream extends Stream {
 		return height;
 	}
 
-	public long getDuration() {
+	public long getUnitCount() {
 		return unitCount;
 	}
 

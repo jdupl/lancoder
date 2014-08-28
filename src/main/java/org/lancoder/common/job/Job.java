@@ -59,7 +59,7 @@ public class Job implements Comparable<Job>, Serializable {
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
-		this.frameRate = fileInfo.getMainVideoStream().getFramerate();
+		this.frameRate = fileInfo.getMainVideoStream().getFrameRate();
 		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
 
 		// Estimate the frame count from the frame rate and length

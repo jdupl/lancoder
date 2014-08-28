@@ -47,7 +47,7 @@ public class JobInitiator extends RunnableService {
 		FFmpegPreset preset = req.getPreset();
 		RateControlType videoRateControlType = req.getRateControlType();
 		Codec videoCodec = Codec.H264;
-		double frameRate = 0;
+		double requestFrameRate = 0;
 		int width = 0;
 		int height = 0;
 
@@ -80,12 +80,15 @@ public class JobInitiator extends RunnableService {
 		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo);
 
 		for (VideoStream stream : fileInfo.getVideoStreams()) {
-			VideoStream streamToEncode = new VideoStream(stream.getIndex(), videoCodec, frameRate, req.getRate(),
-					videoRateControlType, preset, width, height, fileInfo.getDuration(), Unit.SECONDS, 0);
-			stream.getDuration();
-			// Check width and frame rate
+			double frameRate = requestFrameRate < 1 ? stream.getFrameRate() : requestFrameRate;
+			VideoStream streamToEncode = new VideoStream(stream.getIndex(), videoCodec, frameRate,
+					req.getRate(), videoRateControlType, preset, width, height, fileInfo.getDuration(), Unit.SECONDS,
+					req.getPasses());
+
 			VideoStreamConfig config = new VideoStreamConfig(job.getJobId(), extraEncoderArgs, passes, stream,
 					streamToEncode);
+			// TODO Check width and frame rate
+
 			ArrayList<ClientVideoTask> clientVideoTasks = readStream(config, job);
 			ArrayList<VideoTask> tasks = new ArrayList<>();
 			for (ClientVideoTask clientTask : clientVideoTasks) {
@@ -107,20 +110,25 @@ public class JobInitiator extends RunnableService {
 	}
 
 	/**
-	 * Create tasks of
+	 * Create tasks of the stream
 	 * 
 	 * @param config
 	 * @return
 	 */
 	private ArrayList<ClientVideoTask> readStream(VideoStreamConfig config, Job job) {
-
 		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
 
 		VideoStream outStream = config.getOutStream();
 		VideoStream inStream = config.getOrignalStream();
 		// exclude copy streams from task creation
 		if (outStream.getCodec() != Codec.COPY) {
-			long remaining = config.getOrignalStream().getDuration();
+			long remaining = 0;
+			if (inStream.getUnit() == Unit.FRAMES) {
+				remaining = (long) (inStream.getUnitCount() / inStream.getFrameRate());
+			} else if (inStream.getUnit() == Unit.SECONDS) {
+				// convert from ms to seconds
+				remaining = inStream.getUnitCount() * 1000;
+			}
 			long currentMs = 0;
 			File relativeTasksOutput = FileUtils.getFile(job.getOutputFolder(), job.getPartsFolderName());
 			while (remaining > 0) {
@@ -139,12 +147,12 @@ public class JobInitiator extends RunnableService {
 				relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
 						String.format("part-%d.mpeg.ts", taskId)); // TODO get extension from codec
 				long ms = end - start;
-				long unitCount = (long) Math.floor((ms / 1000 * outStream.getFramerate()));
+				long unitCount = (long) Math.floor((ms / 1000 * outStream.getFrameRate()));
 
 				VideoTask task = new VideoTask(taskId, job.getJobId(), outStream.getStepCount(), start, end, unitCount,
 						Unit.FRAMES);
 
-				ClientVideoTask clientVideoTask = new ClientVideoTask(task, config,relativeTaskOutputFile.getPath());
+				ClientVideoTask clientVideoTask = new ClientVideoTask(task, config, relativeTaskOutputFile.getPath());
 				tasks.add(clientVideoTask);
 			}
 		}

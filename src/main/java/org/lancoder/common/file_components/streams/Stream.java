@@ -35,12 +35,13 @@ public abstract class Stream implements Serializable {
 	 *            the json stream object to parse
 	 * @param relativeFile
 	 *            The relative source file of this stream
-	 * @param duration
+	 * @param unitCount
 	 * 
 	 */
-	public Stream(JsonObject json, String relativeFile, long duration) {
+	public Stream(JsonObject json, String relativeFile, long unitCount) {
 		this.relativeFile = relativeFile;
 		this.index = json.get("index").getAsInt();
+		this.unitCount = unitCount;
 		String unknownCodec = json.get("codec_name").getAsString();
 		for (Codec codec : Codec.values()) {
 			if (codec.getFFMpegName().equalsIgnoreCase(unknownCodec)) {

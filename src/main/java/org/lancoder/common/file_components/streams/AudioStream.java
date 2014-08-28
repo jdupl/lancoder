@@ -18,7 +18,6 @@ public class AudioStream extends Stream {
 	private ChannelDisposition channels = ChannelDisposition.ORIGINAL;
 	private int sampleRate;
 	protected Unit unit = Unit.SECONDS;
-	
 
 	public AudioStream(JsonObject json, String relativeSource, long unitCount) {
 		super(json, relativeSource, unitCount);
