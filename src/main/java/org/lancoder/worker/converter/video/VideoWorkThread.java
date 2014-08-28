@@ -27,8 +27,8 @@ public class VideoWorkThread extends Converter {
 	private Process process;
 	private ClientVideoTask task;
 
-	public VideoWorkThread(ClientVideoTask t, ConverterListener listener) {
-		task = t;
+	public VideoWorkThread(ClientVideoTask task, ConverterListener listener) {
+		this.task = task;
 		this.listener = listener;
 		VideoStream destinationStream = task.getStreamConfig().getOutStream();
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());

@@ -150,9 +150,9 @@ public class JobInitiator extends RunnableService {
 				long unitCount = (long) Math.floor((ms / 1000 * outStream.getFrameRate()));
 
 				VideoTask task = new VideoTask(taskId, job.getJobId(), outStream.getStepCount(), start, end, unitCount,
-						Unit.FRAMES);
+						Unit.FRAMES, relativeTaskOutputFile.getPath());
 
-				ClientVideoTask clientVideoTask = new ClientVideoTask(task, config, relativeTaskOutputFile.getPath());
+				ClientVideoTask clientVideoTask = new ClientVideoTask(task, config );
 				tasks.add(clientVideoTask);
 			}
 		}
