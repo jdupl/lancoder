@@ -34,8 +34,7 @@ public class VideoWorkThread extends Converter {
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
 		taskTempOutputFile = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getTempFile());
 		taskTempOutputFolder = new File(taskTempOutputFile.getParent());
-		taskFinalFolder = FileUtils.getFile(absoluteSharedDir, destinationStream.getRelativeFile()).getParentFile();
-
+		taskFinalFolder = FileUtils.getFile(absoluteSharedDir, new File(task.getTempFile()).getParentFile().getPath());
 	}
 
 	private static boolean isWindows() {
@@ -152,7 +151,7 @@ public class VideoWorkThread extends Converter {
 			task.getProgress().start();
 			int currentStep = 1;
 			while (currentStep <= task.getStepCount()) {
-				System.err.printf("Encoding pass %d of %d\n", task.getProgress().getCurrentStep(), task.getStepCount());
+				System.err.printf("Encoding pass %d of %d\n", task.getProgress().getCurrentStepIndex(), task.getStepCount());
 				encodePass(startTimeStr, durationStr);
 				task.getProgress().completeStep();
 				currentStep++;

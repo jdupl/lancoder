@@ -88,14 +88,11 @@ public class JobInitiator extends RunnableService {
 			VideoStreamConfig config = new VideoStreamConfig(job.getJobId(), extraEncoderArgs, passes, stream,
 					streamToEncode);
 			// TODO Check width and frame rate
-
 			ArrayList<ClientVideoTask> clientVideoTasks = readStream(config, job);
-			ArrayList<VideoTask> tasks = new ArrayList<>();
 			for (ClientVideoTask clientTask : clientVideoTasks) {
-				tasks.add(clientTask.getTask());
+				job.getTasks().add(clientTask.getTask());
+				job.getClientTasks().add(clientTask);
 			}
-			// TODO send client video tasks to master (to job)
-
 		}
 
 		for (AudioStream stream : fileInfo.getAudioStreams()) {
@@ -104,7 +101,6 @@ public class JobInitiator extends RunnableService {
 			//
 			// }
 		}
-
 		prepareFileSystem(job);
 		listener.newJob(job);
 	}
@@ -151,7 +147,6 @@ public class JobInitiator extends RunnableService {
 
 				VideoTask task = new VideoTask(taskId, job.getJobId(), outStream.getStepCount(), start, end, unitCount,
 						Unit.FRAMES, relativeTaskOutputFile.getPath());
-
 				ClientVideoTask clientVideoTask = new ClientVideoTask(task, config );
 				tasks.add(clientVideoTask);
 			}

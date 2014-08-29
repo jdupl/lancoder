@@ -7,8 +7,10 @@ import org.lancoder.common.task.StreamConfig;
 
 public class AudioStreamConfig extends StreamConfig {
 
-	public AudioStreamConfig(String jobId, ArrayList<String> extraEncoderArgs, int passes,
-			AudioStream orignalStream, AudioStream destinationStream) {
+	private static final long serialVersionUID = 7191622871794153963L;
+
+	public AudioStreamConfig(String jobId, ArrayList<String> extraEncoderArgs, int passes, AudioStream orignalStream,
+			AudioStream destinationStream) {
 		super(jobId, extraEncoderArgs, passes, orignalStream, destinationStream);
 	}
 

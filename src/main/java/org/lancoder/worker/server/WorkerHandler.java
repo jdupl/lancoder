@@ -24,42 +24,30 @@ public class WorkerHandler implements Runnable {
 		try {
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-			while (!s.isClosed()) {
-				Object request = in.readObject();
-				if (request instanceof Message) {
-					Message requestMessage = (Message) request;
-					switch (requestMessage.getCode()) {
-					case TASK_REQUEST:
-						if (requestMessage instanceof TaskRequestMessage) {
-							TaskRequestMessage trm = (TaskRequestMessage) requestMessage;
-							Message response = null;
-							if (listener.taskRequest(trm.getTask())) {
-								response = new Message(ClusterProtocol.TASK_ACCEPTED);
-							} else {
-								response = new Message(ClusterProtocol.TASK_REFUSED);
-							}
-							out.writeObject(response);
-							out.flush();
-							s.close();
+			Object request = in.readObject();
+			Object obj = new Message(ClusterProtocol.BAD_REQUEST);
+			if (request instanceof Message) {
+				Message requestMessage = (Message) request;
+				switch (requestMessage.getCode()) {
+				case TASK_REQUEST:
+					if (requestMessage instanceof TaskRequestMessage) {
+						TaskRequestMessage trm = (TaskRequestMessage) requestMessage;
+						if (listener.taskRequest(trm.getTask())) {
+							obj = new Message(ClusterProtocol.TASK_ACCEPTED);
+						} else {
+							obj = new Message(ClusterProtocol.TASK_REFUSED);
 						}
-						break;
-					case STATUS_REQUEST:
-						out.writeObject(listener.statusRequest());
-						out.flush();
-						s.close();
-						break;
-					default:
-						out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
-						out.flush();
-						s.close();
-						break;
 					}
-				} else {
-					out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
-					out.flush();
-					s.close();
+					break;
+				case STATUS_REQUEST:
+					obj = listener.statusRequest();
+					break;
+				default:
+					break;
 				}
 			}
+			out.writeObject(obj);
+			out.flush();
 		} catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
 		} finally {

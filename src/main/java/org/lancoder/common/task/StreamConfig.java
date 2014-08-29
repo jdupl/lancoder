@@ -1,11 +1,13 @@
 package org.lancoder.common.task;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.lancoder.common.file_components.streams.Stream;
 
-public abstract class StreamConfig {
+public abstract class StreamConfig implements Serializable {
 
+	private static final long serialVersionUID = 4111919797278370142L;
 	protected String jobId;
 	protected ArrayList<String> extraEncoderArgs;
 	protected int passes;

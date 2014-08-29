@@ -7,6 +7,8 @@ import org.lancoder.common.task.StreamConfig;
 
 public class VideoStreamConfig extends StreamConfig {
 
+	private static final long serialVersionUID = -1258560811697509098L;
+
 	public VideoStreamConfig(String jobId, ArrayList<String> extraEncoderArgs, int passes, VideoStream orignalStream,
 			VideoStream destinationStream) {
 		super(jobId, extraEncoderArgs, passes, orignalStream, destinationStream);

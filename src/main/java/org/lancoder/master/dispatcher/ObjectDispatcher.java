@@ -43,12 +43,12 @@ public class ObjectDispatcher extends RunnableService {
 		try {
 			socket = new Socket(node.getNodeAddress(), node.getNodePort());
 			socket.setSoTimeout(2000);
-
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 			out.writeObject(trm);
 			out.flush();
+
 			Object o = in.readObject();
 			if (o instanceof Message) {
 				Message m = (Message) o;
