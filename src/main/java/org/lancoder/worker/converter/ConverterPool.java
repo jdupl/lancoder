@@ -2,7 +2,6 @@ package org.lancoder.worker.converter;
 
 import java.util.Hashtable;
 
-import org.lancoder.common.RunnableService;
 import org.lancoder.common.Service;
 import org.lancoder.common.network.Cause;
 import org.lancoder.common.task.ClientTask;
@@ -10,7 +9,7 @@ import org.lancoder.worker.WorkerConfig;
 
 public abstract class ConverterPool extends Service implements ConverterListener {
 
-	protected Hashtable<ClientTask, RunnableService> converters;
+	protected Hashtable<ClientTask, Converter> converters;
 	protected int threads;
 	protected ConverterListener parentListener;
 
@@ -56,7 +55,7 @@ public abstract class ConverterPool extends Service implements ConverterListener
 	}
 
 	public void stop() {
-		for (RunnableService converter : converters.values()) {
+		for (Converter converter : converters.values()) {
 			converter.stop();
 		}
 	}

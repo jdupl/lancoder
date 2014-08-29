@@ -6,9 +6,8 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
-import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.network.messages.ClusterProtocol;
@@ -18,7 +17,7 @@ import org.lancoder.common.network.messages.cluster.StatusReport;
 public class ObjectChecker extends RunnableService implements Comparable<ObjectChecker> {
 
 	private NodeCheckerListener listener;
-	final BlockingQueue<Node> tasks = new BlockingArrayQueue<Node>(100);
+	final LinkedBlockingDeque<Node> tasks = new LinkedBlockingDeque<Node>();
 
 	public ObjectChecker(NodeCheckerListener listener) {
 		this.listener = listener;
@@ -33,7 +32,6 @@ public class ObjectChecker extends RunnableService implements Comparable<ObjectC
 	}
 
 	public void checkNode(Node n) {
-		
 		try (Socket s = new Socket()) {
 			SocketAddress sockAddr = new InetSocketAddress(n.getNodeAddress(), n.getNodePort());
 			s.connect(sockAddr, 2000);
@@ -61,14 +59,13 @@ public class ObjectChecker extends RunnableService implements Comparable<ObjectC
 				Node next = tasks.take();
 				checkNode(next);
 			} catch (InterruptedException e) {
-				System.err.println("interrupt"); // DEBUG
 			}
 		}
 	}
 
 	@Override
 	public void serviceFailure(Exception e) {
-		// TODO Auto-generated method stub
+		e.printStackTrace();
 	}
 
 	@Override

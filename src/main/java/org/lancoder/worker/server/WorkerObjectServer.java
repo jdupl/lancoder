@@ -26,13 +26,12 @@ public class WorkerObjectServer extends RunnableService {
 				t.start();
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			serviceFailure(e);
 		}
 	}
 
 	@Override
 	public void serviceFailure(Exception e) {
-		// TODO Auto-generated method stub
+		e.printStackTrace();
 	}
 }
