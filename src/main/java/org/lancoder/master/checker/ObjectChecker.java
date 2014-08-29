@@ -3,7 +3,9 @@ package org.lancoder.master.checker;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.concurrent.BlockingQueue;
 
 import org.eclipse.jetty.util.BlockingArrayQueue;
@@ -31,8 +33,10 @@ public class ObjectChecker extends RunnableService implements Comparable<ObjectC
 	}
 
 	public void checkNode(Node n) {
-		try (Socket s = new Socket(n.getNodeAddress(), n.getNodePort())) {
-			s.setSoTimeout(2000);
+		
+		try (Socket s = new Socket()) {
+			SocketAddress sockAddr = new InetSocketAddress(n.getNodeAddress(), n.getNodePort());
+			s.connect(sockAddr, 2000);
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
@@ -46,7 +50,6 @@ public class ObjectChecker extends RunnableService implements Comparable<ObjectC
 		} catch (IOException e) {
 			listener.nodeDisconnected(n);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -58,6 +61,7 @@ public class ObjectChecker extends RunnableService implements Comparable<ObjectC
 				Node next = tasks.take();
 				checkNode(next);
 			} catch (InterruptedException e) {
+				System.err.println("interrupt"); // DEBUG
 			}
 		}
 	}
