@@ -48,7 +48,7 @@ public class WorkerHandler implements Runnable {
 			}
 			out.writeObject(obj);
 			out.flush();
-		} catch (IOException | ClassNotFoundException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			if (s != null && !s.isClosed()) {

@@ -27,11 +27,10 @@ public class AudioWorkThread extends Converter {
 		this.task = task;
 		this.listener = listener;
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
-		AudioStream destinationStream = task.getStreamConfig().getOutStream();
 		taskTempOutputFile = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getTempFile());
 		taskTempOutputFolder = new File(taskTempOutputFile.getParent());
-		taskFinalFolder = FileUtils.getFile(absoluteSharedDir, destinationStream.getRelativeFile()).getParentFile();
-		taskFinalFile = FileUtils.getFile(absoluteSharedDir, destinationStream.getRelativeFile());
+		taskFinalFile = FileUtils.getFile(absoluteSharedDir, task.getTempFile());
+		taskFinalFolder = new File(taskFinalFile.getParent());
 	}
 
 	private ArrayList<String> getArgs(ClientAudioTask task) {

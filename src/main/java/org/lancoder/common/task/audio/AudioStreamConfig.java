@@ -9,9 +9,9 @@ public class AudioStreamConfig extends StreamConfig {
 
 	private static final long serialVersionUID = 7191622871794153963L;
 
-	public AudioStreamConfig(String jobId, ArrayList<String> extraEncoderArgs, int passes, AudioStream orignalStream,
+	public AudioStreamConfig(String jobId, ArrayList<String> extraEncoderArgs, AudioStream orignalStream,
 			AudioStream destinationStream) {
-		super(jobId, extraEncoderArgs, passes, orignalStream, destinationStream);
+		super(jobId, extraEncoderArgs, 1, orignalStream, destinationStream);
 	}
 
 	@Override

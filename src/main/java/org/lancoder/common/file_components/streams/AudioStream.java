@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.lancoder.common.codecs.ChannelDisposition;
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.progress.Unit;
 
@@ -18,6 +19,16 @@ public class AudioStream extends Stream {
 	private ChannelDisposition channels = ChannelDisposition.ORIGINAL;
 	private int sampleRate;
 	protected Unit unit = Unit.SECONDS;
+
+	public AudioStream(int index, Codec codec, long units, int rate, RateControlType rateControlType,
+			ChannelDisposition channels, int sampleRate, Unit unit) {
+		super(index, codec, units);
+		this.rate = rate;
+		this.rateControlType = rateControlType;
+		this.channels = channels;
+		this.sampleRate = sampleRate;
+		this.unit = unit;
+	}
 
 	public AudioStream(JsonObject json, String relativeSource, long unitCount) {
 		super(json, relativeSource, unitCount);

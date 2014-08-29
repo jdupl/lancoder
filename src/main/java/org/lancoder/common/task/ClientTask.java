@@ -61,4 +61,13 @@ public abstract class ClientTask implements Serializable {
 	public String getTempFile() {
 		return this.task.getTempFile();
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj != null && obj instanceof ClientTask) {
+			ClientTask other = (ClientTask) obj;
+			return other.task.equals(this.task);
+		}
+		return super.equals(obj);
+	}
 }

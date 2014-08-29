@@ -1,8 +1,8 @@
 package org.lancoder.master.dispatcher;
 
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.eclipse.jetty.util.BlockingArrayQueue;
@@ -38,17 +38,14 @@ public class ObjectDispatcher extends RunnableService {
 
 		TaskRequestMessage trm = new TaskRequestMessage(task);
 		boolean handled = false;
-
-		Socket socket = null;
-		try {
-			socket = new Socket(node.getNodeAddress(), node.getNodePort());
-			socket.setSoTimeout(2000);
+		try (Socket socket = new Socket()) {
+			InetSocketAddress addr = new InetSocketAddress(node.getNodeAddress(), node.getNodePort());
+			socket.connect(addr, 2000);
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 			out.writeObject(trm);
 			out.flush();
-
 			Object o = in.readObject();
 			if (o instanceof Message) {
 				Message m = (Message) o;
@@ -57,23 +54,11 @@ public class ObjectDispatcher extends RunnableService {
 					handled = true;
 				}
 			}
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			if (!handled) {
 				listener.taskRefused(item);
-			}
-			if (socket != null && !socket.isClosed()) {
-				try {
-					socket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 			}
 		}
 		free = true;
