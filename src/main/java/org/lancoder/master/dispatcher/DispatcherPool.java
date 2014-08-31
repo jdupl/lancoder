@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.lancoder.common.Service;
+import org.lancoder.common.task.ClientTask;
 
 public class DispatcherPool extends Service implements DispatcherListener {
 
@@ -38,6 +39,15 @@ public class DispatcherPool extends Service implements DispatcherListener {
 		return null;
 	}
 
+	private boolean taskInQueue(ClientTask task) {
+		for (DispatchItem dispatchItem : toDispatch) {
+			if (dispatchItem.getTask().equals(task)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Add an item to dispatch to queue and update list.
 	 * 
@@ -45,7 +55,11 @@ public class DispatcherPool extends Service implements DispatcherListener {
 	 *            The item to dispatch
 	 */
 	public void dispatch(DispatchItem item) {
-		toDispatch.add(item);
+		if (taskInQueue(item.getTask())) {
+			System.err.println("Concurrency error avoided !");
+		} else {
+			toDispatch.add(item);
+		}
 		update();
 	}
 

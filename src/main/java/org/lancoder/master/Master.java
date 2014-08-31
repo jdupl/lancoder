@@ -219,7 +219,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			task.getProgress().start();
 		}
 		node.setStatus(NodeState.LOCKED);
-
+		task.getProgress().start();
 		dispatcher.dispatch(new DispatchItem(task, node));
 	}
 
@@ -416,16 +416,17 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			if (jobDone) {
 				jobEncodingCompleted(job);
 			}
+			updateNodesWork();
 			break;
 		case TASK_TODO:
 		case TASK_CANCELED:
 			task.getProgress().reset();
 			n.getCurrentTasks().remove(task);
+			updateNodesWork();
 			break;
 		default:
 			break;
 		}
-		updateNodesWork();
 		return false;
 	}
 
