@@ -30,7 +30,6 @@ public class VideoWorkThread extends Converter {
 	public VideoWorkThread(ClientVideoTask task, ConverterListener listener) {
 		this.task = task;
 		this.listener = listener;
-		VideoStream destinationStream = task.getStreamConfig().getOutStream();
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
 		taskTempOutputFile = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getTempFile());
 		taskTempOutputFolder = new File(taskTempOutputFile.getParent());

@@ -16,19 +16,19 @@ import org.lancoder.common.task.ClientTask;
 public class ObjectDispatcher extends RunnableService {
 
 	private DispatcherListener listener;
-	private BlockingArrayQueue<DispatchItem> items = new BlockingArrayQueue<>();
+	private BlockingArrayQueue<DispatchItem> items = new BlockingArrayQueue<>(1);
 	private boolean free = true;
 
 	public ObjectDispatcher(DispatcherListener listener) {
 		this.listener = listener;
 	}
 
-	public boolean isFree() {
+	public synchronized boolean isFree() {
 		return free;
 	}
 
-	public void queue(DispatchItem item) {
-		this.items.add(item);
+	public synchronized boolean queue(DispatchItem item) {
+		return this.items.offer(item);
 	}
 
 	private void dispatch(DispatchItem item) {
@@ -49,19 +49,18 @@ public class ObjectDispatcher extends RunnableService {
 			Object o = in.readObject();
 			if (o instanceof Message) {
 				Message m = (Message) o;
-				if (m.getCode() == ClusterProtocol.TASK_ACCEPTED) {
-					listener.taskAccepted(item);
-					handled = true;
-				}
+				handled = m.getCode() == ClusterProtocol.TASK_ACCEPTED;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			if (!handled) {
 				listener.taskRefused(item);
+			} else {
+				listener.taskAccepted(item);
 			}
+			free = true;
 		}
-		free = true;
 	}
 
 	@Override
@@ -77,7 +76,6 @@ public class ObjectDispatcher extends RunnableService {
 	@Override
 	public void serviceFailure(Exception e) {
 		// TODO Auto-generated method stub
-
 	}
 
 }

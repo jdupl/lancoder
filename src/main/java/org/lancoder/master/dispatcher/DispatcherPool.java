@@ -19,8 +19,7 @@ public class DispatcherPool extends Service implements DispatcherListener {
 	}
 
 	private ObjectDispatcher createNewDispatcher() {
-		System.err.println("Creating new dispatcher");
-		ObjectDispatcher dispatcher = new ObjectDispatcher(listener);
+		ObjectDispatcher dispatcher = new ObjectDispatcher(this);
 		dispatchers.add(dispatcher);
 		Thread t = new Thread(threads, dispatcher);
 		t.start();
@@ -36,37 +35,42 @@ public class DispatcherPool extends Service implements DispatcherListener {
 		if (dispatchers.size() < MAX_DISPATCHERS) {
 			return createNewDispatcher();
 		}
-		System.err.println("Maximum dispatcher reached.");
 		return null;
 	}
 
-	public synchronized void dispatch(DispatchItem item) {
-		ObjectDispatcher dispatcher = getFreeDispatcher();
-		if (dispatcher != null) {
-			dispatcher.queue(item);
-		} else {
-			toDispatch.add(item);
-		}
+	/**
+	 * Add an item to dispatch to queue and update list.
+	 * 
+	 * @param item
+	 *            The item to dispatch
+	 */
+	public void dispatch(DispatchItem item) {
+		toDispatch.add(item);
+		update();
 	}
 
+	/**
+	 * Check if queue has anything and if dispatchers are free and dispatcher first item in queue. Must be called every
+	 * time that the item list is updated and node respond.
+	 */
 	private synchronized void update() {
 		DispatchItem item = null;
 		ObjectDispatcher dispatcher = null;
-		if ((item = toDispatch.poll()) != null && (dispatcher = getFreeDispatcher()) != null) {
-			dispatcher.queue(item);
+		if ((item = toDispatch.peek()) != null && (dispatcher = getFreeDispatcher()) != null) {
+			if (dispatcher.queue(item)) {
+				toDispatch.poll();
+			}
 		}
 	}
 
 	@Override
 	public void taskRefused(DispatchItem item) {
-		this.toDispatch.remove(item);
 		this.listener.taskRefused(item);
 		update();
 	}
 
 	@Override
 	public void taskAccepted(DispatchItem item) {
-		this.toDispatch.remove(item);
 		this.listener.taskAccepted(item);
 		update();
 	}
