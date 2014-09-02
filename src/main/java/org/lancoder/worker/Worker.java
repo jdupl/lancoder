@@ -1,5 +1,6 @@
 package org.lancoder.worker;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -42,6 +43,9 @@ import org.lancoder.worker.server.WorkerServerListener;
 public class Worker implements Runnable, ServerListener, WorkerServerListener, ConctactMasterListener,
 		ConverterListener {
 
+	private final static String DEFAULT_PATH = new File(System.getProperty("user.home"), "worker_config.json")
+			.getPath();
+
 	private WorkerConfig config;
 	private String configPath;
 	private NodeState status;
@@ -52,8 +56,16 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	private VideoWorkThread workThread;
 	private AudioConverterPool audioPool;
 
-	public Worker(String configPath) {
-		this.configPath = configPath;
+	public Worker() {
+		this(null);
+	}
+
+	public Worker(String suppliedPath) {
+		if (suppliedPath == null) {
+			this.configPath = DEFAULT_PATH;
+		} else {
+			this.configPath = suppliedPath;
+		}
 		config = WorkerConfig.load(configPath);
 		if (config != null) {
 			System.err.println("Loaded config from disk !");

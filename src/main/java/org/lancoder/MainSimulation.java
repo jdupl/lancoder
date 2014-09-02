@@ -14,5 +14,4 @@ public class MainSimulation {
 		Simulation s = new Simulation();
 		s.run();
 	}
-
 }

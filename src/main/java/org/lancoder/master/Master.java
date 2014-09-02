@@ -50,6 +50,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		MasterNodeServerListener, ServerListener, JobInitiatorListener {
 
 	public static final String ALGORITHM = "SHA-256";
+	private final static String DEFAULT_PATH = new File(System.getProperty("user.home"), "worker_config.json")
+			.getPath();
 
 	Logger logger = LoggerFactory.getLogger(Master.class);
 	private MasterConfig config;
@@ -64,8 +66,17 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private ApiServer apiServer;
 	private DispatcherPool dispatcher;
 
-	public Master(String configPath) {
-		this.configPath = configPath;
+	public Master() {
+		this(null);
+	}
+
+	public Master(String suppliedPath) {
+		if (suppliedPath == null) {
+			this.configPath = DEFAULT_PATH;
+		} else {
+			this.configPath = suppliedPath;
+		}
+
 		config = MasterConfig.load(configPath);
 
 		if (config != null) {

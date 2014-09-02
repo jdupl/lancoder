@@ -4,10 +4,6 @@ import org.lancoder.master.Master;
 import org.lancoder.worker.Worker;
 
 public class Main {
-
-	final static String WORKER_CONFIG_PATH = "worker_config.json";
-	final static String MASTER_CONFIG_PATH = "master_config.json";
-
 	/**
 	 * CLI entry point
 	 * 
@@ -19,25 +15,23 @@ public class Main {
 			printHelp();
 			System.exit(-1);
 		}
+		// Get user's config path
+		String configpath = args.length == 2 ? configpath = args[1] : null;
+		Runnable r = null;
 
 		if (args[0].equals("--worker")) {
-			String config = WORKER_CONFIG_PATH;
-			if (args.length == 2) {
-				config = args[1];
-			}
-			Worker w = new Worker(config);
-			Thread wt = new Thread(w);
-			wt.start();
+			r = new Worker(configpath);
 		} else if (args[0].equals("--master")) {
-			String config = MASTER_CONFIG_PATH;
 			if (args.length == 2) {
-				config = args[1];
+				configpath = args[1];
 			}
-			Master m = new Master(config);
-			Thread mt = new Thread(m);
-			mt.start();
+			r = new Master(configpath);
+		} else {
+			printHelp();
+			System.exit(-1);
 		}
-
+		Thread t = new Thread(r);
+		t.start();
 	}
 
 	public static void printHelp() {

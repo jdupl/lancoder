@@ -17,12 +17,12 @@ public class Simulation extends Thread {
 	 */
 	public void basicSimulation() {
 		System.out.println("SIM: Starting master now");
-		Master m = new Master(Main.MASTER_CONFIG_PATH);
+		Master m = new Master();
 		Thread masterThread = new Thread(m);
 		masterThread.start();
 
 		System.out.println("SIM: Creating first worker now,");
-		Worker worker1 = new Worker(Main.WORKER_CONFIG_PATH);
+		Worker worker1 = new Worker();
 		Thread w1Thread = new Thread(worker1);
 		w1Thread.start();
 
