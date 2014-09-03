@@ -6,19 +6,18 @@ import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import org.lancoder.common.Config;
 
-public class WorkerConfig implements Serializable {
+import com.google.gson.Gson;
+
+public class WorkerConfig extends Config implements Serializable {
 
 	private static final long serialVersionUID = 4279318303054715575L;
-
-	// private static final String WORKER_CONFIG_PATH = "worker_config.json";
 
 	private static final transient int DEFAULT_MASTER_PORT = 1337;
 	private static final int DEFAULT_LISTEN_PORT = 1338;
 	private static final InetAddress DEFAULT_MASTER_IP = InetAddress.getLoopbackAddress();
-	private static final String DEFAULT_TEMP_DIRECTORY = "/tmp";
+	private static final String DEFAULT_TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
 	private static final String DEFAULT_UNID = "";
 	private static final String DEFAULT_NAME = "";
 	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
@@ -50,26 +49,6 @@ public class WorkerConfig implements Serializable {
 		WorkerConfig conf = new WorkerConfig();
 		conf.dump(configPath);
 		return conf;
-	}
-
-	/**
-	 * Serializes current config to disk as JSON object.
-	 * 
-	 * @return True if could write config to disk. Otherwise, return false.
-	 */
-	public synchronized boolean dump(String configPath) {
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		String s = gson.toJson(this);
-
-		try {
-			Files.write(Paths.get(configPath), s.getBytes("UTF-8"));
-		} catch (IOException e) {
-			// print stack and return false
-			e.printStackTrace();
-			return false;
-		}
-
-		return true;
 	}
 
 	/**

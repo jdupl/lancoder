@@ -5,13 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
+import org.lancoder.common.Config;
 import org.lancoder.common.Node;
 import org.lancoder.common.job.Job;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
-public class MasterConfig {
+public class MasterConfig extends Config {
 
 	/**
 	 * Defaults values of the config
@@ -51,33 +51,12 @@ public class MasterConfig {
 		return conf;
 	}
 
-	/**
-	 * Serializes current config to disk as JSON object.
-	 * 
-	 * @return True if could write config to disk. Otherwise, return false.
-	 */
-	public synchronized boolean dump(String configPath) {
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		String s = gson.toJson(this);
-
-		try {
-			Files.write(Paths.get(configPath), s.getBytes("UTF-8"));
-		} catch (IOException e) {
-			// print stack and return false
-			e.printStackTrace();
-			return false;
-		}
-
-		return true;
-	}
-
 	public synchronized static MasterConfig load(String configPath) {
 		MasterConfig config = null;
-		
+
 		if (!Files.exists(Paths.get(configPath))) {
 			return null;
 		}
-		
 		try {
 			byte[] b = Files.readAllBytes(Paths.get(configPath));
 			Gson gson = new Gson();

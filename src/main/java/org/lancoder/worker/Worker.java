@@ -43,8 +43,8 @@ import org.lancoder.worker.server.WorkerServerListener;
 public class Worker implements Runnable, ServerListener, WorkerServerListener, ConctactMasterListener,
 		ConverterListener {
 
-	private final static String DEFAULT_PATH = new File(System.getProperty("user.home"), "worker_config.json")
-			.getPath();
+	private final static String DEFAULT_PATH = new File(System.getProperty("user.home"),
+			".config/lancoder/worker_config.json").getPath();
 
 	private WorkerConfig config;
 	private String configPath;
