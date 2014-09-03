@@ -7,67 +7,72 @@ public enum Codec implements Serializable {
 	/**
 	 * Unknown (unsupported) codec
 	 */
-	UNKNOWN("Unknown", "none", "unknown", "unknown"),
+	UNKNOWN("Unknown", "none", "unknown", "unknown", false),
 	/**
 	 * Ignore the stream. Don't copy or encode the stream to the final file.
 	 */
-	IGNORE("Ingore stream", "none", "ignore", ""),
+	IGNORE("Ingore stream", "none", "ignore", "", false),
 	/**
 	 * Copy the original stream
 	 */
-	COPY("Copy audio stream", "none", "copy", "mkv"),
+	COPY("Copy audio stream", "none", "copy", "mkv", false),
 
 	// Audio codecs
 	/**
 	 * Vorbis codec
 	 */
-	VORBIS("Vorbis", "vorbis", "libvorbis", "ogg"),
+	VORBIS("Vorbis", "vorbis", "libvorbis", "ogg", false),
 	/**
 	 * Opus
 	 */
-	OPUS("Opus", "libopus", "libopus", "ogg"),
+	OPUS("Opus", "libopus", "libopus", "ogg", false),
 	/**
 	 * AAC
 	 */
-	AAC("Advanced Audio Coding", "aac", "libfdk_aac", "m4a"),
+	AAC("Advanced Audio Coding", "aac", "libfdk_aac", "m4a", false),
 	/**
 	 * FLAC
 	 */
-	FLAC("FLAC", "flac", "flac", "flac"),
+	FLAC("FLAC", "flac", "flac", "flac", true),
 	/**
 	 * Mp3
 	 */
-	MP3("MP3", "mp3", "libmp3lame", "mp3"),
+	MP3("MP3", "mp3", "libmp3lame", "mp3", false),
 	/**
 	 * DTS or DCA (DTS Coherent Acoustics)
 	 */
-	DTS("DTS", "dca", "dca", "dts"),
+	DTS("DTS", "dca", "dca", "dts", true),
 
 	// Video codecs
 	/**
 	 * H.264
 	 */
-	H264("H.264/MPEG-4 AVC", "h264", "libx264", "mpegts"),
+	H264("H.264/MPEG-4 AVC", "h264", "libx264", "mpegts", false),
 	/**
 	 * H.265 (This encoding is not yet supported by most systems.)
 	 */
-	H265("HEVC/H.265", "h265", "libx265", "mpegts"),
-
+	H265("HEVC/H.265", "h265", "libx265", "mpegts", false),
 	// MPEG4("MPEG-4", "mpeg4", "mp4"),
 
 	// Subtitles
-	SUBRIP("Subrip", "subrip", "subrip", "srt");
+	SUBRIP("Subrip", "subrip", "subrip", "srt", true);
 
 	private String prettyName;
 	private String ffMpegName;
 	private String encoder;
 	private String container;
+	private boolean lossless;
 
-	private Codec(String name, String ffMpegName, String encoder, String container) {
+	private Codec(String name, String ffMpegName, String encoder, String container, boolean lossless) {
 		this.prettyName = name;
 		this.ffMpegName = ffMpegName;
 		this.encoder = encoder;
 		this.container = container;
+		this.lossless = lossless;
+	}
+
+	public boolean isLossless() {
+		return lossless;
 	}
 
 	public String getPrettyName() {
