@@ -3,8 +3,20 @@ package org.lancoder.common.codecs;
 import java.io.Serializable;
 
 public enum Codec implements Serializable {
-
+	// Special codecs
+	/**
+	 * Unknown (unsupported) codec
+	 */
 	UNKNOWN("Unknown", "none", "unknown", "unknown"),
+	/**
+	 * Ignore the stream. Don't copy or encode the stream to the final file.
+	 */
+	IGNORE("Ingore stream", "none", "ignore", ""),
+	/**
+	 * Copy the original stream
+	 */
+	COPY("Copy audio stream", "none", "copy", "mkv"),
+
 	// Audio codecs
 	/**
 	 * Vorbis codec
@@ -30,10 +42,6 @@ public enum Codec implements Serializable {
 	 * DTS or DCA (DTS Coherent Acoustics)
 	 */
 	DTS("DTS", "dca", "dca", "dts"),
-	/**
-	 * Copy the original stream
-	 */
-	COPY("Copy audio stream", "none", "copy", "mkv"),
 
 	// Video codecs
 	/**
