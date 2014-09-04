@@ -115,29 +115,24 @@ public class VideoWorkThread extends Converter {
 
 	private boolean transcodeToMpegTs() {
 		File destination = new File(absoluteSharedDir, task.getTempFile());
-		// TODO handle robust handling of progress and errors
+		if (destination.exists()) {
+			System.err.printf("Cannot transcode to mkv as file %s already exists\n", destination.getPath());
+			return false;
+		}
+		String[] baseArgs = new String[] { "ffmpeg", "-i", taskTempOutputFile.getAbsolutePath(), "-f", "mpegts", "-c",
+				"copy", "-bsf:v", "h264_mp4toannexb", destination.getAbsolutePath() };
+		ArrayList<String> args = new ArrayList<>();
+		Collections.addAll(args, baseArgs);
 		try {
-			ProcessBuilder ffmpeg = new ProcessBuilder();
-			String[] baseArgs = new String[] { "ffmpeg", "-i", taskTempOutputFile.getAbsolutePath(), "-f", "mpegts",
-					"-c", "copy", "-bsf:v", "h264_mp4toannexb", destination.getAbsolutePath() };
-			ArrayList<String> args = new ArrayList<>();
-			Collections.addAll(args, baseArgs);
-			ffmpeg.command(args);
-			System.err.println(args.toString()); // DEBUG
-
-			Process transcoder = ffmpeg.start();
-			transcoder.waitFor();
-			if (transcoder.exitValue() != 0) {
-				System.err.println("Transcoding from mkv to mpegts appears to have failed !");
-				return false;
-			}
+			Transcoder transcoder = new Transcoder();
+			transcoder.read(args);
 			FileUtils.givePerms(destination, false);
-		} catch (IOException e) {
+		} catch (WorkInterruptedException e) {
 			e.printStackTrace();
-			return false;
-		} catch (InterruptedException e) {
+		} catch (MissingDecoderException e) {
 			e.printStackTrace();
-			return false;
+		} catch (MissingFfmpegException e) {
+			e.printStackTrace();
 		}
 		return true;
 	}

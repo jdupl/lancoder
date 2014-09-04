@@ -88,21 +88,14 @@ public class JobInitiator extends RunnableService {
 			VideoStreamConfig config = new VideoStreamConfig(job.getJobId(), extraEncoderArgs, passes, stream,
 					streamToEncode);
 			// TODO Check width and frame rate
-			ArrayList<ClientVideoTask> clientVideoTasks = readStream(config, job);
-			for (ClientVideoTask clientTask : clientVideoTasks) {
-				job.getTasks().add(clientTask.getTask());
-				job.getClientTasks().add(clientTask);
-			}
+			readStream(config, job);
 		}
 
 		for (AudioStream stream : fileInfo.getAudioStreams()) {
 			AudioStream streamToEncode = new AudioStream(stream.getIndex(), audioCodec, stream.getUnitCount(),
 					audioRate, audioRCT, audioChannels, audioSampleRate, Unit.SECONDS);
 			AudioStreamConfig config = new AudioStreamConfig(job.getJobId(), extraEncoderArgs, stream, streamToEncode);
-			for (ClientAudioTask clientTask : readStream(config, job)) {
-				job.getTasks().add(clientTask.getTask());
-				job.getClientTasks().add(clientTask);
-			}
+			readStream(config, job);
 			// TODO Sanitize channel disposition (upmix protection)
 			// if (stream.getChannels().getCount() < defaultAudio.getChannels().getCount())
 		}
@@ -110,8 +103,7 @@ public class JobInitiator extends RunnableService {
 		listener.newJob(job);
 	}
 
-	private ArrayList<ClientAudioTask> readStream(AudioStreamConfig config, Job job) {
-		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
+	private void readStream(AudioStreamConfig config, Job job) {
 		AudioStream outStream = config.getOutStream();
 		int taskId = job.getTaskCount();
 		File relativeTasksOutput = FileUtils.getFile(job.getOutputFolder(), job.getPartsFolderName());
@@ -120,18 +112,20 @@ public class JobInitiator extends RunnableService {
 		AudioTask task = new AudioTask(taskId, job.getJobId(), 0, outStream.getUnitCount(), outStream.getUnitCount(),
 				Unit.SECONDS, relativeTaskOutputFile.getPath());
 		ClientAudioTask clientTask = new ClientAudioTask(task, config);
-		tasks.add(clientTask);
-		return tasks;
+		job.getClientTasks().add(clientTask);
+		job.getTasks().add(task);
 	}
 
 	/**
-	 * Create tasks of the stream
+	 * Create tasks of the stream and adds to the job.
 	 * 
 	 * @param config
+	 *            The video stream config
+	 * @param job
+	 *            The job to update
 	 * @return
 	 */
-	private ArrayList<ClientVideoTask> readStream(VideoStreamConfig config, Job job) {
-		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
+	private void readStream(VideoStreamConfig config, Job job) {
 		VideoStream outStream = config.getOutStream();
 		VideoStream inStream = config.getOrignalStream();
 		// exclude copy streams from task creation
@@ -165,10 +159,10 @@ public class JobInitiator extends RunnableService {
 				VideoTask task = new VideoTask(taskId, job.getJobId(), outStream.getStepCount(), start, end, unitCount,
 						Unit.FRAMES, relativeTaskOutputFile.getPath());
 				ClientVideoTask clientVideoTask = new ClientVideoTask(task, config);
-				tasks.add(clientVideoTask);
+				job.getClientTasks().add(clientVideoTask);
+				job.getTasks().add(clientVideoTask.getTask());
 			}
 		}
-		return tasks;
 	}
 
 	private void createJob(ApiJobRequest req, File sourcefile) {
