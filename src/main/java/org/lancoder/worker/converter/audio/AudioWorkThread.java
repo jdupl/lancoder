@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,6 +12,7 @@ import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.utils.TimeUtils;
+import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.worker.converter.Converter;
 import org.lancoder.worker.converter.ConverterListener;
 
@@ -22,6 +22,7 @@ public class AudioWorkThread extends Converter {
 	ConverterListener listener;
 	Process p;
 	File taskFinalFile;
+	Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
 
 	public AudioWorkThread(ClientAudioTask task, ConverterListener listener) {
 		this.task = task;
@@ -66,37 +67,6 @@ public class AudioWorkThread extends Converter {
 		return args;
 	}
 
-	private boolean encode(ArrayList<String> args) {
-		boolean success = false;
-		ProcessBuilder pb = new ProcessBuilder(args);
-		Scanner s = null;
-		try {
-			Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
-			Matcher m = null;
-			p = pb.start();
-			s = new Scanner(p.getErrorStream());
-			while (s.hasNext() && !close) {
-				m = timePattern.matcher(s.nextLine());
-				if (m.find()) {
-					task.getProgress().update(TimeUtils.getMsFromString(m.group(1)) / 1000);
-				}
-			}
-			success = p.waitFor() == 0 ? true : false;
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} finally {
-			if (close) {
-				p.destroy();
-			}
-			if (s != null) {
-				s.close();
-			}
-		}
-		return success;
-	}
-
 	private boolean moveFile() {
 		try {
 			FileUtils.moveFile(taskTempOutputFile, taskFinalFile);
@@ -113,7 +83,8 @@ public class AudioWorkThread extends Converter {
 		System.out.println(args.toString()); // DEBUG
 		listener.workStarted(task);
 		createDirs();
-		if (encode(args) && moveFile()) {
+		FFmpegReader ffmpeg = new FFmpegReader();
+		if (ffmpeg.read(args, this, true) && moveFile()) {
 			listener.workCompleted(task);
 			cleanTempPart();
 		} else {
@@ -134,5 +105,14 @@ public class AudioWorkThread extends Converter {
 	public void serviceFailure(Exception e) {
 		listener.nodeCrash(null);
 		// TODO
+	}
+
+	@Override
+	public void onMessage(String line) {
+		Matcher m = null;
+		m = timePattern.matcher(line);
+		if (m.find()) {
+			task.getProgress().update(TimeUtils.getMsFromString(m.group(1)) / 1000);
+		}
 	}
 }

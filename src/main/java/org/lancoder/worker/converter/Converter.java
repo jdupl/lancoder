@@ -5,8 +5,9 @@ import java.io.IOException;
 
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.utils.FileUtils;
+import org.lancoder.ffmpeg.FFmpegReaderListener;
 
-public abstract class Converter extends RunnableService {
+public abstract class Converter extends RunnableService implements FFmpegReaderListener {
 
 	protected File taskTempOutputFile;
 	protected File taskTempOutputFolder;

@@ -205,4 +205,10 @@ public class VideoWorkThread extends Converter {
 		this.listener.nodeCrash(null);
 		// TODO
 	}
+
+	@Override
+	public void onMessage(String line) {
+		// TODO Auto-generated method stub
+		
+	}
 }
