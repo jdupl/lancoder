@@ -8,6 +8,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.lancoder.common.exceptions.MissingDecoderException;
+import org.lancoder.common.exceptions.MissingFfmpegException;
+import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.task.audio.ClientAudioTask;
@@ -18,11 +21,11 @@ import org.lancoder.worker.converter.ConverterListener;
 
 public class AudioWorkThread extends Converter {
 
-	ClientAudioTask task;
-	ConverterListener listener;
-	Process p;
-	File taskFinalFile;
-	Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
+	private ClientAudioTask task;
+	private ConverterListener listener;
+	private File taskFinalFile;
+	private static Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
+	private FFmpegReader ffmpeg = new FFmpegReader();
 
 	public AudioWorkThread(ClientAudioTask task, ConverterListener listener) {
 		this.task = task;
@@ -80,25 +83,25 @@ public class AudioWorkThread extends Converter {
 	@Override
 	public void run() {
 		ArrayList<String> args = getArgs(task);
-		System.out.println(args.toString()); // DEBUG
 		listener.workStarted(task);
 		createDirs();
-		FFmpegReader ffmpeg = new FFmpegReader();
-		if (ffmpeg.read(args, this, true) && moveFile()) {
-			listener.workCompleted(task);
-			cleanTempPart();
-		} else {
-			listener.workFailed(task);
-			cleanTempPart();
+		try {
+			if (ffmpeg.read(args, this, true) && moveFile()) {
+				listener.workCompleted(task);
+				cleanTempPart();
+			} else {
+				listener.workFailed(task);
+				cleanTempPart();
+			}
+		} catch (MissingFfmpegException | MissingDecoderException | WorkInterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public void stop() {
 		super.stop();
-		if (p != null) {
-			p.destroy();
-		}
+		ffmpeg.stop();
 	}
 
 	@Override
