@@ -21,7 +21,7 @@ public abstract class Config {
 		File config = new File(configPath);
 		try {
 			if (!config.exists()) {
-				config.mkdirs();
+				config.getParentFile().mkdirs();
 			}
 			Files.write(Paths.get(configPath), s.getBytes("UTF-8"));
 		} catch (IOException e) {

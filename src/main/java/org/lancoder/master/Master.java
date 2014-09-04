@@ -51,7 +51,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	public static final String ALGORITHM = "SHA-256";
 	private final static String DEFAULT_PATH = new File(System.getProperty("user.home"),
-			".config/lancoder/worker_config.json").getPath();
+			".config/lancoder/master_config.json").getPath();
 
 	Logger logger = LoggerFactory.getLogger(Master.class);
 	private MasterConfig config;
