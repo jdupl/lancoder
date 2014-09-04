@@ -10,6 +10,7 @@ public class NodeCheckerPool extends Service {
 
 	private static final int MAX_CHECKERS = 5;
 
+	// TODO
 	private final Queue<ObjectChecker> checkers = new PriorityQueue<ObjectChecker>(MAX_CHECKERS);
 	private ThreadGroup threads = new ThreadGroup("checkerThreads");
 	private NodeCheckerListener listener;

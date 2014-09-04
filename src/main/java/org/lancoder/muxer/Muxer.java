@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import org.lancoder.common.RunnableService;
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.task.ClientTask;
@@ -36,10 +37,10 @@ public class Muxer extends RunnableService {
 			args.add("--forced-track");
 			args.add("0:no");
 			Stream stream = streamIterator.next();
-
-			if (stream.isCopyToOutput()) {
+			if (stream.getCodec() == Codec.COPY) {
+				File streamOrigin = new File(listener.getSharedFolder(), stream.getRelativeFile());
 				args.addAll(stream.getStreamCopyMapping());
-				args.add(job.getSourceFile());
+				args.add(streamOrigin.getPath());
 			} else {
 				ArrayList<ClientTask> tasks = job.getTasksForStream(stream);
 				// Iterate through tasks of the stream and concatenate if necessary

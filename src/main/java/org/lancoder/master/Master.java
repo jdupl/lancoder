@@ -76,13 +76,10 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		} else {
 			this.configPath = suppliedPath;
 		}
-
 		config = MasterConfig.load(configPath);
-
-		if (config != null) {
-			System.err.println("Loaded config from disk !");
-		} else {
+		if (config == null) {
 			// this saves default configuration to disk
+			System.out.println("Created new master config !");
 			this.config = MasterConfig.generate(configPath);
 		}
 		jobInitiator = new JobInitiator(this, config);

@@ -19,7 +19,6 @@ public abstract class Stream implements Serializable {
 	protected String title = "";
 	protected String language = "und";
 	protected boolean isDefault = false;
-	protected boolean copyToOutput = false;
 	protected long unitCount;
 
 	public Stream(int index, Codec codec, long units) {
@@ -89,14 +88,6 @@ public abstract class Stream implements Serializable {
 
 	public String getRelativeFile() {
 		return relativeFile;
-	}
-
-	public boolean isCopyToOutput() {
-		return copyToOutput;
-	}
-
-	public void setCopyToOutput(boolean copyToOutput) {
-		this.copyToOutput = copyToOutput;
 	}
 
 	public int getIndex() {
