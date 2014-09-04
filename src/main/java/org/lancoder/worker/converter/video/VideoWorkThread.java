@@ -41,8 +41,8 @@ public class VideoWorkThread extends Converter {
 		return (OS.indexOf("win") >= 0);
 	}
 
-	public void encodePass(String startTimeStr, String durationStr) throws MissingFfmpegException,
-			MissingDecoderException, WorkInterruptedException {
+	public void encodePass(String startTimeStr, String durationStr) throws WorkInterruptedException,
+			MissingDecoderException, MissingFfmpegException {
 		VideoStream inStream = task.getStreamConfig().getOrignalStream();
 		File inputFile = new File(absoluteSharedDir, inStream.getRelativeFile());
 		String mapping = String.format("0:%d", inStream.getIndex());
@@ -149,7 +149,7 @@ public class VideoWorkThread extends Converter {
 	}
 
 	@Override
-	public void onMessage(String line) {
+	public void onMessage(String line) throws MissingDecoderException {
 		double speed = -1;
 		long units = -1;
 		Matcher m = currentFramePattern.matcher(line);
@@ -163,6 +163,7 @@ public class VideoWorkThread extends Converter {
 		m = missingDecoder.matcher(line);
 		if (m.find()) {
 			System.err.println("Missing decoder !");
+			throw new MissingDecoderException();
 		} else if (units != -1 && speed != -1) {
 			task.getProgress().update(units, speed);
 		} else if (units != -1) {

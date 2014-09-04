@@ -31,9 +31,11 @@ public class FFmpegReader extends Service {
 	 * @param useStdErr
 	 *            True to read from stderr, false to read from stdout
 	 * @return true if FFmpeg exited cleanly
+	 * @throws MissingFfmpegException
+	 * @throws MissingDecoderException
 	 */
-	public boolean read(ArrayList<String> args, FFmpegReaderListener listener, boolean useStdErr)  throws MissingFfmpegException,
-	MissingDecoderException, WorkInterruptedException{
+	public boolean read(ArrayList<String> args, FFmpegReaderListener listener, boolean useStdErr)
+			throws WorkInterruptedException, MissingDecoderException, MissingFfmpegException {
 		return read(args, listener, useStdErr, null);
 	}
 
@@ -50,9 +52,11 @@ public class FFmpegReader extends Service {
 	 * @param processDirectory
 	 *            The directory to execute the process in
 	 * @return true if FFmpeg exited cleanly
+	 * @throws MissingFfmpegException
+	 * @throws MissingDecoderException
 	 */
-	public boolean read(ArrayList<String> args, FFmpegReaderListener listener, boolean useStdErr, File processDirectory)  throws MissingFfmpegException,
-	MissingDecoderException, WorkInterruptedException {
+	public boolean read(ArrayList<String> args, FFmpegReaderListener listener, boolean useStdErr, File processDirectory)
+			throws WorkInterruptedException, MissingDecoderException, MissingFfmpegException {
 		this.listener = listener;
 		boolean success = false;
 		ProcessBuilder pb = new ProcessBuilder(args);

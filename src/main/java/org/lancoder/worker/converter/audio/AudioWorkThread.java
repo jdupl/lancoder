@@ -84,17 +84,19 @@ public class AudioWorkThread extends Converter {
 	public void run() {
 		ArrayList<String> args = getArgs(task);
 		listener.workStarted(task);
+		boolean success = false;
 		createDirs();
 		try {
-			if (ffmpeg.read(args, this, true) && moveFile()) {
+			success = ffmpeg.read(args, this, true) && moveFile();
+		} catch (WorkInterruptedException | MissingDecoderException | MissingFfmpegException e) {
+			e.printStackTrace();
+		} finally {
+			if (success) {
 				listener.workCompleted(task);
-				cleanTempPart();
 			} else {
 				listener.workFailed(task);
-				cleanTempPart();
 			}
-		} catch (MissingFfmpegException | MissingDecoderException | WorkInterruptedException e) {
-			e.printStackTrace();
+			cleanTempPart();
 		}
 	}
 
@@ -111,7 +113,7 @@ public class AudioWorkThread extends Converter {
 	}
 
 	@Override
-	public void onMessage(String line) {
+	public void onMessage(String line) throws MissingDecoderException {
 		Matcher m = null;
 		m = timePattern.matcher(line);
 		if (m.find()) {
