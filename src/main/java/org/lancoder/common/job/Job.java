@@ -71,19 +71,34 @@ public class Job implements Comparable<Job>, Serializable {
 		this.outputFileName = String.format("%s.mkv", FilenameUtils.getBaseName(sourceFile));
 		File relativeEncodingOutput = FileUtils.getFile(encodingOutputFolder, jobName);
 		this.outputFolder = relativeEncodingOutput.getPath();
+		this.jobId = generateId(sourceFile, jobName);
+	}
+
+	/**
+	 * Create a unique id for a job. Uses the source file, the name of the job and the current millisecond time to avoid
+	 * time, name and file collisions.
+	 * 
+	 * @param sourceFile
+	 *            The source file of the job
+	 * @param jobName
+	 *            The name of the job
+	 * @return A unique id
+	 */
+	private static String generateId(String sourceFile, String jobName) {
+		String result = "";
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
 			byte[] byteArray = md.digest((sourceFile + jobName + System.currentTimeMillis()).getBytes());
-			String result = "";
+
 			for (int i = 0; i < byteArray.length; i++) {
 				result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
 			}
-			this.jobId = result;
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 			// even if the algorithm is not available, don't crash
-			this.jobId = String.valueOf(System.currentTimeMillis());
+			result = String.valueOf(System.currentTimeMillis());
 		}
+		return result;
 	}
 
 	public String getSourceFile() {
