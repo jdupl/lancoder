@@ -91,4 +91,13 @@ public enum Codec implements Serializable {
 		return ffMpegName;
 	}
 
+	public static Codec findByLib(String libname) {
+		for (Codec codec : Codec.values()) {
+			if (codec.getEncoder().equals(libname)) {
+				return codec;
+			}
+		}
+		return UNKNOWN;
+	}
+
 }

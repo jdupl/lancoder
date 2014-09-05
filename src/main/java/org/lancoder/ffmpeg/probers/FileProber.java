@@ -1,4 +1,4 @@
-package org.lancoder.ffmpeg;
+package org.lancoder.ffmpeg.probers;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +10,7 @@ import org.lancoder.common.file_components.FileInfo;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class FFmpegProber {
+public class FileProber {
 
 	public static FileInfo getFileInfo(File absoluteFile, String relativePath) {
 		FileInfo fileInfo = null;
