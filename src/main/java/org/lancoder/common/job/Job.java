@@ -56,27 +56,24 @@ public class Job implements Comparable<Job>, Serializable {
 	private ArrayList<Task> tasks = new ArrayList<>();
 	private ArrayList<ClientTask> clientTasks = new ArrayList<>();
 
-	public Job(String jobName, String inputFile, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo) {
+	public Job(String jobName, String sourceFile, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo) {
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
 		this.frameRate = fileInfo.getMainVideoStream().getFrameRate();
 		this.fileinfo = fileInfo;
+		this.sourceFile = sourceFile;
 		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
 
 		// Estimate the frame count from the frame rate and length
 		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
-		// Get source's filename
-		sourceFile = inputFile;
 		// Set output's filename
-		this.outputFileName = String.format("%s.mkv", FilenameUtils.removeExtension(sourceFile));
-		// Get /sharedFolder/LANcoder/jobsOutput/jobName/ (without the shared folder)
+		this.outputFileName = String.format("%s.mkv", FilenameUtils.getBaseName(sourceFile));
 		File relativeEncodingOutput = FileUtils.getFile(encodingOutputFolder, jobName);
 		this.outputFolder = relativeEncodingOutput.getPath();
-
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
-			byte[] byteArray = md.digest((inputFile + jobName + System.currentTimeMillis()).getBytes());
+			byte[] byteArray = md.digest((sourceFile + jobName + System.currentTimeMillis()).getBytes());
 			String result = "";
 			for (int i = 0; i < byteArray.length; i++) {
 				result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
