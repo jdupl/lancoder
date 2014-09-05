@@ -645,4 +645,10 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public String getEncodingFolder() {
 		return this.config.getFinalEncodingFolder();
 	}
+
+	@Override
+	public void muxingFailed(Job job) {
+		// TODO Auto-generated method stub
+		
+	}
 }

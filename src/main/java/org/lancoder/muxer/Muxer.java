@@ -1,17 +1,20 @@
 package org.lancoder.muxer;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.exceptions.MissingDecoderException;
+import org.lancoder.common.exceptions.MissingFfmpegException;
+import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.utils.FileUtils;
+import org.lancoder.worker.converter.video.Transcoder;
 
 public class Muxer extends RunnableService {
 
@@ -56,26 +59,23 @@ public class Muxer extends RunnableService {
 				}
 			}
 		}
-		ProcessBuilder pb = new ProcessBuilder(args);
-		System.out.println("MUXER: " + args.toString());
 		listener.muxingStarting(job);
+		Transcoder transcoder = new Transcoder();
 		try {
-			Process m = pb.start();
-			m.waitFor();
-			success = m.exitValue() == 0 ? true : false;
-		} catch (IOException | InterruptedException e) {
+			success = transcoder.read(args);
+		} catch (WorkInterruptedException | MissingDecoderException | MissingFfmpegException e) {
 			serviceFailure(e);
 		} finally {
 			if (success) {
 				listener.muxingCompleted(job);
+			} else {
+				listener.muxingFailed(job);
 			}
 		}
 	}
 
 	@Override
 	public void serviceFailure(Exception e) {
-		if (job != null) {
-			listener.muxingFailed(job, e);
-		}
+		e.printStackTrace();
 	}
 }

@@ -8,6 +8,12 @@ import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
 
+/**
+ * Dumb implementation of a FFmpegReader to ignore ffmpeg messages.
+ * 
+ * @author justin
+ *
+ */
 public class Transcoder extends FFmpegReader implements FFmpegReaderListener {
 
 	public boolean read(ArrayList<String> args) throws WorkInterruptedException, MissingDecoderException,
@@ -17,7 +23,7 @@ public class Transcoder extends FFmpegReader implements FFmpegReaderListener {
 
 	@Override
 	public void onMessage(String line) throws MissingDecoderException {
-		// TODO would be nice to track progress
+
 	}
 
 }

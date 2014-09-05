@@ -9,6 +9,8 @@ public interface MuxerListener {
 	public void muxingCompleted(Job job);
 
 	public void muxingFailed(Job job, Exception e);
+	
+	public void muxingFailed(Job job);
 
 	public String getSharedFolder();
 
