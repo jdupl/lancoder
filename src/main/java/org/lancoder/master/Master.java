@@ -467,8 +467,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private boolean checkJobIntegrity(Job job) {
 		boolean integrity = true;
 		for (ClientVideoTask task : job.getClientVideoTasks()) {
-			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getStreamConfig()
-					.getOutStream().getRelativeFile());
+			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getTempFile());
 			if (!absoluteTaskFile.exists()) {
 				System.err.printf("Cannot start muxing ! Task %d of job %s is not found!\n", task.getTaskId(),
 						job.getJobName());

@@ -52,6 +52,7 @@ public class Job implements Comparable<Job>, Serializable {
 	private String partsFolderName;
 	private String sourceFile;
 
+	private FileInfo fileinfo;
 	private ArrayList<Task> tasks = new ArrayList<>();
 	private ArrayList<ClientTask> clientTasks = new ArrayList<>();
 
@@ -60,6 +61,7 @@ public class Job implements Comparable<Job>, Serializable {
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
 		this.frameRate = fileInfo.getMainVideoStream().getFrameRate();
+		this.fileinfo = fileInfo;
 		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
 
 		// Estimate the frame count from the frame rate and length
@@ -104,12 +106,12 @@ public class Job implements Comparable<Job>, Serializable {
 	 */
 	public ArrayList<ClientTask> getTasksForStream(Stream stream) {
 		ArrayList<ClientTask> tasks = new ArrayList<>();
-		// for (int i = 0; i < this.getTasks().size(); i++) {
-		// ClientTask task = this.getTasks().get(i);
-		// if (task.getStream().equals(stream)) {
-		// tasks.add(task);
-		// }
-		// }
+		for (int i = 0; i < this.getTasks().size(); i++) {
+			ClientTask task = this.getClientTasks().get(i);
+			if (task.getStreamConfig().getOrignalStream().equals(stream)) {
+				tasks.add(task);
+			}
+		}
 		return tasks;
 	}
 
@@ -301,7 +303,6 @@ public class Job implements Comparable<Job>, Serializable {
 	}
 
 	public ArrayList<Stream> getStreams() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.fileinfo.getStreams();
 	}
 }
