@@ -1,4 +1,4 @@
-package org.lancoder.common;
+package org.lancoder.ffmpeg;
 
 import java.io.File;
 import java.io.IOException;

@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.io.FilenameUtils;
-import org.lancoder.common.FFmpegProber;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.Codec;
@@ -26,6 +25,7 @@ import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.task.video.VideoStreamConfig;
 import org.lancoder.common.task.video.VideoTask;
 import org.lancoder.common.utils.FileUtils;
+import org.lancoder.ffmpeg.FFmpegProber;
 
 public class JobInitiator extends RunnableService {
 
