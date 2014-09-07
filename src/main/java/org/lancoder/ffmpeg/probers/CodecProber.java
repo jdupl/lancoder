@@ -22,7 +22,6 @@ public class CodecProber implements FFmpegReaderListener {
 	 * @return
 	 */
 	public ArrayList<Codec> getNodeCapabilities() {
-
 		FFmpegReader reader = new FFmpegReader();
 		ArrayList<String> args = new ArrayList<>();
 		args.add("ffmpeg");

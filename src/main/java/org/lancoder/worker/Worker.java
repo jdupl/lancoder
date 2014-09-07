@@ -21,6 +21,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
 import org.lancoder.common.Service;
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.network.Cause;
 import org.lancoder.common.network.Routes;
 import org.lancoder.common.network.messages.ClusterProtocol;
@@ -32,6 +33,7 @@ import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.TaskReport;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
+import org.lancoder.ffmpeg.FFmpegWrapper;
 import org.lancoder.worker.contacter.ConctactMasterListener;
 import org.lancoder.worker.contacter.ContactMasterObject;
 import org.lancoder.worker.converter.ConverterListener;
@@ -56,6 +58,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	private VideoWorkThread workThread;
 	private AudioConverterPool audioPool;
 
+	private ArrayList<Codec> codecs = new ArrayList<>();
+
 	public Worker() {
 		this(null);
 	}
@@ -72,6 +76,11 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		} else {
 			// this saves default configuration to disk
 			this.config = WorkerConfig.generate(configPath);
+		}
+		this.codecs = FFmpegWrapper.getAvailableCodecs();
+		System.out.printf("Detected %d available encoders:\n", codecs.size());
+		for (Codec codec : codecs) {
+			System.out.println(codec.getPrettyName());
 		}
 		WorkerObjectServer objectServer = new WorkerObjectServer(this, config.getListenPort());
 		services.add(objectServer);

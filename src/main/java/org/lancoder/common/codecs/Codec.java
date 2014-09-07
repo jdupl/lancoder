@@ -63,11 +63,8 @@ public enum Codec implements Serializable {
 	/**
 	 * H.265 (This encoding is not yet supported by most systems.)
 	 */
-	H265("HEVC/H.265", "h265", "libx265", "mpegts", false),
+	H265("HEVC/H.265", "h265", "libx265", "mpegts", false);
 	// MPEG4("MPEG-4", "mpeg4", "mp4"),
-
-	// Subtitles
-	SUBRIP("Subrip", "subrip", "subrip", "srt", true);
 
 	private String prettyName;
 	private String ffMpegName;
