@@ -42,6 +42,18 @@ public enum Codec implements Serializable {
 	 * DTS or DCA (DTS Coherent Acoustics)
 	 */
 	DTS("DTS", "dca", "dca", "dts", true),
+	/**
+	 * Speex
+	 */
+	SPEEX("Speex", "speex", "libspeex", "spx", false),
+	/**
+	 * Monkey's Audio
+	 */
+	APE("Monkey's Audio", "ape", "ape", "ape", true),
+	/**
+	 * WavPack
+	 */
+	WAVPACK("WavePack", "wavpack", "wavpack", "wv", true),
 
 	// Video codecs
 	/**
