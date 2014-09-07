@@ -30,7 +30,7 @@ public class ContactMasterObject extends RunnableService {
 			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
 
 			ConnectMessage m = new ConnectMessage(listener.getCurrentNodeUnid(), listener.getCurrentNodePort(),
-					listener.getCurrentNodeName(), listener.getCurrentNodeAddress());
+					listener.getCurrentNodeName(), listener.getCurrentNodeAddress(), listener.getAvailableCodecs());
 			out.writeObject(m);
 			out.flush();
 			Object res = in.readObject();

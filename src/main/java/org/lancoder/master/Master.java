@@ -615,7 +615,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	@Override
 	public String connectRequest(ConnectMessage cm) {
-		Node sender = new Node(cm.address, cm.localPort, cm.name);
+		Node sender = new Node(cm.address, cm.localPort, cm.name, cm.codecs);
 		sender.setUnid(cm.getUnid());
 		if (addNode(sender)) {
 			System.err.println("added node " + sender.getUnid());

@@ -52,13 +52,11 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	private String configPath;
 	private NodeState status;
 	private InetAddress address;
-
+	private ArrayList<Codec> codecs = new ArrayList<>();
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
 	private ArrayList<Service> services = new ArrayList<>();
 	private VideoWorkThread workThread;
 	private AudioConverterPool audioPool;
-
-	private ArrayList<Codec> codecs = new ArrayList<>();
 
 	public Worker() {
 		this(null);
@@ -425,5 +423,10 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	@Override
 	public WorkerConfig getConfig() {
 		return this.config;
+	}
+
+	@Override
+	public ArrayList<Codec> getAvailableCodecs() {
+		return this.codecs;
 	}
 }

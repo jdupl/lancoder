@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 
@@ -16,12 +17,18 @@ public class Node implements Serializable {
 	private String name;
 	private String unid;
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
+	private ArrayList<Codec> codecs = new ArrayList<>();
 
-	public Node(InetAddress nodeAddresse, int nodePort, String name) {
+	public Node(InetAddress nodeAddresse, int nodePort, String name, ArrayList<Codec> codecs) {
 		this.nodeAddress = nodeAddresse;
 		this.nodePort = nodePort;
 		this.name = name;
 		this.status = NodeState.NOT_CONNECTED;
+		this.codecs = codecs;
+	}
+
+	public ArrayList<Codec> getCodecs() {
+		return codecs;
 	}
 
 	public boolean hasTask(ClientTask task) {
@@ -36,7 +43,7 @@ public class Node implements Serializable {
 	@Override
 	public String toString() {
 		return "Node [nodeAddress=" + nodeAddress + ", nodePort=" + nodePort + ", status=" + status + ", name=" + name
-				+ ", unid=" + unid + ", currentTask=" + currentTasks.toArray() + "]";
+				+ ", unid=" + unid + ", currentTasks=" + currentTasks + ", codecs=" + codecs + "]";
 	}
 
 	public boolean equals(Object o) {
