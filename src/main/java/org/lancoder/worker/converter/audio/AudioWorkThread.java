@@ -96,7 +96,7 @@ public class AudioWorkThread extends Converter {
 			} else {
 				listener.workFailed(task);
 			}
-			cleanTempPart();
+//			cleanTempPart(); TODO
 		}
 	}
 

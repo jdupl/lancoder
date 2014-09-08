@@ -21,13 +21,11 @@ public abstract class Converter extends RunnableService implements FFmpegReaderL
 			taskFinalFolder.mkdirs();
 			FileUtils.givePerms(taskFinalFolder, false);
 		}
-
 		if (!taskTempOutputFolder.exists()) {
+			// remove any previous temp files for this part
 			taskTempOutputFolder.mkdirs();
 			FileUtils.givePerms(taskTempOutputFolder, false);
 		}
-		// remove any previous temp files for this part
-		cleanTempPart();
 	}
 
 	protected void cleanTempPart() {

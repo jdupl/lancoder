@@ -158,17 +158,19 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private synchronized ArrayList<Node> getFreeAudioNodes() {
 		ArrayList<Node> nodes = new ArrayList<>();
 		for (Node node : this.getNodes()) {
-			boolean nodeAvailable = true;
-			// check if any of the task is a video task
-			for (ClientTask task : node.getCurrentTasks()) {
-				if (task instanceof ClientVideoTask) {
-					nodeAvailable = false;
-					break;
+			if (node.getStatus() != NodeState.WORKING || node.getStatus() != NodeState.FREE) {
+				boolean nodeAvailable = true;
+				// check if any of the task is a video task
+				for (ClientTask task : node.getCurrentTasks()) {
+					if (task instanceof ClientVideoTask) {
+						nodeAvailable = false;
+						break;
+					}
 				}
-			}
-			// TODO check for each task the task's thread requirements
-			if (nodeAvailable && node.getCurrentTasks().size() < node.getThreadCount()) {
-				nodes.add(node);
+				// TODO check for each task the task's thread requirements
+				if (nodeAvailable && node.getCurrentTasks().size() < node.getThreadCount()) {
+					nodes.add(node);
+				}
 			}
 		}
 		return nodes;
@@ -176,11 +178,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	/**
 	 * Checks if any task and nodes are available and dispatch until possible. Will only dispatch tasks to nodes that
-	 * are capable of encoding with the desired library.
+	 * are capable of encoding with the desired library. Always put audio tasks in priority.
 	 */
-	public void updateNodesWork() {
-		System.out.println("MASTER: Checking dispatch");
-
+	public synchronized void updateNodesWork() {
 		for (Node freeNode : this.getFreeAudioNodes()) {
 			boolean nodeDispatched = false;
 			ArrayList<Job> jobList = new ArrayList<>(jobs.values());
@@ -218,12 +218,14 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	public void dispatch(ClientTask task, Node node) {
-		System.err.println("Trying to dispatch to " + node.getName() + " task " + task.getTaskId());
+		System.err.println("Trying to dispatch to " + node.getName() + " task " + task.getTaskId() + " from "
+				+ task.getJobId());
 		if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 			task.getProgress().start();
 		}
 		node.setStatus(NodeState.LOCKED);
 		task.getProgress().start();
+		node.addTask(task);
 		dispatcher.dispatch(new DispatchItem(task, node));
 	}
 
@@ -581,7 +583,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		Node n = item.getNode();
 		System.err.printf("Node %s refused task\n", n.getName());
 		t.getProgress().reset();
-		// n.setStatus(NodeState.FREE); TODO check this
+		if (n.hasTask(t)) {
+			n.getCurrentTasks().remove(t);
+		}
 		updateNodesWork();
 	}
 
@@ -589,9 +593,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public synchronized void taskAccepted(DispatchItem item) {
 		ClientTask t = item.getTask();
 		Node n = item.getNode();
-		System.err.printf("Node %s accepted task\n", n.getName());
-		n.addTask(t);
-		t.getProgress().reset();
+		System.err.printf("Node %s accepted task %d from %s\n", n.getName(), t.getTaskId(), t.getJobId());
 	}
 
 	@Override
