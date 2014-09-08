@@ -129,25 +129,18 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public synchronized Node identifySender(String nodeId) {
 		Node n = this.nodes.get(nodeId);
 		if (n == null) {
-			System.out.printf("WARNING could not FIND NODE %s\n" + "Size of nodesByUNID: %d\n"
+			System.err.printf("WARNING could not FIND NODE %s\n" + "Size of nodesByUNID: %d\n"
 					+ "Size of nodes arraylist:%d\n", nodeId, nodes.size(), nodes.size());
 		}
 		return n;
 	}
 
-	private ClientAudioTask getNextAudioTask() {
-		// We should process all audio in no particular order
-		for (Job j : this.getJobs()) {
-			for (ClientAudioTask task : j.getClientAudioTasks()) {
-				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
-					return task;
-				}
-			}
-		}
-		return null;
-	}
-
-	private synchronized ArrayList<Node> getFreeNodes() {
+	/**
+	 * Get a list of nodes currently completely free. Video tasks will use all threads.
+	 * 
+	 * @return A list of nodes that can accept a video task
+	 */
+	private synchronized ArrayList<Node> getFreeVideoNodes() {
 		ArrayList<Node> nodes = new ArrayList<>();
 		for (Node node : this.getNodes()) {
 			if (node.getStatus() == NodeState.FREE) {
@@ -157,19 +150,28 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		return nodes;
 	}
 
-	private synchronized Node getBestAudioNode() {
-		// Maximum concurrent audio jobs
-		int maxConcurentTasks = 3; // TODO should use node data
-		Node best = null;
-		int minTasks = Integer.MAX_VALUE;
-
-		for (Entry<String, Node> entry : nodes.entrySet()) {
-			Node n = entry.getValue();
-			if (n.getCurrentTasks().size() < maxConcurentTasks && n.getCurrentTasks().size() < minTasks) {
-				best = n;
+	/**
+	 * Get a list of nodes that can encode audio. Audio tasks only need one thread.
+	 * 
+	 * @return A list of nodes that can accept an audio task
+	 */
+	private synchronized ArrayList<Node> getFreeAudioNodes() {
+		ArrayList<Node> nodes = new ArrayList<>();
+		for (Node node : this.getNodes()) {
+			boolean nodeAvailable = true;
+			// check if any of the task is a video task
+			for (ClientTask task : node.getCurrentTasks()) {
+				if (task instanceof ClientVideoTask) {
+					nodeAvailable = false;
+					break;
+				}
+			}
+			// TODO check for each task the task's thread requirements
+			if (nodeAvailable && node.getCurrentTasks().size() < node.getThreadCount()) {
+				nodes.add(node);
 			}
 		}
-		return best;
+		return nodes;
 	}
 
 	/**
@@ -178,14 +180,25 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 */
 	public void updateNodesWork() {
 		System.out.println("MASTER: Checking dispatch");
-		Node node = null;
-		ClientAudioTask nextAudioTask = null;
 
-		while (((nextAudioTask = getNextAudioTask()) != null && (node = getBestAudioNode()) != null)) {
-			dispatch(nextAudioTask, node);
+		for (Node freeNode : this.getFreeAudioNodes()) {
+			boolean nodeDispatched = false;
+			ArrayList<Job> jobList = new ArrayList<>(jobs.values());
+			Collections.sort(jobList);
+			for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && !nodeDispatched;) {
+				Job job = itJob.next();
+				ArrayList<ClientAudioTask> tasks = job.getTodoAudioTask();
+				for (Iterator<ClientAudioTask> itTask = tasks.iterator(); itTask.hasNext() && !nodeDispatched;) {
+					ClientAudioTask clientAudioTask = itTask.next();
+					if (freeNode.canHandle(clientAudioTask)) {
+						nodeDispatched = true;
+						dispatch(clientAudioTask, freeNode);
+					}
+				}
+			}
 		}
 
-		for (Node freeNode : this.getFreeNodes()) {
+		for (Node freeNode : this.getFreeVideoNodes()) {
 			boolean nodeDispatched = false;
 			ArrayList<Job> jobList = new ArrayList<>(jobs.values());
 			Collections.sort(jobList);
@@ -598,7 +611,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	@Override
 	public String connectRequest(ConnectMessage cm) {
-		Node sender = new Node(cm.address, cm.localPort, cm.name, cm.codecs);
+		Node sender = new Node(cm.address, cm.localPort, cm.name, cm.codecs, cm.threadCount);
 		sender.setUnid(cm.getUnid());
 		if (addNode(sender)) {
 			System.err.println("added node " + sender.getUnid());

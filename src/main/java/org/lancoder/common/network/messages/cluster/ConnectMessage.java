@@ -14,6 +14,7 @@ public class ConnectMessage extends AuthMessage {
 	public String name;
 	public InetAddress address;
 	public ArrayList<Codec> codecs;
+	public int threadCount;
 
 	/**
 	 * Message object sent from workers to master to connect. The same object is replied to the worker so it can grab
@@ -29,14 +30,18 @@ public class ConnectMessage extends AuthMessage {
 	 *            the node address
 	 * @param codecs
 	 *            List of supported encoders by the node
+	 * @param threadCount
+	 *            Maximum threads that can be used
 	 */
-	public ConnectMessage(String unid, int localPort, String name, InetAddress address, ArrayList<Codec> codecs) {
+	public ConnectMessage(String unid, int localPort, String name, InetAddress address, ArrayList<Codec> codecs,
+			int threadCount) {
 		super(ClusterProtocol.CONNECT_ME, unid);
 		this.unid = unid;
 		this.localPort = localPort;
 		this.name = name;
 		this.address = address;
 		this.codecs = codecs;
+		this.threadCount = threadCount;
 	}
 
 }

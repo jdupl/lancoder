@@ -16,15 +16,21 @@ public class Node implements Serializable {
 	private NodeState status;
 	private String name;
 	private String unid;
+	private int threadCount;
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
 	private ArrayList<Codec> codecs = new ArrayList<>();
 
-	public Node(InetAddress nodeAddresse, int nodePort, String name, ArrayList<Codec> codecs) {
+	public Node(InetAddress nodeAddresse, int nodePort, String name, ArrayList<Codec> codecs, int threadCount) {
 		this.nodeAddress = nodeAddresse;
 		this.nodePort = nodePort;
 		this.name = name;
 		this.status = NodeState.NOT_CONNECTED;
 		this.codecs = codecs;
+		this.threadCount = threadCount;
+	}
+
+	public int getThreadCount() {
+		return threadCount;
 	}
 
 	public ArrayList<Codec> getCodecs() {

@@ -52,6 +52,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	private String configPath;
 	private NodeState status;
 	private InetAddress address;
+	private int threadCount;
 	private ArrayList<Codec> codecs = new ArrayList<>();
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
 	private ArrayList<Service> services = new ArrayList<>();
@@ -76,13 +77,17 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			this.config = WorkerConfig.generate(configPath);
 		}
 		this.codecs = FFmpegWrapper.getAvailableCodecs();
+
 		System.out.printf("Detected %d available encoders:\n", codecs.size());
 		for (Codec codec : codecs) {
 			System.out.println(codec.getPrettyName());
 		}
+		// Get number of available threads
+		this.threadCount = Runtime.getRuntime().availableProcessors();
+		System.out.printf("Detected %d threads available.\n", this.threadCount);
 		WorkerObjectServer objectServer = new WorkerObjectServer(this, config.getListenPort());
 		services.add(objectServer);
-		audioPool = new AudioConverterPool(Runtime.getRuntime().availableProcessors(), this);
+		audioPool = new AudioConverterPool(this.threadCount, this);
 		services.add(audioPool);
 		// Get local ip
 		// TODO allow options to override IP detection and enable ipv6
@@ -298,6 +303,10 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 
 	public NodeState getStatus() {
 		return this.status;
+	}
+
+	public int getThreadCount() {
+		return threadCount;
 	}
 
 	public String getWorkerName() {

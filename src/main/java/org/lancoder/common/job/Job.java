@@ -157,6 +157,22 @@ public class Job implements Comparable<Job>, Serializable {
 		}
 		return tasks;
 	}
+	
+	public ArrayList<ClientAudioTask> getTodoAudioTask() {
+		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
+		if (getTaskRemainingCount() != 0) {
+			if (this.getJobStatus() == JobState.JOB_TODO) {
+				// TODO move this to job manager
+				this.setJobStatus(JobState.JOB_COMPUTING);
+			}
+			for (ClientAudioTask task : this.getClientAudioTasks()) {
+				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
+					tasks.add(task);
+				}
+			}
+		}
+		return tasks;
+	}
 
 	/**
 	 * Counts if necessary the tasks currently not processed. A task being processed by a node counts as processed.
