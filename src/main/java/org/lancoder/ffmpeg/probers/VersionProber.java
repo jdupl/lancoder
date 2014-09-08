@@ -5,9 +5,7 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
-import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
 
@@ -25,21 +23,14 @@ public class VersionProber implements FFmpegReaderListener {
 		args.add("-version");
 		try {
 			ffmpeg.read(args, this, false);
-		} catch (WorkInterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (MissingDecoderException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (MissingFfmpegException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return versions;
 	}
 
 	@Override
-	public void onMessage(String line) throws MissingDecoderException {
+	public void onMessage(String line) {
 		Matcher m = ffmpegVersionPattern.matcher(line);
 		if (m.find()) {
 			versions.put("ffmpeg", m.group(1));

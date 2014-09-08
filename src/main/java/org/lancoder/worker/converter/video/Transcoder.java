@@ -22,7 +22,7 @@ public class Transcoder extends FFmpegReader implements FFmpegReaderListener {
 	}
 
 	@Override
-	public void onMessage(String line) throws MissingDecoderException {
+	public void onMessage(String line) {
 
 	}
 

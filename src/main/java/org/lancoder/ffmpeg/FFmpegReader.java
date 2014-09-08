@@ -7,9 +7,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import org.lancoder.common.Service;
-import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
-import org.lancoder.common.exceptions.WorkInterruptedException;
 
 /**
  * Class to create a process, read its output and provide information about it's closing state.
@@ -32,10 +30,9 @@ public class FFmpegReader extends Service {
 	 *            True to read from stderr, false to read from stdout
 	 * @return true if FFmpeg exited cleanly
 	 * @throws MissingFfmpegException
-	 * @throws MissingDecoderException
 	 */
 	public boolean read(ArrayList<String> args, FFmpegReaderListener listener, boolean useStdErr)
-			throws WorkInterruptedException, MissingDecoderException, MissingFfmpegException {
+			throws MissingFfmpegException {
 		return read(args, listener, useStdErr, null);
 	}
 
@@ -53,10 +50,9 @@ public class FFmpegReader extends Service {
 	 *            The directory to execute the process in
 	 * @return true if FFmpeg exited cleanly
 	 * @throws MissingFfmpegException
-	 * @throws MissingDecoderException
 	 */
 	public boolean read(ArrayList<String> args, FFmpegReaderListener listener, boolean useStdErr, File processDirectory)
-			throws WorkInterruptedException, MissingDecoderException, MissingFfmpegException {
+			throws MissingFfmpegException {
 		this.listener = listener;
 		boolean success = false;
 		ProcessBuilder pb = new ProcessBuilder(args);

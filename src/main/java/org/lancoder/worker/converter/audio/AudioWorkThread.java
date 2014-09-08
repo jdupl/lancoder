@@ -9,9 +9,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
-import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.task.audio.ClientAudioTask;
@@ -90,7 +88,7 @@ public class AudioWorkThread extends Converter {
 		createDirs();
 		try {
 			success = ffmpeg.read(args, this, true) && moveFile();
-		} catch (WorkInterruptedException | MissingDecoderException | MissingFfmpegException e) {
+		} catch (MissingFfmpegException e) {
 			e.printStackTrace();
 		} finally {
 			if (success) {
@@ -115,7 +113,7 @@ public class AudioWorkThread extends Converter {
 	}
 
 	@Override
-	public void onMessage(String line) throws MissingDecoderException {
+	public void onMessage(String line) {
 		Matcher m = null;
 		m = timePattern.matcher(line);
 		if (m.find()) {

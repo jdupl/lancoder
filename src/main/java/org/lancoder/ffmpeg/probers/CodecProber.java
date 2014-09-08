@@ -5,9 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.lancoder.common.codecs.Codec;
-import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
-import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
 
@@ -28,14 +26,14 @@ public class CodecProber implements FFmpegReaderListener {
 		args.add("-encoders");
 		try {
 			reader.read(args, this, false);
-		} catch (WorkInterruptedException | MissingDecoderException | MissingFfmpegException e) {
+		} catch (MissingFfmpegException e) {
 			e.printStackTrace();
 		}
 		return codecs;
 	}
 
 	@Override
-	public void onMessage(String line) throws MissingDecoderException {
+	public void onMessage(String line) {
 		Matcher m = codecPattern.matcher(line);
 		if (m.find()) {
 			Codec c = Codec.findByLib(m.group(1));
