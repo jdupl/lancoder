@@ -25,7 +25,7 @@ import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.task.video.VideoStreamConfig;
 import org.lancoder.common.task.video.VideoTask;
 import org.lancoder.common.utils.FileUtils;
-import org.lancoder.ffmpeg.probers.FileProber;
+import org.lancoder.ffmpeg.FFmpegWrapper;
 
 public class JobInitiator extends RunnableService {
 
@@ -45,7 +45,7 @@ public class JobInitiator extends RunnableService {
 	private void createJob(ApiJobRequest req, File sourceFile, String jobName) {
 		// Get meta-data from source file
 		File absoluteFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), sourceFile.getPath());
-		FileInfo fileInfo = FileProber.getFileInfo(absoluteFile, sourceFile.getPath());
+		FileInfo fileInfo = FFmpegWrapper.getFileInfo(absoluteFile, sourceFile.getPath());
 
 		FFmpegPreset preset = req.getPreset();
 		RateControlType videoRateControlType = req.getRateControlType();

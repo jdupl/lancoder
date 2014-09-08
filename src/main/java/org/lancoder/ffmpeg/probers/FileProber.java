@@ -12,7 +12,7 @@ import com.google.gson.JsonParser;
 
 public class FileProber {
 
-	public static FileInfo getFileInfo(File absoluteFile, String relativePath) {
+	public FileInfo getFileInfo(File absoluteFile, String relativePath) {
 		FileInfo fileInfo = null;
 		Process process = null;
 		try {
