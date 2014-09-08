@@ -40,6 +40,18 @@ public class Node implements Serializable {
 		return false;
 	}
 
+	/**
+	 * Methd to check if the current supports the codec of the output stream of a task.
+	 * 
+	 * @param task
+	 *            The task to check
+	 * @return True if node can handle the task
+	 */
+	public boolean canHandle(ClientTask task) {
+		Codec taskCodec = task.getStreamConfig().getOutStream().getCodec();
+		return this.codecs.contains(taskCodec);
+	}
+
 	@Override
 	public String toString() {
 		return "Node [nodeAddress=" + nodeAddress + ", nodePort=" + nodePort + ", status=" + status + ", name=" + name

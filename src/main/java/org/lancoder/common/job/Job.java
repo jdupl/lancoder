@@ -133,19 +133,29 @@ public class Job implements Comparable<Job>, Serializable {
 	 * @return The task or null if no task is available
 	 */
 	public synchronized ClientVideoTask getNextVideoTask() {
-		if (getTaskRemainingCount() == 0) {
-			return null;
-		}
-		if (this.getJobStatus() == JobState.JOB_TODO) {
-			// TODO move this to job manager
-			this.setJobStatus(JobState.JOB_COMPUTING);
-		}
-		for (ClientVideoTask task : this.getClientVideoTasks()) {
-			if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
-				return task;
+		ArrayList<ClientVideoTask> tasks = getTodoVideoTask();
+		return tasks.isEmpty() ? null : tasks.get(0);
+	}
+
+	/**
+	 * Returns all tasks to do for this job. Changes Job status if job is not started yet.
+	 * 
+	 * @return The list of task
+	 */
+	public synchronized ArrayList<ClientVideoTask> getTodoVideoTask() {
+		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
+		if (getTaskRemainingCount() != 0) {
+			if (this.getJobStatus() == JobState.JOB_TODO) {
+				// TODO move this to job manager
+				this.setJobStatus(JobState.JOB_COMPUTING);
+			}
+			for (ClientVideoTask task : this.getClientVideoTasks()) {
+				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
+					tasks.add(task);
+				}
 			}
 		}
-		return null;
+		return tasks;
 	}
 
 	/**

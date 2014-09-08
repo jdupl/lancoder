@@ -7,7 +7,9 @@ import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.apache.http.client.config.RequestConfig;
@@ -133,25 +135,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		return n;
 	}
 
-	/**
-	 * Get the task of a job with the least possible remaining tasks.
-	 * 
-	 * @return The task to dispatch next or null is none available
-	 */
-	private ClientVideoTask getNextVideoTask() {
-		Job min = null;
-		int minTaskCount = Integer.MAX_VALUE;
-
-		for (Job j : this.getJobs()) {
-			int taskCount = j != null ? j.getTaskRemainingCount() : 0;
-			if (taskCount != 0 && (min == null || minTaskCount > taskCount)) {
-				min = j;
-				minTaskCount = taskCount;
-			}
-		}
-		return min != null ? min.getNextVideoTask() : null;
-	}
-
 	private ClientAudioTask getNextAudioTask() {
 		// We should process all audio in no particular order
 		for (Job j : this.getJobs()) {
@@ -164,24 +147,14 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		return null;
 	}
 
-	/**
-	 * This should look for available online and free nodes.
-	 * 
-	 * @return pointer to the node object
-	 */
-	private synchronized Node getBestFreeNode() {
-		Node best = null;
-		int minTasks = Integer.MAX_VALUE;
-
-		for (Entry<String, Node> entry : nodes.entrySet()) {
-			Node n = entry.getValue();
-			if (n.getStatus() == NodeState.FREE) {
-				if (n.getCurrentTasks().size() < minTasks) {
-					best = n;
-				}
+	private synchronized ArrayList<Node> getFreeNodes() {
+		ArrayList<Node> nodes = new ArrayList<>();
+		for (Node node : this.getNodes()) {
+			if (node.getStatus() == NodeState.FREE) {
+				nodes.add(node);
 			}
 		}
-		return best;
+		return nodes;
 	}
 
 	private synchronized Node getBestAudioNode() {
@@ -200,29 +173,39 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	/**
-	 * Checks if any task and nodes are available and dispatch until possible.
-	 * 
-	 * @return true if any work was dispatched
+	 * Checks if any task and nodes are available and dispatch until possible. Will only dispatch tasks to nodes that
+	 * are capable of encoding with the desired library.
 	 */
 	public void updateNodesWork() {
 		System.out.println("MASTER: Checking dispatch");
 		Node node = null;
-		ClientVideoTask nextVideoTask = null;
 		ClientAudioTask nextAudioTask = null;
 
 		while (((nextAudioTask = getNextAudioTask()) != null && (node = getBestAudioNode()) != null)) {
 			dispatch(nextAudioTask, node);
 		}
-		// Avoid looping through jobs as it might be cpu intensive in large projects
-		// Order of the while condition is important as looping through workers is faster
-		while ((node = getBestFreeNode()) != null && (nextVideoTask = getNextVideoTask()) != null) {
-			System.err.println("Trying to dispatch to " + node.getName() + " task " + nextVideoTask.getTaskId());
-			dispatch(nextVideoTask, node);
+
+		for (Node freeNode : this.getFreeNodes()) {
+			boolean nodeDispatched = false;
+			ArrayList<Job> jobList = new ArrayList<>(jobs.values());
+			Collections.sort(jobList);
+			for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && !nodeDispatched;) {
+				Job job = itJob.next();
+				ArrayList<ClientVideoTask> tasks = job.getTodoVideoTask();
+				for (Iterator<ClientVideoTask> itTask = tasks.iterator(); itTask.hasNext() && !nodeDispatched;) {
+					ClientVideoTask clientVideoTask = itTask.next();
+					if (freeNode.canHandle(clientVideoTask)) {
+						nodeDispatched = true;
+						dispatch(clientVideoTask, freeNode);
+					}
+				}
+			}
 		}
 		config.dump(configPath);
 	}
 
 	public void dispatch(ClientTask task, Node node) {
+		System.err.println("Trying to dispatch to " + node.getName() + " task " + task.getTaskId());
 		if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 			task.getProgress().start();
 		}
@@ -649,6 +632,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	@Override
 	public void muxingFailed(Job job) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }
