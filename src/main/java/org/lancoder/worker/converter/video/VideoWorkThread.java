@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.common.exceptions.WorkInterruptedException;
@@ -31,9 +32,12 @@ public class VideoWorkThread extends Converter {
 		this.task = task;
 		this.listener = listener;
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
-		taskTempOutputFile = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getTempFile());
-		taskTempOutputFolder = new File(taskTempOutputFile.getParent());
-		taskFinalFolder = FileUtils.getFile(absoluteSharedDir, new File(task.getTempFile()).getParentFile().getPath());
+		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getJobId(),
+				String.valueOf(task.getTaskId()));
+		String filename = FilenameUtils.getName(task.getTempFile());
+		taskTempOutputFile = new File(taskTempOutputFolder, filename);
+		taskFinalFile = FileUtils.getFile(absoluteSharedDir, task.getTempFile());
+		taskFinalFolder = new File(taskFinalFile.getParent());
 	}
 
 	private static boolean isWindows() {
@@ -113,19 +117,18 @@ public class VideoWorkThread extends Converter {
 	}
 
 	private boolean transcodeToMpegTs() {
-		File destination = new File(absoluteSharedDir, task.getTempFile());
-		if (destination.exists()) {
-			System.err.printf("Cannot transcode to mkv as file %s already exists\n", destination.getPath());
+		if (taskFinalFile.exists()) {
+			System.err.printf("Cannot transcode to mkv as file %s already exists\n", taskFinalFile.getPath());
 			return false;
 		}
 		String[] baseArgs = new String[] { "ffmpeg", "-i", taskTempOutputFile.getAbsolutePath(), "-f", "mpegts", "-c",
-				"copy", "-bsf:v", "h264_mp4toannexb", destination.getAbsolutePath() };
+				"copy", "-bsf:v", "h264_mp4toannexb", taskFinalFile.getAbsolutePath() };
 		ArrayList<String> args = new ArrayList<>();
 		Collections.addAll(args, baseArgs);
 		try {
 			Transcoder transcoder = new Transcoder();
 			transcoder.read(args);
-			FileUtils.givePerms(destination, false);
+			FileUtils.givePerms(taskFinalFile, false);
 		} catch (WorkInterruptedException e) {
 			e.printStackTrace();
 		} catch (MissingDecoderException e) {

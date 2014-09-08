@@ -13,6 +13,7 @@ public abstract class Converter extends RunnableService implements FFmpegReaderL
 	protected File taskTempOutputFolder;
 	protected File taskFinalFolder;
 	protected File absoluteSharedDir;
+	protected File taskFinalFile;
 
 	protected ConverterListener listener;
 
