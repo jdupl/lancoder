@@ -1,6 +1,5 @@
 package org.lancoder.worker.converter.audio;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,7 +7,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
@@ -26,15 +24,9 @@ public class AudioWorkThread extends Converter {
 	private FFmpegReader ffmpeg = new FFmpegReader();
 
 	public AudioWorkThread(ClientAudioTask task, ConverterListener listener) {
+		super(task);
 		this.task = task;
 		this.listener = listener;
-		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
-		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getJobId(),
-				String.valueOf(task.getTaskId()));
-		String filename = FilenameUtils.getName(task.getTempFile());
-		taskTempOutputFile = new File(taskTempOutputFolder, filename);
-		taskFinalFile = FileUtils.getFile(absoluteSharedDir, task.getTempFile());
-		taskFinalFolder = new File(taskFinalFile.getParent());
 	}
 
 	private ArrayList<String> getArgs(ClientAudioTask task) {
@@ -96,7 +88,7 @@ public class AudioWorkThread extends Converter {
 			} else {
 				listener.workFailed(task);
 			}
-			// cleanTempPart(); TODO
+			destroyTempFolder();
 		}
 	}
 

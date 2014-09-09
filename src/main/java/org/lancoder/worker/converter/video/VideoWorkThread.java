@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.common.exceptions.WorkInterruptedException;
@@ -29,15 +28,9 @@ public class VideoWorkThread extends Converter {
 	private static Pattern missingDecoder = Pattern.compile("Error while opening encoder for output stream");
 
 	public VideoWorkThread(ClientVideoTask task, ConverterListener listener) {
+		super(task);
 		this.task = task;
 		this.listener = listener;
-		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
-		taskTempOutputFolder = FileUtils.getFile(listener.getConfig().getTempEncodingFolder(), task.getJobId(),
-				String.valueOf(task.getTaskId()));
-		String filename = FilenameUtils.getName(task.getTempFile());
-		taskTempOutputFile = new File(taskTempOutputFolder, filename);
-		taskFinalFile = FileUtils.getFile(absoluteSharedDir, task.getTempFile());
-		taskFinalFolder = new File(taskFinalFile.getParent());
 	}
 
 	private static boolean isWindows() {
@@ -114,6 +107,7 @@ public class VideoWorkThread extends Converter {
 				listener.workFailed(task);
 			}
 		}
+		this.destroyTempFolder();
 	}
 
 	private boolean transcodeToMpegTs() {
