@@ -77,14 +77,12 @@ public class VideoWorkThread extends Converter {
 		boolean success = false;
 		try {
 			listener.workStarted(task);
-			System.out.println("WORKER WORK THREAD: Executing task " + task.getTaskId());
+			createDirs();
 			// use start and duration for ffmpeg legacy support
 			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
 			String startTimeStr = TimeUtils.getStringFromMs(task.getEncodingStartTime());
 			String durationStr = TimeUtils.getStringFromMs(durationMs);
-			createDirs();
 
-			task.getProgress().start();
 			int currentStep = 1;
 			while (currentStep <= task.getStepCount()) {
 				System.err.printf("Encoding pass %d of %d\n", task.getProgress().getCurrentStepIndex(),
@@ -93,9 +91,7 @@ public class VideoWorkThread extends Converter {
 				task.getProgress().completeStep();
 				currentStep++;
 			}
-			System.err.println("transcoding");
 			success = transcodeToMpegTs();
-			System.err.println("transcoding finished");
 		} catch (MissingFfmpegException | MissingDecoderException e) {
 			listener.nodeCrash(new Cause(e, "unknown", true));
 		} catch (WorkInterruptedException e) {
