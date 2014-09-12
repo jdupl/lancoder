@@ -25,6 +25,7 @@ import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.network.Cause;
 import org.lancoder.common.network.Routes;
 import org.lancoder.common.network.messages.ClusterProtocol;
+import org.lancoder.common.network.messages.cluster.ConnectMessage;
 import org.lancoder.common.network.messages.cluster.CrashReport;
 import org.lancoder.common.network.messages.cluster.Message;
 import org.lancoder.common.network.messages.cluster.StatusReport;
@@ -235,7 +236,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			CloseableHttpClient client = HttpClients.createDefault();
 			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
 
-			URI url = new URI("http", null, this.getCurrentNodeAddress().getHostAddress(), this.getCurrentNodePort(),
+			URI url = new URI("http", null, this.address.getHostAddress(), this.getListenPort(),
 					Routes.DISCONNECT_NODE, null, null);
 			HttpPost post = new HttpPost(url);
 			post.setConfig(defaultRequestConfig);
@@ -253,8 +254,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			CloseableHttpClient client = HttpClients.createDefault();
 			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
 
-			URI url = new URI("http", null, this.getCurrentNodeAddress().getHostAddress(), this.getCurrentNodePort(),
-					Routes.NODE_CRASH, null, null);
+			URI url = new URI("http", null, address.getHostAddress(), this.getListenPort(), Routes.NODE_CRASH, null,
+					null);
 			HttpPost post = new HttpPost(url);
 			post.setConfig(defaultRequestConfig);
 
@@ -374,26 +375,6 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public String getCurrentNodeUnid() {
-		return this.config.getUniqueID();
-	}
-
-	@Override
-	public String getCurrentNodeName() {
-		return this.getWorkerName();
-	}
-
-	@Override
-	public int getCurrentNodePort() {
-		return this.getListenPort();
-	}
-
-	@Override
-	public InetAddress getCurrentNodeAddress() {
-		return this.address;
-	}
-
-	@Override
 	public synchronized void workStarted(ClientTask task) {
 		task.getProgress().start();
 		this.currentTasks.add(task);
@@ -435,7 +416,12 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public ArrayList<Codec> getAvailableCodecs() {
-		return this.codecs;
+	public ConnectMessage getConnectMessage() {
+		return new ConnectMessage(this.getCurrentNodeUnid(), getListenPort(), this.getWorkerName(), address, codecs,
+				threadCount);
+	}
+
+	private String getCurrentNodeUnid() {
+		return this.config.getUniqueID();
 	}
 }

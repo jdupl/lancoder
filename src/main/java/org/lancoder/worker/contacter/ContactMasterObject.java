@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.lancoder.common.RunnableService;
-import org.lancoder.common.network.messages.cluster.ConnectMessage;
 
 public class ContactMasterObject extends RunnableService {
 
@@ -23,16 +23,13 @@ public class ContactMasterObject extends RunnableService {
 
 	private void contactMaster() {
 		System.err.println("Trying to contact master...");
-		try {
-			Socket s = new Socket(masterAddress, masterPort);
+		InetSocketAddress addr = new InetSocketAddress(masterAddress, masterPort);
+		try (Socket s = new Socket()) {
 			s.setSoTimeout(2000);
+			s.connect(addr);
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-
-			ConnectMessage m = new ConnectMessage(listener.getCurrentNodeUnid(), listener.getCurrentNodePort(),
-					listener.getCurrentNodeName(), listener.getCurrentNodeAddress(), listener.getAvailableCodecs(),
-					listener.getThreadCount());
-			out.writeObject(m);
+			out.writeObject(listener.getConnectMessage());
 			out.flush();
 			Object res = in.readObject();
 			if (res instanceof String) {
