@@ -8,6 +8,7 @@ import java.net.Socket;
 import org.lancoder.common.network.messages.ClusterProtocol;
 import org.lancoder.common.network.messages.cluster.ConnectMessage;
 import org.lancoder.common.network.messages.cluster.Message;
+import org.lancoder.common.network.messages.cluster.PingMessage;
 import org.lancoder.common.network.messages.cluster.StatusReport;
 
 public class MasterHandler implements Runnable {
@@ -58,6 +59,11 @@ public class MasterHandler implements Runnable {
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
 						}
+						out.flush();
+						s.close();
+						break;
+					case PING:
+						out.writeObject(PingMessage.getPong());
 						out.flush();
 						s.close();
 						break;

@@ -8,6 +8,10 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.lancoder.common.RunnableService;
+import org.lancoder.common.network.messages.ClusterProtocol;
+import org.lancoder.common.network.messages.cluster.Message;
+import org.lancoder.common.network.messages.cluster.PingMessage;
+import org.lancoder.common.status.NodeState;
 
 public class ContactMasterObject extends RunnableService {
 
@@ -21,15 +25,25 @@ public class ContactMasterObject extends RunnableService {
 		this.masterPort = masterPort;
 	}
 
+	/**
+	 * Get current message to master.
+	 * 
+	 * @return ConnectMessage if master is not connected. PingMessage otherwise.
+	 */
+	private Message getMessage() {
+		return listener.getStatus() == NodeState.NOT_CONNECTED ? listener.getConnectMessage() : PingMessage.getPing();
+	}
+
 	private void contactMaster() {
-		System.err.println("Trying to contact master...");
 		InetSocketAddress addr = new InetSocketAddress(masterAddress, masterPort);
 		try (Socket s = new Socket()) {
 			s.setSoTimeout(2000);
 			s.connect(addr);
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-			out.writeObject(listener.getConnectMessage());
+			Message m = getMessage();
+			System.err.println(m.getCode()); // DEBUG
+			out.writeObject(m);
 			out.flush();
 			Object res = in.readObject();
 			if (res instanceof String) {
@@ -40,9 +54,14 @@ public class ContactMasterObject extends RunnableService {
 				} else {
 					System.err.println("Received null string or invalid string from master ?");
 				}
+			} else if (res instanceof PingMessage && ((PingMessage) res).getCode() == ClusterProtocol.PONG) {
+				// TODO master sent good reponse
+			} else {
+				System.err.println("bad response from master");
 			}
 			s.close();
 		} catch (IOException e) {
+			e.printStackTrace();
 			System.err.println("Failed to contact master.");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();

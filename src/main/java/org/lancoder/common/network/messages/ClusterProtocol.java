@@ -48,5 +48,13 @@ public enum ClusterProtocol {
 	/**
 	 * Master refused to speak to node (key verification)
 	 */
-	BAD_NODE
+	BAD_NODE,
+	/**
+	 * Represents a simple ping.
+	 */
+	PING,
+	/**
+	 * Response of the ping.
+	 */
+	PONG
 }

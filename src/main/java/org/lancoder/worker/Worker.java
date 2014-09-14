@@ -184,15 +184,14 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	public void updateStatus(NodeState statusCode) {
-		if (this.status == NodeState.NOT_CONNECTED && statusCode != NodeState.NOT_CONNECTED) {
-			this.stopContactMaster();
-		}
+//		if (this.status == NodeState.NOT_CONNECTED && statusCode != NodeState.NOT_CONNECTED) {
+//			this.stopContactMaster();
+//		}
 		print("changing worker status to " + statusCode);
 		this.status = statusCode;
 		switch (statusCode) {
 		case FREE:
 			notifyMasterStatusChange();
-			// this.currentTask = null;
 			break;
 		case WORKING:
 		case PAUSED:
@@ -200,7 +199,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			break;
 		case NOT_CONNECTED:
 			// start thread to try to contact master
-			startContactMaster();
+//			startContactMaster();
+			// TODO
 			break;
 		case CRASHED:
 			notifyMasterStatusChange();
@@ -219,6 +219,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		this.services.add(contact);
 	}
 
+	@Deprecated
 	public void stopContactMaster() {
 		System.out.println("Trying to stop contact service");
 		for (Service s : this.services) {
@@ -322,6 +323,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			}
 		}
 		updateStatus(NodeState.NOT_CONNECTED);
+		startContactMaster();
 		System.err.println("Started all services");
 	}
 
@@ -423,5 +425,14 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 
 	private String getCurrentNodeUnid() {
 		return this.config.getUniqueID();
+	}
+
+	@Override
+	public void masterTimeout() {
+		for (ClientTask task : this.currentTasks) {
+			stopWork(task);
+		}
+		this.updateStatus(NodeState.NOT_CONNECTED);
+
 	}
 }
