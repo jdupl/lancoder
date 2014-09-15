@@ -10,11 +10,12 @@ import org.lancoder.worker.WorkerConfig;
 public abstract class ConverterPool extends Service implements ConverterListener {
 
 	protected Hashtable<ClientTask, Converter> converters;
-	protected int threads;
+	protected int threadCount;
 	protected ConverterListener parentListener;
+	protected ThreadGroup threadGroup = new ThreadGroup("converter_threads");
 
 	public ConverterPool(int threads, ConverterListener listener) {
-		this.threads = threads;
+		this.threadCount = threads;
 		this.parentListener = listener;
 		converters = new Hashtable<>(threads);
 	}
@@ -25,6 +26,16 @@ public abstract class ConverterPool extends Service implements ConverterListener
 
 	public synchronized boolean hasFreeConverters() {
 		return hasFree();
+	}
+
+	protected synchronized boolean spawn(Converter converter) {
+		if (!hasFree()) {
+			return false;
+		}
+		converters.put(converter.getClientTask(), converter);
+		Thread t = new Thread(threadGroup, converter);
+		t.start();
+		return true;
 	}
 
 	public void workCompleted(ClientTask t) {
@@ -46,7 +57,7 @@ public abstract class ConverterPool extends Service implements ConverterListener
 	}
 
 	public synchronized int getThreads() {
-		return threads;
+		return threadCount;
 	}
 
 	@Override
@@ -58,5 +69,6 @@ public abstract class ConverterPool extends Service implements ConverterListener
 		for (Converter converter : converters.values()) {
 			converter.stop();
 		}
+		threadGroup.interrupt();
 	}
 }

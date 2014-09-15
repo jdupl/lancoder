@@ -29,13 +29,17 @@ public abstract class Converter extends RunnableService implements FFmpegReaderL
 
 	protected ConverterListener listener;
 
+	protected ClientTask clientTask;
+
 	/**
 	 * Constructor of base converter. Initialize file names and directories from task configuration.
 	 * 
 	 * @param task
 	 *            The ClientTask containing global task config.
 	 */
-	public Converter(ClientTask task) {
+	public Converter(ClientTask task, ConverterListener listener) {
+		this.clientTask = task;
+		this.listener = listener;
 		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
 		jobTempOutputFolder = new File(listener.getConfig().getTempEncodingFolder(), task.getJobId());
 		taskTempOutputFolder = FileUtils.getFile(jobTempOutputFolder, String.valueOf(task.getTaskId()));
@@ -94,4 +98,9 @@ public abstract class Converter extends RunnableService implements FFmpegReaderL
 					jobTempOutputFolder);
 		}
 	}
+
+	public ClientTask getClientTask() {
+		return clientTask;
+	}
+
 }

@@ -19,14 +19,12 @@ import org.lancoder.worker.converter.ConverterListener;
 public class AudioWorkThread extends Converter {
 
 	private ClientAudioTask task;
-	private ConverterListener listener;
 	private static Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
 	private FFmpegReader ffmpeg = new FFmpegReader();
 
 	public AudioWorkThread(ClientAudioTask task, ConverterListener listener) {
-		super(task);
+		super(task, listener);
 		this.task = task;
-		this.listener = listener;
 	}
 
 	private ArrayList<String> getArgs(ClientAudioTask task) {

@@ -28,9 +28,8 @@ public class VideoWorkThread extends Converter {
 	private static Pattern missingDecoder = Pattern.compile("Error while opening encoder for output stream");
 
 	public VideoWorkThread(ClientVideoTask task, ConverterListener listener) {
-		super(task);
+		super(task, listener);
 		this.task = task;
-		this.listener = listener;
 	}
 
 	private static boolean isWindows() {

@@ -14,7 +14,7 @@ public class AudioConverterPool extends ConverterPool {
 	@Override
 	protected boolean hasFree() {
 		int size = converters.size();
-		return size < threads ? true : false;
+		return size < threadCount ? true : false;
 	}
 
 	@Override
@@ -24,9 +24,6 @@ public class AudioConverterPool extends ConverterPool {
 		}
 		ClientAudioTask aTask = (ClientAudioTask) task;
 		AudioWorkThread converter = new AudioWorkThread(aTask, this);
-		converters.put(task, converter);
-		Thread t = new Thread(converter);
-		t.start();
-		return true;
+		return this.spawn(converter);
 	}
 }
