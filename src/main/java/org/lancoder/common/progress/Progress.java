@@ -62,7 +62,7 @@ public class Progress implements Serializable {
 	public void update(long units) {
 		double unitsSinceLast = units - unitsCompleted;
 		long msElapsed = System.currentTimeMillis() - this.lastUpdate;
-		double estimatedSpeed = unitsSinceLast / msElapsed * 1000.0;
+		double estimatedSpeed = unitsSinceLast / msElapsed * 1000;
 		if (!Double.isInfinite(estimatedSpeed)) {
 			update(units, estimatedSpeed);
 		}

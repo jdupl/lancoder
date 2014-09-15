@@ -11,8 +11,8 @@
             <h3 class="panel-title">{{node.name}} | {{node.nodeAddress}}:{{node.nodePort}} | {{node.status}}</h3>
         </div>
         <div class="panel-body">
-            <div class="animate-repeat" ng-repeat="currentTask in node.currentTasks">
-              <div class="panel {{node.panel}}">
+            <div class="animate-repeat" ng-repeat="task in node.currentTasks">
+              <div class="panel {{node.panel}}" ng-init="currentTask = task.task">
                   <div class="panel-body">
                     <div class="row">
                         <div class="col-md-6">

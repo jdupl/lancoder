@@ -33,7 +33,8 @@ public class AudioStream extends Stream {
 	public AudioStream(JsonObject json, String relativeSource, long unitCount) {
 		super(json, relativeSource, unitCount);
 		JsonElement element = null;
-		this.unitCount = unitCount;
+		// Convert msec to sec
+		this.unitCount = unitCount / 1000;
 		if ((element = json.get("bit_rate")) != null) {
 			// convert from bit/s to kbps
 			this.rateControlType = RateControlType.VBR;
