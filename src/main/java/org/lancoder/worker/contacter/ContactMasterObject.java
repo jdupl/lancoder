@@ -35,14 +35,13 @@ public class ContactMasterObject extends RunnableService {
 	}
 
 	private void contactMaster() {
+		Message m = getMessage();
 		InetSocketAddress addr = new InetSocketAddress(masterAddress, masterPort);
 		try (Socket s = new Socket()) {
 			s.setSoTimeout(2000);
 			s.connect(addr);
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-			Message m = getMessage();
-			System.err.println(m.getCode()); // DEBUG
 			out.writeObject(m);
 			out.flush();
 			Object res = in.readObject();
@@ -54,15 +53,17 @@ public class ContactMasterObject extends RunnableService {
 				} else {
 					System.err.println("Received null string or invalid string from master ?");
 				}
-			} else if (res instanceof PingMessage && ((PingMessage) res).getCode() == ClusterProtocol.PONG) {
-				// TODO master sent good reponse
-			} else {
-				System.err.println("bad response from master");
+			} else if (!(res instanceof Message) && ((Message) res).getCode() != ClusterProtocol.PONG) {
+				System.err.println("Worker detected master fault when pinging !");
+				// TODO alert somewhere
 			}
-			s.close();
 		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Failed to contact master.");
+			if (m.getCode() == ClusterProtocol.CONNECT_ME) {
+				System.err.println("Failed to contact master.");
+			} else {
+				listener.masterTimeout();
+				e.printStackTrace();
+			}
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -86,7 +87,6 @@ public class ContactMasterObject extends RunnableService {
 			}
 		}
 		System.out.println("Worker contacter closed");
-
 	}
 
 	@Override

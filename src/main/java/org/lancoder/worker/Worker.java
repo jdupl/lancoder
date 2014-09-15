@@ -184,9 +184,9 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	public void updateStatus(NodeState statusCode) {
-//		if (this.status == NodeState.NOT_CONNECTED && statusCode != NodeState.NOT_CONNECTED) {
-//			this.stopContactMaster();
-//		}
+		// if (this.status == NodeState.NOT_CONNECTED && statusCode != NodeState.NOT_CONNECTED) {
+		// this.stopContactMaster();
+		// }
 		print("changing worker status to " + statusCode);
 		this.status = statusCode;
 		switch (statusCode) {
@@ -199,7 +199,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			break;
 		case NOT_CONNECTED:
 			// start thread to try to contact master
-//			startContactMaster();
+			// startContactMaster();
 			// TODO
 			break;
 		case CRASHED:
@@ -212,23 +212,10 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	private void startContactMaster() {
-		// ContactMasterHttp contact = new ContactMasterHttp(getMasterIpAddress(), getMasterPort(), this);
 		ContactMasterObject contact = new ContactMasterObject(getMasterIpAddress(), getMasterPort(), this);
 		Thread mastercontactThread = new Thread(contact);
 		mastercontactThread.start();
 		this.services.add(contact);
-	}
-
-	@Deprecated
-	public void stopContactMaster() {
-		System.out.println("Trying to stop contact service");
-		for (Service s : this.services) {
-			if (s instanceof ContactMasterObject) {
-				System.out.println("Found service. Sending stop request.");
-				s.stop();
-				break;
-			}
-		}
 	}
 
 	@Deprecated
@@ -429,10 +416,10 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 
 	@Override
 	public void masterTimeout() {
+		System.err.println("Master is disconnected !");
 		for (ClientTask task : this.currentTasks) {
 			stopWork(task);
 		}
 		this.updateStatus(NodeState.NOT_CONNECTED);
-
 	}
 }
