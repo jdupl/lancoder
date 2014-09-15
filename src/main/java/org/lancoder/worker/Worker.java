@@ -55,8 +55,9 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	private InetAddress address;
 	private int threadCount;
 	private ArrayList<Codec> codecs = new ArrayList<>();
-	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
-	private ArrayList<Service> services = new ArrayList<>();
+	private final ArrayList<ClientTask> currentTasks = new ArrayList<>();
+	private final ArrayList<Service> services = new ArrayList<>();
+	private final ThreadGroup serviceThreads = new ThreadGroup("worker_services");
 	private VideoWorkThread workThread;
 	private AudioConverterPool audioPool;
 
@@ -109,6 +110,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			e.printStackTrace();
 		}
 		print("initialized not connected to a master server");
+		ContactMasterObject contact = new ContactMasterObject(getMasterIpAddress(), getMasterPort(), this);
+		this.services.add(contact);
 	}
 
 	public void shutdown() {
@@ -122,6 +125,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		for (Service s : services) {
 			s.stop();
 		}
+		this.serviceThreads.interrupt();
 		config.dump(configPath);
 	}
 
@@ -183,9 +187,6 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	public void updateStatus(NodeState statusCode) {
-		// if (this.status == NodeState.NOT_CONNECTED && statusCode != NodeState.NOT_CONNECTED) {
-		// this.stopContactMaster();
-		// }
 		print("changing worker status to " + statusCode);
 		this.status = statusCode;
 		switch (statusCode) {
@@ -197,9 +198,6 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			notifyMasterStatusChange();
 			break;
 		case NOT_CONNECTED:
-			// start thread to try to contact master
-			// startContactMaster();
-			// TODO
 			break;
 		case CRASHED:
 			notifyMasterStatusChange();
@@ -208,13 +206,6 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			System.err.println("WORKER: Unhandlded status code while updating status");
 			break;
 		}
-	}
-
-	private void startContactMaster() {
-		ContactMasterObject contact = new ContactMasterObject(getMasterIpAddress(), getMasterPort(), this);
-		Thread mastercontactThread = new Thread(contact);
-		mastercontactThread.start();
-		this.services.add(contact);
 	}
 
 	@Deprecated
@@ -302,14 +293,13 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	public void run() {
+		updateStatus(NodeState.NOT_CONNECTED);
 		for (Service s : services) {
 			if (s instanceof RunnableService) {
-				Thread t = new Thread((RunnableService) s);
+				Thread t = new Thread(this.serviceThreads, (RunnableService) s);
 				t.start();
 			}
 		}
-		updateStatus(NodeState.NOT_CONNECTED);
-		startContactMaster();
 		System.err.println("Started all services");
 	}
 
