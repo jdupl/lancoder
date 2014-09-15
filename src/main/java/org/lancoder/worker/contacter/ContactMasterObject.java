@@ -15,6 +15,9 @@ import org.lancoder.common.status.NodeState;
 
 public class ContactMasterObject extends RunnableService {
 
+	private final static int DELAY_FAST_MSEC = 5000;
+	private final static int DELAY_LONG_MSEC = 30000;
+
 	private ConctactMasterListener listener;
 	private InetAddress masterAddress;
 	private int masterPort;
@@ -69,24 +72,20 @@ public class ContactMasterObject extends RunnableService {
 		}
 	}
 
+	private int getNextDelay() {
+		return listener.getStatus() == NodeState.NOT_CONNECTED ? DELAY_FAST_MSEC : DELAY_LONG_MSEC;
+	}
+
 	@Override
 	public void run() {
 		while (!close) {
 			try {
 				contactMaster();
-				// sleep 10 times 500ms for fast closing
-				// TODO better way to sleep
-				for (int i = 0; i < 10; i++) {
-					if (close)
-						break;
-					Thread.currentThread();
-					Thread.sleep(500);
-				}
+				int delay = getNextDelay();
+				Thread.sleep(delay);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
 			}
 		}
-		System.out.println("Worker contacter closed");
 	}
 
 	@Override

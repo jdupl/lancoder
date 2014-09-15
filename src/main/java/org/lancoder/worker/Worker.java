@@ -77,15 +77,14 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			// this saves default configuration to disk
 			this.config = WorkerConfig.generate(configPath);
 		}
+		// Get codecs
 		this.codecs = FFmpegWrapper.getAvailableCodecs();
+		System.out.printf("Detected %d available encoders: %s", codecs.size(), codecs);
 
-		System.out.printf("Detected %d available encoders:\n", codecs.size());
-		for (Codec codec : codecs) {
-			System.out.println(codec.getPrettyName());
-		}
 		// Get number of available threads
 		this.threadCount = Runtime.getRuntime().availableProcessors();
 		System.out.printf("Detected %d threads available.\n", this.threadCount);
+
 		WorkerObjectServer objectServer = new WorkerObjectServer(this, config.getListenPort());
 		services.add(objectServer);
 		audioPool = new AudioConverterPool(this.threadCount, this);
