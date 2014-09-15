@@ -157,7 +157,7 @@ public class Job implements Comparable<Job>, Serializable {
 		}
 		return tasks;
 	}
-	
+
 	public ArrayList<ClientAudioTask> getTodoAudioTask() {
 		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
 		if (getTaskRemainingCount() != 0) {

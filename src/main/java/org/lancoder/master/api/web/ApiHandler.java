@@ -39,7 +39,7 @@ public class ApiHandler extends AbstractHandler {
 		case "/jobs":
 			response.setStatus(HttpServletResponse.SC_OK);
 			baseRequest.setHandled(true);
-			response.getWriter().println(gson.toJson(master.getJobs()));
+			response.getWriter().println(master.getApiJobs());
 			break;
 		case "/jobs/add":
 			br = request.getReader();
