@@ -18,6 +18,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
 import org.lancoder.common.Service;
@@ -51,15 +52,12 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 
 	private WorkerConfig config;
 	private String configPath;
-	private NodeState status;
-	private InetAddress address;
-	private int threadCount;
-	private ArrayList<Codec> codecs = new ArrayList<>();
-	private final ArrayList<ClientTask> currentTasks = new ArrayList<>();
 	private final ArrayList<Service> services = new ArrayList<>();
 	private final ThreadGroup serviceThreads = new ThreadGroup("worker_services");
 	private VideoWorkThread workThread;
 	private AudioConverterPool audioPool;
+
+	private Node node;
 
 	public Worker() {
 		this(null);
@@ -79,19 +77,20 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			this.config = WorkerConfig.generate(configPath);
 		}
 		// Get codecs
-		this.codecs = FFmpegWrapper.getAvailableCodecs();
+		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs();
 		System.out.printf("Detected %d available encoders: %s", codecs.size(), codecs);
 
 		// Get number of available threads
-		this.threadCount = Runtime.getRuntime().availableProcessors();
-		System.out.printf("Detected %d threads available.\n", this.threadCount);
+		int threadCount = Runtime.getRuntime().availableProcessors();
+		System.out.printf("Detected %d threads available.\n", threadCount);
 
 		WorkerObjectServer objectServer = new WorkerObjectServer(this, config.getListenPort());
 		services.add(objectServer);
-		audioPool = new AudioConverterPool(this.threadCount, this);
+		audioPool = new AudioConverterPool(threadCount, this);
 		services.add(audioPool);
 		// Get local ip
 		// TODO allow options to override IP detection and enable ipv6
+		InetAddress address = null;
 		try {
 			Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
 			while (n.hasMoreElements()) {
@@ -112,10 +111,11 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		print("initialized not connected to a master server");
 		ContactMasterObject contact = new ContactMasterObject(getMasterIpAddress(), getMasterPort(), this);
 		this.services.add(contact);
+		node = new Node(address, this.config.getListenPort(), config.getName(), codecs, threadCount);
 	}
 
 	public void shutdown() {
-		if (this.status != NodeState.NOT_CONNECTED) {
+		if (this.getStatus() != NodeState.NOT_CONNECTED) {
 			System.out.println("Sending disconnect notification to master");
 			gracefulShutdown();
 		}
@@ -137,14 +137,18 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		// TODO check which task to stop (if many tasks are implemented)
 		this.workThread.stop();
 		System.err.println("Setting current task to null");
-		this.currentTasks.remove(t);
+		this.getCurrentTasks().remove(t);
 		if (t instanceof ClientVideoTask) {
 			this.updateStatus(NodeState.FREE);
 		}
 	}
 
+	private ArrayList<ClientTask> getCurrentTasks() {
+		return this.node.getCurrentTasks();
+	}
+
 	public synchronized boolean startWork(ClientTask t) {
-		if (t instanceof ClientVideoTask && this.status == NodeState.FREE) {
+		if (t instanceof ClientVideoTask && this.getStatus() == NodeState.FREE) {
 			ClientVideoTask vTask = (ClientVideoTask) t;
 			this.workThread = new VideoWorkThread(vTask, this);
 			Thread wt = new Thread(workThread);
@@ -177,7 +181,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	 */
 	public ArrayList<TaskReport> getTaskReports() {
 		ArrayList<TaskReport> reports = new ArrayList<TaskReport>();
-		for (ClientTask task : currentTasks) {
+		for (ClientTask task : this.getCurrentTasks()) {
 			TaskReport report = new TaskReport(config.getUniqueID(), task);
 			if (report != null) {
 				reports.add(report);
@@ -186,9 +190,13 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		return reports;
 	}
 
+	private void setStatus(NodeState state) {
+		this.node.setStatus(state);
+	}
+
 	public void updateStatus(NodeState statusCode) {
 		print("changing worker status to " + statusCode);
-		this.status = statusCode;
+		this.setStatus(statusCode);
 		switch (statusCode) {
 		case FREE:
 			notifyMasterStatusChange();
@@ -208,13 +216,16 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		}
 	}
 
+	private InetAddress getAddress() {
+		return this.node.getNodeAddress();
+	}
+
 	@Deprecated
 	private void gracefulShutdown() {
 		try {
 			CloseableHttpClient client = HttpClients.createDefault();
 			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
-
-			URI url = new URI("http", null, this.address.getHostAddress(), this.getListenPort(),
+			URI url = new URI("http", null, this.getAddress().getHostAddress(), this.getListenPort(),
 					Routes.DISCONNECT_NODE, null, null);
 			HttpPost post = new HttpPost(url);
 			post.setConfig(defaultRequestConfig);
@@ -232,8 +243,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			CloseableHttpClient client = HttpClients.createDefault();
 			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
 
-			URI url = new URI("http", null, address.getHostAddress(), this.getListenPort(), Routes.NODE_CRASH, null,
-					null);
+			URI url = new URI("http", null, this.getAddress().getHostAddress(), this.getListenPort(),
+					Routes.NODE_CRASH, null, null);
 			HttpPost post = new HttpPost(url);
 			post.setConfig(defaultRequestConfig);
 
@@ -281,11 +292,11 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	public NodeState getStatus() {
-		return this.status;
+		return this.getStatus();
 	}
 
 	public int getThreadCount() {
-		return threadCount;
+		return this.node.getThreadCount();
 	}
 
 	public String getWorkerName() {
@@ -331,7 +342,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 
 	@Override
 	public boolean deleteTask(ClientTask t) {
-		for (ClientTask task : currentTasks) {
+		for (ClientTask task : this.node.getCurrentTasks()) {
 			if (task.equals(t)) {
 				stopWork(task);
 				return true;
@@ -355,8 +366,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	@Override
 	public synchronized void workStarted(ClientTask task) {
 		task.getProgress().start();
-		this.currentTasks.add(task);
-		if (this.status != NodeState.WORKING) {
+		this.getCurrentTasks().add(task);
+		if (this.getStatus() != NodeState.WORKING) {
 			updateStatus(NodeState.WORKING);
 		}
 	}
@@ -366,8 +377,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		System.err.println("Worker completed task");
 		task.getProgress().complete();
 		notifyMasterStatusChange();
-		this.currentTasks.remove(task);
-		if (currentTasks.size() == 0) {
+		this.getCurrentTasks().remove(task);
+		if (this.getCurrentTasks().isEmpty()) {
 			updateStatus(NodeState.FREE);
 		}
 	}
@@ -377,8 +388,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		System.err.println("Worker failed task " + task.getTaskId());
 		task.getProgress().reset();
 		notifyMasterStatusChange();
-		this.currentTasks.remove(task);
-		if (currentTasks.size() == 0) {
+		this.getCurrentTasks().remove(task);
+		if (this.getCurrentTasks().isEmpty()) {
 			updateStatus(NodeState.FREE);
 		}
 	}
@@ -395,18 +406,13 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 
 	@Override
 	public ConnectMessage getConnectMessage() {
-		return new ConnectMessage(this.getCurrentNodeUnid(), getListenPort(), this.getWorkerName(), address, codecs,
-				threadCount);
-	}
-
-	private String getCurrentNodeUnid() {
-		return this.config.getUniqueID();
+		return new ConnectMessage(this.node);
 	}
 
 	@Override
 	public void masterTimeout() {
 		System.err.println("Master is disconnected !");
-		for (ClientTask task : this.currentTasks) {
+		for (ClientTask task : this.getCurrentTasks()) {
 			stopWork(task);
 		}
 		this.updateStatus(NodeState.NOT_CONNECTED);

@@ -13,18 +13,17 @@ public class Node implements Serializable {
 	private static final long serialVersionUID = 3450445684775221368L;
 	private InetAddress nodeAddress;
 	private int nodePort;
-	private NodeState status;
+	private NodeState status = NodeState.NOT_CONNECTED;
 	private String name;
 	private String unid;
 	private int threadCount;
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
 	private ArrayList<Codec> codecs = new ArrayList<>();
 
-	public Node(InetAddress nodeAddresse, int nodePort, String name, ArrayList<Codec> codecs, int threadCount) {
-		this.nodeAddress = nodeAddresse;
+	public Node(InetAddress nodeAddress, int nodePort, String name, ArrayList<Codec> codecs, int threadCount) {
+		this.nodeAddress = nodeAddress;
 		this.nodePort = nodePort;
 		this.name = name;
-		this.status = NodeState.NOT_CONNECTED;
 		this.codecs = codecs;
 		this.threadCount = threadCount;
 	}
