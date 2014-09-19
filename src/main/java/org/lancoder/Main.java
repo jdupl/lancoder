@@ -20,12 +20,12 @@ public class Main {
 		Runnable r = null;
 
 		if (args[0].equals("--worker")) {
-			r = new Worker(configpath);
+			// r = new Worker(configpath);
 		} else if (args[0].equals("--master")) {
 			if (args.length == 2) {
 				configpath = args[1];
 			}
-			r = new Master(configpath);
+			// r = new Master(configpath);
 		} else {
 			printHelp();
 			System.exit(-1);
@@ -35,9 +35,10 @@ public class Main {
 	}
 
 	public static void printHelp() {
-		System.err.println("Usage: LANcoder.jar (--master | --worker) [configPath]");
+		System.err.println("Usage: LANcoder.jar (--master | --worker) [--init] [--config] [configPath]");
 		System.err.println("Use --master to run as master OR --worker to run as worker.");
-		System.err.println("Add \"/path/to/config.json\" to overide default config path.");
+		System.err.println("Use --init to generate a new config with user input.");
+		System.err.println("Use --config \"/path/to/config.json\" to overide default config path.");
 	}
 
 }

@@ -1,33 +1,42 @@
 package org.lancoder.worker;
 
-import java.io.IOException;
+import java.io.File;
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
+import org.lancoder.Prompt;
 import org.lancoder.common.Config;
-
-import com.google.gson.Gson;
 
 public class WorkerConfig extends Config implements Serializable {
 
 	private static final long serialVersionUID = 4279318303054715575L;
 
-	private static final transient int DEFAULT_MASTER_PORT = 1337;
+	private final static String DEFAULT_PATH = new File(System.getProperty("user.home"),
+			".config/lancoder/worker_config.json").getPath();
+
+	/**
+	 * Defaults values of the config
+	 */
+	private static final int DEFAULT_MASTER_PORT = 1337;
 	private static final int DEFAULT_LISTEN_PORT = 1338;
-	private static final InetAddress DEFAULT_MASTER_IP = InetAddress.getLoopbackAddress();
+	private static final String DEFAULT_MASTER_IP = InetAddress.getLoopbackAddress().getHostAddress();
 	private static final String DEFAULT_TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
 	private static final String DEFAULT_UNID = "";
-	private static final String DEFAULT_NAME = "";
+	private static final String DEFAULT_NAME = "unknown_worker";
 	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
 
-	private InetAddress masterIpAddress;
+	@Prompt(message = "master ip address")
+	private String masterIpAddress;
+	@Prompt(message = "master port")
 	private int masterPort;
+	@Prompt(message = "worker port")
 	private int listenPort;
 	private String uniqueID;
+	@Prompt(message = "worker's name")
 	private String name;
+	@Prompt(message = "shared folder root")
 	private String absoluteSharedFolder;
+	@Prompt(message = "temporary files location")
 	private String tempEncodingFolder;
 
 	public WorkerConfig() {
@@ -38,38 +47,6 @@ public class WorkerConfig extends Config implements Serializable {
 		this.name = DEFAULT_NAME;
 		this.absoluteSharedFolder = DEFAULT_ABSOLUTE_PATH;
 		this.tempEncodingFolder = DEFAULT_TEMP_DIRECTORY;
-	}
-
-	/**
-	 * Generate default config and save to disk.
-	 * 
-	 * @return The default config
-	 */
-	public static WorkerConfig generate(String configPath) {
-		WorkerConfig conf = new WorkerConfig();
-		conf.dump(configPath);
-		return conf;
-	}
-
-	/**
-	 * Loads json config (editable by user) from disk
-	 * 
-	 * @return The config or null if no file was readable
-	 */
-	public static WorkerConfig load(String configPath) {
-		WorkerConfig config = null;
-		if (!Files.exists(Paths.get(configPath))) {
-			return null;
-		}
-		try {
-			byte[] b = Files.readAllBytes(Paths.get(configPath));
-			Gson gson = new Gson();
-			config = gson.fromJson(new String(b, "UTF-8"), WorkerConfig.class);
-		} catch (IOException e) {
-			// print stack and return null
-			e.printStackTrace();
-		}
-		return config;
 	}
 
 	public String getAbsoluteSharedFolder() {
@@ -104,11 +81,11 @@ public class WorkerConfig extends Config implements Serializable {
 		this.uniqueID = uniqueID;
 	}
 
-	public InetAddress getMasterIpAddress() {
+	public String getMasterIpAddress() {
 		return masterIpAddress;
 	}
 
-	public void setMasterIpAddress(InetAddress masterIpAddress) {
+	public void setMasterIpAddress(String masterIpAddress) {
 		this.masterIpAddress = masterIpAddress;
 	}
 
@@ -126,6 +103,11 @@ public class WorkerConfig extends Config implements Serializable {
 
 	public void setListenPort(int listenPort) {
 		this.listenPort = listenPort;
+	}
+
+	@Override
+	public String getDefaultPath() {
+		return DEFAULT_PATH;
 	}
 
 }

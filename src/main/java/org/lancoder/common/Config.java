@@ -10,12 +10,14 @@ import com.google.gson.GsonBuilder;
 
 public abstract class Config {
 
+	protected String configPath;
+
 	/**
 	 * Serializes current config to disk as JSON object.
 	 * 
 	 * @return True if could write config to disk. Otherwise, return false.
 	 */
-	public synchronized boolean dump(String configPath) {
+	public synchronized boolean dump() {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		String s = gson.toJson(this);
 		File config = new File(configPath);
@@ -29,6 +31,16 @@ public abstract class Config {
 			return false;
 		}
 		return true;
+	}
+
+	public abstract String getDefaultPath();
+
+	public String getConfigPath() {
+		return configPath;
+	}
+
+	public void setConfigPath(String configPath) {
+		this.configPath = configPath;
 	}
 
 }
