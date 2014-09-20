@@ -22,6 +22,17 @@ public class Main {
 	 * @throws MissingConfiguration
 	 */
 	public static void main(String[] args) throws MissingConfiguration {
+		Namespace parsed = getArgs(args);
+		boolean isWorker = parsed.getBoolean("worker");
+		Class<? extends Config> clazz = isWorker ? WorkerConfig.class : MasterConfig.class;
+		ConfigFactory<? extends Config> factory = new ConfigFactory<>(clazz);
+		Config conf = factory.load();
+		Runnable r = isWorker ? new Worker((WorkerConfig) conf) : new Master((MasterConfig) conf);
+		Thread t = new Thread(r);
+		t.start();
+	}
+
+	private static Namespace getArgs(String[] args) {
 		ArgumentParser parser = ArgumentParsers.newArgumentParser("lancoder");
 		MutuallyExclusiveGroup group = parser.addMutuallyExclusiveGroup().required(true);
 		group.addArgument("--worker").action(Arguments.storeTrue());
@@ -29,23 +40,6 @@ public class Main {
 		MutuallyExclusiveGroup group2 = parser.addMutuallyExclusiveGroup();
 		group2.addArgument("--init-prompt").action(Arguments.storeTrue());
 		group2.addArgument("--init-default").action(Arguments.storeTrue());
-
-		Namespace parsed = parser.parseArgsOrFail(args);
-
-		Runnable r = null;
-		boolean isWorker = parsed.getBoolean("worker");
-		Class clazz = isWorker ? WorkerConfig.class : MasterConfig.class;
-		if (isWorker) {
-			clazz = WorkerConfig.class;
-		}
-		ConfigFactory<Config> factory = new ConfigFactory<>(clazz);
-		Config conf = factory.load();
-		if (isWorker) {
-			r = new Worker((WorkerConfig) conf);
-		} else {
-			r = new Master((MasterConfig) conf);
-		}
-		Thread t = new Thread(r);
-		t.start();
+		return parser.parseArgsOrFail(args);
 	}
 }
