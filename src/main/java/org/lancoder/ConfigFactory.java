@@ -48,8 +48,9 @@ public class ConfigFactory<T extends Config> {
 	public T init(boolean userInput, boolean overwrite) throws InvalidConfigurationException {
 		File f = new File(instance.getConfigPath());
 		if (!overwrite && f.exists()) {
-			throw new InvalidConfigurationException(String.format("Configuration file %s exists. "
-					+ "Cannot overwrite the file ! Perhaps you should use the flag --overwrite.", f.getAbsoluteFile()));
+			throw new InvalidConfigurationException(String.format(
+					"Configuration file %s exists. Cannot overwrite the file ! "
+							+ "Perhaps you should use the flag --overwrite.", f.getAbsoluteFile()));
 		}
 		T config = (userInput ? promptUser() : instance);
 		config.dump();

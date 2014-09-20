@@ -19,10 +19,26 @@ public class Main {
 	 * 
 	 * @param args
 	 *            The user's arguments
-	 * @throws InvalidConfigurationException
 	 */
-	public static void main(String[] args) throws InvalidConfigurationException {
-		Namespace parsed = parse(args);
+	public static void main(String[] args) {
+		try {
+			run(parse(args));
+		} catch (InvalidConfigurationException e) {
+			// Display exception message to explain cause of fatal crash to user
+			System.err.println(e.getMessage());
+			System.exit(-1);
+		}
+	}
+
+	/**
+	 * Instantiates configuration and core from args.
+	 * 
+	 * @param parsed
+	 *            The parsed user's args
+	 * @throws InvalidConfigurationException
+	 *             Any fatal exception with the configuration. User needs to fix arguments.
+	 */
+	private static void run(Namespace parsed) throws InvalidConfigurationException {
 		boolean isWorker = parsed.getBoolean("worker");
 		boolean promptInit = parsed.getBoolean("init_prompt");
 		boolean defaultInit = parsed.getBoolean("init_default");
