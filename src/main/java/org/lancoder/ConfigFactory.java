@@ -1,5 +1,6 @@
 package org.lancoder;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
@@ -10,7 +11,7 @@ import java.util.Scanner;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
 import org.lancoder.common.Config;
-import org.lancoder.common.exceptions.InvalidConfiguration;
+import org.lancoder.common.exceptions.InvalidConfigurationException;
 
 import com.google.gson.Gson;
 
@@ -19,17 +20,17 @@ public class ConfigFactory<T extends Config> {
 	private Class<T> clazz;
 	private T instance;
 
-	public ConfigFactory(Class<T> clazz) throws InvalidConfiguration {
+	public ConfigFactory(Class<T> clazz) throws InvalidConfigurationException {
 		this(clazz, null);
 	}
 
-	public ConfigFactory(Class<T> clazz, String configPath) throws InvalidConfiguration {
+	public ConfigFactory(Class<T> clazz, String configPath) throws InvalidConfigurationException {
 		try {
 			this.clazz = clazz;
 			this.instance = clazz.newInstance();
 			this.instance.setConfigPath(configPath == null ? instance.getDefaultPath() : configPath);
 		} catch (InstantiationException | IllegalAccessException e) {
-			throw new InvalidConfiguration();
+			throw new InvalidConfigurationException();
 		}
 	}
 
@@ -38,9 +39,18 @@ public class ConfigFactory<T extends Config> {
 	 * 
 	 * @param userInput
 	 *            If true, the method will get data from System.in (the user). Otherwise loads default values.
+	 * @param overwrite
+	 *            If configuration file exists, override it.
 	 * @return The new configuration
+	 * @throws InvalidConfigurationException
+	 *             If file exists and factory must NOT overwrite the file.
 	 */
-	public T init(boolean userInput) {
+	public T init(boolean userInput, boolean overwrite) throws InvalidConfigurationException {
+		File f = new File(instance.getConfigPath());
+		if (!overwrite && f.exists()) {
+			throw new InvalidConfigurationException(String.format("Configuration file %s exists. "
+					+ "Cannot overwrite the file ! Perhaps you should use the flag --overwrite.", f.getAbsoluteFile()));
+		}
 		T config = (userInput ? promptUser() : instance);
 		config.dump();
 		return config;
@@ -52,12 +62,12 @@ public class ConfigFactory<T extends Config> {
 	 * @param clazz
 	 *            The type of configuration
 	 * @return The loaded configuration
-	 * @throws InvalidConfiguration
+	 * @throws InvalidConfigurationException
 	 *             If file is corrupted or missing
 	 */
-	public T load() throws InvalidConfiguration {
+	public T load() throws InvalidConfigurationException {
 		if (!Files.exists(Paths.get(instance.getConfigPath()))) {
-			throw new InvalidConfiguration();
+			throw new InvalidConfigurationException();
 		}
 		try {
 			byte[] b = Files.readAllBytes(Paths.get(instance.getConfigPath()));
@@ -66,22 +76,13 @@ public class ConfigFactory<T extends Config> {
 			System.out.println("Loaded config from disk");
 			return config;
 		} catch (IOException e) {
-			throw new InvalidConfiguration();
+			throw new InvalidConfigurationException();
 		}
-	}
-
-	private HashMap<Field, String> getFields() {
-		HashMap<Field, String> fields = new HashMap<>();
-		for (Field field : clazz.getDeclaredFields()) {
-			Prompt p = field.getAnnotation(Prompt.class);
-			if (p != null) {
-				fields.put(field, p.message());
-			}
-		}
-		return fields;
 	}
 
 	private T promptUser() {
+		System.out.println("Please enter the following fields. Default values are in [].");
+		System.out.println("To use the default value, hit return.");
 		T config = null;
 		try (Scanner s = new Scanner(new CloseShieldInputStream(System.in))) {
 			s.useDelimiter(System.lineSeparator());
@@ -101,11 +102,22 @@ public class ConfigFactory<T extends Config> {
 					}
 				}
 			}
-			s.close();
+			config.setConfigPath(instance.getConfigPath());
 		} catch (InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
 		return config;
+	}
+
+	private HashMap<Field, String> getFields() {
+		HashMap<Field, String> fields = new HashMap<>();
+		for (Field field : clazz.getDeclaredFields()) {
+			Prompt p = field.getAnnotation(Prompt.class);
+			if (p != null) {
+				fields.put(field, p.message());
+			}
+		}
+		return fields;
 	}
 
 	private T fromJson(String jsonString) {

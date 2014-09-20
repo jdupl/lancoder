@@ -1,6 +1,6 @@
 package org.lancoder;
 
-import org.lancoder.common.exceptions.InvalidConfiguration;
+import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.master.Master;
 import org.lancoder.master.MasterConfig;
 import org.lancoder.worker.Worker;
@@ -17,21 +17,23 @@ public class Simulation extends Thread {
 	/**
 	 * Initialize only a master and a worker. Jobs must be added via the api.
 	 * 
+	 * @throws InvalidConfigurationException
+	 * 
 	 */
-	public void basicSimulation() {
+	public void basicSimulation() throws InvalidConfigurationException {
 		MasterConfig masterConfig = null;
 		WorkerConfig workerConfig = null;
 		ConfigFactory<MasterConfig> masterFactory = new ConfigFactory<>(MasterConfig.class);
 		ConfigFactory<WorkerConfig> workerFactory = new ConfigFactory<>(WorkerConfig.class);
 		try {
 			masterConfig = masterFactory.load();
-		} catch (InvalidConfiguration e) {
-			masterConfig = masterFactory.init(true);
+		} catch (InvalidConfigurationException e) {
+			masterConfig = masterFactory.init(true, true);
 		}
 		try {
 			workerConfig = workerFactory.load();
-		} catch (InvalidConfiguration e) {
-			workerConfig = workerFactory.init(true);
+		} catch (InvalidConfigurationException e) {
+			workerConfig = workerFactory.init(true, true);
 		}
 		System.out.println("SIM: Starting master now");
 		Master m = new Master(masterConfig);
@@ -45,6 +47,10 @@ public class Simulation extends Thread {
 	}
 
 	public void run() {
-		basicSimulation();
+		try {
+			basicSimulation();
+		} catch (InvalidConfigurationException e) {
+			e.printStackTrace();
+		}
 	}
 }

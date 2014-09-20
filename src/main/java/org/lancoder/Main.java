@@ -7,7 +7,7 @@ import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 import org.lancoder.common.Config;
-import org.lancoder.common.exceptions.InvalidConfiguration;
+import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.master.Master;
 import org.lancoder.master.MasterConfig;
 import org.lancoder.worker.Worker;
@@ -19,19 +19,20 @@ public class Main {
 	 * 
 	 * @param args
 	 *            The user's arguments
-	 * @throws InvalidConfiguration
+	 * @throws InvalidConfigurationException
 	 */
-	public static void main(String[] args) throws InvalidConfiguration {
+	public static void main(String[] args) throws InvalidConfigurationException {
 		Namespace parsed = parse(args);
 		boolean isWorker = parsed.getBoolean("worker");
 		boolean promptInit = parsed.getBoolean("init_prompt");
 		boolean defaultInit = parsed.getBoolean("init_default");
+		boolean overwrite = parsed.getBoolean("overwrite");
 		String config = parsed.getString("config");
 		boolean mustInit = promptInit || defaultInit;
 
 		Class<? extends Config> clazz = isWorker ? WorkerConfig.class : MasterConfig.class;
 		ConfigFactory<? extends Config> factory = new ConfigFactory<>(clazz, config);
-		Config conf = mustInit ? factory.init(promptInit) : factory.load();
+		Config conf = mustInit ? factory.init(promptInit, overwrite) : factory.load();
 
 		Runnable r = isWorker ? new Worker((WorkerConfig) conf) : new Master((MasterConfig) conf);
 		new Thread(r).start();
@@ -55,7 +56,7 @@ public class Main {
 
 		parser.addArgument("--config", "-c").help("specify the config file");
 		parser.addArgument("--overwrite", "-o").action(Arguments.storeTrue())
-				.help("if flag is set, overwrite current config");
+				.help("if flag is set, overwrite old config");
 		return parser.parseArgsOrFail(args);
 	}
 }
