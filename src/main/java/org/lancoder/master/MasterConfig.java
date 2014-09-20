@@ -1,34 +1,36 @@
 package org.lancoder.master;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.File;
 import java.util.ArrayList;
 
-import org.lancoder.common.Config;
 import org.lancoder.common.Node;
+import org.lancoder.common.config.Config;
+import org.lancoder.common.config.Prompt;
 import org.lancoder.common.job.Job;
-
-import com.google.gson.Gson;
 
 public class MasterConfig extends Config {
 
+	private final static String DEFAULT_PATH = new File(System.getProperty("user.home"),
+			".config/lancoder/master_config.json").getPath();
 	/**
 	 * Defaults values of the config
 	 */
 	private static final int DEFAULT_NODE_LISTEN_PORT = 1337;
 	private static final int DEFAULT_API_LISTEN_PORT = 8080;
 	private static final String DEFAULT_ENCODE_DESTINATION = "encodes";
-	// maybe change for winblows support
 	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
 
+	@Prompt(message = "master's listening port")
 	private int nodeServerPort;
+	@Prompt(message = "webui port")
 	private int apiServerPort;
+	@Prompt(message = "shared folder root")
 	private String absoluteSharedFolder;
+	@Prompt(message = "output directory (relative to shared folder)")
 	private String finalEncodingFolder;
 
-	private ArrayList<Node> nodeList;
-	public ArrayList<Job> jobList;
+	private ArrayList<Node> nodeList = new ArrayList<>();
+	public ArrayList<Job> jobList = new ArrayList<>();
 
 	public MasterConfig() {
 		nodeServerPort = DEFAULT_NODE_LISTEN_PORT;
@@ -38,34 +40,6 @@ public class MasterConfig extends Config {
 
 		jobList = new ArrayList<Job>();
 		nodeList = new ArrayList<Node>();
-	}
-
-	/**
-	 * Generate default config and save to disk.
-	 * 
-	 * @return The default config
-	 */
-	public static MasterConfig generate(String configPath) {
-		MasterConfig conf = new MasterConfig();
-		conf.dump(configPath);
-		return conf;
-	}
-
-	public synchronized static MasterConfig load(String configPath) {
-		MasterConfig config = null;
-
-		if (!Files.exists(Paths.get(configPath))) {
-			return null;
-		}
-		try {
-			byte[] b = Files.readAllBytes(Paths.get(configPath));
-			Gson gson = new Gson();
-			config = gson.fromJson(new String(b, "UTF-8"), MasterConfig.class);
-		} catch (IOException e) {
-			// print stack and return null
-			e.printStackTrace();
-		}
-		return config;
 	}
 
 	public ArrayList<Job> getJobList() {
@@ -114,5 +88,10 @@ public class MasterConfig extends Config {
 
 	public void setApiServerPort(int apiServerPort) {
 		this.apiServerPort = apiServerPort;
+	}
+
+	@Override
+	public String getDefaultPath() {
+		return DEFAULT_PATH;
 	}
 }

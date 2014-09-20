@@ -1,7 +1,17 @@
 package org.lancoder;
 
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
+import net.sourceforge.argparse4j.inf.Namespace;
+
+import org.lancoder.common.config.Config;
+import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.master.Master;
+import org.lancoder.master.MasterConfig;
 import org.lancoder.worker.Worker;
+import org.lancoder.worker.WorkerConfig;
 
 public class Main {
 	/**
@@ -11,33 +21,58 @@ public class Main {
 	 *            The user's arguments
 	 */
 	public static void main(String[] args) {
-		if (args.length < 1 || args.length > 2) {
-			printHelp();
+		try {
+			run(parse(args));
+		} catch (InvalidConfigurationException e) {
+			// Display exception message to explain cause of fatal crash to user
+			System.err.println(e.getMessage());
 			System.exit(-1);
 		}
-		// Get user's config path
-		String configpath = args.length == 2 ? configpath = args[1] : null;
-		Runnable r = null;
-
-		if (args[0].equals("--worker")) {
-			r = new Worker(configpath);
-		} else if (args[0].equals("--master")) {
-			if (args.length == 2) {
-				configpath = args[1];
-			}
-			r = new Master(configpath);
-		} else {
-			printHelp();
-			System.exit(-1);
-		}
-		Thread t = new Thread(r);
-		t.start();
 	}
 
-	public static void printHelp() {
-		System.err.println("Usage: LANcoder.jar (--master | --worker) [configPath]");
-		System.err.println("Use --master to run as master OR --worker to run as worker.");
-		System.err.println("Add \"/path/to/config.json\" to overide default config path.");
+	/**
+	 * Instantiates configuration and core from args.
+	 * 
+	 * @param parsed
+	 *            The parsed user's args
+	 * @throws InvalidConfigurationException
+	 *             Any fatal exception with the configuration. User needs to fix arguments.
+	 */
+	private static void run(Namespace parsed) throws InvalidConfigurationException {
+		boolean isWorker = parsed.getBoolean("worker");
+		boolean promptInit = parsed.getBoolean("init_prompt");
+		boolean defaultInit = parsed.getBoolean("init_default");
+		boolean overwrite = parsed.getBoolean("overwrite");
+		String config = parsed.getString("config");
+		boolean mustInit = promptInit || defaultInit;
+
+		Class<? extends Config> clazz = isWorker ? WorkerConfig.class : MasterConfig.class;
+		ConfigFactory<? extends Config> factory = new ConfigFactory<>(clazz, config);
+		Config conf = mustInit ? factory.init(promptInit, overwrite) : factory.load();
+
+		Runnable r = isWorker ? new Worker((WorkerConfig) conf) : new Master((MasterConfig) conf);
+		new Thread(r).start();
 	}
 
+	private static Namespace parse(String[] args) {
+		ArgumentParser parser = ArgumentParsers.newArgumentParser("lancoder").defaultHelp(false)
+				.version("${prog} 0.0.1");
+		parser.addArgument("--version", "-v").action(Arguments.version()).help("show the current version and exit");
+
+		MutuallyExclusiveGroup group = parser.addMutuallyExclusiveGroup().required(true)
+				.description("Run a master or worker instance");
+		group.addArgument("--worker", "-w").action(Arguments.storeTrue()).help("run the worker");
+		group.addArgument("--master", "-m").action(Arguments.storeTrue()).help("run the master");
+
+		MutuallyExclusiveGroup group2 = parser.addMutuallyExclusiveGroup();
+		group2.addArgument("--init-prompt", "-i").action(Arguments.storeTrue())
+				.help("intialize configuration and prompt user");
+		group2.addArgument("--init-default", "-I").action(Arguments.storeTrue())
+				.help("initialise default config (you should edit that file after afterwards)");
+
+		parser.addArgument("--config", "-c").help("specify the config file");
+		parser.addArgument("--overwrite", "-o").action(Arguments.storeTrue())
+				.help("if flag is set, overwrite old config");
+		return parser.parseArgsOrFail(args);
+	}
 }

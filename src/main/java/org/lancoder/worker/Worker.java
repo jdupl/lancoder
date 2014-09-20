@@ -1,6 +1,5 @@
 package org.lancoder.worker;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -11,6 +10,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
@@ -47,35 +47,17 @@ import org.lancoder.worker.server.WorkerServerListener;
 public class Worker implements Runnable, ServerListener, WorkerServerListener, ConctactMasterListener,
 		ConverterListener {
 
-	private final static String DEFAULT_PATH = new File(System.getProperty("user.home"),
-			".config/lancoder/worker_config.json").getPath();
-
+	private Node node;
 	private WorkerConfig config;
-	private String configPath;
 	private final ArrayList<Service> services = new ArrayList<>();
 	private final ThreadGroup serviceThreads = new ThreadGroup("worker_services");
 	private VideoWorkThread workThread;
 	private AudioConverterPool audioPool;
 
-	private Node node;
+	private InetAddress masterInetAddress = null;
 
-	public Worker() {
-		this(null);
-	}
-
-	public Worker(String suppliedPath) {
-		if (suppliedPath == null) {
-			this.configPath = DEFAULT_PATH;
-		} else {
-			this.configPath = suppliedPath;
-		}
-		config = WorkerConfig.load(configPath);
-		if (config != null) {
-			System.err.println("Loaded config from disk !");
-		} else {
-			// this saves default configuration to disk
-			this.config = WorkerConfig.generate(configPath);
-		}
+	public Worker(WorkerConfig config) {
+		this.config = config;
 		// Get codecs
 		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs();
 		System.out.printf("Detected %d available encoders: %s", codecs.size(), codecs);
@@ -108,8 +90,15 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			// TODO Perhaps just close worker
 			e.printStackTrace();
 		}
+		// Get real address from ip/hostname from config
+		try {
+			this.masterInetAddress = InetAddress.getByName(config.getMasterIpAddress());
+		} catch (UnknownHostException e) {
+			System.err.printf("Master's hostname %s could not be resolved !\n", config.getMasterIpAddress());
+			e.printStackTrace();
+		}
 		print("initialized not connected to a master server");
-		ContactMasterObject contact = new ContactMasterObject(getMasterIpAddress(), getMasterPort(), this);
+		ContactMasterObject contact = new ContactMasterObject(getMasterInetAddress(), getMasterPort(), this);
 		this.services.add(contact);
 		node = new Node(address, this.config.getListenPort(), config.getName(), codecs, threadCount);
 	}
@@ -126,7 +115,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			s.stop();
 		}
 		this.serviceThreads.interrupt();
-		config.dump(configPath);
+		config.dump();
 	}
 
 	public void print(String s) {
@@ -260,7 +249,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		boolean success = false;
 		StatusReport report = this.getStatusReport();
 
-		try (Socket s = new Socket(getMasterIpAddress(), getMasterPort())) {
+		try (Socket s = new Socket(getMasterInetAddress(), getMasterPort())) {
 			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
 			out.flush();
@@ -283,8 +272,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		return config.getListenPort();
 	}
 
-	public InetAddress getMasterIpAddress() {
-		return config.getMasterIpAddress();
+	public InetAddress getMasterInetAddress() {
+		return masterInetAddress;
 	}
 
 	public int getMasterPort() {
@@ -292,7 +281,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	public NodeState getStatus() {
-		return this.getStatus();
+		return this.node.getStatus();
 	}
 
 	public int getThreadCount() {
@@ -317,7 +306,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	public void setUnid(String unid) {
 		print("got id " + unid + " from master");
 		this.config.setUniqueID(unid);
-		this.config.dump(configPath);
+		this.config.dump();
 	}
 
 	@Override

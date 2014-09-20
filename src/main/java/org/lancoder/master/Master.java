@@ -57,12 +57,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		MasterNodeServerListener, ServerListener, JobInitiatorListener {
 
 	public static final String ALGORITHM = "SHA-256";
-	private final static String DEFAULT_PATH = new File(System.getProperty("user.home"),
-			".config/lancoder/master_config.json").getPath();
 
 	Logger logger = LoggerFactory.getLogger(Master.class);
 	private MasterConfig config;
-	private String configPath;
 
 	private HashMap<String, Node> nodes = new HashMap<>();
 	private HashMap<String, Job> jobs = new HashMap<>();
@@ -73,22 +70,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private ApiServer apiServer;
 	private DispatcherPool dispatcher;
 
-	public Master() {
-		this(null);
-	}
-
-	public Master(String suppliedPath) {
-		if (suppliedPath == null) {
-			this.configPath = DEFAULT_PATH;
-		} else {
-			this.configPath = suppliedPath;
-		}
-		config = MasterConfig.load(configPath);
-		if (config == null) {
-			// this saves default configuration to disk
-			System.out.println("Created new master config !");
-			this.config = MasterConfig.generate(configPath);
-		}
+	public Master(MasterConfig config) {
+		this.config = config;
 		jobInitiator = new JobInitiator(this, config);
 		nodeServer = new MasterObjectServer(this, getConfig().getNodeServerPort());
 		nodeChecker = new NodeChecker(this);
@@ -110,7 +93,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 				task.getProgress().reset();
 			}
 		}
-		config.dump(configPath);
+		config.dump();
 		// say goodbye to nodes
 		for (Node n : getOnlineNodes()) {
 			disconnectNode(n);
@@ -219,7 +202,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 				}
 			}
 		}
-		config.dump(configPath);
+		config.dump();
 	}
 
 	public void dispatch(ClientTask task, Node node) {
@@ -336,7 +319,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			return false;
 		}
 		updateNodesWork();
-		config.dump(configPath);
+		config.dump();
 		return true;
 	}
 
@@ -368,7 +351,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			return false;
 		}
 		updateNodesWork();
-		config.dump(configPath);
+		config.dump();
 		return true;
 	}
 
