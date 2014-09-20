@@ -17,6 +17,14 @@ import com.google.gson.Gson;
 
 public class ConfigFactory<T extends Config> {
 
+	private static final String CONF_NOT_FOUND = "Cannot load configuration file %s.%n"
+			+ "Initialize a configuration file with --init options.";
+	private static final String CONF_CORRUPTED = "Cannot load configuration file %s.%n"
+			+ "Could not cast cast. Looks like the file is corrupted.%n "
+			+ "Please initialize a new config and overwrite current config.";
+	private static final String CONF_EXISTS = "Configuration file %s exists. Cannot overwrite the file !%n"
+			+ "Perhaps you should use the flag --overwrite.";
+
 	private Class<T> clazz;
 	private T instance;
 
@@ -48,9 +56,7 @@ public class ConfigFactory<T extends Config> {
 	public T init(boolean userInput, boolean overwrite) throws InvalidConfigurationException {
 		File f = new File(instance.getConfigPath());
 		if (!overwrite && f.exists()) {
-			throw new InvalidConfigurationException(String.format(
-					"Configuration file %s exists. Cannot overwrite the file ! "
-							+ "Perhaps you should use the flag --overwrite.", f.getAbsoluteFile()));
+			throw new InvalidConfigurationException(String.format(CONF_EXISTS, f.getAbsoluteFile()));
 		}
 		T config = (userInput ? promptUser() : instance);
 		config.dump();
@@ -68,7 +74,7 @@ public class ConfigFactory<T extends Config> {
 	 */
 	public T load() throws InvalidConfigurationException {
 		if (!Files.exists(Paths.get(instance.getConfigPath()))) {
-			throw new InvalidConfigurationException();
+			throw new InvalidConfigurationException(String.format(CONF_NOT_FOUND, instance.getConfigPath()));
 		}
 		try {
 			byte[] b = Files.readAllBytes(Paths.get(instance.getConfigPath()));
@@ -77,7 +83,7 @@ public class ConfigFactory<T extends Config> {
 			System.out.println("Loaded config from disk");
 			return config;
 		} catch (IOException e) {
-			throw new InvalidConfigurationException();
+			throw new InvalidConfigurationException(String.format(CONF_CORRUPTED, instance.getConfigPath()));
 		}
 	}
 
