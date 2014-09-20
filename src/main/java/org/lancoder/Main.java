@@ -7,7 +7,7 @@ import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 import org.lancoder.common.Config;
-import org.lancoder.common.exceptions.MissingConfiguration;
+import org.lancoder.common.exceptions.InvalidConfiguration;
 import org.lancoder.master.Master;
 import org.lancoder.master.MasterConfig;
 import org.lancoder.worker.Worker;
@@ -19,9 +19,9 @@ public class Main {
 	 * 
 	 * @param args
 	 *            The user's arguments
-	 * @throws MissingConfiguration
+	 * @throws InvalidConfiguration
 	 */
-	public static void main(String[] args) throws MissingConfiguration {
+	public static void main(String[] args) throws InvalidConfiguration {
 		Namespace parsed = parse(args);
 		boolean isWorker = parsed.getBoolean("worker");
 		boolean promptInit = parsed.getBoolean("init_prompt");

@@ -1,6 +1,6 @@
 package org.lancoder;
 
-import org.lancoder.common.exceptions.MissingConfiguration;
+import org.lancoder.common.exceptions.InvalidConfiguration;
 import org.lancoder.master.Master;
 import org.lancoder.master.MasterConfig;
 import org.lancoder.worker.Worker;
@@ -25,12 +25,12 @@ public class Simulation extends Thread {
 		ConfigFactory<WorkerConfig> workerFactory = new ConfigFactory<>(WorkerConfig.class);
 		try {
 			masterConfig = masterFactory.load();
-		} catch (MissingConfiguration e) {
+		} catch (InvalidConfiguration e) {
 			masterConfig = masterFactory.init(true);
 		}
 		try {
 			workerConfig = workerFactory.load();
-		} catch (MissingConfiguration e) {
+		} catch (InvalidConfiguration e) {
 			workerConfig = workerFactory.init(true);
 		}
 		System.out.println("SIM: Starting master now");

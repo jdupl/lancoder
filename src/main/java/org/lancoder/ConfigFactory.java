@@ -10,22 +10,27 @@ import java.util.Scanner;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
 import org.lancoder.common.Config;
-import org.lancoder.common.exceptions.MissingConfiguration;
+import org.lancoder.common.exceptions.InvalidConfiguration;
 
 import com.google.gson.Gson;
 
 public class ConfigFactory<T extends Config> {
 
 	private Class<T> clazz;
-	private String configPath;
+	private T instance;
 
-	public ConfigFactory(Class<T> clazz) {
+	public ConfigFactory(Class<T> clazz) throws InvalidConfiguration {
 		this(clazz, null);
 	}
 
-	public ConfigFactory(Class<T> clazz, String configPath) {
-		this.clazz = clazz;
-		this.configPath = configPath == null ? generate().getDefaultPath() : configPath;
+	public ConfigFactory(Class<T> clazz, String configPath) throws InvalidConfiguration {
+		try {
+			this.clazz = clazz;
+			this.instance = clazz.newInstance();
+			this.instance.setConfigPath(configPath == null ? instance.getDefaultPath() : configPath);
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new InvalidConfiguration();
+		}
 	}
 
 	/**
@@ -36,8 +41,7 @@ public class ConfigFactory<T extends Config> {
 	 * @return The new configuration
 	 */
 	public T init(boolean userInput) {
-		T config = userInput ? promptUser() : generate();
-		config.setConfigPath(configPath);
+		T config = (userInput ? promptUser() : instance);
 		config.dump();
 		return config;
 	}
@@ -48,36 +52,21 @@ public class ConfigFactory<T extends Config> {
 	 * @param clazz
 	 *            The type of configuration
 	 * @return The loaded configuration
-	 * @throws MissingConfiguration
+	 * @throws InvalidConfiguration
 	 *             If file is corrupted or missing
 	 */
-	public T load() throws MissingConfiguration {
-		T config = generate();
-		if (!Files.exists(Paths.get(configPath))) {
-			throw new MissingConfiguration();
+	public T load() throws InvalidConfiguration {
+		if (!Files.exists(Paths.get(instance.getConfigPath()))) {
+			throw new InvalidConfiguration();
 		}
 		try {
-			byte[] b = Files.readAllBytes(Paths.get(configPath));
-			config = fromJson(new String(b, "UTF-8"));
-			config.setConfigPath(configPath);
+			byte[] b = Files.readAllBytes(Paths.get(instance.getConfigPath()));
+			T config = fromJson(new String(b, "UTF-8"));
+			config.setConfigPath(instance.getConfigPath());
 			System.out.println("Loaded config from disk");
+			return config;
 		} catch (IOException e) {
-			throw new MissingConfiguration();
-		}
-		return config;
-	}
-
-	/**
-	 * Generate default config instance
-	 * 
-	 * @return The default config
-	 */
-	private T generate() {
-		try {
-			return clazz.newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
-			e.printStackTrace();
-			return null;
+			throw new InvalidConfiguration();
 		}
 	}
 
