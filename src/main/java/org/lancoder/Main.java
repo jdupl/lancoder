@@ -38,14 +38,24 @@ public class Main {
 	}
 
 	private static Namespace parse(String[] args) {
-		ArgumentParser parser = ArgumentParsers.newArgumentParser("lancoder");
-		MutuallyExclusiveGroup group = parser.addMutuallyExclusiveGroup().required(true);
-		group.addArgument("--worker").action(Arguments.storeTrue());
-		group.addArgument("--master").action(Arguments.storeTrue());
+		ArgumentParser parser = ArgumentParsers.newArgumentParser("lancoder").defaultHelp(false)
+				.version("${prog} 0.0.1");
+		parser.addArgument("--version", "-v").action(Arguments.version()).help("show the current version and exit");
+
+		MutuallyExclusiveGroup group = parser.addMutuallyExclusiveGroup().required(true)
+				.description("Run a master or worker instance");
+		group.addArgument("--worker", "-w").action(Arguments.storeTrue()).help("run the worker");
+		group.addArgument("--master", "-m").action(Arguments.storeTrue()).help("run the master");
+
 		MutuallyExclusiveGroup group2 = parser.addMutuallyExclusiveGroup();
-		group2.addArgument("--init-prompt").action(Arguments.storeTrue());
-		group2.addArgument("--init-default").action(Arguments.storeTrue());
-		parser.addArgument("--config");
+		group2.addArgument("--init-prompt", "-i").action(Arguments.storeTrue())
+				.help("intialize configuration and prompt user");
+		group2.addArgument("--init-default", "-I").action(Arguments.storeTrue())
+				.help("initialise default config (you should edit that file after afterwards)");
+
+		parser.addArgument("--config", "-c").help("specify the config file");
+		parser.addArgument("--overwrite", "-o").action(Arguments.storeTrue())
+				.help("if flag is set, overwrite current config");
 		return parser.parseArgsOrFail(args);
 	}
 }
