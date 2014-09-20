@@ -2,12 +2,16 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>lancoder</groupId>
-	<artifactId>lancoder</artifactId>
+	<artifactId>org.lancoder</artifactId>
 	<version>0.0.1</version>
+	<packaging>jar</packaging>
+	<name>lancoder</name>
+	<url>lancoder.org</url>
+
 	<properties>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
+		<jdk.version>1.7</jdk.version>
 	</properties>
+
 	<repositories>
 		<repository>
 			<id>repo2_maven_org</id>
@@ -46,5 +50,12 @@
 			<artifactId>argparse4j</artifactId>
 			<version>0.4.4</version>
 		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
+
 </project>
