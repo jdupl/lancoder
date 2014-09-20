@@ -20,13 +20,12 @@ public class ConfigFactory<T extends Config> {
 	private String configPath;
 
 	public ConfigFactory(Class<T> clazz) {
-		this.clazz = clazz;
-		configPath = generate().getDefaultPath();
+		this(clazz, null);
 	}
 
 	public ConfigFactory(Class<T> clazz, String configPath) {
 		this.clazz = clazz;
-		this.configPath = configPath;
+		this.configPath = configPath == null ? generate().getDefaultPath() : configPath;
 	}
 
 	/**
