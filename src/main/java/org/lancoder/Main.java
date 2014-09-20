@@ -1,7 +1,17 @@
 package org.lancoder;
 
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
+import net.sourceforge.argparse4j.inf.Namespace;
+
+import org.lancoder.common.Config;
+import org.lancoder.common.exceptions.MissingConfiguration;
 import org.lancoder.master.Master;
+import org.lancoder.master.MasterConfig;
 import org.lancoder.worker.Worker;
+import org.lancoder.worker.WorkerConfig;
 
 public class Main {
 	/**
@@ -9,36 +19,33 @@ public class Main {
 	 * 
 	 * @param args
 	 *            The user's arguments
+	 * @throws MissingConfiguration
 	 */
-	public static void main(String[] args) {
-		if (args.length < 1 || args.length > 2) {
-			printHelp();
-			System.exit(-1);
-		}
-		// Get user's config path
-		String configpath = args.length == 2 ? configpath = args[1] : null;
-		Runnable r = null;
+	public static void main(String[] args) throws MissingConfiguration {
+		ArgumentParser parser = ArgumentParsers.newArgumentParser("lancoder");
+		MutuallyExclusiveGroup group = parser.addMutuallyExclusiveGroup().required(true);
+		group.addArgument("--worker").action(Arguments.storeTrue());
+		group.addArgument("--master").action(Arguments.storeTrue());
+		MutuallyExclusiveGroup group2 = parser.addMutuallyExclusiveGroup();
+		group2.addArgument("--init-prompt").action(Arguments.storeTrue());
+		group2.addArgument("--init-default").action(Arguments.storeTrue());
 
-		if (args[0].equals("--worker")) {
-			// r = new Worker(configpath);
-		} else if (args[0].equals("--master")) {
-			if (args.length == 2) {
-				configpath = args[1];
-			}
-			// r = new Master(configpath);
+		Namespace parsed = parser.parseArgsOrFail(args);
+
+		Runnable r = null;
+		boolean isWorker = parsed.getBoolean("worker");
+		Class clazz = isWorker ? WorkerConfig.class : MasterConfig.class;
+		if (isWorker) {
+			clazz = WorkerConfig.class;
+		}
+		ConfigFactory<Config> factory = new ConfigFactory<>(clazz);
+		Config conf = factory.load();
+		if (isWorker) {
+			r = new Worker((WorkerConfig) conf);
 		} else {
-			printHelp();
-			System.exit(-1);
+			r = new Master((MasterConfig) conf);
 		}
 		Thread t = new Thread(r);
 		t.start();
 	}
-
-	public static void printHelp() {
-		System.err.println("Usage: LANcoder.jar (--master | --worker) [--init] [--config] [configPath]");
-		System.err.println("Use --master to run as master OR --worker to run as worker.");
-		System.err.println("Use --init to generate a new config with user input.");
-		System.err.println("Use --config \"/path/to/config.json\" to overide default config path.");
-	}
-
 }
