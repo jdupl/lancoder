@@ -1,5 +1,6 @@
-package org.lancoder;
+package org.lancoder.simulation;
 
+import org.lancoder.ConfigFactory;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.master.Master;
 import org.lancoder.master.MasterConfig;

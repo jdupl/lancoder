@@ -1,4 +1,4 @@
-package org.lancoder;
+package org.lancoder.simulation;
 
 import java.io.IOException;
 

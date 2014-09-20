@@ -10,7 +10,8 @@ import java.util.Map.Entry;
 import java.util.Scanner;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
-import org.lancoder.common.Config;
+import org.lancoder.common.config.Config;
+import org.lancoder.common.config.Prompt;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 
 import com.google.gson.Gson;

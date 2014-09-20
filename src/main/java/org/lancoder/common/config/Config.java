@@ -1,4 +1,4 @@
-package org.lancoder.common;
+package org.lancoder.common.config;
 
 import java.io.File;
 import java.io.IOException;

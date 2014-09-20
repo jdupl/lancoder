@@ -6,7 +6,7 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-import org.lancoder.common.Config;
+import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.master.Master;
 import org.lancoder.master.MasterConfig;

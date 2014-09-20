@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.Serializable;
 import java.net.InetAddress;
 
-import org.lancoder.Prompt;
-import org.lancoder.common.Config;
+import org.lancoder.common.config.Config;
+import org.lancoder.common.config.Prompt;
 
 public class WorkerConfig extends Config implements Serializable {
 

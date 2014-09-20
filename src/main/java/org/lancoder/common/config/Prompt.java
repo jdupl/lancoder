@@ -1,4 +1,4 @@
-package org.lancoder;
+package org.lancoder.common.config;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

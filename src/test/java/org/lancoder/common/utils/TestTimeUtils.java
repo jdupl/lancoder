@@ -1,4 +1,4 @@
-package drfoliberg.common.utils;
+package org.lancoder.common.utils;
 
 import static org.junit.Assert.*;
 
