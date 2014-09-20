@@ -5,9 +5,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import org.lancoder.common.network.messages.ClusterProtocol;
-import org.lancoder.common.network.messages.cluster.Message;
-import org.lancoder.common.network.messages.cluster.TaskRequestMessage;
+import org.lancoder.common.network.cluster.messages.Message;
+import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 
 public class WorkerHandler implements Runnable {
 

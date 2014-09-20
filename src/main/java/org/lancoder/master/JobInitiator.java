@@ -16,7 +16,7 @@ import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.job.RateControlType;
-import org.lancoder.common.network.messages.api.ApiJobRequest;
+import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.progress.Unit;
 import org.lancoder.common.task.audio.AudioStreamConfig;
 import org.lancoder.common.task.audio.AudioTask;

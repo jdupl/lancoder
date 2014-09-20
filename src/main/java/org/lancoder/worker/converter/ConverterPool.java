@@ -3,7 +3,7 @@ package org.lancoder.worker.converter;
 import java.util.Hashtable;
 
 import org.lancoder.common.Service;
-import org.lancoder.common.network.Cause;
+import org.lancoder.common.network.cluster.messages.Cause;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.worker.WorkerConfig;
 

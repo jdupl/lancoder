@@ -1,8 +1,8 @@
-package org.lancoder.common.network.messages.cluster;
+package org.lancoder.common.network.cluster.messages;
 
 import java.util.ArrayList;
 
-import org.lancoder.common.network.messages.ClusterProtocol;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.TaskReport;
 

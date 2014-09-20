@@ -9,8 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.lancoder.common.network.messages.api.ApiJobRequest;
-import org.lancoder.common.network.messages.api.ApiResponse;
+import org.lancoder.common.network.messages.web.ApiJobRequest;
+import org.lancoder.common.network.messages.web.ApiResponse;
 import org.lancoder.master.Master;
 
 import com.google.gson.Gson;

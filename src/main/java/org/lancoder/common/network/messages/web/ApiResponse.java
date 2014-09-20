@@ -1,4 +1,4 @@
-package org.lancoder.common.network.messages.api;
+package org.lancoder.common.network.messages.web;
 
 import java.io.Serializable;
 

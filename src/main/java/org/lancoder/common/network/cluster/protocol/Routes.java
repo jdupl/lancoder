@@ -1,4 +1,4 @@
-package org.lancoder.common.network;
+package org.lancoder.common.network.cluster.protocol;
 
 public class Routes {
 	public static final String NODE_STATUS = "/node/status";

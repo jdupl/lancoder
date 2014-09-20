@@ -1,4 +1,4 @@
-package org.lancoder.common.network.messages;
+package org.lancoder.common.network.cluster.protocol;
 
 public enum ClusterProtocol {
 	/**

@@ -1,6 +1,7 @@
-package org.lancoder.common.network.messages.cluster;
+package org.lancoder.common.network.cluster.messages;
 
-import org.lancoder.common.network.messages.ClusterProtocol;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+
 
 public class PingMessage extends Message {
 

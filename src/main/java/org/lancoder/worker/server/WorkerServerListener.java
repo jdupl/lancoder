@@ -1,6 +1,6 @@
 package org.lancoder.worker.server;
 
-import org.lancoder.common.network.messages.cluster.StatusReport;
+import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.task.ClientTask;
 
 public interface WorkerServerListener {

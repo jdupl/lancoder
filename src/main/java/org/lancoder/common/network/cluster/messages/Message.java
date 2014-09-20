@@ -1,8 +1,8 @@
-package org.lancoder.common.network.messages.cluster;
+package org.lancoder.common.network.cluster.messages;
 
 import java.io.Serializable;
 
-import org.lancoder.common.network.messages.ClusterProtocol;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 
 public class Message implements Serializable {
 

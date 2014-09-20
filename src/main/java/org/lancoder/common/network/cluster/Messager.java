@@ -1,4 +1,4 @@
-package org.lancoder.common.network;
+package org.lancoder.common.network.cluster;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

@@ -8,9 +8,9 @@ import java.net.Socket;
 import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
-import org.lancoder.common.network.messages.ClusterProtocol;
-import org.lancoder.common.network.messages.cluster.Message;
-import org.lancoder.common.network.messages.cluster.TaskRequestMessage;
+import org.lancoder.common.network.cluster.messages.Message;
+import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.task.ClientTask;
 
 public class ObjectDispatcher extends RunnableService {

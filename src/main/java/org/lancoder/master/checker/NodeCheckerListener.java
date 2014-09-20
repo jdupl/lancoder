@@ -3,7 +3,7 @@ package org.lancoder.master.checker;
 import java.util.ArrayList;
 
 import org.lancoder.common.Node;
-import org.lancoder.common.network.messages.cluster.StatusReport;
+import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.task.TaskReport;
 
 public interface NodeCheckerListener {

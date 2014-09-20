@@ -1,6 +1,6 @@
-package org.lancoder.common.network.messages.cluster;
+package org.lancoder.common.network.cluster.messages;
 
-import org.lancoder.common.network.messages.ClusterProtocol;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.task.ClientTask;
 
 public class TaskRequestMessage extends Message {

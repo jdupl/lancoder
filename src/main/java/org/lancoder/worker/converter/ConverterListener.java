@@ -1,6 +1,6 @@
 package org.lancoder.worker.converter;
 
-import org.lancoder.common.network.Cause;
+import org.lancoder.common.network.cluster.messages.Cause;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.worker.WorkerConfig;
 

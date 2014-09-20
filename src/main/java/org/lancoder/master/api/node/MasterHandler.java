@@ -5,11 +5,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import org.lancoder.common.network.messages.ClusterProtocol;
-import org.lancoder.common.network.messages.cluster.ConnectMessage;
-import org.lancoder.common.network.messages.cluster.Message;
-import org.lancoder.common.network.messages.cluster.PingMessage;
-import org.lancoder.common.network.messages.cluster.StatusReport;
+import org.lancoder.common.network.cluster.messages.ConnectMessage;
+import org.lancoder.common.network.cluster.messages.Message;
+import org.lancoder.common.network.cluster.messages.PingMessage;
+import org.lancoder.common.network.cluster.messages.StatusReport;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 
 public class MasterHandler implements Runnable {
 

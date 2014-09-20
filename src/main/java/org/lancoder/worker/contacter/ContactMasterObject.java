@@ -8,9 +8,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.lancoder.common.RunnableService;
-import org.lancoder.common.network.messages.ClusterProtocol;
-import org.lancoder.common.network.messages.cluster.Message;
-import org.lancoder.common.network.messages.cluster.PingMessage;
+import org.lancoder.common.network.cluster.messages.Message;
+import org.lancoder.common.network.cluster.messages.PingMessage;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.status.NodeState;
 
 public class ContactMasterObject extends RunnableService {

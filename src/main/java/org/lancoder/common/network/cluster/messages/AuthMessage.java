@@ -1,6 +1,7 @@
-package org.lancoder.common.network.messages.cluster;
+package org.lancoder.common.network.cluster.messages;
 
-import org.lancoder.common.network.messages.ClusterProtocol;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+
 
 /**
  * Extends Message to require unid. Master server directly knows which node sent the message. Master server can verify

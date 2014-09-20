@@ -10,7 +10,7 @@ import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.common.file_components.streams.VideoStream;
-import org.lancoder.common.network.Cause;
+import org.lancoder.common.network.cluster.messages.Cause;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.common.utils.TimeUtils;

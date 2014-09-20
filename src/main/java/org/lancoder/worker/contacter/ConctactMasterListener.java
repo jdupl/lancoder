@@ -1,6 +1,6 @@
 package org.lancoder.worker.contacter;
 
-import org.lancoder.common.network.messages.cluster.ConnectMessage;
+import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.status.NodeState;
 
 public interface ConctactMasterListener {

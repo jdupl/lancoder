@@ -1,7 +1,7 @@
 package org.lancoder.master.api.node;
 
-import org.lancoder.common.network.messages.cluster.ConnectMessage;
-import org.lancoder.common.network.messages.cluster.StatusReport;
+import org.lancoder.common.network.cluster.messages.ConnectMessage;
+import org.lancoder.common.network.cluster.messages.StatusReport;
 
 public interface MasterNodeServerListener {
 

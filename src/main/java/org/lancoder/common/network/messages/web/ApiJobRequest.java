@@ -1,4 +1,4 @@
-package org.lancoder.common.network.messages.api;
+package org.lancoder.common.network.messages.web;
 
 import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.Codec;

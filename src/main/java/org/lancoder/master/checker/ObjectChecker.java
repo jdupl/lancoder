@@ -10,9 +10,9 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
-import org.lancoder.common.network.messages.ClusterProtocol;
-import org.lancoder.common.network.messages.cluster.Message;
-import org.lancoder.common.network.messages.cluster.StatusReport;
+import org.lancoder.common.network.cluster.messages.Message;
+import org.lancoder.common.network.cluster.messages.StatusReport;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 
 public class ObjectChecker extends RunnableService implements Comparable<ObjectChecker> {
 
