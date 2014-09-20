@@ -8,16 +8,10 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
@@ -29,7 +23,6 @@ import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
-import org.lancoder.common.network.cluster.protocol.Routes;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.TaskReport;
@@ -209,40 +202,12 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		return this.node.getNodeAddress();
 	}
 
-	@Deprecated
 	private void gracefulShutdown() {
-		try {
-			CloseableHttpClient client = HttpClients.createDefault();
-			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
-			URI url = new URI("http", null, this.getAddress().getHostAddress(), this.getListenPort(),
-					Routes.DISCONNECT_NODE, null, null);
-			HttpPost post = new HttpPost(url);
-			post.setConfig(defaultRequestConfig);
-			// Send request, but don't mind the response
-			client.execute(post);
-		} catch (IOException e) {
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
+		throw new UnsupportedOperationException();
 	}
 
-	@Deprecated
 	public synchronized void sendCrashReport(CrashReport report) {
-		try {
-			CloseableHttpClient client = HttpClients.createDefault();
-			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000).build();
-
-			URI url = new URI("http", null, this.getAddress().getHostAddress(), this.getListenPort(),
-					Routes.NODE_CRASH, null, null);
-			HttpPost post = new HttpPost(url);
-			post.setConfig(defaultRequestConfig);
-
-			// Send request, but don't mind the response
-			client.execute(post);
-		} catch (IOException e) {
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
+		throw new UnsupportedOperationException();
 	}
 
 	public boolean notifyMasterStatusChange() {

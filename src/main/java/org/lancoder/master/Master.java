@@ -1,9 +1,6 @@
 package org.lancoder.master;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -12,10 +9,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
@@ -24,7 +17,6 @@ import org.lancoder.common.job.Job;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.StatusReport;
-import org.lancoder.common.network.cluster.protocol.Routes;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
 import org.lancoder.common.status.JobState;
@@ -250,22 +242,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	 *            The node to remove
 	 */
 	public void disconnectNode(Node n) {
-		try {
-			CloseableHttpClient client = HttpClients.createDefault();
-			RequestConfig defaultRequestConfig = RequestConfig.custom().setSocketTimeout(2000)
-					.setConnectionRequestTimeout(2000).setConnectTimeout(2000).build();
-			URI url = new URI("http", null, n.getNodeAddress().getHostAddress(), n.getNodePort(),
-					Routes.DISCONNECT_NODE, null, null);
-			HttpPost post = new HttpPost(url);
-			post.setConfig(defaultRequestConfig);
-			client.execute(post);
-		} catch (IOException e) {
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		} finally {
-			// remove node from list
-			removeNode(n);
-		}
+		// remove node from list
+		removeNode(n);
+		throw new UnsupportedOperationException();
 	}
 
 	/**
