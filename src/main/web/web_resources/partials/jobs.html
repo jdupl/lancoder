@@ -65,18 +65,26 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label>Audio codec</label>
-                        <select class="form-control" ng-model="newJob.audioCodec" ng-init="newJob.audioCodec = 'VORBIS'" ng-options="codec.value as codec.name for codec in audioCodecs"></select>
+                        <label>Audio processing</label>
+                        <select class="form-control" ng-model="newJob.audioConfig" ng-init="newJob.audioConfig = 'AUTO'" ng-options="config.value as config.name for config in audioConfigs"></select>
                     </div>
                 </div>
-                <div class="col-md-3" ng-hide="newJob.audioCodec === 'COPY'">
-                    <div class="form-group">
-                        <label>Audio rate control type</label>
-                        <select class="form-control" ng-model="newJob.audioRateControlType" ng-init="newJob.audioRateControlType = 'AUTO'" ng-options="ct.value as ct.name for ct in audioControlTypes"></select>
+                <div ng-show="newJob.audioConfig === 'MANUAL'">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Audio codec</label>
+                            <select class="form-control" ng-model="newJob.audioCodec" ng-init="newJob.audioCodec = 'VORBIS'" ng-options="codec.value as codec.name for codec in audioCodecs"></select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Audio rate control type</label>
+                            <select class="form-control" ng-model="newJob.audioRateControlType" ng-init="newJob.audioRateControlType = 'VBR'" ng-options="ct.value as ct.name for ct in audioControlTypes"></select>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="row" ng-hide="newJob.audioRateControlType === 'AUTO'">
+            <div class="row" ng-show="newJob.audioConfig === 'MANUAL'">
                 <div class="col-md-3">
                     <div class="form-group">
                         <div ng-switch on="newJob.audioRateControlType">
