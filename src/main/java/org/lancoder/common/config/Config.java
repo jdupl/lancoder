@@ -10,7 +10,7 @@ import com.google.gson.GsonBuilder;
 
 public abstract class Config {
 
-	protected String configPath;
+	protected transient String configPath;
 
 	/**
 	 * Serializes current config to disk as JSON object.
