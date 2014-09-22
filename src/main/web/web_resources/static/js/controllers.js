@@ -3,11 +3,11 @@
 /* Controllers */
 
 angular.module('lancoder.controllers', []).
-    controller('nodes', function ($scope, $http, $timeout) {
-      var refreshNodes = $scope.refreshNodes = function () {
+    controller('nodes', function($scope, $http, $timeout) {
+      var refreshNodes = $scope.refreshNodes = function() {
         // Get nodes
         $http({method: 'GET', url: '/api/nodes'})
-            .success(function (data, status, headers, config) {
+            .success(function(data, status, headers, config) {
               for (var i = 0; i < data.length; i++) {
                 switch (data[i].status) {
                   case 'WORKING':
@@ -50,13 +50,13 @@ angular.module('lancoder.controllers', []).
                   $scope.nodes[i].currentTasks[j].task.taskProgress.currentStep = currentStep;
                 }
               }
-            }).error(function () {
+            }).error(function() {
           $scope.nodes.error = 'Cannot not reach master server.';
         });
       };
 
-      $scope.nodesAutoRefresh = function () {
-        $timeout(function () {
+      $scope.nodesAutoRefresh = function() {
+        $timeout(function() {
           $scope.refreshNodes();
           $scope.nodesAutoRefresh();
         }, 5000);
@@ -64,9 +64,9 @@ angular.module('lancoder.controllers', []).
       refreshNodes();
       $scope.nodesAutoRefresh();
     })
-    .controller('jobs', function ($scope, $http, $timeout) {
+    .controller('jobs', function($scope, $http, $timeout) {
       $http({method: 'GET', url: '/api/codecs/audio'})
-          .success(function (data) {
+          .success(function(data) {
             $scope.audioCodecs = data;
             for (var i = 0; i < data.length; i++) {
               var codec = data[i];
@@ -77,7 +77,7 @@ angular.module('lancoder.controllers', []).
             }
           });
       $http({method: 'GET', url: '/api/codecs/video'})
-          .success(function (data) {
+          .success(function(data) {
             $scope.videoCodecs = data;
           });
       $scope.presets = ['ULTRAFAST', 'SUPERFAST', 'VERYFAST', 'FASTER', 'FAST', 'MEDIUM', 'SLOW', 'SLOWER', 'VERYSLOW', 'PLACEBO'];
@@ -102,10 +102,10 @@ angular.module('lancoder.controllers', []).
       $scope.audioSampleRates = [8000, 11025, 22050, 44100, 48000, 88200, 96000];
       $scope.passes = [1, 2];
 
-      var refreshJobs = $scope.refreshJobs = function () {
+      var refreshJobs = $scope.refreshJobs = function() {
         // Get jobs
         $http({method: 'GET', url: '/api/jobs'})
-            .success(function (data, status, headers, config) {
+            .success(function(data, status, headers, config) {
               for (var i = 0; i < data.length; i++) {
                 switch (data[i].jobStatus) {
                   case 'JOB_COMPLETED':
@@ -141,46 +141,46 @@ angular.module('lancoder.controllers', []).
                 }
               }
               $scope.jobs = data;
-            }).error(function () {
+            }).error(function() {
           $scope.jobs = [];
           $scope.jobs.error = 'Cannot not reach master server.';
         });
       };
-      $scope.jobsAutoRefresh = function () {
-        $timeout(function () {
+      $scope.jobsAutoRefresh = function() {
+        $timeout(function() {
           $scope.refreshJobs();
           $scope.jobsAutoRefresh();
         }, 5000);
       };
-      $scope.addjob = function (newjob) {
+      $scope.addjob = function(newjob) {
         $http({method: 'POST', url: '/api/jobs/add', data: newjob})
-            .success(function (data) {
+            .success(function(data) {
               if (data.success) {
                 refreshJobs();
                 $scope.showAddJobPanel = false;
               } else {
                 alert(data.message);
               }
-            }).error(function () {
+            }).error(function() {
           alert('Network failure');
         });
       };
-      $scope.deletejob = function (oldjob) {
+      $scope.deletejob = function(oldjob) {
         $http({method: 'POST', url: '/api/jobs/delete', data: oldjob})
-            .success(function (data) {
+            .success(function(data) {
               if (data.success) {
                 refreshJobs();
               } else {
                 alert(data.message);
               }
-            }).error(function () {
+            }).error(function() {
           alert('Network failure');
         });
       };
       refreshJobs();
       $scope.jobsAutoRefresh();
-    }).controller('HeaderController', function ($scope, $location) {
-  $scope.isActive = function (viewLocation) {
+    }).controller('HeaderController', function($scope, $location) {
+  $scope.isActive = function(viewLocation) {
     return viewLocation === $location.path();
   };
 });
