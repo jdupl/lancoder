@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.lancoder.common.codecs.Codec;
-import org.lancoder.common.codecs.CodecAdapterFactory;
+import org.lancoder.common.codecs.CodecTypeAdapter;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
 import org.lancoder.master.Master;
@@ -29,7 +29,7 @@ public class ApiHandler extends AbstractHandler {
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-		Gson gson = new Gson();
+		Gson gson = new GsonBuilder().registerTypeAdapter(Codec.class, new CodecTypeAdapter<>()).create();
 		ApiResponse res = new ApiResponse(false, "Unknown error");
 		BufferedReader br = null;
 		response.setContentType("application/json");
@@ -73,14 +73,14 @@ public class ApiHandler extends AbstractHandler {
 			baseRequest.setHandled(true);
 			break;
 		case "/codecs/audio":
-			try {
-				gson = new GsonBuilder().registerTypeAdapterFactory(new CodecAdapterFactory()).create();
-				response.setStatus(HttpServletResponse.SC_OK);
-				response.getWriter().println(gson.toJson(Codec.getAudioCodecs()));
-				baseRequest.setHandled(true);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			response.setStatus(HttpServletResponse.SC_OK);
+			response.getWriter().println(gson.toJson(Codec.getAudioCodecs()));
+			baseRequest.setHandled(true);
+			break;
+		case "/codecs/video":
+			response.setStatus(HttpServletResponse.SC_OK);
+			response.getWriter().println(gson.toJson(Codec.getVideoCodecs()));
+			baseRequest.setHandled(true);
 			break;
 		default:
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
