@@ -9,14 +9,14 @@ import com.google.gson.stream.JsonWriter;
 /**
  * Type adapter for Gson serialization
  */
-public class CodecTypeAdapter<T> extends TypeAdapter<T> {
+public class CodecTypeAdapter<T> extends TypeAdapter<Codec> {
 
-	public void write(JsonWriter out, T value) throws IOException {
+	public void write(JsonWriter out, Codec value) throws IOException {
 		if (value == null) {
 			out.nullValue();
 			return;
 		}
-		Codec codec = (Codec) value;
+		Codec codec = value;
 		out.beginObject();
 		out.name("value");
 		out.value(codec.name());
@@ -24,11 +24,24 @@ public class CodecTypeAdapter<T> extends TypeAdapter<T> {
 		out.value(codec.getPrettyName());
 		out.name("lossless");
 		out.value(codec.isLossless());
+		out.name("library");
+		out.value(codec.getEncoder());
 		out.endObject();
 	}
 
 	@Override
-	public T read(JsonReader in) throws IOException {
-		throw new UnsupportedOperationException();
+	public Codec read(JsonReader in) throws IOException {
+		in.beginObject();
+		while (in.hasNext()) {
+			if (in.nextName().equals("library")) {
+				Codec c = Codec.findByLib(in.nextString());
+				in.endObject();
+				return c;
+			} else {
+				in.skipValue();
+			}
+		}
+		in.endObject();
+		return null;
 	}
 }
