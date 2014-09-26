@@ -63,8 +63,15 @@ public enum Codec implements Serializable {
 	/**
 	 * H.265 (This encoding is not yet supported by most systems.)
 	 */
-	H265("HEVC/H.265", "h265", "libx265", "mpegts", false);
-	// MPEG4("MPEG-4", "mpeg4", "mp4"),
+	H265("HEVC/H.265", "h265", "libx265", "mpegts", false),
+	/**
+	 * Experimental codec by ffmpeg. Not supported for muxing (in test)
+	 */
+	VP8("WebM Vp8", "vp8", "libvpx", "webm", false),
+	/**
+	 * Experimental codec by ffmpeg. Not supported for muxing (in test)
+	 */
+	VP9("WebM Vp9", "vp9", "libvpx-vp9", "webm", false);
 
 	private String prettyName;
 	private String ffMpegName;
@@ -114,7 +121,7 @@ public enum Codec implements Serializable {
 	}
 
 	public static Codec[] getVideoCodecs() {
-		return new Codec[] { H264, H265 };
+		return new Codec[] { H264, H265, VP9, VP8 };
 	}
 
 }

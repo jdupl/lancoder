@@ -11,7 +11,7 @@ import org.lancoder.ffmpeg.FFmpegReaderListener;
 
 public class CodecProber implements FFmpegReaderListener {
 
-	private static Pattern codecPattern = Pattern.compile("[VASFSXBD.]{6}\\s(\\p{Alnum}+)");
+	private static Pattern codecPattern = Pattern.compile("[VASFSXBD\\s\\.]{6,8}([\\p{Lower}\\d\\-]+)");
 	private final ArrayList<Codec> codecs = new ArrayList<>();
 
 	/**
@@ -35,8 +35,9 @@ public class CodecProber implements FFmpegReaderListener {
 	@Override
 	public void onMessage(String line) {
 		Matcher m = codecPattern.matcher(line);
-		if (m.find()) {
-			Codec c = Codec.findByLib(m.group(1));
+		if (m.find() && m.groupCount() == 1) {
+			String s = m.group(1);
+			Codec c = Codec.findByLib(s);
 			if (c != Codec.UNKNOWN) {
 				codecs.add(c);
 			}
