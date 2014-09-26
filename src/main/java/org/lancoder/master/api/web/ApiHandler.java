@@ -9,11 +9,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecTypeAdapter;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
 import org.lancoder.master.Master;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class ApiHandler extends AbstractHandler {
 
@@ -26,10 +29,10 @@ public class ApiHandler extends AbstractHandler {
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-		Gson gson = new Gson();
+		Gson gson = new GsonBuilder().registerTypeAdapter(Codec.class, new CodecTypeAdapter<>()).create();
 		ApiResponse res = new ApiResponse(false, "Unknown error");
 		BufferedReader br = null;
-		response.setContentType("text/json;charset=utf-8");
+		response.setContentType("application/json");
 		switch (target) {
 		case "/nodes":
 			response.setStatus(HttpServletResponse.SC_OK);
@@ -54,7 +57,6 @@ public class ApiHandler extends AbstractHandler {
 			} catch (Exception e) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			}
-
 			response.getWriter().println(gson.toJson(res));
 			baseRequest.setHandled(true);
 			break;
@@ -68,6 +70,16 @@ public class ApiHandler extends AbstractHandler {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			}
 			response.getWriter().println(gson.toJson(res));
+			baseRequest.setHandled(true);
+			break;
+		case "/codecs/audio":
+			response.setStatus(HttpServletResponse.SC_OK);
+			response.getWriter().println(gson.toJson(Codec.getAudioCodecs()));
+			baseRequest.setHandled(true);
+			break;
+		case "/codecs/video":
+			response.setStatus(HttpServletResponse.SC_OK);
+			response.getWriter().println(gson.toJson(Codec.getVideoCodecs()));
 			baseRequest.setHandled(true);
 			break;
 		default:

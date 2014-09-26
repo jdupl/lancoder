@@ -65,6 +65,21 @@ angular.module('lancoder.controllers', []).
       $scope.nodesAutoRefresh();
     })
     .controller('jobs', function($scope, $http, $timeout) {
+      $http({method: 'GET', url: '/api/codecs/audio'})
+          .success(function(data) {
+            $scope.audioCodecs = data;
+            for (var i = 0; i < data.length; i++) {
+              var codec = data[i];
+              if (codec.value === "VORBIS") {
+                $scope.newJob.audioCodec = codec;
+                break;
+              }
+            }
+          });
+      $http({method: 'GET', url: '/api/codecs/video'})
+          .success(function(data) {
+            $scope.videoCodecs = data;
+          });
       $scope.presets = ['ULTRAFAST', 'SUPERFAST', 'VERYFAST', 'FASTER', 'FAST', 'MEDIUM', 'SLOW', 'SLOWER', 'VERYSLOW', 'PLACEBO'];
       $scope.controlTypes = [
         {value: 'VBR', name: 'Variable Bitrate'},
@@ -72,12 +87,12 @@ angular.module('lancoder.controllers', []).
       ];
       $scope.audioControlTypes = [
         {value: 'VBR', name: 'Variable Bitrate'},
-        {value: 'CRF', name: 'Constant rate factor'},
-        {value: 'AUTO', name: 'Vorbis q5 audio downmix to stereo'}
+        {value: 'CRF', name: 'Constant rate factor'}
       ];
-      $scope.audioCodecs = [
-        {value: 'VORBIS', name: 'Vorbis'},
-        {value: 'COPY', name: 'Copy original stream'}
+      $scope.audioConfigs = [
+        {value: 'AUTO', name: 'Automatic (Vorbis Q5 stereo)'},
+        {value: 'COPY', name: 'Copy original stream'},
+        {value: 'MANUAL', name: 'Manual configuration'}
       ];
       $scope.audioChannels = [
         {value: 'MONO', name: 'Mono'},
@@ -131,14 +146,12 @@ angular.module('lancoder.controllers', []).
           $scope.jobs.error = 'Cannot not reach master server.';
         });
       };
-
       $scope.jobsAutoRefresh = function() {
         $timeout(function() {
           $scope.refreshJobs();
           $scope.jobsAutoRefresh();
         }, 5000);
       };
-
       $scope.addjob = function(newjob) {
         $http({method: 'POST', url: '/api/jobs/add', data: newjob})
             .success(function(data) {
@@ -152,7 +165,6 @@ angular.module('lancoder.controllers', []).
           alert('Network failure');
         });
       };
-
       $scope.deletejob = function(oldjob) {
         $http({method: 'POST', url: '/api/jobs/delete', data: oldjob})
             .success(function(data) {
@@ -167,7 +179,6 @@ angular.module('lancoder.controllers', []).
       };
       refreshJobs();
       $scope.jobsAutoRefresh();
-
     }).controller('HeaderController', function($scope, $location) {
   $scope.isActive = function(viewLocation) {
     return viewLocation === $location.path();

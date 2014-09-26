@@ -109,4 +109,12 @@ public enum Codec implements Serializable {
 		return UNKNOWN;
 	}
 
+	public static Codec[] getAudioCodecs() {
+		return new Codec[] { AAC, APE, DTS, FLAC, MP3, OPUS, SPEEX, VORBIS, WAVPACK };
+	}
+
+	public static Codec[] getVideoCodecs() {
+		return new Codec[] { H264, H265 };
+	}
+
 }

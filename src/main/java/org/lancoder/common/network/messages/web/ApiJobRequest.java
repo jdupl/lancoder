@@ -15,11 +15,20 @@ public class ApiJobRequest {
 	private FFmpegPreset preset;
 	private RateControlType rateControlType;
 	// Audio
+	private UserAudioPreset audioPreset;
 	private Codec audioCodec;
 	private RateControlType audioRateControlType;
 	private int audioRate;
 	private ChannelDisposition audioChannels;
 	private int audioSampleRate;
+
+	public UserAudioPreset getAudioPreset() {
+		return audioPreset;
+	}
+
+	public void setAudioPreset(UserAudioPreset audioPreset) {
+		this.audioPreset = audioPreset;
+	}
 
 	public RateControlType getAudioRateControlType() {
 		return audioRateControlType;

@@ -63,22 +63,33 @@ public class JobInitiator extends RunnableService {
 			passes = 1;
 		}
 		int lengthOfTasks = 1000 * 60 * 5; // TODO get length of task (maybe in an 'advanced section')
-
 		// Audio parameters
-		RateControlType audioRCT = req.getAudioRateControlType();
-		Codec audioCodec = req.getAudioCodec();
-		ChannelDisposition audioChannels = req.getAudioChannels();
-		int audioSampleRate = req.getAudioSampleRate();
-		int audioRate = req.getRate();
-
-		if (audioRCT == RateControlType.AUTO) {
+		RateControlType audioRCT = null;
+		int audioRate = 0;
+		int audioSampleRate = 0;
+		Codec audioCodec = null;
+		ChannelDisposition audioChannels = null;
+		switch (req.getAudioPreset()) {
+		case COPY:
+			audioCodec = Codec.COPY;
+			break;
+		case AUTO:
+			// Set default values
 			audioRCT = RateControlType.CRF;
 			audioRate = 5;
 			audioSampleRate = 48000;
 			audioCodec = Codec.VORBIS;
 			audioChannels = ChannelDisposition.STEREO;
+			break;
+		case MANUAL:
+			// Set values from user's request
+			audioRCT = req.getAudioRateControlType();
+			audioCodec = req.getAudioCodec();
+			audioChannels = req.getAudioChannels();
+			audioSampleRate = req.getAudioSampleRate();
+			audioRate = req.getRate();
+			break;
 		}
-
 		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo);
 
 		for (VideoStream stream : fileInfo.getVideoStreams()) {

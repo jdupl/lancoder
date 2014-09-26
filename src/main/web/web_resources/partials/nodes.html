@@ -12,37 +12,37 @@
         </div>
         <div class="panel-body">
             <div class="animate-repeat" ng-repeat="task in node.currentTasks">
-              <div class="panel {{node.panel}}" ng-init="currentTask = task.task">
-                  <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                          <p>Encoding part {{currentTask.taskInfo.taskId}} of file {{currentTask.sourceFile}}</p>
-                            <div ng-if="currentTask.taskProgress.stepCount > 1">
-                              <p>Pass {{currentTask.taskProgress.currentPassIndex}} of {{currentTask.taskProgress.stepCount}}</p>
+                <div class="panel {{node.panel}}" ng-init="currentTask = task.task">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p>Encoding part {{currentTask.taskInfo.taskId}} of file {{currentTask.sourceFile}}</p>
+                                <div ng-if="currentTask.taskProgress.stepCount > 1">
+                                    <p>Pass {{currentTask.taskProgress.currentPassIndex}} of {{currentTask.taskProgress.stepCount}}</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="progress">
-                                <div class="progress-bar progress-bar-success" role="progressbar"
-                                  aria-valuenow="{{currentTask.taskProgress.currentStep.progress}}"
-                                  aria-valuemin="0" aria-valuemax="100" style="width: {{currentTask.taskProgress.currentStep.progress}}%">
+                            <div class="col-md-6">
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-success" role="progressbar"
+                                         aria-valuenow="{{currentTask.taskProgress.currentStep.progress}}"
+                                         aria-valuemin="0" aria-valuemax="100" style="width: {{currentTask.taskProgress.currentStep.progress}}%">
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p>Encoding at {{currentTask.taskProgress.currentStep.speed | number:1}} {{currentTask.taskProgress.currentStep.prettyUnit}}.
-                               Estimated time to finish this pass:
-                               {{currentTask.taskProgress.currentStep.timeEstimated / 1000 | number:0}}
-                               s</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p>Encoding at {{currentTask.taskProgress.currentStep.speed| number:1}} {{currentTask.taskProgress.currentStep.prettyUnit}}.
+                                    Estimated time to finish this pass:
+                                    {{currentTask.taskProgress.currentStep.timeEstimated / 1000| number:0}}
+                                    s</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p style="text-align: right">{{currentTask.taskProgress.currentStep.progress| number:2}}% complete</p>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <p style="text-align: right">{{currentTask.taskProgress.currentStep.progress | number:2}}% complete</p>
-                        </div>
                     </div>
-                  </div>
-              </div>
+                </div>
             </div>
             <div class="btn-group">
                 <button type="button" class="btn btn-warning">
