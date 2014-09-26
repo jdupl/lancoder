@@ -9,7 +9,6 @@ import org.lancoder.common.RunnableService;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
-import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.task.ClientTask;
@@ -63,7 +62,7 @@ public class Muxer extends RunnableService {
 		Transcoder transcoder = new Transcoder();
 		try {
 			success = transcoder.read(args);
-		} catch (WorkInterruptedException | MissingDecoderException | MissingFfmpegException e) {
+		} catch (MissingDecoderException | MissingFfmpegException e) {
 			serviceFailure(e);
 		} finally {
 			if (success) {

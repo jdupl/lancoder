@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
-import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.network.cluster.messages.Cause;
 import org.lancoder.common.task.video.ClientVideoTask;
@@ -36,8 +35,8 @@ public class VideoWorkThread extends Converter {
 		return (OS.indexOf("win") >= 0);
 	}
 
-	public void encodePass(String startTimeStr, String durationStr) throws WorkInterruptedException,
-			MissingDecoderException, MissingFfmpegException {
+	public void encodePass(String startTimeStr, String durationStr) throws MissingDecoderException,
+			MissingFfmpegException {
 		VideoStream inStream = task.getStreamConfig().getOrignalStream();
 		File inputFile = new File(absoluteSharedDir, inStream.getRelativeFile());
 		String mapping = String.format("0:%d", inStream.getIndex());
@@ -93,8 +92,6 @@ public class VideoWorkThread extends Converter {
 			success = transcodeToMpegTs();
 		} catch (MissingFfmpegException | MissingDecoderException e) {
 			listener.nodeCrash(new Cause(e, "unknown", true));
-		} catch (WorkInterruptedException e) {
-			System.err.println("WORKER: stopping work");
 		} finally {
 			if (success) {
 				listener.workCompleted(task);
@@ -118,8 +115,6 @@ public class VideoWorkThread extends Converter {
 			Transcoder transcoder = new Transcoder();
 			transcoder.read(args);
 			FileUtils.givePerms(taskFinalFile, false);
-		} catch (WorkInterruptedException e) {
-			e.printStackTrace();
 		} catch (MissingDecoderException e) {
 			e.printStackTrace();
 		} catch (MissingFfmpegException e) {

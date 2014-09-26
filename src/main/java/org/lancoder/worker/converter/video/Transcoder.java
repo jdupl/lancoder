@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
-import org.lancoder.common.exceptions.WorkInterruptedException;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
 
@@ -16,8 +15,7 @@ import org.lancoder.ffmpeg.FFmpegReaderListener;
  */
 public class Transcoder extends FFmpegReader implements FFmpegReaderListener {
 
-	public boolean read(ArrayList<String> args) throws WorkInterruptedException, MissingDecoderException,
-			MissingFfmpegException {
+	public boolean read(ArrayList<String> args) throws MissingDecoderException, MissingFfmpegException {
 		return super.read(args, this, true);
 	}
 
