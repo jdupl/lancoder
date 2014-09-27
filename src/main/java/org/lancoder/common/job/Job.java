@@ -5,19 +5,19 @@ import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.lancoder.common.annotations.NoWebUI;
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.TaskState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.Task;
-import org.lancoder.common.task.audio.AudioTask;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
-import org.lancoder.common.task.video.VideoTask;
 
 /**
  * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all
@@ -54,7 +54,16 @@ public class Job implements Comparable<Job>, Serializable {
 
 	private FileInfo fileinfo;
 	private ArrayList<Task> tasks = new ArrayList<>();
+	/**
+	 * List of ClientTasks. Only used by dispatcher and should not be serialized to webui.
+	 */
+	@NoWebUI
 	private ArrayList<ClientTask> clientTasks = new ArrayList<>();
+	/**
+	 * Mapping of the destination streams and their tasks. Only used internally and should not be serialized to webui.
+	 */
+	@NoWebUI
+	private HashMap<Stream, ArrayList<ClientTask>> streamTaskMapping = new HashMap<>();
 
 	public Job(String jobName, String sourceFile, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo) {
 		this.jobName = jobName;
@@ -110,6 +119,30 @@ public class Job implements Comparable<Job>, Serializable {
 	}
 
 	/**
+	 * Add a stream and its tasks to the job.
+	 * 
+	 * @param stream
+	 *            The destination stream
+	 * @param clientTasks
+	 *            The tasks
+	 */
+	public void addStream(Stream stream, ArrayList<ClientTask> clientTasks) {
+		this.streamTaskMapping.put(stream, clientTasks);
+		registerTasks(clientTasks);
+	}
+
+	private void registerTasks(ArrayList<ClientTask> tasks) {
+		for (ClientTask clientTask : tasks) {
+			registerTask(clientTask);
+		}
+	}
+
+	private void registerTask(ClientTask clientTask) {
+		this.clientTasks.add(clientTask);
+		this.tasks.add(clientTask.getTask());
+	}
+
+	/**
 	 * Get the tasks associated to this stream.
 	 * 
 	 * @param stream
@@ -117,14 +150,7 @@ public class Job implements Comparable<Job>, Serializable {
 	 * @return An ArrayList of related tasks
 	 */
 	public ArrayList<ClientTask> getTasksForStream(Stream stream) {
-		ArrayList<ClientTask> tasks = new ArrayList<>();
-		for (int i = 0; i < this.getTasks().size(); i++) {
-			ClientTask task = this.getClientTasks().get(i);
-			if (task.getStreamConfig().getOrignalStream().equals(stream)) {
-				tasks.add(task);
-			}
-		}
-		return tasks;
+		return streamTaskMapping.get(stream);
 	}
 
 	/**
@@ -196,27 +222,7 @@ public class Job implements Comparable<Job>, Serializable {
 		}
 	}
 
-	public ArrayList<AudioTask> getAudioTasks() {
-		ArrayList<AudioTask> tasks = new ArrayList<>();
-		for (Task task : this.tasks) {
-			if (task instanceof AudioTask) {
-				tasks.add((AudioTask) task);
-			}
-		}
-		return tasks;
-	}
-
-	public ArrayList<VideoTask> getVideoTasks() {
-		ArrayList<VideoTask> tasks = new ArrayList<>();
-		for (Task task : this.tasks) {
-			if (task instanceof VideoTask) {
-				tasks.add((VideoTask) task);
-			}
-		}
-		return tasks;
-	}
-
-	public ArrayList<ClientAudioTask> getClientAudioTasks() {
+	private ArrayList<ClientAudioTask> getClientAudioTasks() {
 		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
 		for (ClientTask task : this.clientTasks) {
 			if (task instanceof ClientAudioTask) {
@@ -238,10 +244,6 @@ public class Job implements Comparable<Job>, Serializable {
 
 	public ArrayList<ClientTask> getClientTasks() {
 		return clientTasks;
-	}
-
-	public ArrayList<Task> getTasks() {
-		return tasks;
 	}
 
 	/**

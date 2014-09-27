@@ -9,12 +9,15 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.lancoder.common.annotations.NoWebUI;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.codecs.CodecTypeAdapter;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
 import org.lancoder.master.Master;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -29,7 +32,18 @@ public class ApiHandler extends AbstractHandler {
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-		Gson gson = new GsonBuilder().registerTypeAdapter(Codec.class, new CodecTypeAdapter<>()).create();
+		Gson gson = new GsonBuilder().registerTypeAdapter(Codec.class, new CodecTypeAdapter<>())
+				.setExclusionStrategies(new ExclusionStrategy() {
+					@Override
+					public boolean shouldSkipField(FieldAttributes f) {
+						return f.getAnnotation(NoWebUI.class) != null;
+					}
+
+					@Override
+					public boolean shouldSkipClass(Class<?> clazz) {
+						return false;
+					}
+				}).create();
 		ApiResponse res = new ApiResponse(false, "Unknown error");
 		BufferedReader br = null;
 		response.setContentType("application/json");
@@ -42,7 +56,7 @@ public class ApiHandler extends AbstractHandler {
 		case "/jobs":
 			response.setStatus(HttpServletResponse.SC_OK);
 			baseRequest.setHandled(true);
-			response.getWriter().println(master.getApiJobs());
+			response.getWriter().println(gson.toJson(master.getJobs()));
 			break;
 		case "/jobs/add":
 			br = request.getReader();

@@ -40,11 +40,6 @@ import org.lancoder.muxer.MuxerListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 public class Master implements Runnable, MuxerListener, DispatcherListener, NodeCheckerListener,
 		MasterNodeServerListener, ServerListener, JobInitiatorListener {
 
@@ -325,7 +320,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 				}
 			}
 		}
-
 		if (this.jobs.remove(j.getJobId()) == null) {
 			return false;
 		}
@@ -615,25 +609,5 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public void muxingFailed(Job job) {
 		// TODO Auto-generated method stub
 
-	}
-
-	/**
-	 * Build a minimal representation of the jobs. Excludes serialization of client tasks.
-	 * 
-	 * @return String representation of the jobs in JSON
-	 */
-	public String getApiJobs() {
-		Gson gson = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy() {
-			@Override
-			public boolean shouldSkipField(FieldAttributes f) {
-				return f.getName().equals("clientTasks");
-			}
-
-			@Override
-			public boolean shouldSkipClass(Class<?> clazz) {
-				return false;
-			}
-		}).create();
-		return gson.toJson(this.getJobs());
 	}
 }

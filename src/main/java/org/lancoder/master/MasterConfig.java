@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 
 import org.lancoder.common.Node;
+import org.lancoder.common.annotations.Prompt;
 import org.lancoder.common.config.Config;
-import org.lancoder.common.config.Prompt;
 import org.lancoder.common.job.Job;
 
 public class MasterConfig extends Config {
