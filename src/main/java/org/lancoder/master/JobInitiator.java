@@ -131,6 +131,7 @@ public class JobInitiator extends RunnableService {
 		VideoStream outStream = config.getOutStream();
 		VideoStream inStream = config.getOrignalStream();
 		ArrayList<ClientTask> tasks = new ArrayList<>();
+		int taskId = job.getTaskCount();
 		// exclude copy streams from task creation
 		if (outStream.getCodec() != Codec.COPY) {
 			long remaining = 0;
@@ -153,7 +154,6 @@ public class JobInitiator extends RunnableService {
 					remaining -= job.getLengthOfTasks();
 					currentMs += job.getLengthOfTasks();
 				}
-				int taskId = job.getTaskCount();
 				File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
 						String.format("part-%d.mpeg.ts", taskId)); // TODO get extension from codec
 				long ms = end - start;
@@ -161,6 +161,7 @@ public class JobInitiator extends RunnableService {
 				VideoTask task = new VideoTask(taskId, job.getJobId(), outStream.getStepCount(), start, end, unitCount,
 						Unit.FRAMES, relativeTaskOutputFile.getPath());
 				tasks.add(new ClientVideoTask(task, config));
+				taskId++;
 			}
 		}
 		return tasks;
