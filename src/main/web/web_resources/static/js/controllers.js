@@ -3,7 +3,7 @@
 /* Controllers */
 
 angular.module('lancoder.controllers', []).
-    controller('nodes', function($scope, $http, $timeout) {
+    controller('nodes', function($scope, $http, $interval) {
       var refreshNodes = $scope.refreshNodes = function() {
         // Get nodes
         $http({method: 'GET', url: '/api/nodes'})
@@ -56,7 +56,7 @@ angular.module('lancoder.controllers', []).
       };
 
       $scope.nodesAutoRefresh = function() {
-        $timeout(function() {
+        $interval(function() {
           $scope.refreshNodes();
           $scope.nodesAutoRefresh();
         }, 5000);
@@ -147,7 +147,7 @@ angular.module('lancoder.controllers', []).
         });
       };
       $scope.jobsAutoRefresh = function() {
-        $timeout(function() {
+        $interval(function() {
           $scope.refreshJobs();
           $scope.jobsAutoRefresh();
         }, 5000);
