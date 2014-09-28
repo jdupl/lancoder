@@ -127,10 +127,10 @@ angular.module('lancoder.controllers', []).
                     data[i].panel = 'panel-default';
                 }
                 data[i].completedTasks = 0;
-                data[i].totalTasks = data[i].tasks.length;
+                data[i].taskCount = data[i].tasks.length;
                 data[i].totalFps = 0;
-                for (var j = 0; j < data[i].totalTasks; j++) {
-                  switch (data[i].tasks[j].taskState) {
+                for (var j = 0; j < data[i].taskCount; j++) {
+                  switch (data[i].tasks[j].taskProgress.taskState) {
                     case 'TASK_COMPLETED':
                       data[i].completedTasks++;
                       break;

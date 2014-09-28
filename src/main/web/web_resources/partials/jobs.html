@@ -142,10 +142,9 @@
             <div class="panel-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <p>{{job.completedTasks}} of out {{job.totalTasks}} tasks completed</p>
-                        <p>Encoding at {{job.totalFps}} fps</p>
+                        <p>{{job.completedTasks}} of out {{job.taskCount}} tasks completed</p>
                         <div class="progress">
-                            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{job.completedTasks}}" aria-valuemin="0" aria-valuemax="{{job.totalTasks}}" style="width: {{job.completedTasks / job.totalTasks * 100}}%" >
+                            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{job.completedTasks}}" aria-valuemin="0" aria-valuemax="{{job.taskCount}}" style="width: {{job.completedTasks / job.taskCount * 100}}%" >
                             </div>
                         </div>
                         <div class="btn-group">
