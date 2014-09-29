@@ -4,29 +4,28 @@ services.factory('apiService', function($http) {
     nodes: function() {
       var promise = $http({method: 'GET', url: '/api/nodes'})
           .success(function(data, status, headers, config) {
-            for (var i = 0; i < data.length; i++) {
-              console.log(data[i].status);
-              switch (data[i].status) {
+            var nodes = data;
+            for (var i = 0; i < nodes.length; i++) {
+              switch (nodes[i].status) {
                 case 'WORKING':
-                  data[i].panel = 'panel-success';
+                  nodes[i].panel = 'panel-success';
                   break;
                 case 'CRASHED':
-                  data[i].panel = 'panel-danger';
+                  nodes[i].panel = 'panel-danger';
                   break;
                 case 'FREE':
-                  data[i].panel = 'panel-primary';
+                  nodes[i].panel = 'panel-primary';
                   break;
                 case 'PAUSED':
-                  data[i].panel = 'panel-warning';
+                  nodes[i].panel = 'panel-warning';
                   break;
                 case 'NOT_CONNECTED':
-                  data[i].panel = 'panel-info';
+                  nodes[i].panel = 'panel-info';
                   break;
                 default:
-                  data[i].panel = 'panel-default';
+                  nodes[i].panel = 'panel-default';
               }
             }
-            var nodes = data;
             //stepCount
             for (var i = 0; i < nodes.length; i++) {
               var node = nodes[i];
@@ -50,7 +49,7 @@ services.factory('apiService', function($http) {
             return nodes;
           })
           .error(function() {
-            var nodes;
+            var nodes = {};
             nodes.error = 'Cannot not reach master server.';
             return nodes;
           });
