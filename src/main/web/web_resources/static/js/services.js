@@ -1,10 +1,11 @@
 var services = angular.module('lancoder.services', []);
 services.factory('apiService', function($http) {
-  var getNodes = {
+  var service = {
     nodes: function() {
       var promise = $http({method: 'GET', url: '/api/nodes'})
           .success(function(data, status, headers, config) {
             for (var i = 0; i < data.length; i++) {
+              console.log(data[i].status);
               switch (data[i].status) {
                 case 'WORKING':
                   data[i].panel = 'panel-success';
@@ -56,5 +57,5 @@ services.factory('apiService', function($http) {
       return promise;
     }
   };
-  return getNodes;
+  return service;
 });

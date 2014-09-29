@@ -1,7 +1,9 @@
-var controllers = angular.module('lancoder.controllers', []);
-controllers.controller('nodes', function($scope, $http, $interval) {
+var controllers = angular.module('lancoder.controllers', ['lancoder.services']);
+controllers.controller('nodes', function($scope, $http, $interval, apiService) {
   var refreshNodes = $scope.refreshNodes = function() {
-    // TODO
+    apiService.nodes().then(function(nodes) {
+      console.log(nodes);
+    });
   };
   $scope.nodesAutoRefresh = function() {
     $interval(function() {
