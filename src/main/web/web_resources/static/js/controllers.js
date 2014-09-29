@@ -1,70 +1,18 @@
-'use strict';
-
-/* Controllers */
-
-angular.module('lancoder.controllers', []).
-    controller('nodes', function($scope, $http, $interval) {
-      var refreshNodes = $scope.refreshNodes = function() {
-        // Get nodes
-        $http({method: 'GET', url: '/api/nodes'})
-            .success(function(data, status, headers, config) {
-              for (var i = 0; i < data.length; i++) {
-                switch (data[i].status) {
-                  case 'WORKING':
-                    data[i].panel = 'panel-success';
-                    break;
-                  case 'CRASHED':
-                    data[i].panel = 'panel-danger';
-                    break;
-                  case 'FREE':
-                    data[i].panel = 'panel-primary';
-                    break;
-                  case 'PAUSED':
-                    data[i].panel = 'panel-warning';
-                    break;
-                  case 'NOT_CONNECTED':
-                    data[i].panel = 'panel-info';
-                    break;
-                  default:
-                    data[i].panel = 'panel-default';
-                }
-              }
-              $scope.nodes = data;
-              //stepCount
-              for (var i = 0; i < $scope.nodes.length; i++) {
-                var node = $scope.nodes[i];
-                for (var j = 0; j < node.currentTasks.length; j++) {
-                  // Get and set task step count
-                  var currentTask = node.currentTasks[j];
-                  $scope.nodes[i].currentTasks[j].task.taskProgress.stepCount = Object.keys(currentTask.task.taskProgress.steps).length;
-                  // Get current step
-                  var index = currentTask.task.taskProgress.currentPassIndex;
-                  var currentStep = $scope.nodes[i].currentTasks[j].task.taskProgress.steps[index];
-                  // Convert the unit type from enum constant to pretty string
-                  if (currentStep.unit === 'SECONDS') {
-                    currentStep.prettyUnit = 'times playback speed';
-                  } else if (currentStep.unit === 'FRAMES') {
-                    currentStep.prettyUnit = 'FPS';
-                  }
-                  // Add reference to the currentStep
-                  $scope.nodes[i].currentTasks[j].task.taskProgress.currentStep = currentStep;
-                }
-              }
-            }).error(function() {
-          $scope.nodes.error = 'Cannot not reach master server.';
-        });
-      };
-
-      $scope.nodesAutoRefresh = function() {
-        $interval(function() {
-          $scope.refreshNodes();
-          $scope.nodesAutoRefresh();
-        }, 5000);
-      };
-      refreshNodes();
+var controllers = angular.module('lancoder.controllers', []);
+controllers.controller('nodes', function($scope, $http, $interval) {
+  var refreshNodes = $scope.refreshNodes = function() {
+    // TODO
+  };
+  $scope.nodesAutoRefresh = function() {
+    $interval(function() {
+      $scope.refreshNodes();
       $scope.nodesAutoRefresh();
-    })
-    .controller('jobs', function($scope, $http, $timeout) {
+    }, 5000);
+  };
+  refreshNodes();
+  $scope.nodesAutoRefresh();
+})
+    .controller('jobs', function($scope, $http, $interval) {
       $http({method: 'GET', url: '/api/codecs/audio'})
           .success(function(data) {
             $scope.audioCodecs = data;
