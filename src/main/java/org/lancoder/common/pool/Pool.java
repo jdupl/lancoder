@@ -1,11 +1,12 @@
-package org.lancoder.common.Pool;
+package org.lancoder.common.pool;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.lancoder.common.Service;
 import org.lancoder.common.task.ClientTask;
 
-public abstract class Pool<T> implements PoolListener<T> {
+public abstract class Pool<T> extends Service implements PoolListener<T> {
 
 	protected final HashMap<T, Pooler<T>> converters = new HashMap<>();
 	protected final ArrayList<T> todo = new ArrayList<>();
@@ -46,7 +47,9 @@ public abstract class Pool<T> implements PoolListener<T> {
 		return threadLimit;
 	}
 
+	@Override
 	public void stop() {
+		super.stop();
 		for (Pooler<T> converter : converters.values()) {
 			converter.stop();
 		}
@@ -54,14 +57,16 @@ public abstract class Pool<T> implements PoolListener<T> {
 	}
 
 	public void started(T e) {
-		// TODO
+		listener.started(e);
 	}
 
 	public void completed(T e) {
-		// TODO
+		this.converters.remove(e);
+		listener.completed(e);
 	}
 
 	public void failed(T e) {
-		// TODO
+		this.converters.remove(e);
+		listener.completed(e);
 	}
 }

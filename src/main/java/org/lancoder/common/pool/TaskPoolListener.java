@@ -1,4 +1,4 @@
-package org.lancoder.common.Pool;
+package org.lancoder.common.pool;
 
 import org.lancoder.common.task.Task;
 
