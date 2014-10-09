@@ -24,7 +24,7 @@ public class AudioTaskListenerAdapter implements PoolListener<ClientAudioTask> {
 
 	@Override
 	public void failed(ClientAudioTask e) {
-		this.listener.completed(e);
+		this.listener.failed(e);
 	}
 
 	@Override

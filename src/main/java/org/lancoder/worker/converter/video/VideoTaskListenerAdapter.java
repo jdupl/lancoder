@@ -23,7 +23,7 @@ public class VideoTaskListenerAdapter implements PoolListener<ClientVideoTask> {
 
 	@Override
 	public void failed(ClientVideoTask e) {
-		this.listener.completed(e);
+		this.listener.failed(e);
 	}
 
 	@Override
