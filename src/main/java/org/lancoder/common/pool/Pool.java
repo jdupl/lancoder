@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lancoder.common.Service;
-import org.lancoder.common.task.ClientTask;
 
 public abstract class Pool<T> extends Service implements PoolListener<T> {
 
@@ -32,7 +31,7 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 		return converters.size() < threadLimit;
 	}
 
-	public abstract boolean encode(ClientTask task);
+	public abstract boolean encode(T task);
 
 	protected synchronized boolean spawn(Pooler<T> pooler) {
 		if (!hasFree()) {
@@ -68,5 +67,10 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 	public void failed(T e) {
 		this.converters.remove(e);
 		listener.completed(e);
+	}
+
+	public void crash(Exception e) {
+		// TODO
+		e.printStackTrace();
 	}
 }

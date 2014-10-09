@@ -7,4 +7,6 @@ public interface PoolListener<T> {
 	public void completed(T e);
 
 	public void failed(T e);
+
+	public void crash(Exception e);
 }

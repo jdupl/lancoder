@@ -6,12 +6,18 @@ public abstract class Pooler<T> extends RunnableService {
 
 	protected boolean active;
 	protected PoolListener<T> listener;
+	protected T task;
 
-	public Pooler(PoolListener<T> listener) {
+	public Pooler(T task, PoolListener<T> listener) {
+		this.task = task;
 		this.listener = listener;
 	}
 
-	public abstract T getPoolable();
+	public T getPoolable() {
+		return this.task;
+	}
 
-	public abstract boolean isActive();
+	public boolean isActive() {
+		return this.active;
+	}
 }

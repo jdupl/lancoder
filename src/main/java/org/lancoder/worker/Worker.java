@@ -17,12 +17,12 @@ import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
 import org.lancoder.common.Service;
 import org.lancoder.common.codecs.Codec;
-import org.lancoder.common.network.cluster.messages.Cause;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.TaskReport;
@@ -31,14 +31,15 @@ import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.ffmpeg.FFmpegWrapper;
 import org.lancoder.worker.contacter.ConctactMasterListener;
 import org.lancoder.worker.contacter.ContactMasterObject;
-import org.lancoder.worker.converter.ConverterListener;
 import org.lancoder.worker.converter.audio.AudioConverterPool;
+import org.lancoder.worker.converter.audio.AudioTaskListenerAdapter;
+import org.lancoder.worker.converter.video.VideoTaskListenerAdapter;
 import org.lancoder.worker.converter.video.VideoWorkThread;
 import org.lancoder.worker.server.WorkerObjectServer;
 import org.lancoder.worker.server.WorkerServerListener;
 
 public class Worker implements Runnable, ServerListener, WorkerServerListener, ConctactMasterListener,
-		ConverterListener {
+		PoolListener<ClientTask> {
 
 	private Node node;
 	private WorkerConfig config;
@@ -61,7 +62,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 
 		WorkerObjectServer objectServer = new WorkerObjectServer(this, config.getListenPort());
 		services.add(objectServer);
-		audioPool = new AudioConverterPool(threadCount, this);
+		audioPool = new AudioConverterPool(threadCount, new AudioTaskListenerAdapter(this), config);
 		services.add(audioPool);
 		// Get local ip
 		// TODO allow options to override IP detection and enable ipv6
@@ -132,7 +133,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	public synchronized boolean startWork(ClientTask t) {
 		if (t instanceof ClientVideoTask && this.getStatus() == NodeState.FREE) {
 			ClientVideoTask vTask = (ClientVideoTask) t;
-			this.workThread = new VideoWorkThread(vTask, this);
+			this.workThread = new VideoWorkThread(vTask, new VideoTaskListenerAdapter(this),
+					this.config.getAbsoluteSharedFolder(), this.config.getTempEncodingFolder());
 			Thread wt = new Thread(workThread);
 			wt.start();
 			services.add(workThread);
@@ -318,7 +320,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public synchronized void workStarted(ClientTask task) {
+	public synchronized void started(ClientTask task) {
 		task.getProgress().start();
 		this.getCurrentTasks().add(task);
 		if (this.getStatus() != NodeState.WORKING) {
@@ -327,7 +329,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public synchronized void workCompleted(ClientTask task) {
+	public synchronized void completed(ClientTask task) {
 		System.err.println("Worker completed task");
 		task.getProgress().complete();
 		notifyMasterStatusChange();
@@ -338,7 +340,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public synchronized void workFailed(ClientTask task) {
+	public synchronized void failed(ClientTask task) {
 		System.err.println("Worker failed task " + task.getTaskId());
 		task.getProgress().reset();
 		notifyMasterStatusChange();
@@ -349,13 +351,9 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	@Override
-	public void nodeCrash(Cause cause) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public WorkerConfig getConfig() {
-		return this.config;
+	public void crash(Exception e) {
+		e.printStackTrace();
+		// TODO
 	}
 
 	@Override
@@ -371,4 +369,5 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		}
 		this.updateStatus(NodeState.NOT_CONNECTED);
 	}
+
 }

@@ -4,12 +4,13 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FilenameUtils;
-import org.lancoder.common.RunnableService;
+import org.lancoder.common.pool.PoolListener;
+import org.lancoder.common.pool.Pooler;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
 
-public abstract class Converter extends RunnableService implements FFmpegReaderListener {
+public abstract class Converter<T extends ClientTask> extends Pooler<T> implements FFmpegReaderListener {
 
 	/**
 	 * /tmp/jobId/
@@ -27,7 +28,7 @@ public abstract class Converter extends RunnableService implements FFmpegReaderL
 	protected File absoluteSharedDir;
 	protected File taskFinalFile;
 
-	protected ConverterListener listener;
+	protected PoolListener<T> listener;
 
 	protected ClientTask clientTask;
 
@@ -37,11 +38,12 @@ public abstract class Converter extends RunnableService implements FFmpegReaderL
 	 * @param task
 	 *            The ClientTask containing global task config.
 	 */
-	public Converter(ClientTask task, ConverterListener listener) {
+	public Converter(T task, PoolListener<T> listener, String absoluteSharedFolder, String tempEncodingFolder) {
+		super(task, listener);
 		this.clientTask = task;
 		this.listener = listener;
-		absoluteSharedDir = new File(listener.getConfig().getAbsoluteSharedFolder());
-		jobTempOutputFolder = new File(listener.getConfig().getTempEncodingFolder(), task.getJobId());
+		absoluteSharedDir = new File(absoluteSharedFolder);
+		jobTempOutputFolder = new File(tempEncodingFolder, task.getJobId());
 		taskTempOutputFolder = FileUtils.getFile(jobTempOutputFolder, String.valueOf(task.getTaskId()));
 		String filename = FilenameUtils.getName(task.getTempFile());
 		taskTempOutputFile = new File(taskTempOutputFolder, filename);

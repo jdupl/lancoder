@@ -10,20 +10,21 @@ import org.apache.commons.io.FileUtils;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
+import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.worker.converter.Converter;
-import org.lancoder.worker.converter.ConverterListener;
 
-public class AudioWorkThread extends Converter {
+public class AudioWorkThread extends Converter<ClientAudioTask> {
 
 	private ClientAudioTask task;
 	private static Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
 	private FFmpegReader ffmpeg = new FFmpegReader();
 
-	public AudioWorkThread(ClientAudioTask task, ConverterListener listener) {
-		super(task, listener);
+	public AudioWorkThread(ClientAudioTask task, PoolListener<ClientAudioTask> listener, String absoluteSharedFolder,
+			String tempEncodingFolder) {
+		super(task, listener, absoluteSharedFolder, tempEncodingFolder);
 		this.task = task;
 	}
 
@@ -73,7 +74,7 @@ public class AudioWorkThread extends Converter {
 	@Override
 	public void run() {
 		ArrayList<String> args = getArgs(task);
-		listener.workStarted(task);
+		listener.started(task);
 		boolean success = false;
 		createDirs();
 		try {
@@ -82,9 +83,9 @@ public class AudioWorkThread extends Converter {
 			e.printStackTrace();
 		} finally {
 			if (success) {
-				listener.workCompleted(task);
+				listener.completed(task);
 			} else {
-				listener.workFailed(task);
+				listener.failed(task);
 			}
 			destroyTempFolder();
 		}
@@ -98,7 +99,7 @@ public class AudioWorkThread extends Converter {
 
 	@Override
 	public void serviceFailure(Exception e) {
-		listener.nodeCrash(null);
+		listener.crash(null);
 		// TODO
 	}
 

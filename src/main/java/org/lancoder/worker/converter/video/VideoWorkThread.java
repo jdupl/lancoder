@@ -9,15 +9,14 @@ import java.util.regex.Pattern;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.common.file_components.streams.VideoStream;
-import org.lancoder.common.network.cluster.messages.Cause;
+import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.worker.converter.Converter;
-import org.lancoder.worker.converter.ConverterListener;
 
-public class VideoWorkThread extends Converter {
+public class VideoWorkThread extends Converter<ClientVideoTask> {
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
 
@@ -26,8 +25,9 @@ public class VideoWorkThread extends Converter {
 	private static Pattern fpsPattern = Pattern.compile("fps=\\s+([0-9]+)");
 	private static Pattern missingDecoder = Pattern.compile("Error while opening encoder for output stream");
 
-	public VideoWorkThread(ClientVideoTask task, ConverterListener listener) {
-		super(task, listener);
+	public VideoWorkThread(ClientVideoTask task, PoolListener<ClientVideoTask> listener, String absoluteSharedFolder,
+			String tempEncodingFolder) {
+		super(task, listener, absoluteSharedFolder, tempEncodingFolder);
 		this.task = task;
 	}
 
@@ -74,7 +74,7 @@ public class VideoWorkThread extends Converter {
 	public void run() {
 		boolean success = false;
 		try {
-			listener.workStarted(task);
+			listener.started(task);
 			createDirs();
 			// use start and duration for ffmpeg legacy support
 			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
@@ -91,12 +91,12 @@ public class VideoWorkThread extends Converter {
 			}
 			success = transcodeToMpegTs();
 		} catch (MissingFfmpegException | MissingDecoderException e) {
-			listener.nodeCrash(new Cause(e, "unknown", true));
+			listener.crash(e);
 		} finally {
 			if (success) {
-				listener.workCompleted(task);
+				listener.completed(task);
 			} else {
-				listener.workFailed(task);
+				listener.failed(task);
 			}
 		}
 		this.destroyTempFolder();
@@ -125,7 +125,7 @@ public class VideoWorkThread extends Converter {
 
 	@Override
 	public void serviceFailure(Exception e) {
-		this.listener.nodeCrash(null);
+		this.listener.crash(e);
 		// TODO
 	}
 
@@ -144,7 +144,7 @@ public class VideoWorkThread extends Converter {
 		m = missingDecoder.matcher(line);
 		if (m.find()) {
 			System.err.println("Missing decoder !");
-			listener.nodeCrash(new Cause(new MissingDecoderException(), "Missing decoder or encoder", false));
+			listener.crash(new MissingDecoderException("Missing decoder or encoder"));
 		} else if (units != -1 && speed != -1) {
 			task.getProgress().update(units, speed);
 		} else if (units != -1) {
