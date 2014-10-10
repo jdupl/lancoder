@@ -80,14 +80,14 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		listener.crash(null);
 		// TODO
 	}
-	
+
 	@Override
 	protected void start() {
-		ArrayList<String> args = getArgs(task);
 		listener.started(task);
 		setFiles();
 		boolean success = false;
 		createDirs();
+		ArrayList<String> args = getArgs(task);
 		try {
 			success = ffmpeg.read(args, this, true) && moveFile();
 		} catch (MissingFfmpegException e) {
