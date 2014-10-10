@@ -33,6 +33,11 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 		return hasFree();
 	}
 
+	private Pooler<T> spawn(Pooler<T> pooler) {
+		new Thread(threads, pooler).start();
+		return pooler;
+	}
+
 	protected abstract Pooler<T> getNewPooler();
 
 	/**
@@ -47,7 +52,7 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 				pooler = p;
 			}
 		}
-		return pooler == null && hasFree() ? getNewPooler() : pooler;
+		return pooler == null && hasFree() ? spawn(getNewPooler()) : pooler;
 	}
 
 	protected boolean hasFree() {
