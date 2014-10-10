@@ -11,7 +11,7 @@ public class AudioConverterPool extends Pool<ClientAudioTask> {
 	private WorkerConfig config;
 
 	public AudioConverterPool(int threads, PoolListener<ClientAudioTask> listener, WorkerConfig config) {
-		super(threads, listener);
+		super(threads, listener, false);
 		this.config = config;
 	}
 

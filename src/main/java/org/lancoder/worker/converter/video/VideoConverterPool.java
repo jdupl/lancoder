@@ -11,7 +11,7 @@ public class VideoConverterPool extends Pool<ClientVideoTask> {
 	private WorkerConfig config;
 
 	public VideoConverterPool(int threads, PoolListener<ClientVideoTask> listener, WorkerConfig config) {
-		super(threads, listener);
+		super(threads, listener, false);
 		this.config = config;
 	}
 

@@ -197,10 +197,6 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		}
 	}
 
-	private InetAddress getAddress() {
-		return this.node.getNodeAddress();
-	}
-
 	private void gracefulShutdown() {
 		throw new UnsupportedOperationException();
 	}
