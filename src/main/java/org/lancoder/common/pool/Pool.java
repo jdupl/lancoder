@@ -12,10 +12,16 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 	protected final ThreadGroup threads = new ThreadGroup("threads");
 	protected final PoolListener<T> listener;
 	private int threadLimit;
+	private boolean canQueue;
 
-	public Pool(int threads, PoolListener<T> listener) {
-		this.threadLimit = threads;
+	public Pool(int threadLimit, PoolListener<T> listener) {
+		this(threadLimit, listener, true);
+	}
+
+	public Pool(int threadLimit, PoolListener<T> listener, boolean canQueue) {
+		this.threadLimit = threadLimit;
 		this.listener = listener;
+		this.canQueue = canQueue;
 	}
 
 	/**
@@ -49,14 +55,20 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 	}
 
 	/**
-	 * Add an item to the pool.
+	 * Try to add an item to the pool. If pool is not allowed to have a queue and all poolers are busy, return false.
 	 * 
-	 * @param task
-	 * @return
+	 * @param element
+	 *            The element to handle
+	 * @return If element could be added to queue
 	 */
-	public void handle(T task) {
-		this.todo.add(task);
-		refresh();
+	public boolean handle(T element) {
+		boolean handled = false;
+		if (canQueue || (todo.size() == 0 && hasFree())) {
+			this.todo.add(element);
+			refresh();
+			handled = true;
+		}
+		return handled;
 	}
 
 	/**
