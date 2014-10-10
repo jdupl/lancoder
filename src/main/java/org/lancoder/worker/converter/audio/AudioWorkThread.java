@@ -22,10 +22,9 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 	private static Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
 	private FFmpegReader ffmpeg = new FFmpegReader();
 
-	public AudioWorkThread(ClientAudioTask task, PoolListener<ClientAudioTask> listener, String absoluteSharedFolder,
+	public AudioWorkThread(PoolListener<ClientAudioTask> listener, String absoluteSharedFolder,
 			String tempEncodingFolder) {
-		super(task, listener, absoluteSharedFolder, tempEncodingFolder);
-		this.task = task;
+		super(listener, absoluteSharedFolder, tempEncodingFolder);
 	}
 
 	private ArrayList<String> getArgs(ClientAudioTask task) {
@@ -72,7 +71,19 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 	}
 
 	@Override
-	public void run() {
+	public void stop() {
+		super.stop();
+		ffmpeg.stop();
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+		listener.crash(null);
+		// TODO
+	}
+	
+	@Override
+	protected void start() {
 		ArrayList<String> args = getArgs(task);
 		listener.started(task);
 		boolean success = false;
@@ -89,19 +100,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 			}
 			destroyTempFolder();
 		}
-	}
-
-	@Override
-	public void stop() {
-		super.stop();
-		ffmpeg.stop();
-	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-		listener.crash(null);
-		// TODO
-	}
+	};
 
 	@Override
 	public void onMessage(String line) {

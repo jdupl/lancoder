@@ -140,7 +140,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			services.add(workThread);
 		} else if (t instanceof ClientAudioTask && this.audioPool.hasFreeConverters()) {
 			ClientAudioTask aTask = (ClientAudioTask) t;
-			audioPool.encode(aTask);
+			audioPool.handle(aTask);
 		} else {
 			return false;
 		}

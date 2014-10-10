@@ -6,6 +6,7 @@ import java.util.Queue;
 import org.lancoder.common.Node;
 import org.lancoder.common.Service;
 
+@Deprecated
 public class NodeCheckerPool extends Service {
 
 	private static final int MAX_CHECKERS = 5;

@@ -38,8 +38,8 @@ public abstract class Converter<T extends ClientTask> extends Pooler<T> implemen
 	 * @param task
 	 *            The ClientTask containing global task config.
 	 */
-	public Converter(T task, PoolListener<T> listener, String absoluteSharedFolder, String tempEncodingFolder) {
-		super(task, listener);
+	public Converter(PoolListener<T> listener, String absoluteSharedFolder, String tempEncodingFolder) {
+		super(listener);
 		this.clientTask = task;
 		this.listener = listener;
 		absoluteSharedDir = new File(absoluteSharedFolder);
