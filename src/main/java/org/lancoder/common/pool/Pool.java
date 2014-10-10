@@ -89,7 +89,7 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 	}
 
 	protected boolean hasFree() {
-		return poolers.size() < threadLimit;
+		return getActiveCount() < this.threadLimit;
 	}
 
 	/**
