@@ -6,7 +6,7 @@ import org.lancoder.common.RunnableService;
 
 public abstract class Pooler<T> extends RunnableService {
 
-	private LinkedBlockingDeque<T> requests = new LinkedBlockingDeque<>();
+	private LinkedBlockingDeque<T> requests = new LinkedBlockingDeque<>(1);
 	protected PoolListener<T> listener;
 	protected T task;
 	protected boolean active;
@@ -47,7 +47,9 @@ public abstract class Pooler<T> extends RunnableService {
 	 */
 	private void handle(T request) {
 		this.task = request;
+		this.active = true;
 		start();
+		this.active = false;
 	}
 
 	protected abstract void start();
