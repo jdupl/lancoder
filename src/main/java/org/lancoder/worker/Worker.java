@@ -132,10 +132,11 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	}
 
 	public synchronized boolean startWork(ClientTask t) {
-		if (t instanceof ClientVideoTask && this.getStatus() == NodeState.FREE) {
+		if (t instanceof ClientVideoTask && videoPool.hasFreeConverters()) {
 			ClientVideoTask vTask = (ClientVideoTask) t;
 			videoPool.handle(vTask);
-		} else if (t instanceof ClientAudioTask && this.audioPool.hasFreeConverters()) {
+		} else if (t instanceof ClientAudioTask && this.audioPool.hasFreeConverters() && videoPool.hasFreeConverters()) {
+			// video pool must also be free
 			ClientAudioTask aTask = (ClientAudioTask) t;
 			audioPool.handle(aTask);
 		} else {
