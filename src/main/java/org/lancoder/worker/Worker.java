@@ -33,8 +33,8 @@ import org.lancoder.worker.contacter.ConctactMasterListener;
 import org.lancoder.worker.contacter.ContactMasterObject;
 import org.lancoder.worker.converter.audio.AudioConverterPool;
 import org.lancoder.worker.converter.audio.AudioTaskListenerAdapter;
+import org.lancoder.worker.converter.video.VideoConverterPool;
 import org.lancoder.worker.converter.video.VideoTaskListenerAdapter;
-import org.lancoder.worker.converter.video.VideoWorkThread;
 import org.lancoder.worker.server.WorkerObjectServer;
 import org.lancoder.worker.server.WorkerServerListener;
 
@@ -45,8 +45,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	private WorkerConfig config;
 	private final ArrayList<Service> services = new ArrayList<>();
 	private final ThreadGroup serviceThreads = new ThreadGroup("worker_services");
-	private VideoWorkThread workThread;
 	private AudioConverterPool audioPool;
+	private VideoConverterPool videoPool;
 
 	private InetAddress masterInetAddress = null;
 
@@ -64,6 +64,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		services.add(objectServer);
 		audioPool = new AudioConverterPool(threadCount, new AudioTaskListenerAdapter(this), config);
 		services.add(audioPool);
+		videoPool = new VideoConverterPool(1, new VideoTaskListenerAdapter(this), config);
+		services.add(videoPool);
 		// Get local ip
 		// TODO allow options to override IP detection and enable ipv6
 		InetAddress address = null;
@@ -118,7 +120,6 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 
 	public synchronized void stopWork(ClientTask t) {
 		// TODO check which task to stop (if many tasks are implemented)
-		this.workThread.stop();
 		System.err.println("Setting current task to null");
 		this.getCurrentTasks().remove(t);
 		if (t instanceof ClientVideoTask) {
@@ -133,11 +134,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	public synchronized boolean startWork(ClientTask t) {
 		if (t instanceof ClientVideoTask && this.getStatus() == NodeState.FREE) {
 			ClientVideoTask vTask = (ClientVideoTask) t;
-			this.workThread = new VideoWorkThread(vTask, new VideoTaskListenerAdapter(this),
-					this.config.getAbsoluteSharedFolder(), this.config.getTempEncodingFolder());
-			Thread wt = new Thread(workThread);
-			wt.start();
-			services.add(workThread);
+			videoPool.handle(vTask);
 		} else if (t instanceof ClientAudioTask && this.audioPool.hasFreeConverters()) {
 			ClientAudioTask aTask = (ClientAudioTask) t;
 			audioPool.handle(aTask);

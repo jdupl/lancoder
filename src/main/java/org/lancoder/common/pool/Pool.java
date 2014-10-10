@@ -5,9 +5,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.lancoder.common.Service;
 
-public abstract class Pool<T> extends Service {
+public abstract class Pool<T> extends Service implements PoolListener<T> {
 
-	protected final HashMap<T, Pooler<T>> converters = new HashMap<>();
+	protected final HashMap<T, Pooler<T>> poolers = new HashMap<>();
 	protected final LinkedBlockingQueue<T> todo = new LinkedBlockingQueue<>();
 	protected final ThreadGroup threads = new ThreadGroup("threads");
 	protected final PoolListener<T> listener;
@@ -36,7 +36,7 @@ public abstract class Pool<T> extends Service {
 	 */
 	private Pooler<T> getFreePooler() {
 		Pooler<T> pooler = null;
-		for (Pooler<T> p : converters.values()) {
+		for (Pooler<T> p : poolers.values()) {
 			if (!p.isActive()) {
 				pooler = p;
 			}
@@ -45,7 +45,7 @@ public abstract class Pool<T> extends Service {
 	}
 
 	protected boolean hasFree() {
-		return converters.size() < threadLimit;
+		return poolers.size() < threadLimit;
 	}
 
 	/**
@@ -67,7 +67,7 @@ public abstract class Pool<T> extends Service {
 		while (todo.size() > 0 && hasFree() && !caughtNull) {
 			Pooler<T> pooler = this.getFreePooler();
 			if (pooler != null) {
-				pooler.start(todo.poll());
+				pooler.add(todo.poll());
 			} else {
 				caughtNull = true;
 			}
@@ -81,28 +81,28 @@ public abstract class Pool<T> extends Service {
 	@Override
 	public void stop() {
 		super.stop();
-		for (Pooler<T> converter : converters.values()) {
+		for (Pooler<T> converter : poolers.values()) {
 			converter.stop();
 		}
 		threads.interrupt();
 	}
 
-	// public void started(T e) {
-	// listener.started(e);
-	// }
-	//
-	// public void completed(T e) {
-	// this.converters.remove(e);
-	// listener.completed(e);
-	// }
-	//
-	// public void failed(T e) {
-	// this.converters.remove(e);
-	// listener.completed(e);
-	// }
-	//
-	// public void crash(Exception e) {
-	// // TODO
-	// e.printStackTrace();
-	// }
+	public void started(T e) {
+		listener.started(e);
+	}
+
+	public void completed(T e) {
+		listener.completed(e);
+		refresh();
+	}
+
+	public void failed(T e) {
+		listener.failed(e);
+		refresh();
+	}
+
+	public void crash(Exception e) {
+		// TODO
+		e.printStackTrace();
+	}
 }

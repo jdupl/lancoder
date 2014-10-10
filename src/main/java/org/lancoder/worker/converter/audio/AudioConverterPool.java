@@ -17,9 +17,7 @@ public class AudioConverterPool extends Pool<ClientAudioTask> {
 
 	@Override
 	protected Pooler<ClientAudioTask> getNewPooler() {
-		AudioWorkThread converter = new AudioWorkThread(this, config.getAbsoluteSharedFolder(),
-				config.getTempEncodingFolder());
-		return null;
+		return new AudioWorkThread(this, config.getAbsoluteSharedFolder(), config.getTempEncodingFolder());
 	}
 
 }
