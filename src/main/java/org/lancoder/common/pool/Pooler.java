@@ -6,10 +6,10 @@ import org.lancoder.common.RunnableService;
 
 public abstract class Pooler<T> extends RunnableService {
 
-	protected boolean active;
 	private LinkedBlockingDeque<T> requests = new LinkedBlockingDeque<>();
 	protected PoolListener<T> listener;
 	protected T task;
+	protected boolean active;
 
 	public Pooler(PoolListener<T> listener) {
 		this.listener = listener;

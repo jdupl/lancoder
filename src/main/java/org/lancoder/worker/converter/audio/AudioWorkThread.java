@@ -18,7 +18,6 @@ import org.lancoder.worker.converter.Converter;
 
 public class AudioWorkThread extends Converter<ClientAudioTask> {
 
-	private ClientAudioTask task;
 	private static Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
 	private FFmpegReader ffmpeg = new FFmpegReader();
 
@@ -86,6 +85,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 	protected void start() {
 		ArrayList<String> args = getArgs(task);
 		listener.started(task);
+		setFiles();
 		boolean success = false;
 		createDirs();
 		try {

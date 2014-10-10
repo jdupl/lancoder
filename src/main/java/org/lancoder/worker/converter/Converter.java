@@ -12,6 +12,9 @@ import org.lancoder.ffmpeg.FFmpegReaderListener;
 
 public abstract class Converter<T extends ClientTask> extends Pooler<T> implements FFmpegReaderListener {
 
+	protected String absoluteSharedFolderStr;
+	protected String tempEncodingFolderStr;
+
 	/**
 	 * /tmp/jobId/
 	 */
@@ -28,10 +31,6 @@ public abstract class Converter<T extends ClientTask> extends Pooler<T> implemen
 	protected File absoluteSharedDir;
 	protected File taskFinalFile;
 
-	protected PoolListener<T> listener;
-
-	protected ClientTask clientTask;
-
 	/**
 	 * Constructor of base converter. Initialize file names and directories from task configuration.
 	 * 
@@ -40,10 +39,13 @@ public abstract class Converter<T extends ClientTask> extends Pooler<T> implemen
 	 */
 	public Converter(PoolListener<T> listener, String absoluteSharedFolder, String tempEncodingFolder) {
 		super(listener);
-		this.clientTask = task;
-		this.listener = listener;
-		absoluteSharedDir = new File(absoluteSharedFolder);
-		jobTempOutputFolder = new File(tempEncodingFolder, task.getJobId());
+		this.absoluteSharedFolderStr = absoluteSharedFolder;
+		this.tempEncodingFolderStr = tempEncodingFolder;
+	}
+
+	protected void setFiles() {
+		absoluteSharedDir = new File(absoluteSharedFolderStr);
+		jobTempOutputFolder = new File(tempEncodingFolderStr, task.getJobId());
 		taskTempOutputFolder = FileUtils.getFile(jobTempOutputFolder, String.valueOf(task.getTaskId()));
 		String filename = FilenameUtils.getName(task.getTempFile());
 		taskTempOutputFile = new File(taskTempOutputFolder, filename);
@@ -100,9 +102,4 @@ public abstract class Converter<T extends ClientTask> extends Pooler<T> implemen
 					jobTempOutputFolder);
 		}
 	}
-
-	public ClientTask getClientTask() {
-		return clientTask;
-	}
-
 }
