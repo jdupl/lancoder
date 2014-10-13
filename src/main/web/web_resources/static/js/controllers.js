@@ -28,6 +28,13 @@ controllers.controller('jobs', function($scope, $http, $interval) {
   $http({method: 'GET', url: '/api/codecs/video'})
       .success(function(data) {
         $scope.videoCodecs = data;
+        for (var i = 0; i < data.length; i++) {
+          var codec = data[i];
+          if (codec.value === "H264") {
+            $scope.newJob.videoCodec = codec;
+            break;
+          }
+        }
       });
   $scope.presets = ['ULTRAFAST', 'SUPERFAST', 'VERYFAST', 'FASTER', 'FAST', 'MEDIUM', 'SLOW', 'SLOWER', 'VERYSLOW', 'PLACEBO'];
   $scope.controlTypes = [

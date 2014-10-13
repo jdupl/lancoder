@@ -50,7 +50,7 @@ public class JobInitiator extends RunnableService {
 
 		FFmpegPreset preset = req.getPreset();
 		RateControlType videoRateControlType = req.getRateControlType();
-		Codec videoCodec = Codec.H264;
+		Codec videoCodec = req.getVideoCodec();
 		double requestFrameRate = 0;
 		int width = 0;
 		int height = 0;
