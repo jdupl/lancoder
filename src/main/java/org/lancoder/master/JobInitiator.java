@@ -117,13 +117,15 @@ public class JobInitiator extends RunnableService {
 	private ArrayList<ClientTask> createTasks(AudioStreamConfig config, Job job) {
 		ArrayList<ClientTask> tasks = new ArrayList<>();
 		AudioStream outStream = config.getOutStream();
-		int taskId = job.getTaskCount();
-		File relativeTasksOutput = FileUtils.getFile(job.getOutputFolder(), job.getPartsFolderName());
-		File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
-				String.format("part-%d.%s", taskId, outStream.getCodec().getContainer()));
-		AudioTask task = new AudioTask(taskId, job.getJobId(), 0, outStream.getUnitCount(), outStream.getUnitCount(),
-				Unit.SECONDS, relativeTaskOutputFile.getPath());
-		tasks.add(new ClientAudioTask(task, config));
+		if (outStream.getCodec() != Codec.COPY) {
+			int taskId = job.getTaskCount();
+			File relativeTasksOutput = FileUtils.getFile(job.getOutputFolder(), job.getPartsFolderName());
+			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
+					String.format("part-%d.%s", taskId, outStream.getCodec().getContainer()));
+			AudioTask task = new AudioTask(taskId, job.getJobId(), 0, outStream.getUnitCount(),
+					outStream.getUnitCount(), Unit.SECONDS, relativeTaskOutputFile.getPath());
+			tasks.add(new ClientAudioTask(task, config));
+		}
 		return tasks;
 	}
 

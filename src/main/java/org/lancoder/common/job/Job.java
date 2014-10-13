@@ -343,6 +343,8 @@ public class Job implements Comparable<Job>, Serializable {
 	}
 
 	public ArrayList<Stream> getStreams() {
-		return this.fileinfo.getStreams();
+		ArrayList<Stream> streams = new ArrayList<>();
+		streams.addAll(this.streamTaskMapping.keySet());
+		return streams;
 	}
 }

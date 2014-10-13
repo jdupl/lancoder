@@ -67,7 +67,8 @@ public class AudioStream extends Stream {
 	@Override
 	public ArrayList<String> getStreamCopyMapping() {
 		ArrayList<String> args = new ArrayList<>();
-		Collections.addAll(args, "-D", "-S", "-B", "--no-chapters", "-M", "--no-global-tags");
+		Collections.addAll(args, "-D", "-S", "-B", "--no-chapters", "-M", "--no-global-tags", "-a",
+				String.valueOf(this.index));
 		return args;
 	}
 }

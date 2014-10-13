@@ -40,7 +40,7 @@ public class Muxer extends RunnableService {
 			args.add("0:no");
 			Stream stream = streamIterator.next();
 			if (stream.getCodec() == Codec.COPY) {
-				File streamOrigin = new File(listener.getSharedFolder(), stream.getRelativeFile());
+				File streamOrigin = new File(listener.getSharedFolder(), job.getSourceFile());
 				args.addAll(stream.getStreamCopyMapping());
 				args.add(streamOrigin.getPath());
 			} else {
