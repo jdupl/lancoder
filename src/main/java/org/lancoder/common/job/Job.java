@@ -52,7 +52,6 @@ public class Job implements Comparable<Job>, Serializable {
 	private String partsFolderName;
 	private String sourceFile;
 
-	private FileInfo fileinfo;
 	private ArrayList<Task> tasks = new ArrayList<>();
 	/**
 	 * List of ClientTasks. Only used by dispatcher and should not be serialized to webui.
@@ -70,7 +69,6 @@ public class Job implements Comparable<Job>, Serializable {
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
 		this.frameRate = fileInfo.getMainVideoStream().getFrameRate();
-		this.fileinfo = fileInfo;
 		this.sourceFile = sourceFile;
 		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
 
