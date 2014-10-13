@@ -6,29 +6,19 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import org.lancoder.common.Node;
-import org.lancoder.common.RunnableService;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.common.pool.Pooler;
 
-public class ObjectChecker extends RunnableService implements Comparable<ObjectChecker> {
+public class ObjectChecker extends Pooler<Node> {
 
 	private NodeCheckerListener listener;
-	final LinkedBlockingDeque<Node> tasks = new LinkedBlockingDeque<Node>();
 
 	public ObjectChecker(NodeCheckerListener listener) {
 		this.listener = listener;
-	}
-
-	public synchronized boolean add(Node n) {
-		return this.tasks.offer(n);
-	}
-
-	public int getQueueSize() {
-		return this.tasks.size();
 	}
 
 	public void checkNode(Node n) {
@@ -53,23 +43,12 @@ public class ObjectChecker extends RunnableService implements Comparable<ObjectC
 	}
 
 	@Override
-	public void run() {
-		while (!close) {
-			try {
-				Node next = tasks.take();
-				checkNode(next);
-			} catch (InterruptedException e) {
-			}
-		}
-	}
-
-	@Override
 	public void serviceFailure(Exception e) {
 		e.printStackTrace();
 	}
 
 	@Override
-	public int compareTo(ObjectChecker o) {
-		return Integer.compare(getQueueSize(), o.getQueueSize());
+	protected void start() {
+		checkNode(task);
 	}
 }

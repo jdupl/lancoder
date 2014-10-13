@@ -21,7 +21,7 @@ public class NodeChecker extends RunnableService {
 		}
 		System.out.println("MASTER NODE CHECKER: checking if nodes are still alive");
 		for (Node n : listener.getOnlineNodes()) {
-			pool.add(n);
+			pool.handle(n);
 		}
 		return false;
 	}

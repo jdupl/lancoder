@@ -30,7 +30,7 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 	/**
 	 * The listener of the pool
 	 */
-	protected final PoolListener<T> listener;
+	protected PoolListener<T> listener;
 
 	public Pool(int threadLimit, PoolListener<T> listener) {
 		this(threadLimit, listener, true);
@@ -40,6 +40,10 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 		this.threadLimit = threadLimit;
 		this.listener = listener;
 		this.canQueue = canQueue;
+	}
+
+	public Pool(int threadLimit) {
+		this.threadLimit = threadLimit;
 	}
 
 	/**
