@@ -35,8 +35,8 @@ import org.lancoder.master.checker.NodeCheckerListener;
 import org.lancoder.master.dispatcher.DispatchItem;
 import org.lancoder.master.dispatcher.DispatcherListener;
 import org.lancoder.master.dispatcher.DispatcherPool;
-import org.lancoder.muxer.Muxer;
 import org.lancoder.muxer.MuxerListener;
+import org.lancoder.muxer.MuxerPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +56,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private NodeChecker nodeChecker;
 	private ApiServer apiServer;
 	private DispatcherPool dispatcher;
+	private MuxerPool muxerPool;
 
 	public Master(MasterConfig config) {
 		this.config = config;
@@ -65,12 +66,14 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
 		dispatcher = new DispatcherPool(this);
+		muxerPool = new MuxerPool(this, config.getAbsoluteSharedFolder());
 
 		services.add(nodeChecker);
 		services.add(nodeServer);
 		services.add(apiServer);
 		services.add(jobInitiator);
 		services.add(dispatcher);
+		services.add(muxerPool);
 	}
 
 	public void shutdown() {
@@ -407,11 +410,8 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		if (!checkJobIntegrity(job)) {
 			job.setJobStatus(JobState.JOB_COMPUTING);
 		} else {
-			// start muxing
-			Muxer m = new Muxer(this, job);
-			// this.services.add(m); TODO add muxer to services
-			Thread t = new Thread(m);
-			t.start();
+			// start muxing (or let pool add to the todo list)
+			muxerPool.handle(job);
 		}
 	}
 
@@ -521,24 +521,6 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	@Override
-	public void muxingStarting(Job job) {
-		job.setJobStatus(JobState.JOB_MUXING);
-	}
-
-	@Override
-	public void muxingCompleted(Job job) {
-		System.out.printf("Job %s finished muxing !\n", job.getJobName());
-		job.setJobStatus(JobState.JOB_COMPLETED);
-	}
-
-	@Override
-	public void muxingFailed(Job job, Exception e) {
-		// TODO Do something more (implement job failure ?)
-		System.err.printf("Muxing failed for job %s\n", job.getJobName());
-		e.printStackTrace();
-	}
-
-	@Override
 	public synchronized void taskRefused(DispatchItem item) {
 		ClientTask t = item.getTask();
 		Node n = item.getNode();
@@ -596,18 +578,25 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	@Override
-	public String getSharedFolder() {
-		return this.config.getAbsoluteSharedFolder();
+	public void started(Job job) {
+		job.setJobStatus(JobState.JOB_MUXING);
 	}
 
 	@Override
-	public String getEncodingFolder() {
-		return this.config.getFinalEncodingFolder();
+	public void completed(Job job) {
+		System.out.printf("Job %s finished muxing !\n", job.getJobName());
+		job.setJobStatus(JobState.JOB_COMPLETED);
 	}
 
 	@Override
-	public void muxingFailed(Job job) {
+	public void failed(Job job) {
+		System.err.printf("Muxing failed for job %s\n", job.getJobName());
+		// TODO
+	}
+
+	@Override
+	public void crash(Exception e) {
 		// TODO Auto-generated method stub
-
+		e.printStackTrace();
 	}
 }

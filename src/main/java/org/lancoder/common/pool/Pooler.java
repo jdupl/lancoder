@@ -6,7 +6,7 @@ import org.lancoder.common.RunnableService;
 
 public abstract class Pooler<T> extends RunnableService {
 
-	private LinkedBlockingDeque<T> requests = new LinkedBlockingDeque<>(1);
+	private LinkedBlockingDeque<T> requests = new LinkedBlockingDeque<>();
 	protected PoolListener<T> listener;
 	protected T task;
 	protected boolean active;
@@ -58,7 +58,7 @@ public abstract class Pooler<T> extends RunnableService {
 	 * While the pooler thread is running start tasks when requests gets elements.
 	 */
 	@Override
-	public void run() {
+	public final void run() {
 		try {
 			while (!close) {
 				handle(requests.take());
