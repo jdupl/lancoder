@@ -8,4 +8,5 @@ public abstract class RunnableService extends Service implements Runnable {
 	 * @param e
 	 */
 	public abstract void serviceFailure(Exception e);
+
 }

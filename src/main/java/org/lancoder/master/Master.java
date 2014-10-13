@@ -30,7 +30,7 @@ import org.lancoder.common.utils.FileUtils;
 import org.lancoder.master.api.node.MasterNodeServerListener;
 import org.lancoder.master.api.node.MasterObjectServer;
 import org.lancoder.master.api.web.ApiServer;
-import org.lancoder.master.checker.NodeChecker;
+import org.lancoder.master.checker.NodeCheckerService;
 import org.lancoder.master.checker.NodeCheckerListener;
 import org.lancoder.master.dispatcher.DispatchItem;
 import org.lancoder.master.dispatcher.DispatcherListener;
@@ -53,7 +53,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private ArrayList<Service> services = new ArrayList<>();
 	private JobInitiator jobInitiator;
 	private MasterObjectServer nodeServer;
-	private NodeChecker nodeChecker;
+	private NodeCheckerService nodeChecker;
 	private ApiServer apiServer;
 	private DispatcherPool dispatcher;
 	private MuxerPool muxerPool;
@@ -62,7 +62,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		this.config = config;
 		jobInitiator = new JobInitiator(this, config);
 		nodeServer = new MasterObjectServer(this, getConfig().getNodeServerPort());
-		nodeChecker = new NodeChecker(this);
+		nodeChecker = new NodeCheckerService(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
 		dispatcher = new DispatcherPool(this);
