@@ -30,11 +30,11 @@ import org.lancoder.common.utils.FileUtils;
 import org.lancoder.master.api.node.MasterNodeServerListener;
 import org.lancoder.master.api.node.MasterObjectServer;
 import org.lancoder.master.api.web.ApiServer;
-import org.lancoder.master.checker.NodeCheckerService;
 import org.lancoder.master.checker.NodeCheckerListener;
+import org.lancoder.master.checker.NodeCheckerService;
 import org.lancoder.master.dispatcher.DispatchItem;
-import org.lancoder.master.dispatcher.DispatcherListener;
 import org.lancoder.master.dispatcher.DispatcherPool;
+import org.lancoder.master.dispatcher.DispatcherListener;
 import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private MasterObjectServer nodeServer;
 	private NodeCheckerService nodeChecker;
 	private ApiServer apiServer;
-	private DispatcherPool dispatcher;
+	private DispatcherPool dispatcherPool;
 	private MuxerPool muxerPool;
 
 	public Master(MasterConfig config) {
@@ -65,14 +65,14 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		nodeChecker = new NodeCheckerService(this);
 		// api server to serve/get information from users
 		apiServer = new ApiServer(this);
-		dispatcher = new DispatcherPool(this);
+		dispatcherPool = new DispatcherPool(this);
 		muxerPool = new MuxerPool(this, config.getAbsoluteSharedFolder());
 
 		services.add(nodeChecker);
 		services.add(nodeServer);
 		services.add(apiServer);
 		services.add(jobInitiator);
-		services.add(dispatcher);
+		services.add(dispatcherPool);
 		services.add(muxerPool);
 	}
 
@@ -204,7 +204,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		node.setStatus(NodeState.LOCKED);
 		task.getProgress().start();
 		node.addTask(task);
-		dispatcher.dispatch(new DispatchItem(task, node));
+		dispatcherPool.handle(new DispatchItem(task, node));
 	}
 
 	private String getNewUNID(Node n) {

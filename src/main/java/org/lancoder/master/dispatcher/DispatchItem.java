@@ -4,8 +4,8 @@ import org.lancoder.common.Node;
 import org.lancoder.common.task.ClientTask;
 
 public class DispatchItem {
-	private ClientTask task;
 
+	private ClientTask task;
 	private Node node;
 
 	public DispatchItem(ClientTask task, Node node) {
