@@ -1,18 +1,8 @@
 package org.lancoder.muxer;
 
 import org.lancoder.common.job.Job;
+import org.lancoder.common.pool.PoolListener;
 
-public interface MuxerListener {
+public interface MuxerListener extends PoolListener<Job> {
 
-	public void muxingStarting(Job job);
-
-	public void muxingCompleted(Job job);
-
-	public void muxingFailed(Job job, Exception e);
-	
-	public void muxingFailed(Job job);
-
-	public String getSharedFolder();
-
-	public String getEncodingFolder();
 }

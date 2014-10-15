@@ -1,45 +1,45 @@
 package org.lancoder.master.checker;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+
 import org.lancoder.common.Node;
-import org.lancoder.common.RunnableService;
+import org.lancoder.common.network.cluster.messages.Message;
+import org.lancoder.common.network.cluster.messages.StatusReport;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.common.pool.Pooler;
 
-public class NodeChecker extends RunnableService {
+public class NodeChecker extends Pooler<Node> {
 
-	private final static int MS_DELAY_BETWEEN_CHECKS = 5000;
 	private NodeCheckerListener listener;
-	private NodeCheckerPool pool;
 
 	public NodeChecker(NodeCheckerListener listener) {
 		this.listener = listener;
-		this.pool = new NodeCheckerPool(listener);
 	}
 
-	private boolean checkNodes() {
-		if (listener.getNodes().size() == 0) {
-			System.out.println("MASTER NODE CHECKER: no nodes to check!");
-			return false;
-		}
-		System.out.println("MASTER NODE CHECKER: checking if nodes are still alive");
-		for (Node n : listener.getOnlineNodes()) {
-			pool.add(n);
-		}
-		return false;
-	}
-
-	@Override
-	public void run() {
-		System.out.println("Starting node checker service!");
-		while (!close) {
-			try {
-				checkNodes();
-				System.out.println("NODE CHECKER: checking back in 5 seconds");
-				Thread.currentThread();
-				Thread.sleep(MS_DELAY_BETWEEN_CHECKS);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+	public void checkNode(Node n) {
+		try (Socket s = new Socket()) {
+			SocketAddress sockAddr = new InetSocketAddress(n.getNodeAddress(), n.getNodePort());
+			s.connect(sockAddr, 2000);
+			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+			out.flush();
+			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+			Message m = new Message(ClusterProtocol.STATUS_REQUEST);
+			out.writeObject(m);
+			out.flush();
+			Object o = in.readObject();
+			if (o instanceof StatusReport) {
+				listener.readStatusReport((StatusReport) o);
 			}
+		} catch (IOException e) {
+			listener.nodeDisconnected(n);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 		}
-		System.out.println("Closed node checker service !");
 	}
 
 	@Override
@@ -47,4 +47,8 @@ public class NodeChecker extends RunnableService {
 		e.printStackTrace();
 	}
 
+	@Override
+	protected void start() {
+		checkNode(task);
+	}
 }

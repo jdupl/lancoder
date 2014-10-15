@@ -1,6 +1,6 @@
-'use strict';
 angular.module('lancoder', [
   'ngRoute',
+  'lancoder.services',
   'lancoder.controllers'
 ]).config(['$routeProvider', function($routeProvider) {
     $routeProvider.when('/nodes', {templateUrl: 'partials/nodes.html', controller: 'nodes'});

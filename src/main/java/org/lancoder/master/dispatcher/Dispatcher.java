@@ -5,34 +5,22 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.lancoder.common.Node;
-import org.lancoder.common.RunnableService;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.common.pool.Pooler;
 import org.lancoder.common.task.ClientTask;
 
-public class ObjectDispatcher extends RunnableService {
+public class Dispatcher extends Pooler<DispatchItem> {
 
 	private DispatcherListener listener;
-	private BlockingArrayQueue<DispatchItem> items = new BlockingArrayQueue<>(1);
-	private boolean free = true;
 
-	public ObjectDispatcher(DispatcherListener listener) {
+	public Dispatcher(DispatcherListener listener) {
 		this.listener = listener;
 	}
 
-	public synchronized boolean isFree() {
-		return free;
-	}
-
-	public synchronized boolean queue(DispatchItem item) {
-		return this.items.offer(item);
-	}
-
 	private void dispatch(DispatchItem item) {
-		free = false;
 		ClientTask task = item.getTask();
 		Node node = item.getNode();
 
@@ -59,23 +47,17 @@ public class ObjectDispatcher extends RunnableService {
 			} else {
 				listener.taskAccepted(item);
 			}
-			free = true;
 		}
 	}
 
 	@Override
-	public void run() {
-		while (!close) {
-			try {
-				dispatch(items.take());
-			} catch (InterruptedException e) {
-			}
-		}
+	protected void start() {
+		dispatch(task);
 	}
 
 	@Override
 	public void serviceFailure(Exception e) {
-		// TODO Auto-generated method stub
+		e.printStackTrace();
 	}
 
 }

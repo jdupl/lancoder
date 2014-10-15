@@ -1,29 +1,23 @@
 package org.lancoder.worker.converter.audio;
 
-import org.lancoder.common.task.ClientTask;
+import org.lancoder.common.pool.Pool;
+import org.lancoder.common.pool.PoolListener;
+import org.lancoder.common.pool.Pooler;
 import org.lancoder.common.task.audio.ClientAudioTask;
-import org.lancoder.worker.converter.ConverterListener;
-import org.lancoder.worker.converter.ConverterPool;
+import org.lancoder.worker.WorkerConfig;
 
-public class AudioConverterPool extends ConverterPool {
+public class AudioConverterPool extends Pool<ClientAudioTask> {
 
-	public AudioConverterPool(int threads, ConverterListener listener) {
-		super(threads, listener);
+	private WorkerConfig config;
+
+	public AudioConverterPool(int threads, PoolListener<ClientAudioTask> listener, WorkerConfig config) {
+		super(threads, listener, false);
+		this.config = config;
 	}
 
 	@Override
-	protected boolean hasFree() {
-		int size = converters.size();
-		return size < threadCount ? true : false;
+	protected Pooler<ClientAudioTask> getNewPooler() {
+		return new AudioWorkThread(this, config.getAbsoluteSharedFolder(), config.getTempEncodingFolder());
 	}
 
-	@Override
-	public synchronized boolean encode(ClientTask task) {
-		if (!(task instanceof ClientAudioTask) || !hasFree()) {
-			return false;
-		}
-		ClientAudioTask aTask = (ClientAudioTask) task;
-		AudioWorkThread converter = new AudioWorkThread(aTask, this);
-		return this.spawn(converter);
-	}
 }

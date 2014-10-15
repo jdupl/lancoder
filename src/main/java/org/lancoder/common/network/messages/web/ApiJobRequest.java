@@ -12,6 +12,7 @@ public class ApiJobRequest {
 	// Video
 	private int rate;
 	private int passes;
+	private Codec videoCodec;
 	private FFmpegPreset preset;
 	private RateControlType rateControlType;
 	// Audio
@@ -21,6 +22,10 @@ public class ApiJobRequest {
 	private int audioRate;
 	private ChannelDisposition audioChannels;
 	private int audioSampleRate;
+
+	public Codec getVideoCodec() {
+		return videoCodec;
+	}
 
 	public UserAudioPreset getAudioPreset() {
 		return audioConfig;

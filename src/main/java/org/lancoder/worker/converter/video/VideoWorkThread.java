@@ -9,26 +9,24 @@ import java.util.regex.Pattern;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.common.file_components.streams.VideoStream;
-import org.lancoder.common.network.cluster.messages.Cause;
+import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.worker.converter.Converter;
-import org.lancoder.worker.converter.ConverterListener;
 
-public class VideoWorkThread extends Converter {
+public class VideoWorkThread extends Converter<ClientVideoTask> {
 
 	private static String OS = System.getProperty("os.name").toLowerCase();
 
-	private ClientVideoTask task;
 	private static Pattern currentFramePattern = Pattern.compile("frame=\\s+([0-9]+)");
 	private static Pattern fpsPattern = Pattern.compile("fps=\\s+([0-9]+)");
 	private static Pattern missingDecoder = Pattern.compile("Error while opening encoder for output stream");
 
-	public VideoWorkThread(ClientVideoTask task, ConverterListener listener) {
-		super(task, listener);
-		this.task = task;
+	public VideoWorkThread(PoolListener<ClientVideoTask> listener, String absoluteSharedFolder,
+			String tempEncodingFolder) {
+		super(listener, absoluteSharedFolder, tempEncodingFolder);
 	}
 
 	private static boolean isWindows() {
@@ -70,38 +68,6 @@ public class VideoWorkThread extends Converter {
 		ffmpeg.read(ffmpegArgs, this, true, taskTempOutputFolder);
 	}
 
-	@Override
-	public void run() {
-		boolean success = false;
-		try {
-			listener.workStarted(task);
-			createDirs();
-			// use start and duration for ffmpeg legacy support
-			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
-			String startTimeStr = TimeUtils.getStringFromMs(task.getEncodingStartTime());
-			String durationStr = TimeUtils.getStringFromMs(durationMs);
-
-			int currentStep = 1;
-			while (currentStep <= task.getStepCount()) {
-				System.err.printf("Encoding pass %d of %d\n", task.getProgress().getCurrentStepIndex(),
-						task.getStepCount());
-				encodePass(startTimeStr, durationStr);
-				task.getProgress().completeStep();
-				currentStep++;
-			}
-			success = transcodeToMpegTs();
-		} catch (MissingFfmpegException | MissingDecoderException e) {
-			listener.nodeCrash(new Cause(e, "unknown", true));
-		} finally {
-			if (success) {
-				listener.workCompleted(task);
-			} else {
-				listener.workFailed(task);
-			}
-		}
-		this.destroyTempFolder();
-	}
-
 	private boolean transcodeToMpegTs() {
 		if (taskFinalFile.exists()) {
 			System.err.printf("Cannot transcode to mkv as file %s already exists\n", taskFinalFile.getPath());
@@ -125,7 +91,7 @@ public class VideoWorkThread extends Converter {
 
 	@Override
 	public void serviceFailure(Exception e) {
-		this.listener.nodeCrash(null);
+		this.listener.crash(e);
 		// TODO
 	}
 
@@ -144,11 +110,44 @@ public class VideoWorkThread extends Converter {
 		m = missingDecoder.matcher(line);
 		if (m.find()) {
 			System.err.println("Missing decoder !");
-			listener.nodeCrash(new Cause(new MissingDecoderException(), "Missing decoder or encoder", false));
+			listener.crash(new MissingDecoderException("Missing decoder or encoder"));
 		} else if (units != -1 && speed != -1) {
 			task.getProgress().update(units, speed);
 		} else if (units != -1) {
 			task.getProgress().update(units);
 		}
+	}
+
+	@Override
+	protected void start() {
+		boolean success = false;
+		try {
+			listener.started(task);
+			setFiles();
+			createDirs();
+			// use start and duration for ffmpeg legacy support
+			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
+			String startTimeStr = TimeUtils.getStringFromMs(task.getEncodingStartTime());
+			String durationStr = TimeUtils.getStringFromMs(durationMs);
+
+			int currentStep = 1;
+			while (currentStep <= task.getStepCount()) {
+				System.err.printf("Encoding pass %d of %d\n", task.getProgress().getCurrentStepIndex(),
+						task.getStepCount());
+				encodePass(startTimeStr, durationStr);
+				task.getProgress().completeStep();
+				currentStep++;
+			}
+			success = transcodeToMpegTs();
+		} catch (MissingFfmpegException | MissingDecoderException e) {
+			listener.crash(e);
+		} finally {
+			if (success) {
+				listener.completed(task);
+			} else {
+				listener.failed(task);
+			}
+		}
+		this.destroyTempFolder();
 	}
 }
