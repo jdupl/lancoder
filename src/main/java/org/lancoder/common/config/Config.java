@@ -2,7 +2,6 @@ package org.lancoder.common.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -13,15 +12,15 @@ import com.google.gson.GsonBuilder;
 
 public abstract class Config {
 
-	private static final String DEFAULT_FFMPEG_PATH = InetAddress.getLoopbackAddress().getHostAddress();
+	private static final String DEFAULT_FFMPEG_PATH = "ffmpeg";
 
 	protected transient String configPath;
 
 	@Prompt(message = "FFmpeg's path")
-	protected String ffmpegPath;
+	public static String ffmpegPath;
 
 	public Config() {
-		this.ffmpegPath = DEFAULT_FFMPEG_PATH;
+		ffmpegPath = DEFAULT_FFMPEG_PATH;
 	}
 
 	/**
