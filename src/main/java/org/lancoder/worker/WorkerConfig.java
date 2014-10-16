@@ -22,7 +22,7 @@ public class WorkerConfig extends Config implements Serializable {
 	private static final String DEFAULT_MASTER_IP = InetAddress.getLoopbackAddress().getHostAddress();
 	private static final String DEFAULT_TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
 	private static final String DEFAULT_UNID = "";
-	private static final String DEFAULT_NAME = "unknown_worker";
+	private static final String DEFAULT_NAME = InetAddress.getLoopbackAddress().getCanonicalHostName();
 	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
 
 	@Prompt(message = "master ip address")
