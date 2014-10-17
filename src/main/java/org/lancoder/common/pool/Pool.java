@@ -5,7 +5,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.lancoder.common.Service;
 
-public abstract class Pool<T> extends Service implements PoolListener<T> {
+public abstract class Pool<T> extends Service implements PoolListener<T>, Cleanable {
 
 	/**
 	 * How many poolers can be initialized in the pool
@@ -49,12 +49,14 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 	/**
 	 * Clean the resources of the pool. Allows the pool to shrink after high load.
 	 */
-	public void clean() {
+	@Override
+	public boolean clean() {
 		for (Pooler<T> pooler : poolers) {
 			if (pooler.clean()) {
 				poolers.remove(pooler);
 			}
 		}
+		return false;
 	}
 
 	/**
@@ -81,14 +83,23 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 		return hasFree();
 	}
 
-	private Pooler<T> spawn(Pooler<T> pooler) {
+	private Pooler<T> spawn() {
+		if (!canSpawn()) {
+			return null;
+		}
+		Pooler<T> pooler = getNewPooler();
 		Thread thread = new Thread(threads, pooler);
 		pooler.setThread(thread);
 		thread.start();
+		poolers.add(pooler);
 		return pooler;
 	}
 
 	protected abstract Pooler<T> getNewPooler();
+
+	private boolean canSpawn() {
+		return poolers.size() < threadLimit;
+	}
 
 	/**
 	 * Get a free pooler resource or create a new one.
@@ -102,11 +113,19 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 				pooler = p;
 			}
 		}
-		return pooler == null && hasFree() ? spawn(getNewPooler()) : pooler;
+		if (pooler == null) {
+			pooler = spawn();
+		}
+		return pooler;
 	}
 
+	/**
+	 * Get if any currently initialized pooler is free
+	 * 
+	 * @return
+	 */
 	protected boolean hasFree() {
-		return getActiveCount() < this.threadLimit;
+		return getActiveCount() < threadLimit;
 	}
 
 	/**

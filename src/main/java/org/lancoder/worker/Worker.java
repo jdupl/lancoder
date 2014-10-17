@@ -22,6 +22,8 @@ import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.common.pool.Cleanable;
+import org.lancoder.common.pool.PoolCleanerService;
 import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
@@ -60,12 +62,15 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		int threadCount = Runtime.getRuntime().availableProcessors();
 		System.out.printf("Detected %d threads available.%n", threadCount);
 
+		ArrayList<Cleanable> cleanables = new ArrayList<>();
 		WorkerObjectServer objectServer = new WorkerObjectServer(this, config.getListenPort());
 		services.add(objectServer);
 		audioPool = new AudioConverterPool(threadCount, new AudioTaskListenerAdapter(this), config);
 		services.add(audioPool);
+		cleanables.add(audioPool);
 		videoPool = new VideoConverterPool(1, new VideoTaskListenerAdapter(this), config);
 		services.add(videoPool);
+		cleanables.add(videoPool);
 		// Get local ip
 		// TODO allow options to override IP detection and enable ipv6
 		InetAddress address = null;
@@ -97,6 +102,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		ContactMasterObject contact = new ContactMasterObject(getMasterInetAddress(), getMasterPort(), this);
 		this.services.add(contact);
 		node = new Node(address, this.config.getListenPort(), config.getName(), codecs, threadCount);
+		services.add(new PoolCleanerService(cleanables));
 	}
 
 	public void shutdown() {

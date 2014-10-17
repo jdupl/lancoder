@@ -4,9 +4,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import org.lancoder.common.RunnableService;
 
-public abstract class Pooler<T> extends RunnableService {
-
-	protected final static long CLEAN_DELAY_MSEC = 5 * 1000 * 60;
+public abstract class Pooler<T> extends RunnableService implements Cleanable {
 
 	/**
 	 * List of elements to process
@@ -123,7 +121,9 @@ public abstract class Pooler<T> extends RunnableService {
 			while (!close) {
 				handle(requests.take());
 			}
+			System.err.println("Pooler ressource closed");
 		} catch (InterruptedException e) {
+			System.err.println("Pooler ressource interrupted");
 			e.printStackTrace();
 		}
 	}

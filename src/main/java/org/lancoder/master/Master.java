@@ -20,6 +20,8 @@ import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
+import org.lancoder.common.pool.Cleanable;
+import org.lancoder.common.pool.PoolCleanerService;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.status.TaskState;
@@ -61,6 +63,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 
 	public Master(MasterConfig config) {
 		this.config = config;
+		ArrayList<Cleanable> cleanables = new ArrayList<>();
 		jobInitiator = new JobInitiator(this, config);
 		nodeServer = new MasterObjectServer(this, getConfig().getNodeServerPort());
 		nodeChecker = new NodeCheckerService(this);
@@ -69,12 +72,16 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		dispatcherPool = new DispatcherPool(this);
 		muxerPool = new MuxerPool(this, config.getAbsoluteSharedFolder());
 
+		cleanables.add(dispatcherPool);
+		cleanables.add(muxerPool);
+
 		services.add(nodeChecker);
 		services.add(nodeServer);
 		services.add(apiServer);
 		services.add(jobInitiator);
 		services.add(dispatcherPool);
 		services.add(muxerPool);
+		services.add(new PoolCleanerService(cleanables));
 	}
 
 	public void shutdown() {
