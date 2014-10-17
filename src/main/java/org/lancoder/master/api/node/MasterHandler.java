@@ -34,7 +34,7 @@ public class MasterHandler implements Runnable {
 					switch (requestMessage.getCode()) {
 					case CONNECT_ME:
 						if (requestMessage instanceof ConnectMessage) {
-							String unid = listener.connectRequest((ConnectMessage) requestMessage);
+							String unid = listener.connectRequest((ConnectMessage) requestMessage, s.getInetAddress());
 							out.writeObject(unid);
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));

@@ -1,6 +1,7 @@
 package org.lancoder.master;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -555,15 +556,25 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	@Override
-	public String connectRequest(ConnectMessage cm) {
+	public String connectRequest(ConnectMessage cm, InetAddress detectedIp) {
+		String unid = null;
 		Node sender = cm.getNode();
+		if (sender.getNodeAddress() == null) {
+			System.err.printf("Client did not provide a valid ip address.%nAssuming ip %s detected from socket.",
+					detectedIp);
+			sender.setNodeAddress(detectedIp);
+		} else if (sender.getNodeAddress().getAddress() != detectedIp.getAddress()) {
+			System.err.printf("WARNING: Client provided ip does not match detected ip from socket.%n"
+					+ "Client provided ip: %s%nSocket provided ip: %s%nAssuming socket ip is real.%n",
+					sender.getNodeAddress(), detectedIp);
+			sender.setNodeAddress(detectedIp);
+		}
 		sender.setUnid(cm.getUnid());
 		if (addNode(sender)) {
 			System.err.println("added node " + sender.getUnid());
-			return sender.getUnid();
+			unid = sender.getUnid();
 		}
-		// Could not add node
-		return null;
+		return unid;
 	}
 
 	@Override
