@@ -6,17 +6,66 @@ import org.lancoder.common.RunnableService;
 
 public abstract class Pooler<T> extends RunnableService {
 
+	protected final static long CLEAN_DELAY_MSEC = 5 * 1000 * 60;
+
+	/**
+	 * List of elements to process
+	 */
 	private LinkedBlockingDeque<T> requests = new LinkedBlockingDeque<>();
+	/**
+	 * The listener to notify
+	 */
 	protected PoolListener<T> listener;
+	/**
+	 * Currently processed element
+	 */
 	protected T task;
+	/**
+	 * Is the ressource currently in use
+	 */
 	protected boolean active;
-	
+	/**
+	 * Timestamp in unix msec of last activity
+	 */
+	private long lastActivity;
+
+	/**
+	 * The thread used by the pooler ressource
+	 */
+	private Thread thread;
+
 	public Pooler() {
-		
+		this.lastActivity = System.currentTimeMillis();
 	}
 
 	public Pooler(PoolListener<T> listener) {
+		this();
 		this.listener = listener;
+	}
+
+	public void setThread(Thread thread) {
+		this.thread = thread;
+	}
+
+	/**
+	 * Decide if the pooler should be closed. Super implementation provides a time based decision from last activity.
+	 * 
+	 * @return if current pooler should be closed
+	 */
+	private boolean expired() {
+		return System.currentTimeMillis() - this.lastActivity > CLEAN_DELAY_MSEC;
+	}
+
+	/**
+	 * Stop and clean ressource if necessary
+	 */
+	public final boolean clean() {
+		boolean closed = false;
+		if (!isActive() && expired()) {
+			this.stop();
+			closed = true;
+		}
+		return closed;
 	}
 
 	/**
@@ -52,8 +101,15 @@ public abstract class Pooler<T> extends RunnableService {
 	private void handle(T request) {
 		this.task = request;
 		this.active = true;
-		start();
+		start(); // pooler thread is now busy and blocks here
 		this.active = false;
+		this.lastActivity = System.currentTimeMillis();
+	}
+
+	@Override
+	public void stop() {
+		super.stop();
+		this.thread.interrupt();
 	}
 
 	protected abstract void start();

@@ -47,6 +47,17 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 	}
 
 	/**
+	 * Clean the resources of the pool. Allows the pool to shrink after high load.
+	 */
+	public void clean() {
+		for (Pooler<T> pooler : poolers) {
+			if (pooler.clean()) {
+				poolers.remove(pooler);
+			}
+		}
+	}
+
+	/**
 	 * Count the number of currently busy pooler resource
 	 * 
 	 * @return The busy pooler count
@@ -71,7 +82,9 @@ public abstract class Pool<T> extends Service implements PoolListener<T> {
 	}
 
 	private Pooler<T> spawn(Pooler<T> pooler) {
-		new Thread(threads, pooler).start();
+		Thread thread = new Thread(threads, pooler);
+		pooler.setThread(thread);
+		thread.start();
 		return pooler;
 	}
 

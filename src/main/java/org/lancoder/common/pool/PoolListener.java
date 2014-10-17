@@ -9,4 +9,5 @@ public interface PoolListener<T> {
 	public void failed(T e);
 
 	public void crash(Exception e);
+
 }
