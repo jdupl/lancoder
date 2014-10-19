@@ -54,7 +54,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		if (task.getStepCount() > 1) {
 			// Add pass arguments
 			ffmpegArgs.add("-pass");
-			ffmpegArgs.add(String.valueOf(task.getProgress().getCurrentStep()));
+			ffmpegArgs.add(String.valueOf(task.getProgress().getCurrentStepIndex()));
 			if (task.getProgress().getCurrentStepIndex() != task.getStepCount()) {
 				ffmpegArgs.add("-f");
 				ffmpegArgs.add("rawvideo");
