@@ -66,6 +66,7 @@ public abstract class Pool<T> extends Service implements PoolListener<T>, Cleana
 		}
 		for (Pooler<T> pooler : toClean) {
 			pooler.clean();
+			this.poolers.remove(pooler);
 		}
 		return toClean.size() != 0;
 	}
