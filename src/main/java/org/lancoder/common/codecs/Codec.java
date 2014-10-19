@@ -59,11 +59,11 @@ public enum Codec implements Serializable {
 	/**
 	 * H.264
 	 */
-	H264("H.264/MPEG-4 AVC", "h264", "libx264", "mpegts", false),
+	H264("H.264/MPEG-4 AVC", "h264", "libx264", "mkv", false),
 	/**
 	 * H.265 (This encoding is not yet supported by most systems.)
 	 */
-	H265("HEVC/H.265", "h265", "libx265", "mpegts", false),
+	H265("HEVC/H.265", "h265", "libx265", "mkv", false),
 	/**
 	 * Experimental codec by ffmpeg. Not supported for muxing (in test)
 	 */

@@ -156,8 +156,9 @@ public class JobInitiator extends RunnableService {
 					remaining -= job.getLengthOfTasks();
 					currentMs += job.getLengthOfTasks();
 				}
+				String extension = outStream.getCodec() == Codec.H264 ? "mpeg.ts" : outStream.getCodec().getContainer();
 				File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
-						String.format("part-%d.mpeg.ts", taskId)); // TODO get extension from codec
+						String.format("part-%d.%s", taskId, extension));
 				long ms = end - start;
 				long unitCount = (long) Math.floor((ms / 1000 * outStream.getFrameRate()));
 				VideoTask task = new VideoTask(taskId, job.getJobId(), outStream.getStepCount(), start, end, unitCount,

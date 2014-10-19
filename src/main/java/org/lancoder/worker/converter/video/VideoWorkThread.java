@@ -1,11 +1,13 @@
 package org.lancoder.worker.converter.video;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
@@ -142,7 +144,23 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 				task.getProgress().completeStep();
 				currentStep++;
 			}
-			success = transcodeToMpegTs();
+			// TODO move to a codec strategy
+			if (task.getStreamConfig().getOutStream().getCodec() == Codec.H264) {
+				success = transcodeToMpegTs();
+			} else {
+				if (taskFinalFile.exists()) {
+					System.err.printf("Cannot transcode to mkv as file %s already exists\n", taskFinalFile.getPath());
+					success = false;
+				}
+				try {
+					FileUtils.moveFile(taskTempOutputFile, taskFinalFile);
+					FileUtils.givePerms(taskFinalFile, false);
+					success = true;
+				} catch (IOException e) {
+					e.printStackTrace();
+					success = false;
+				}
+			}
 		} catch (MissingFfmpegException | MissingDecoderException e) {
 			listener.crash(e);
 		} finally {
