@@ -7,12 +7,12 @@ import org.lancoder.common.RunnableService;
 
 public class WorkerObjectServer extends RunnableService {
 
-	private WorkerServerListener listener;
 	private int port;
-	
+	private HandlerPool pool;
+
 	public WorkerObjectServer(WorkerServerListener listener, int port) {
 		this.port = port;
-		this.listener = listener;
+		this.pool = new HandlerPool(100, listener);
 	}
 
 	@Override
@@ -20,10 +20,8 @@ public class WorkerObjectServer extends RunnableService {
 		ServerSocket server;
 		try {
 			server = new ServerSocket(port);
-			while(!close){
-				WorkerHandler handler = new WorkerHandler(server.accept(), listener);
-				Thread t = new Thread(handler);
-				t.start();
+			while (!close) {
+				this.pool.handle(server.accept());
 			}
 		} catch (IOException e) {
 			serviceFailure(e);

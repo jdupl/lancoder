@@ -8,22 +8,21 @@ import java.net.Socket;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.common.pool.Pooler;
 
-public class WorkerHandler implements Runnable {
+public class WorkerHandler extends Pooler<Socket> {
 
 	private WorkerServerListener listener;
-	private Socket s;
 
-	public WorkerHandler(Socket s, WorkerServerListener listener) {
-		this.s = s;
+	public WorkerHandler(WorkerServerListener listener) {
 		this.listener = listener;
 	}
 
 	@Override
-	public void run() {
+	protected void start() {
 		try {
-			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+			ObjectOutputStream out = new ObjectOutputStream(task.getOutputStream());
+			ObjectInputStream in = new ObjectInputStream(task.getInputStream());
 			Object request = in.readObject();
 			Object obj = new Message(ClusterProtocol.BAD_REQUEST);
 			if (request instanceof Message) {
@@ -51,13 +50,18 @@ public class WorkerHandler implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			if (s != null && !s.isClosed()) {
+			if (task != null && !task.isClosed()) {
 				try {
-					s.close();
+					task.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		}
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+
 	}
 }
