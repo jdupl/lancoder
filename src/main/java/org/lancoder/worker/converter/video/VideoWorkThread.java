@@ -43,7 +43,8 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		String mapping = String.format("0:%d", inStream.getIndex());
 		// Get parameters from the task and bind parameters to process
 		String[] baseArgs = new String[] { Config.ffmpegPath, "-ss", startTimeStr, "-t", durationStr, "-i",
-				inputFile.getAbsolutePath(), "-sn", "-force_key_frames", "0", "-an", "-map", mapping, "-c:v", encodingLibrary };
+				inputFile.getAbsolutePath(), "-sn", "-force_key_frames", "0", "-an", "-map", mapping, "-c:v",
+				encodingLibrary };
 		ArrayList<String> ffmpegArgs = new ArrayList<>();
 		// Add base args to process builder
 		Collections.addAll(ffmpegArgs, baseArgs);

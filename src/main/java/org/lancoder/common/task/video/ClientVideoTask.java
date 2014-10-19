@@ -2,6 +2,7 @@ package org.lancoder.common.task.video;
 
 import java.util.ArrayList;
 
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.Task;
@@ -41,7 +42,7 @@ public class ClientVideoTask extends ClientTask {
 	public ArrayList<String> getPresetArg() {
 		ArrayList<String> args = new ArrayList<>();
 		VideoStream stream = this.getStreamConfig().getOutStream();
-		if (stream.getPreset() != null) {
+		if (stream.getPreset() != null && stream.getCodec() == Codec.H264) {
 			args.add("-preset");
 			args.add(stream.getPreset().toString());
 		}
