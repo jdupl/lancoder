@@ -54,12 +54,17 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 		return System.currentTimeMillis() - this.lastActivity > CLEAN_DELAY_MSEC;
 	}
 
+	@Override
+	public boolean shouldClean() {
+		return !isActive() && expired();
+	}
+
 	/**
 	 * Stop and clean ressource if necessary
 	 */
 	public final boolean clean() {
 		boolean closed = false;
-		if (!isActive() && expired()) {
+		if (shouldClean()) {
 			this.stop();
 			closed = true;
 		}
@@ -121,10 +126,9 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 			while (!close) {
 				handle(requests.take());
 			}
-			System.err.println("Pooler ressource closed");
 		} catch (InterruptedException e) {
 			System.err.println("Pooler ressource interrupted");
-			e.printStackTrace();
 		}
+		System.err.println("Pooler ressource closed");
 	}
 }

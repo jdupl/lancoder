@@ -46,17 +46,28 @@ public abstract class Pool<T> extends Service implements PoolListener<T>, Cleana
 		this.threadLimit = threadLimit;
 	}
 
+	@Override
+	public boolean shouldClean() {
+		return true;
+	};
+
 	/**
 	 * Clean the resources of the pool. Allows the pool to shrink after high load.
+	 * 
+	 * @return if any resource was cleaned
 	 */
 	@Override
 	public boolean clean() {
+		ArrayList<Pooler<T>> toClean = new ArrayList<>();
 		for (Pooler<T> pooler : poolers) {
-			if (pooler.clean()) {
-				poolers.remove(pooler);
+			if (pooler.shouldClean()) {
+				toClean.add(pooler);
 			}
 		}
-		return false;
+		for (Pooler<T> pooler : toClean) {
+			pooler.clean();
+		}
+		return toClean.size() != 0;
 	}
 
 	/**

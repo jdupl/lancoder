@@ -6,7 +6,7 @@ import org.lancoder.common.RunnableService;
 
 public class PoolCleanerService extends RunnableService {
 
-	private final static long CHECK_DELAY_MSEC = 1000 * 60;
+	private final static long CHECK_DELAY_MSEC = 1000 * 30;
 
 	private ArrayList<Cleanable> cleanables;
 
