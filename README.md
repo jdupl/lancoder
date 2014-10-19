@@ -10,11 +10,12 @@ Don't ask for libav support (it's full of bugs).
 WebUI controlled 
 
 ### Features
-* x264 encoding (x265 in test) 
-* 2 pass VBR encoding or CRF encoding
-* Batch processing of directory
+* x264 and x265 encoding (vp8 and vp9 in dev) 
+* 2 pass or 1 pass VBR encoding, CRF encoding
+* Batch processing of directories
 * Audio processing with many tracks
-* Subtitles automuxing from source (dev)
+* Track copy
+* Subtitles automuxing from source
 
 
 ---
