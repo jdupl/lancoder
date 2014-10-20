@@ -55,7 +55,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	public Worker(WorkerConfig config) {
 		this.config = config;
 		// Get codecs
-		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs();
+		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(config);
 		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
 
 		// Get number of available threads

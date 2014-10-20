@@ -39,7 +39,7 @@ public class WorkerConfig extends Config implements Serializable {
 	@Prompt(message = "temporary files location")
 	private String tempEncodingFolder;
 	@Prompt(message = "FFmpeg's path")
-	public static String ffmpegPath;
+	private String ffmpegPath;
 
 	public WorkerConfig() {
 		this.masterIpAddress = DEFAULT_MASTER_IP;
@@ -49,7 +49,7 @@ public class WorkerConfig extends Config implements Serializable {
 		this.name = DEFAULT_NAME;
 		this.absoluteSharedFolder = DEFAULT_ABSOLUTE_PATH;
 		this.tempEncodingFolder = DEFAULT_TEMP_DIRECTORY;
-		WorkerConfig.ffmpegPath = DEFAULT_FFMPEG_PATH;
+		this.ffmpegPath = DEFAULT_FFMPEG_PATH;
 	}
 
 	public String getAbsoluteSharedFolder() {
@@ -111,6 +111,11 @@ public class WorkerConfig extends Config implements Serializable {
 	@Override
 	public String getDefaultPath() {
 		return DEFAULT_PATH;
+	}
+
+	@Override
+	public String getFFmpegPath() {
+		return ffmpegPath;
 	}
 
 }

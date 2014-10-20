@@ -5,10 +5,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
-import org.lancoder.worker.WorkerConfig;
 
 public class CodecProber implements FFmpegReaderListener {
 
@@ -20,10 +20,10 @@ public class CodecProber implements FFmpegReaderListener {
 	 * 
 	 * @return
 	 */
-	public ArrayList<Codec> getNodeCapabilities() {
+	public ArrayList<Codec> getNodeCapabilities(Config config) {
 		FFmpegReader reader = new FFmpegReader();
 		ArrayList<String> args = new ArrayList<>();
-		args.add(WorkerConfig.ffmpegPath);
+		args.add(config.getFFmpegPath());
 		args.add("-encoders");
 		try {
 			reader.read(args, this, false);

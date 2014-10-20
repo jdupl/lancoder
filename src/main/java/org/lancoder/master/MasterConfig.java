@@ -29,7 +29,7 @@ public class MasterConfig extends Config {
 	@Prompt(message = "output directory (relative to shared folder)")
 	private String finalEncodingFolder;
 	@Prompt(message = "FFmpeg's path")
-	public static String ffmpegPath;
+	private String ffmpegPath;
 
 	private ArrayList<Node> nodeList = new ArrayList<>();
 	public ArrayList<Job> jobList = new ArrayList<>();
@@ -39,10 +39,7 @@ public class MasterConfig extends Config {
 		finalEncodingFolder = DEFAULT_ENCODE_DESTINATION;
 		absoluteSharedFolder = DEFAULT_ABSOLUTE_PATH;
 		apiServerPort = DEFAULT_API_LISTEN_PORT;
-		MasterConfig.ffmpegPath = DEFAULT_FFMPEG_PATH;
-
-		jobList = new ArrayList<Job>();
-		nodeList = new ArrayList<Node>();
+		ffmpegPath = DEFAULT_FFMPEG_PATH;
 	}
 
 	public ArrayList<Job> getJobList() {
@@ -96,5 +93,10 @@ public class MasterConfig extends Config {
 	@Override
 	public String getDefaultPath() {
 		return DEFAULT_PATH;
+	}
+
+	@Override
+	public String getFFmpegPath() {
+		return ffmpegPath;
 	}
 }

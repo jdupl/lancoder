@@ -36,6 +36,8 @@ public abstract class Config {
 	}
 
 	public abstract String getDefaultPath();
+	
+	public abstract String getFFmpegPath();
 
 	public String getConfigPath() {
 		return configPath;
