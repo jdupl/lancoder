@@ -5,23 +5,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import org.lancoder.common.annotations.Prompt;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public abstract class Config {
 
-	private static final String DEFAULT_FFMPEG_PATH = "ffmpeg";
+	protected static final String DEFAULT_FFMPEG_PATH = "ffmpeg";
 
 	protected transient String configPath;
-
-	@Prompt(message = "FFmpeg's path")
-	public static String ffmpegPath;
-
-	public Config() {
-		ffmpegPath = DEFAULT_FFMPEG_PATH;
-	}
 
 	/**
 	 * Serializes current config to disk as JSON object.
@@ -52,10 +43,6 @@ public abstract class Config {
 
 	public void setConfigPath(String configPath) {
 		this.configPath = configPath;
-	}
-
-	public String getFFmpegPath() {
-		return ffmpegPath;
 	}
 
 }

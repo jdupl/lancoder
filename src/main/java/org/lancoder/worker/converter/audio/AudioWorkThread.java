@@ -7,7 +7,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
-import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
@@ -15,6 +14,7 @@ import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.ffmpeg.FFmpegReader;
+import org.lancoder.worker.WorkerConfig;
 import org.lancoder.worker.converter.Converter;
 
 public class AudioWorkThread extends Converter<ClientAudioTask> {
@@ -37,8 +37,8 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		String channelDisposition = String.valueOf(outStream.getChannels().getCount());
 		String sampleRate = String.valueOf(outStream.getSampleRate());
 
-		String[] baseArgs = new String[] { Config.ffmpegPath, "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping,
-				"-ac", channelDisposition, "-ar", sampleRate, "-c:a", outStream.getCodec().getEncoder() };
+		String[] baseArgs = new String[] { WorkerConfig.ffmpegPath, "-i", absoluteInput, "-vn", "-sn", "-map",
+				streamMapping, "-ac", channelDisposition, "-ar", sampleRate, "-c:a", outStream.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
 		switch (outStream.getCodec()) {
 		case VORBIS:

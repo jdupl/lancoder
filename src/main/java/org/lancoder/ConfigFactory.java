@@ -33,11 +33,13 @@ public class ConfigFactory<T extends Config> {
 		this(clazz, null);
 	}
 
-	public ConfigFactory(Class<T> clazz, String configPath) throws InvalidConfigurationException {
+	public ConfigFactory(Class<T> clazz, String configPath)
+			throws InvalidConfigurationException {
 		try {
 			this.clazz = clazz;
 			this.instance = clazz.newInstance();
-			this.instance.setConfigPath(configPath == null ? instance.getDefaultPath() : configPath);
+			this.instance.setConfigPath(configPath == null ? instance
+					.getDefaultPath() : configPath);
 		} catch (InstantiationException | IllegalAccessException e) {
 			throw new InvalidConfigurationException();
 		}
@@ -47,17 +49,20 @@ public class ConfigFactory<T extends Config> {
 	 * Initialize a new configuration and save new configuration to disk.
 	 * 
 	 * @param userInput
-	 *            If true, the method will get data from System.in (the user). Otherwise loads default values.
+	 *            If true, the method will get data from System.in (the user).
+	 *            Otherwise loads default values.
 	 * @param overwrite
 	 *            If configuration file exists, override it.
 	 * @return The new configuration
 	 * @throws InvalidConfigurationException
 	 *             If file exists and factory must NOT overwrite the file.
 	 */
-	public T init(boolean userInput, boolean overwrite) throws InvalidConfigurationException {
+	public T init(boolean userInput, boolean overwrite)
+			throws InvalidConfigurationException {
 		File f = new File(instance.getConfigPath());
 		if (!overwrite && f.exists()) {
-			throw new InvalidConfigurationException(String.format(CONF_EXISTS, f.getAbsoluteFile()));
+			throw new InvalidConfigurationException(String.format(CONF_EXISTS,
+					f.getAbsoluteFile()));
 		}
 		T config = (userInput ? promptUser() : instance);
 		config.dump();
@@ -75,7 +80,8 @@ public class ConfigFactory<T extends Config> {
 	 */
 	public T load() throws InvalidConfigurationException {
 		if (!Files.exists(Paths.get(instance.getConfigPath()))) {
-			throw new InvalidConfigurationException(String.format(CONF_NOT_FOUND, instance.getConfigPath()));
+			throw new InvalidConfigurationException(String.format(
+					CONF_NOT_FOUND, instance.getConfigPath()));
 		}
 		try {
 			byte[] b = Files.readAllBytes(Paths.get(instance.getConfigPath()));
@@ -84,12 +90,14 @@ public class ConfigFactory<T extends Config> {
 			System.out.println("Loaded config from disk");
 			return config;
 		} catch (IOException e) {
-			throw new InvalidConfigurationException(String.format(CONF_CORRUPTED, instance.getConfigPath()));
+			throw new InvalidConfigurationException(String.format(
+					CONF_CORRUPTED, instance.getConfigPath()));
 		}
 	}
 
 	private T promptUser() {
-		System.out.println("Please enter the following fields. Default values are in [].");
+		System.out
+				.println("Please enter the following fields. Default values are in [].");
 		System.out.println("To use the default value, hit return.");
 		T config = null;
 		try (Scanner s = new Scanner(new CloseShieldInputStream(System.in))) {

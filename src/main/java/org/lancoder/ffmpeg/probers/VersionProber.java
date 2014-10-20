@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
+import org.lancoder.worker.WorkerConfig;
 
 public class VersionProber implements FFmpegReaderListener {
 
@@ -20,7 +20,7 @@ public class VersionProber implements FFmpegReaderListener {
 	public HashMap<String, String> getVersions() {
 		FFmpegReader ffmpeg = new FFmpegReader();
 		ArrayList<String> args = new ArrayList<>();
-		args.add(Config.ffmpegPath);
+		args.add(WorkerConfig.ffmpegPath);
 		args.add("-version");
 		try {
 			ffmpeg.read(args, this, false);
@@ -34,7 +34,7 @@ public class VersionProber implements FFmpegReaderListener {
 	public void onMessage(String line) {
 		Matcher m = ffmpegVersionPattern.matcher(line);
 		if (m.find()) {
-			versions.put(Config.ffmpegPath, m.group(1));
+			versions.put(WorkerConfig.ffmpegPath, m.group(1));
 		} else if ((m = libVersionPattern.matcher(line)).find() && m.groupCount() == 4) {
 			versions.put(m.group(1), String.format("%s.%s.%s", m.group(2), m.group(3), m.group(4)));
 		}

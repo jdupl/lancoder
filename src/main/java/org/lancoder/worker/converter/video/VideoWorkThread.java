@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.lancoder.common.codecs.Codec;
-import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingFfmpegException;
 import org.lancoder.common.file_components.streams.VideoStream;
@@ -17,6 +16,7 @@ import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.ffmpeg.FFmpegReader;
+import org.lancoder.worker.WorkerConfig;
 import org.lancoder.worker.converter.Converter;
 
 public class VideoWorkThread extends Converter<ClientVideoTask> {
@@ -44,7 +44,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		File inputFile = new File(absoluteSharedDir, inStream.getRelativeFile());
 		String mapping = String.format("0:%d", inStream.getIndex());
 		// Get parameters from the task and bind parameters to process
-		String[] baseArgs = new String[] { Config.ffmpegPath, "-ss", startTimeStr, "-t", durationStr, "-i",
+		String[] baseArgs = new String[] { WorkerConfig.ffmpegPath, "-ss", startTimeStr, "-t", durationStr, "-i",
 				inputFile.getAbsolutePath(), "-sn", "-force_key_frames", "0", "-an", "-map", mapping, "-c:v",
 				encodingLibrary };
 		ArrayList<String> ffmpegArgs = new ArrayList<>();
@@ -79,7 +79,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 			System.err.printf("Cannot transcode to mkv as file %s already exists\n", taskFinalFile.getPath());
 			return false;
 		}
-		String[] baseArgs = new String[] { Config.ffmpegPath, "-i", taskTempOutputFile.getAbsolutePath(), "-f",
+		String[] baseArgs = new String[] { WorkerConfig.ffmpegPath, "-i", taskTempOutputFile.getAbsolutePath(), "-f",
 				"mpegts", "-c", "copy", "-bsf:v", "h264_mp4toannexb", taskFinalFile.getAbsolutePath() };
 		ArrayList<String> args = new ArrayList<>();
 		Collections.addAll(args, baseArgs);
