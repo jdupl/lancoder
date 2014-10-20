@@ -22,13 +22,11 @@ public class DispatcherPool extends Pool<DispatchItem> implements DispatcherList
 	@Override
 	public void taskAccepted(DispatchItem item) {
 		this.listener.taskAccepted(item);
-		refresh();
 	}
 
 	@Override
 	public void taskRefused(DispatchItem item) {
 		this.listener.taskRefused(item);
-		refresh();
 	}
 
 }

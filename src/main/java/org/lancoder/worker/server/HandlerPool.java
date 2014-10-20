@@ -23,25 +23,21 @@ public class HandlerPool extends Pool<Socket> implements WorkerServerListener {
 
 	@Override
 	public boolean taskRequest(ClientTask tqm) {
-		refresh();
 		return this.listener.taskRequest(tqm);
 	}
 
 	@Override
 	public boolean deleteTask(ClientTask tqm) {
-		refresh();
 		return this.listener.deleteTask(tqm);
 	}
 
 	@Override
 	public StatusReport statusRequest() {
-		refresh();
 		return this.listener.statusRequest();
 	}
 
 	@Override
 	public void shutdownWorker() {
-		refresh();
 		this.listener.shutdownWorker();
 	}
 

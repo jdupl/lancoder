@@ -3,9 +3,9 @@ package org.lancoder.common.pool;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.lancoder.common.Service;
+import org.lancoder.common.RunnableService;
 
-public abstract class Pool<T> extends Service implements PoolListener<T>, Cleanable {
+public abstract class Pool<T> extends RunnableService implements PoolListener<T>, Cleanable {
 
 	/**
 	 * How many poolers can be initialized in the pool
@@ -104,6 +104,8 @@ public abstract class Pool<T> extends Service implements PoolListener<T>, Cleana
 		pooler.setThread(thread);
 		thread.start();
 		poolers.add(pooler);
+		System.err.printf("%s spawned new pooler ressource. Now with %d poolers.%n", this.getClass().getSimpleName(),
+				this.poolers.size());
 		return pooler;
 	}
 
@@ -148,31 +150,39 @@ public abstract class Pool<T> extends Service implements PoolListener<T>, Cleana
 	 * @return If element could be added to queue
 	 */
 	public boolean handle(T element) {
-		boolean handled = false;
-		if (canQueue || (todo.size() == 0 && hasFree())) {
-			this.todo.add(element);
-			refresh();
-			handled = true;
-		}
-		return handled;
+		return this.todo.add(element);
+	}
+
+	public String toString() {
+		return String.format("%s has %d poolers and %d todos", this.getClass().getSimpleName(), this.poolers.size(),
+				this.todo.size());
 	}
 
 	/**
-	 * Try to give todo items to poolers.
+	 * Sends task to a pooler or adds it back to the queue if no pooler can be used.
+	 * 
+	 * @param task
 	 */
-	protected void refresh() {
-		boolean caughtNull = false;
-		while (todo.size() > 0 && hasFree() && !caughtNull) {
-			Pooler<T> pooler = this.getFreePooler();
-			if (pooler != null) {
-				pooler.add(todo.poll());
-			} else {
-				caughtNull = true;
+	private void dispatch(T task) {
+		Pooler<T> pooler = this.getFreePooler();
+		if (pooler != null) {
+			pooler.add(task);
+		} else {
+			System.err.println("Warning: could not find free pooler ressource.");
+		}
+	}
+
+	public void run() {
+		while (!close) {
+			try {
+				dispatch(this.todo.take());
+			} catch (InterruptedException e) {
+				System.out.println("Pool interrupted");
 			}
 		}
 	}
 
-	public synchronized int getThreadLimit() {
+	public int getThreadLimit() {
 		return threadLimit;
 	}
 
@@ -191,16 +201,19 @@ public abstract class Pool<T> extends Service implements PoolListener<T>, Cleana
 
 	public void completed(T e) {
 		listener.completed(e);
-		refresh();
 	}
 
 	public void failed(T e) {
 		listener.failed(e);
-		refresh();
 	}
 
 	public void crash(Exception e) {
 		// TODO
+		e.printStackTrace();
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
 		e.printStackTrace();
 	}
 }

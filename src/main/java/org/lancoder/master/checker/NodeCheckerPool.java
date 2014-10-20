@@ -41,18 +41,15 @@ public class NodeCheckerPool extends Pool<Node> implements NodeCheckerListener {
 	@Override
 	public void nodeDisconnected(Node n) {
 		this.listener.nodeDisconnected(n);
-		refresh();
 	}
 
 	@Override
 	public void readTaskReports(ArrayList<TaskReport> taskReports) {
 		this.listener.readTaskReports(taskReports);
-		refresh();
 	}
 
 	@Override
 	public void readStatusReport(StatusReport statusReport) {
 		this.listener.readStatusReport(statusReport);
-		refresh();
 	}
 }

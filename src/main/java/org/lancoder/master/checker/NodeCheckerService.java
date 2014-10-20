@@ -8,6 +8,7 @@ public class NodeCheckerService extends RunnableService {
 	private final static int MS_DELAY_BETWEEN_CHECKS = 5000;
 	private NodeCheckerListener listener;
 	private NodeCheckerPool pool;
+	private Thread poolThread;
 
 	public NodeCheckerService(NodeCheckerListener listener) {
 		this.listener = listener;
@@ -24,10 +25,19 @@ public class NodeCheckerService extends RunnableService {
 			}
 		}
 	}
+	
+	@Override
+	public void stop() {
+		super.stop();
+		pool.stop();
+		poolThread.interrupt();
+	}
 
 	@Override
 	public void run() {
 		System.out.println("Starting node checker service!");
+		poolThread = new Thread(pool);
+		poolThread.start();
 		while (!close) {
 			try {
 				checkNodes();
