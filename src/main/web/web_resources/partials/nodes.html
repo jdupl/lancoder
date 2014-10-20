@@ -1,4 +1,3 @@
-<p>Here is the current node list of the master server</p>
 <div ng-if="nodes.error">
     <div class="alert alert-danger alert-dismissable">
         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
@@ -11,6 +10,7 @@
             <h3 class="panel-title">{{node.name}} | {{node.nodeAddress}}:{{node.nodePort}} | {{node.status}}</h3>
         </div>
         <div class="panel-body">
+            <button popover-title="Available codecs" popover="{{node.cleanCodecs}}" popover-placement="right" class="btn btn-default">View Codecs</button>
             <div class="animate-repeat" ng-repeat="task in node.currentTasks">
                 <div class="panel {{node.panel}}" ng-init="currentTask = task.task">
                     <div class="panel-body">
@@ -32,7 +32,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6">
-                                <p>Encoding at {{currentTask.taskProgress.currentStep.speed | number:1}} {{currentTask.taskProgress.currentStep.prettyUnit}}.
+                                <p>Encoding at {{currentTask.taskProgress.currentStep.speed| number:1}} {{currentTask.taskProgress.currentStep.prettyUnit}}.
                                     Estimated time to finish this pass:
                                     {{currentTask.taskProgress.currentStep.timeEstimated / 1000| number:0}}
                                     s</p>

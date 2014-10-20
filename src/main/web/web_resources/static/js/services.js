@@ -1,5 +1,5 @@
 var services = angular.module('lancoder.services', []);
-services.factory('apiService', function($http) {
+services.factory('apiService', function ($http) {
   return({
     nodes: nodes
   });
@@ -49,6 +49,10 @@ services.factory('apiService', function($http) {
         }
         // Add reference to the currentStep
         nodes[i].currentTasks[j].task.taskProgress.currentStep = currentStep;
+      }
+      node.cleanCodecs = [];
+      for (var k = 0; k < node.codecs.length; k++) {
+        node.cleanCodecs.push(node.codecs[k].name);
       }
     }
     return nodes;
