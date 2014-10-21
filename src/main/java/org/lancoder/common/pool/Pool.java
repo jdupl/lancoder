@@ -163,7 +163,7 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 	 * 
 	 * @param task
 	 */
-	private void dispatch(T task) {
+	private synchronized void dispatch(T task) {
 		Pooler<T> pooler = this.getFreePooler();
 		if (pooler != null) {
 			pooler.add(task);
