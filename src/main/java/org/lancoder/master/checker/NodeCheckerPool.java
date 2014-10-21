@@ -24,7 +24,7 @@ public class NodeCheckerPool extends Pool<Node> implements NodeCheckerListener {
 	}
 
 	@Override
-	protected Pooler<Node> getNewPooler() {
+	protected Pooler<Node> getPoolerInstance() {
 		return new NodeChecker(this);
 	}
 

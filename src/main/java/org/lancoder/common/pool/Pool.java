@@ -95,11 +95,19 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 		return hasFree();
 	}
 
+	/**
+	 * Try to spawn a new resource and run it in the main thread pool.
+	 * 
+	 * @return
+	 */
 	private Pooler<T> spawn() {
-		if (!canSpawn()) {
-			return null;
+		Pooler<T> pooler = null;
+		if (canSpawn()) {
+			pooler = getPoolerInstance();
+		} else {
+			System.err.printf("A maximum of %d element(s) has been reached in pool %s ! Cannot create new instance.",
+					threadLimit, this.getClass().getSimpleName());
 		}
-		Pooler<T> pooler = getNewPooler();
 		Thread thread = new Thread(threads, pooler);
 		pooler.setThread(thread);
 		thread.start();
@@ -109,7 +117,7 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 		return pooler;
 	}
 
-	protected abstract Pooler<T> getNewPooler();
+	protected abstract Pooler<T> getPoolerInstance();
 
 	private boolean canSpawn() {
 		return poolers.size() < threadLimit;
@@ -120,15 +128,20 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 	 * 
 	 * @return A free pooler or null if no pooler are available.
 	 */
+	private Pooler<T> getAvailablePooler() {
+		Pooler<T> pooler = getFreePooler();
+		if (pooler == null) {
+			pooler = spawn();
+		}
+		return pooler;
+	}
+
 	private Pooler<T> getFreePooler() {
 		Pooler<T> pooler = null;
 		for (Pooler<T> p : poolers) {
 			if (!p.isActive()) {
 				pooler = p;
 			}
-		}
-		if (pooler == null) {
-			pooler = spawn();
 		}
 		return pooler;
 	}
@@ -168,7 +181,7 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 	 * @param task
 	 */
 	private synchronized void dispatch(T task) {
-		Pooler<T> pooler = this.getFreePooler();
+		Pooler<T> pooler = this.getAvailablePooler();
 		if (pooler != null) {
 			pooler.add(task);
 		} else {

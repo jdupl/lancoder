@@ -16,7 +16,7 @@ public class MuxerPool extends Pool<Job> {
 	}
 
 	@Override
-	protected Pooler<Job> getNewPooler() {
+	protected Pooler<Job> getPoolerInstance() {
 		return new Muxer(this.listener, sharedFolder);
 	}
 

@@ -17,7 +17,7 @@ public class HandlerPool extends Pool<Socket> implements WorkerServerListener {
 	}
 
 	@Override
-	protected Pooler<Socket> getNewPooler() {
+	protected Pooler<Socket> getPoolerInstance() {
 		return new WorkerHandler(this);
 	}
 

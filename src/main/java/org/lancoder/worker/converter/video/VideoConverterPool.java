@@ -16,7 +16,7 @@ public class VideoConverterPool extends Pool<ClientVideoTask> {
 	}
 
 	@Override
-	protected Pooler<ClientVideoTask> getNewPooler() {
+	protected Pooler<ClientVideoTask> getPoolerInstance() {
 		return new VideoWorkThread(listener, this.config.getAbsoluteSharedFolder(),
 				this.config.getTempEncodingFolder(), config);
 	}

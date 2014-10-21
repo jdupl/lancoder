@@ -15,7 +15,7 @@ public class DispatcherPool extends Pool<DispatchItem> implements DispatcherList
 	}
 
 	@Override
-	protected Pooler<DispatchItem> getNewPooler() {
+	protected Pooler<DispatchItem> getPoolerInstance() {
 		return new Dispatcher(listener);
 	}
 
