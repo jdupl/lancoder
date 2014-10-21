@@ -566,19 +566,10 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	public String connectRequest(ConnectMessage cm, InetAddress detectedIp) {
 		String unid = null;
 		Node sender = cm.getNode();
-		if (sender.getNodeAddress() == null) {
-			System.err.printf("Client did not provide a valid ip address.%nAssuming ip %s detected from socket.",
-					detectedIp);
-			sender.setNodeAddress(detectedIp);
-		} else if (sender.getNodeAddress().getAddress() != detectedIp.getAddress()) {
-			System.err.printf("WARNING: Client provided ip does not match detected ip from socket.%n"
-					+ "Client provided ip: %s%nSocket provided ip: %s%nAssuming socket ip is real.%n",
-					sender.getNodeAddress(), detectedIp);
-			sender.setNodeAddress(detectedIp);
-		}
+		sender.setNodeAddress(detectedIp);
 		sender.setUnid(cm.getUnid());
 		if (addNode(sender)) {
-			System.err.println("added node " + sender.getUnid());
+			System.err.println("added node " + sender.getUnid()); // TODO log
 			unid = sender.getUnid();
 		}
 		return unid;

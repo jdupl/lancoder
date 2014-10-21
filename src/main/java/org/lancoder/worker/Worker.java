@@ -3,14 +3,10 @@ package org.lancoder.worker;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
@@ -71,37 +67,16 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		videoPool = new VideoConverterPool(1, new VideoTaskListenerAdapter(this), config);
 		services.add(videoPool);
 		cleanables.add(videoPool);
-		// Get local ip
-		// TODO allow options to override IP detection and enable ipv6
-		InetAddress address = null;
-		try {
-			Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
-			while (n.hasMoreElements()) {
-				NetworkInterface e = n.nextElement();
-				Enumeration<InetAddress> a = e.getInetAddresses();
-				while (a.hasMoreElements()) {
-					InetAddress addr = a.nextElement();
-					if (!addr.isLoopbackAddress() && (addr instanceof Inet4Address)) {
-						address = addr;
-						System.out.println("Assuming worker ip is:" + address.getHostAddress());
-					}
-				}
-			}
-		} catch (SocketException e) {
-			// TODO Perhaps just close worker
-			e.printStackTrace();
-		}
 		// Get real address from ip/hostname from config
 		try {
 			this.masterInetAddress = InetAddress.getByName(config.getMasterIpAddress());
 		} catch (UnknownHostException e) {
-			System.err.printf("Master's hostname %s could not be resolved !\n", config.getMasterIpAddress());
+			System.err.printf("Master's hostname '%s' could not be resolved !\n", config.getMasterIpAddress());
 			e.printStackTrace();
 		}
-		print("initialized not connected to a master server");
 		ContactMasterObject contact = new ContactMasterObject(getMasterInetAddress(), getMasterPort(), this);
 		this.services.add(contact);
-		node = new Node(address, this.config.getListenPort(), config.getName(), codecs, threadCount,
+		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount,
 				config.getUniqueID());
 		services.add(new PoolCleanerService(cleanables));
 	}
