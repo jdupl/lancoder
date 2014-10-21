@@ -20,11 +20,12 @@ public class Node implements Serializable {
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
 	private ArrayList<Codec> codecs = new ArrayList<>();
 
-	public Node(InetAddress nodeAddress, int nodePort, String name, ArrayList<Codec> codecs, int threadCount) {
+	public Node(InetAddress nodeAddress, int nodePort, String name, ArrayList<Codec> codecs, int threadCount, String unid) {
 		this.nodeAddress = nodeAddress;
 		this.nodePort = nodePort;
 		this.name = name;
 		this.codecs = codecs;
+		this.unid = unid;
 		this.threadCount = threadCount;
 	}
 

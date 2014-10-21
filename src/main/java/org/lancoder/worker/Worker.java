@@ -101,7 +101,8 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		print("initialized not connected to a master server");
 		ContactMasterObject contact = new ContactMasterObject(getMasterInetAddress(), getMasterPort(), this);
 		this.services.add(contact);
-		node = new Node(address, this.config.getListenPort(), config.getName(), codecs, threadCount);
+		node = new Node(address, this.config.getListenPort(), config.getName(), codecs, threadCount,
+				config.getUniqueID());
 		services.add(new PoolCleanerService(cleanables));
 	}
 
