@@ -36,8 +36,8 @@ import org.lancoder.master.api.web.ApiServer;
 import org.lancoder.master.checker.NodeCheckerListener;
 import org.lancoder.master.checker.NodeCheckerService;
 import org.lancoder.master.dispatcher.DispatchItem;
-import org.lancoder.master.dispatcher.DispatcherPool;
 import org.lancoder.master.dispatcher.DispatcherListener;
+import org.lancoder.master.dispatcher.DispatcherPool;
 import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
 import org.slf4j.Logger;
@@ -60,28 +60,25 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	private ApiServer apiServer;
 	private DispatcherPool dispatcherPool;
 	private MuxerPool muxerPool;
+	private PoolCleanerService poolCleaner;
 
 	public Master(MasterConfig config) {
 		this.config = config;
-		ArrayList<Cleanable> cleanables = new ArrayList<>();
+		// TODO check ffmpeg and mkvmerge
 		jobInitiator = new JobInitiator(this, config);
-		nodeServer = new MasterObjectServer(this, getConfig().getNodeServerPort());
-		nodeChecker = new NodeCheckerService(this);
-		// api server to serve/get information from users
-		apiServer = new ApiServer(this);
-		dispatcherPool = new DispatcherPool(this);
-		muxerPool = new MuxerPool(this, config.getAbsoluteSharedFolder());
-
-		cleanables.add(dispatcherPool);
-		cleanables.add(muxerPool);
-
-		services.add(nodeChecker);
-		services.add(nodeServer);
-		services.add(apiServer);
 		services.add(jobInitiator);
+		nodeServer = new MasterObjectServer(this, getConfig().getNodeServerPort());
+		services.add(nodeServer);
+		nodeChecker = new NodeCheckerService(this);
+		services.add(nodeChecker);
+		apiServer = new ApiServer(this);
+		services.add(apiServer);
+		dispatcherPool = new DispatcherPool(this);
 		services.add(dispatcherPool);
+		muxerPool = new MuxerPool(this, config.getAbsoluteSharedFolder());
 		services.add(muxerPool);
-		services.add(new PoolCleanerService(cleanables));
+		poolCleaner = new PoolCleanerService();
+		services.add(poolCleaner);
 	}
 
 	public void shutdown() {
@@ -524,6 +521,9 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 			if (s instanceof RunnableService) {
 				Thread t = new Thread((RunnableService) s);
 				t.start();
+			}
+			if (s instanceof Cleanable) {
+				poolCleaner.addCleanable((Cleanable) s);
 			}
 		}
 	}

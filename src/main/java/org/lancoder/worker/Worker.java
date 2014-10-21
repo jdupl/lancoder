@@ -45,6 +45,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 	private final ThreadGroup serviceThreads = new ThreadGroup("worker_services");
 	private AudioConverterPool audioPool;
 	private VideoConverterPool videoPool;
+	private PoolCleanerService poolCleaner;
 
 	private InetAddress masterInetAddress = null;
 
@@ -53,32 +54,27 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		// Get codecs
 		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(config);
 		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
-
 		// Get number of available threads
 		int threadCount = Runtime.getRuntime().availableProcessors();
 		System.out.printf("Detected %d threads available.%n", threadCount);
-
-		ArrayList<Cleanable> cleanables = new ArrayList<>();
-		WorkerObjectServer objectServer = new WorkerObjectServer(this, config.getListenPort());
-		services.add(objectServer);
-		audioPool = new AudioConverterPool(threadCount, new AudioTaskListenerAdapter(this), config);
-		services.add(audioPool);
-		cleanables.add(audioPool);
-		videoPool = new VideoConverterPool(1, new VideoTaskListenerAdapter(this), config);
-		services.add(videoPool);
-		cleanables.add(videoPool);
-		// Get real address from ip/hostname from config
+		// Parse master ip address
 		try {
 			this.masterInetAddress = InetAddress.getByName(config.getMasterIpAddress());
 		} catch (UnknownHostException e) {
 			System.err.printf("Master's hostname '%s' could not be resolved !\n", config.getMasterIpAddress());
 			e.printStackTrace();
+			System.exit(1);
 		}
-		ContactMasterObject contact = new ContactMasterObject(getMasterInetAddress(), getMasterPort(), this);
-		this.services.add(contact);
-		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount,
-				config.getUniqueID());
-		services.add(new PoolCleanerService(cleanables));
+		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount, config.getUniqueID());
+		// Instantiate services
+		audioPool = new AudioConverterPool(threadCount, new AudioTaskListenerAdapter(this), config);
+		services.add(audioPool);
+		videoPool = new VideoConverterPool(1, new VideoTaskListenerAdapter(this), config);
+		services.add(videoPool);
+		poolCleaner = new PoolCleanerService();
+		services.add(poolCleaner);
+		services.add(new WorkerObjectServer(this, config.getListenPort()));
+		services.add(new ContactMasterObject(getMasterInetAddress(), getMasterPort(), this));
 	}
 
 	public void shutdown() {
@@ -241,6 +237,9 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			if (s instanceof RunnableService) {
 				Thread t = new Thread(this.serviceThreads, (RunnableService) s);
 				t.start();
+			}
+			if (s instanceof Cleanable) {
+				poolCleaner.addCleanable((Cleanable) s);
 			}
 		}
 		System.err.println("Started all services");

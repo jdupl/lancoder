@@ -8,11 +8,7 @@ public class PoolCleanerService extends RunnableService {
 
 	private final static long CHECK_DELAY_MSEC = 1000 * 30;
 
-	private ArrayList<Cleanable> cleanables;
-
-	public PoolCleanerService(ArrayList<Cleanable> cleanables) {
-		this.cleanables = cleanables;
-	}
+	private final ArrayList<Cleanable> cleanables = new ArrayList<>();
 
 	@Override
 	public void run() {
@@ -29,6 +25,10 @@ public class PoolCleanerService extends RunnableService {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public void addCleanable(Cleanable c) {
+		this.cleanables.add(c);
 	}
 
 	@Override
