@@ -150,6 +150,10 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 	 * @return If element could be added to queue
 	 */
 	public boolean handle(T element) {
+		if (!canQueue && todo.size() > 0) {
+			System.err.printf("Warning pool %s seems to be overflowing. Current todo list has %s elements.", this
+					.getClass().getSimpleName(), todo.size());
+		}
 		return this.todo.add(element);
 	}
 
