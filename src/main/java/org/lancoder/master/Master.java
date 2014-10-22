@@ -10,18 +10,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
+import org.lancoder.common.Container;
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
-import org.lancoder.common.Service;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
-import org.lancoder.common.pool.Cleanable;
-import org.lancoder.common.pool.PoolCleanerService;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.status.TaskState;
@@ -43,31 +41,34 @@ import org.lancoder.muxer.MuxerPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Master implements Runnable, MuxerListener, DispatcherListener, NodeCheckerListener,
+public class Master extends Container implements MuxerListener, DispatcherListener, NodeCheckerListener,
 		MasterNodeServerListener, ServerListener, JobInitiatorListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
 	Logger logger = LoggerFactory.getLogger(Master.class);
 	private MasterConfig config;
-
 	private HashMap<String, Node> nodes = new HashMap<>();
 	private HashMap<String, Job> jobs = new HashMap<>();
-	private ArrayList<Service> services = new ArrayList<>();
 	private JobInitiator jobInitiator;
 	private MasterObjectServer nodeServer;
 	private NodeCheckerService nodeChecker;
 	private ApiServer apiServer;
 	private DispatcherPool dispatcherPool;
 	private MuxerPool muxerPool;
-	private PoolCleanerService poolCleaner;
 
 	public Master(MasterConfig config) {
 		this.config = config;
+		instanciateServices();
 		// TODO check ffmpeg and mkvmerge
+	}
+
+	@Override
+	protected void instanciateServices() {
+		super.instanciateServices();
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
-		nodeServer = new MasterObjectServer(this, getConfig().getNodeServerPort());
+		nodeServer = new MasterObjectServer(this, config.getNodeServerPort());
 		services.add(nodeServer);
 		nodeChecker = new NodeCheckerService(this);
 		services.add(nodeChecker);
@@ -77,12 +78,10 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		services.add(dispatcherPool);
 		muxerPool = new MuxerPool(this, config.getAbsoluteSharedFolder());
 		services.add(muxerPool);
-		poolCleaner = new PoolCleanerService();
-		services.add(poolCleaner);
 	}
 
 	public void shutdown() {
-		// save config and make sure current tasks are reset
+		// save config and make sure to reset current tasks
 		for (Node n : getNodes()) {
 			for (ClientTask task : n.getCurrentTasks()) {
 				task.getProgress().reset();
@@ -93,9 +92,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 		for (Node n : getOnlineNodes()) {
 			disconnectNode(n);
 		}
-		for (Service s : services) {
-			s.stop();
-		}
+		stopServices();
 	}
 
 	public MasterConfig getConfig() {
@@ -517,15 +514,7 @@ public class Master implements Runnable, MuxerListener, DispatcherListener, Node
 	}
 
 	public void run() {
-		for (Service s : services) {
-			if (s instanceof RunnableService) {
-				Thread t = new Thread((RunnableService) s);
-				t.start();
-			}
-			if (s instanceof Cleanable) {
-				poolCleaner.addCleanable((Cleanable) s);
-			}
-		}
+		startServices();
 	}
 
 	@Override

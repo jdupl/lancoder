@@ -8,18 +8,16 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
+import org.lancoder.common.Container;
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
-import org.lancoder.common.Service;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
-import org.lancoder.common.pool.Cleanable;
-import org.lancoder.common.pool.PoolCleanerService;
 import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
@@ -36,18 +34,16 @@ import org.lancoder.worker.converter.video.VideoTaskListenerAdapter;
 import org.lancoder.worker.server.WorkerObjectServer;
 import org.lancoder.worker.server.WorkerServerListener;
 
-public class Worker implements Runnable, ServerListener, WorkerServerListener, ConctactMasterListener,
+public class Worker extends Container implements ServerListener, WorkerServerListener, ConctactMasterListener,
 		PoolListener<ClientTask> {
 
 	private Node node;
 	private WorkerConfig config;
-	private final ArrayList<Service> services = new ArrayList<>();
-	private final ThreadGroup serviceThreads = new ThreadGroup("worker_services");
 	private AudioConverterPool audioPool;
 	private VideoConverterPool videoPool;
-	private PoolCleanerService poolCleaner;
 
 	private InetAddress masterInetAddress = null;
+	private int threadCount;
 
 	public Worker(WorkerConfig config) {
 		this.config = config;
@@ -55,7 +51,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(config);
 		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
 		// Get number of available threads
-		int threadCount = Runtime.getRuntime().availableProcessors();
+		threadCount = Runtime.getRuntime().availableProcessors();
 		System.out.printf("Detected %d threads available.%n", threadCount);
 		// Parse master ip address
 		try {
@@ -66,13 +62,16 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 			System.exit(1);
 		}
 		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount, config.getUniqueID());
-		// Instantiate services
+		instanciateServices();
+	}
+
+	@Override
+	protected void instanciateServices() {
+		super.instanciateServices();
 		audioPool = new AudioConverterPool(threadCount, new AudioTaskListenerAdapter(this), config);
 		services.add(audioPool);
 		videoPool = new VideoConverterPool(1, new VideoTaskListenerAdapter(this), config);
 		services.add(videoPool);
-		poolCleaner = new PoolCleanerService();
-		services.add(poolCleaner);
 		services.add(new WorkerObjectServer(this, config.getListenPort()));
 		services.add(new ContactMasterObject(getMasterInetAddress(), getMasterPort(), this));
 	}
@@ -84,11 +83,6 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 		}
 		int nbServices = services.size();
 		print("shutting down " + nbServices + " service(s).");
-
-		for (Service s : services) {
-			s.stop();
-		}
-		this.serviceThreads.interrupt();
 		config.dump();
 	}
 
@@ -233,16 +227,7 @@ public class Worker implements Runnable, ServerListener, WorkerServerListener, C
 
 	public void run() {
 		updateStatus(NodeState.NOT_CONNECTED);
-		for (Service s : services) {
-			if (s instanceof RunnableService) {
-				Thread t = new Thread(this.serviceThreads, (RunnableService) s);
-				t.start();
-			}
-			if (s instanceof Cleanable) {
-				poolCleaner.addCleanable((Cleanable) s);
-			}
-		}
-		System.err.println("Started all services");
+		startServices();
 	}
 
 	public void setUnid(String unid) {
