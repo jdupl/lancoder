@@ -1,6 +1,6 @@
 package org.lancoder.common.exceptions;
 
-public class InvalidConfigurationException extends Exception {
+public class InvalidConfigurationException extends RuntimeException {
 
 	private static final long serialVersionUID = 8452232793746449187L;
 

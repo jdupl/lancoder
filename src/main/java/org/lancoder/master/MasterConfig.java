@@ -20,6 +20,7 @@ public class MasterConfig extends Config {
 	private static final String DEFAULT_ENCODE_DESTINATION = "encodes";
 	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
 	private static final String DEFAULT_FFPROBE_PATH = "ffprobe";
+	private static final String DEFAULT_MKV_MERGE_PATH = "mkvmerge";
 
 	@Prompt(message = "master's listening port")
 	private int nodeServerPort;
@@ -33,6 +34,8 @@ public class MasterConfig extends Config {
 	private String ffmpegPath;
 	@Prompt(message = "FFprobe's path")
 	private String ffprobePath;
+	@Prompt(message = "MkvMerge's path")
+	private String mkvMergePath;
 
 	private ArrayList<Node> nodeList = new ArrayList<>();
 	public ArrayList<Job> jobList = new ArrayList<>();
@@ -44,6 +47,11 @@ public class MasterConfig extends Config {
 		apiServerPort = DEFAULT_API_LISTEN_PORT;
 		ffmpegPath = DEFAULT_FFMPEG_PATH;
 		ffprobePath = DEFAULT_FFPROBE_PATH;
+		mkvMergePath = DEFAULT_MKV_MERGE_PATH;
+	}
+
+	public String getMkvMergePath() {
+		return mkvMergePath;
 	}
 
 	public String getFFprobePath() {

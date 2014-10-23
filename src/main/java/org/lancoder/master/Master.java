@@ -29,6 +29,7 @@ import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
+import org.lancoder.common.third_parties.MkvMerge;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.master.api.node.MasterNodeServerListener;
 import org.lancoder.master.api.node.MasterObjectServer;
@@ -61,8 +62,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 
 	public Master(MasterConfig config) {
 		this.config = config;
-		basicRoutine();
-		// TODO check ffmpeg and mkvmerge
+		bootstrap();
 	}
 
 	@Override
@@ -86,6 +86,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	protected void registerThirdParties() {
 		this.thirdParties.add(new FFmpeg(config));
 		this.thirdParties.add(new FFprobe(config));
+		this.thirdParties.add(new MkvMerge(config));
 	}
 
 	public void shutdown() {

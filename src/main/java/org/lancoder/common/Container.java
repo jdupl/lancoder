@@ -14,7 +14,7 @@ public abstract class Container extends RunnableService implements ServiceManage
 	protected final ThreadGroup serviceThreads = new ThreadGroup("services");
 	protected PoolCleanerService poolCleaner;
 
-	protected void basicRoutine() {
+	protected void bootstrap() {
 		registerThirdParties();
 		checkThirdParties();
 		registerServices();

@@ -13,6 +13,7 @@ import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
 import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
@@ -48,24 +49,28 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 
 	public Worker(WorkerConfig config) {
 		this.config = config;
-		basicRoutine();
+		bootstrap();
+	}
+
+	@Override
+	protected void bootstrap() {
+		super.bootstrap();
 		// Get codecs
 		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(config);
 		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
 		// Get number of available threads
 		threadCount = Runtime.getRuntime().availableProcessors();
 		System.out.printf("Detected %d threads available.%n", threadCount);
-		// Parse master ip address
+		// Parse master ip address or host name
 		try {
 			this.masterInetAddress = InetAddress.getByName(config.getMasterIpAddress());
 		} catch (UnknownHostException e) {
-			System.err.printf("Master's hostname '%s' could not be resolved !\n", config.getMasterIpAddress());
-			e.printStackTrace();
-			System.exit(1);
+			throw new InvalidConfigurationException(String.format("Master's host name '%s' could not be resolved !"
+					+ "\nOriginal exception: '%s'", config.getMasterIpAddress(), e.getMessage()));
 		}
 		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount, config.getUniqueID());
 	}
-	
+
 	@Override
 	protected void registerThirdParties() {
 		this.thirdParties.add(new FFmpeg(config));
