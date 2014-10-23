@@ -7,7 +7,7 @@ import java.util.Iterator;
 
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.exceptions.MissingDecoderException;
-import org.lancoder.common.exceptions.MissingFfmpegException;
+import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.pool.Pooler;
@@ -62,7 +62,7 @@ public class Muxer extends Pooler<Job> {
 		Transcoder transcoder = new Transcoder();
 		try {
 			success = transcoder.read(args);
-		} catch (MissingDecoderException | MissingFfmpegException e) {
+		} catch (MissingDecoderException | MissingThirdPartyException e) {
 			serviceFailure(e);
 		} finally {
 			if (success) {

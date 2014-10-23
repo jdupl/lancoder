@@ -27,6 +27,8 @@ import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.TaskReport;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
+import org.lancoder.common.third_parties.FFmpeg;
+import org.lancoder.common.third_parties.FFprobe;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.master.api.node.MasterNodeServerListener;
 import org.lancoder.master.api.node.MasterObjectServer;
@@ -59,13 +61,13 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 
 	public Master(MasterConfig config) {
 		this.config = config;
-		instanciateServices();
+		basicRoutine();
 		// TODO check ffmpeg and mkvmerge
 	}
 
 	@Override
-	protected void instanciateServices() {
-		super.instanciateServices();
+	protected void registerServices() {
+		super.registerServices();
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
 		nodeServer = new MasterObjectServer(this, config.getNodeServerPort());
@@ -78,6 +80,12 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		services.add(dispatcherPool);
 		muxerPool = new MuxerPool(this, config.getAbsoluteSharedFolder());
 		services.add(muxerPool);
+	}
+
+	@Override
+	protected void registerThirdParties() {
+		this.thirdParties.add(new FFmpeg(config));
+		this.thirdParties.add(new FFprobe(config));
 	}
 
 	public void shutdown() {
@@ -597,4 +605,5 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		// TODO Auto-generated method stub
 		e.printStackTrace();
 	}
+
 }

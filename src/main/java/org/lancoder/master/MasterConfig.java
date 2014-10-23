@@ -19,6 +19,7 @@ public class MasterConfig extends Config {
 	private static final int DEFAULT_API_LISTEN_PORT = 8080;
 	private static final String DEFAULT_ENCODE_DESTINATION = "encodes";
 	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
+	private static final String DEFAULT_FFPROBE_PATH = "ffprobe";
 
 	@Prompt(message = "master's listening port")
 	private int nodeServerPort;
@@ -30,6 +31,8 @@ public class MasterConfig extends Config {
 	private String finalEncodingFolder;
 	@Prompt(message = "FFmpeg's path")
 	private String ffmpegPath;
+	@Prompt(message = "FFprobe's path")
+	private String ffprobePath;
 
 	private ArrayList<Node> nodeList = new ArrayList<>();
 	public ArrayList<Job> jobList = new ArrayList<>();
@@ -40,6 +43,11 @@ public class MasterConfig extends Config {
 		absoluteSharedFolder = DEFAULT_ABSOLUTE_PATH;
 		apiServerPort = DEFAULT_API_LISTEN_PORT;
 		ffmpegPath = DEFAULT_FFMPEG_PATH;
+		ffprobePath = DEFAULT_FFPROBE_PATH;
+	}
+
+	public String getFFprobePath() {
+		return ffprobePath;
 	}
 
 	public ArrayList<Job> getJobList() {

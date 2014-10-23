@@ -6,7 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.lancoder.common.config.Config;
-import org.lancoder.common.exceptions.MissingFfmpegException;
+import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
 
@@ -24,7 +24,7 @@ public class VersionProber implements FFmpegReaderListener {
 		args.add("-version");
 		try {
 			ffmpeg.read(args, this, false);
-		} catch (MissingFfmpegException e) {
+		} catch (MissingThirdPartyException e) {
 			e.printStackTrace();
 		}
 		return versions;

@@ -24,6 +24,7 @@ import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.TaskReport;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
+import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.ffmpeg.FFmpegWrapper;
 import org.lancoder.worker.contacter.ConctactMasterListener;
 import org.lancoder.worker.contacter.ContactMasterObject;
@@ -47,6 +48,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 
 	public Worker(WorkerConfig config) {
 		this.config = config;
+		basicRoutine();
 		// Get codecs
 		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(config);
 		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
@@ -62,12 +64,16 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 			System.exit(1);
 		}
 		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount, config.getUniqueID());
-		instanciateServices();
+	}
+	
+	@Override
+	protected void registerThirdParties() {
+		this.thirdParties.add(new FFmpeg(config));
 	}
 
 	@Override
-	protected void instanciateServices() {
-		super.instanciateServices();
+	protected void registerServices() {
+		super.registerServices();
 		audioPool = new AudioConverterPool(threadCount, new AudioTaskListenerAdapter(this), config);
 		services.add(audioPool);
 		videoPool = new VideoConverterPool(1, new VideoTaskListenerAdapter(this), config);

@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.lancoder.common.config.Config;
-import org.lancoder.common.exceptions.MissingFfmpegException;
+import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.pool.PoolListener;
@@ -91,7 +91,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		ArrayList<String> args = getArgs(task);
 		try {
 			success = ffmpeg.read(args, this, true) && moveFile();
-		} catch (MissingFfmpegException e) {
+		} catch (MissingThirdPartyException e) {
 			e.printStackTrace();
 		} finally {
 			if (success) {

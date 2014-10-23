@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.config.Config;
-import org.lancoder.common.exceptions.MissingFfmpegException;
+import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
 
@@ -27,7 +27,7 @@ public class CodecProber implements FFmpegReaderListener {
 		args.add("-encoders");
 		try {
 			reader.read(args, this, false);
-		} catch (MissingFfmpegException e) {
+		} catch (MissingThirdPartyException e) {
 			e.printStackTrace();
 		}
 		return codecs;

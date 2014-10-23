@@ -2,16 +2,35 @@ package org.lancoder.common;
 
 import java.util.ArrayList;
 
+import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.pool.Cleanable;
 import org.lancoder.common.pool.PoolCleanerService;
+import org.lancoder.common.third_parties.ThirdParty;
 
 public abstract class Container extends RunnableService implements ServiceManager {
 
 	protected final ArrayList<Service> services = new ArrayList<>();
+	protected final ArrayList<ThirdParty> thirdParties = new ArrayList<>();
 	protected final ThreadGroup serviceThreads = new ThreadGroup("services");
 	protected PoolCleanerService poolCleaner;
 
-	protected void instanciateServices() {
+	protected void basicRoutine() {
+		registerThirdParties();
+		checkThirdParties();
+		registerServices();
+	}
+
+	protected abstract void registerThirdParties();
+
+	protected void checkThirdParties() {
+		for (ThirdParty thirdParty : thirdParties) {
+			if (!thirdParty.isInstalled()) {
+				throw new MissingThirdPartyException(thirdParty);
+			}
+		}
+	}
+
+	protected void registerServices() {
 		poolCleaner = new PoolCleanerService();
 		services.add(poolCleaner);
 	}

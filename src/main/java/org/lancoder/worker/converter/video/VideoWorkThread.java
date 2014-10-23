@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.MissingDecoderException;
-import org.lancoder.common.exceptions.MissingFfmpegException;
+import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.task.video.ClientVideoTask;
@@ -36,7 +36,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 	}
 
 	public void encodePass(String startTimeStr, String durationStr) throws MissingDecoderException,
-			MissingFfmpegException {
+			MissingThirdPartyException {
 		VideoStream inStream = task.getStreamConfig().getOrignalStream();
 		VideoStream outStream = task.getStreamConfig().getOutStream();
 		String encodingLibrary = outStream.getCodec().getEncoder();
@@ -88,7 +88,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 			FileUtils.givePerms(taskFinalFile, false);
 		} catch (MissingDecoderException e) {
 			e.printStackTrace();
-		} catch (MissingFfmpegException e) {
+		} catch (MissingThirdPartyException e) {
 			e.printStackTrace();
 		}
 		return true;
@@ -151,7 +151,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 					success = false;
 				}
 			}
-		} catch (MissingFfmpegException | MissingDecoderException e) {
+		} catch (MissingThirdPartyException | MissingDecoderException e) {
 			listener.crash(e);
 		} finally {
 			if (success) {

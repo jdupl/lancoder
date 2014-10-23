@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import org.lancoder.common.Service;
-import org.lancoder.common.exceptions.MissingFfmpegException;
+import org.lancoder.common.exceptions.MissingThirdPartyException;
 
 /**
  * Class to create a process, read its output and provide information about it's closing state.
@@ -29,10 +29,10 @@ public class FFmpegReader extends Service {
 	 * @param useStdErr
 	 *            True to read from stderr, false to read from stdout
 	 * @return true if FFmpeg exited cleanly
-	 * @throws MissingFfmpegException
+	 * @throws MissingThirdPartyException
 	 */
 	public boolean read(ArrayList<String> args, FFmpegReaderListener listener, boolean useStdErr)
-			throws MissingFfmpegException {
+			throws MissingThirdPartyException {
 		return read(args, listener, useStdErr, null);
 	}
 
@@ -49,10 +49,10 @@ public class FFmpegReader extends Service {
 	 * @param processDirectory
 	 *            The directory to execute the process in
 	 * @return true if FFmpeg exited cleanly
-	 * @throws MissingFfmpegException
+	 * @throws MissingThirdPartyException
 	 */
 	public boolean read(ArrayList<String> args, FFmpegReaderListener listener, boolean useStdErr, File processDirectory)
-			throws MissingFfmpegException {
+			throws MissingThirdPartyException {
 		this.listener = listener;
 		boolean success = false;
 		ProcessBuilder pb = new ProcessBuilder(args);
