@@ -41,15 +41,12 @@ import org.lancoder.master.dispatcher.DispatcherListener;
 import org.lancoder.master.dispatcher.DispatcherPool;
 import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Master extends Container implements MuxerListener, DispatcherListener, NodeCheckerListener,
 		MasterNodeServerListener, ServerListener, JobInitiatorListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
-	Logger logger = LoggerFactory.getLogger(Master.class);
 	private MasterConfig config;
 	private HashMap<String, Node> nodes = new HashMap<>();
 	private HashMap<String, Job> jobs = new HashMap<>();
