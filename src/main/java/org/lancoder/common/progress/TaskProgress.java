@@ -29,26 +29,13 @@ public class TaskProgress implements Serializable {
 	}
 
 	/**
-	 * Update current task to specified units.
+	 * Update current task to specified units. Will update progress by estimating speed.
 	 * 
 	 * @param units
 	 *            The unit count currently completed
 	 */
 	public void update(long units) {
 		this.getCurrentStep().update(units);
-	}
-
-	/**
-	 * Update current task to specified units and speed.
-	 * 
-	 * @param units
-	 *            The unit count currently completed
-	 * 
-	 * @param speed
-	 *            The speed in units / second
-	 */
-	public void update(long units, double speed) {
-		this.getCurrentStep().update(units, speed);
 	}
 
 	public void reset() {

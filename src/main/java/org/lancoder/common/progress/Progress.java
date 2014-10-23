@@ -76,7 +76,7 @@ public class Progress implements Serializable {
 	 * @param speed
 	 *            The current speed
 	 */
-	public void update(long units, double speed) {
+	private void update(long units, double speed) {
 		this.lastUpdate = System.currentTimeMillis();
 		this.timeElapsed = lastUpdate - this.timeStarted;
 		this.unitsCompleted = units;

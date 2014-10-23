@@ -24,7 +24,6 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 	private static String OS = System.getProperty("os.name").toLowerCase();
 
 	private static Pattern currentFramePattern = Pattern.compile("frame=\\s+([0-9]+)");
-	private static Pattern fpsPattern = Pattern.compile("fps=\\s+([0-9]+)");
 	private static Pattern missingDecoder = Pattern.compile("Error while opening encoder for output stream");
 
 	public VideoWorkThread(PoolListener<ClientVideoTask> listener, String absoluteSharedFolder,
@@ -103,24 +102,15 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 
 	@Override
 	public void onMessage(String line) {
-		double speed = -1;
-		long units = -1;
 		Matcher m = currentFramePattern.matcher(line);
 		if (m.find()) {
-			units = Long.parseLong(m.group(1));
-		}
-		m = fpsPattern.matcher(line);
-		if (m.find()) {
-			speed = Double.parseDouble(m.group(1));
+			long units = Long.parseLong(m.group(1));
+			task.getProgress().update(units);
 		}
 		m = missingDecoder.matcher(line);
 		if (m.find()) {
 			System.err.println("Missing decoder !");
 			listener.crash(new MissingDecoderException("Missing decoder or encoder"));
-		} else if (units != -1 && speed != -1) {
-			task.getProgress().update(units, speed);
-		} else if (units != -1) {
-			task.getProgress().update(units);
 		}
 	}
 
