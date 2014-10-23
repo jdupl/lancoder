@@ -2,6 +2,7 @@ package org.lancoder.common.progress;
 
 import java.io.Serializable;
 
+import org.lancoder.common.math.MovingAverage;
 import org.lancoder.common.status.TaskState;
 
 public class Progress implements Serializable {
@@ -48,6 +49,8 @@ public class Progress implements Serializable {
 	 */
 	protected long lastUpdate;
 
+	protected MovingAverage average = new MovingAverage(50);
+
 	public Progress(long units, Unit unit) {
 		this.unitsTotal = units;
 		this.unit = unit;
@@ -60,27 +63,40 @@ public class Progress implements Serializable {
 	 *            The current count of units completed
 	 */
 	public void update(long units) {
-		double unitsSinceLast = units - unitsCompleted;
+		long unitsSinceLast = units - unitsCompleted;
 		long msElapsed = System.currentTimeMillis() - this.lastUpdate;
-		double estimatedSpeed = unitsSinceLast / msElapsed * 1000;
+		updateSpeed(unitsSinceLast, msElapsed);
+		updateProgress(units);
+	}
+
+	/**
+	 * Get speed estimation in units/second and update progress speed.
+	 * 
+	 * @param units
+	 *            The units since last update
+	 * @param ms
+	 *            The msec elapsed since last update
+	 */
+	private void updateSpeed(double units, long ms) {
+		double estimatedSpeed = units / ms * 1000;
 		if (!Double.isInfinite(estimatedSpeed)) {
-			update(units, estimatedSpeed);
+			this.average.add(estimatedSpeed);
+			this.speed = average.getAverage();
+		} else {
+			System.err.println("Ignoring infinite speed estimate !");
 		}
 	}
 
 	/**
-	 * Update progress with the unit count and speed.
+	 * Update progress with the unit count and estimated time remaining.
 	 * 
 	 * @param units
 	 *            The current count of units completed
-	 * @param speed
-	 *            The current speed
 	 */
-	private void update(long units, double speed) {
+	private void updateProgress(long units) {
 		this.lastUpdate = System.currentTimeMillis();
 		this.timeElapsed = lastUpdate - this.timeStarted;
 		this.unitsCompleted = units;
-		this.speed = speed;
 		long remainingUnits = unitsTotal - unitsCompleted;
 		this.timeEstimated = ((long) (remainingUnits / this.speed)) * 1000;
 		this.progress = (unitsCompleted * 100.0) / unitsTotal;
