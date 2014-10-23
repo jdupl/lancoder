@@ -5,6 +5,9 @@ controllers.controller('nodes', function($scope, $http, $interval, apiService) {
       $scope.nodes = nodes;
     });
   };
+  $scope.shutdown = function(node) {
+    $http({method: 'POST', url: '/api/nodes/shutdown', data: node['unid']});
+  };
   $scope.nodesAutoRefresh = function() {
     $interval(function() {
       $scope.refreshNodes();
