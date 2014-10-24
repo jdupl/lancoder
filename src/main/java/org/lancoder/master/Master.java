@@ -14,6 +14,7 @@ import org.lancoder.common.Container;
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
+import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.network.cluster.messages.AuthMessage;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
@@ -149,7 +150,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		for (Node node : this.getOnlineNodes()) {
 			if (node.getStatus() != NodeState.WORKING || node.getStatus() != NodeState.FREE) {
 				boolean nodeAvailable = true;
-				// check if any of the task is a video task
 				for (ClientTask task : node.getCurrentTasks()) {
 					if (task instanceof ClientVideoTask) {
 						nodeAvailable = false;
@@ -165,42 +165,57 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		return nodes;
 	}
 
+	private ClientAudioTask getNextAudioTask(ArrayList<Codec> codecs) {
+		ClientAudioTask task = null;
+		ArrayList<Job> jobList = new ArrayList<>(jobs.values());
+		Collections.sort(jobList);
+		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
+			Job job = itJob.next();
+			ArrayList<ClientAudioTask> tasks = job.getTodoAudioTask();
+			for (Iterator<ClientAudioTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
+				ClientAudioTask clientTask = itTask.next();
+				if (codecs.contains(clientTask.getStreamConfig().getOutStream().getCodec())) {
+					task = clientTask;
+				}
+			}
+		}
+		return task;
+	}
+
+	private ClientVideoTask getNextVideoTask(ArrayList<Codec> codecs) {
+		ClientVideoTask task = null;
+		ArrayList<Job> jobList = new ArrayList<>(jobs.values());
+		Collections.sort(jobList);
+		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
+			Job job = itJob.next();
+			ArrayList<ClientVideoTask> tasks = job.getTodoVideoTask();
+			for (Iterator<ClientVideoTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
+				ClientVideoTask clientTask = itTask.next();
+				if (codecs.contains(clientTask.getStreamConfig().getOutStream().getCodec())) {
+					task = clientTask;
+				}
+			}
+		}
+		return task;
+	}
+
 	/**
 	 * Checks if any task and nodes are available and dispatch until possible. Will only dispatch tasks to nodes that
 	 * are capable of encoding with the desired library. Always put audio tasks in priority.
 	 */
 	public synchronized void updateNodesWork() {
-		for (Node freeNode : this.getFreeAudioNodes()) {
-			boolean nodeDispatched = false;
-			ArrayList<Job> jobList = new ArrayList<>(jobs.values());
-			Collections.sort(jobList);
-			for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && !nodeDispatched;) {
-				Job job = itJob.next();
-				ArrayList<ClientAudioTask> tasks = job.getTodoAudioTask();
-				for (Iterator<ClientAudioTask> itTask = tasks.iterator(); itTask.hasNext() && !nodeDispatched;) {
-					ClientAudioTask clientAudioTask = itTask.next();
-					if (freeNode.canHandle(clientAudioTask)) {
-						nodeDispatched = true;
-						dispatch(clientAudioTask, freeNode);
-					}
-				}
+		for (Node node : this.getFreeAudioNodes()) {
+			ClientAudioTask task = getNextAudioTask(node.getCodecs());
+			if (task != null) {
+				dispatch(task, node);
+				break;
 			}
 		}
-
-		for (Node freeNode : this.getFreeVideoNodes()) {
-			boolean nodeDispatched = false;
-			ArrayList<Job> jobList = new ArrayList<>(jobs.values());
-			Collections.sort(jobList);
-			for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && !nodeDispatched;) {
-				Job job = itJob.next();
-				ArrayList<ClientVideoTask> tasks = job.getTodoVideoTask();
-				for (Iterator<ClientVideoTask> itTask = tasks.iterator(); itTask.hasNext() && !nodeDispatched;) {
-					ClientVideoTask clientVideoTask = itTask.next();
-					if (freeNode.canHandle(clientVideoTask)) {
-						nodeDispatched = true;
-						dispatch(clientVideoTask, freeNode);
-					}
-				}
+		for (Node node : this.getFreeVideoNodes()) {
+			ClientVideoTask task = getNextVideoTask(node.getCodecs());
+			if (task != null) {
+				dispatch(task, node);
+				break;
 			}
 		}
 		config.dump();

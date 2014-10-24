@@ -54,7 +54,6 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 
 	@Override
 	protected void bootstrap() {
-		super.bootstrap();
 		// Get codecs
 		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(config);
 		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
@@ -68,6 +67,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 			throw new InvalidConfigurationException(String.format("Master's host name '%s' could not be resolved !"
 					+ "\nOriginal exception: '%s'", config.getMasterIpAddress(), e.getMessage()));
 		}
+		super.bootstrap();
 		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount, config.getUniqueID());
 	}
 
