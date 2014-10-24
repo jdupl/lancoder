@@ -43,7 +43,7 @@ public class ApiHandler extends AbstractHandler {
 					public boolean shouldSkipClass(Class<?> clazz) {
 						return false;
 					}
-				}).create();
+				}).serializeSpecialFloatingPointValues().create();
 		ApiResponse res = new ApiResponse(false, "Unknown error");
 		BufferedReader br = null;
 		response.setContentType("application/json");
