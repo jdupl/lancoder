@@ -14,6 +14,9 @@ import org.lancoder.worker.Worker;
 import org.lancoder.worker.WorkerConfig;
 
 public class Main {
+
+	private final static String LANCODER_VERSION = "0.0.0";
+
 	/**
 	 * CLI entry point
 	 * 
@@ -22,6 +25,7 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		try {
+			System.out.printf("Runnning lancoder %s%n", LANCODER_VERSION);
 			run(parse(args));
 		} catch (InvalidConfigurationException e) {
 			// Display exception message to explain cause of fatal crash to user
@@ -57,7 +61,7 @@ public class Main {
 
 	private static Namespace parse(String[] args) {
 		ArgumentParser parser = ArgumentParsers.newArgumentParser("lancoder").defaultHelp(false)
-				.version("${prog} 0.0.1");
+				.version("${prog} " + LANCODER_VERSION);
 		parser.addArgument("--version", "-v").action(Arguments.version()).help("show the current version and exit");
 
 		MutuallyExclusiveGroup group = parser.addMutuallyExclusiveGroup().required(true)
