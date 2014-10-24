@@ -20,7 +20,6 @@ public class Dispatcher extends Pooler<DispatchItem> {
 
 	private void dispatch(DispatchItem item) {
 		Node node = item.getNode();
-		System.out.println(node.getStatus());
 		ClusterProtocol handled = null;
 		try (Socket socket = new Socket()) {
 			InetSocketAddress addr = new InetSocketAddress(node.getNodeAddress(), node.getNodePort());

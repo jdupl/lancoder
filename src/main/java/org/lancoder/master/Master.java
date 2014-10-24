@@ -287,6 +287,9 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		} else {
 			success = false;
 		}
+		if (success) {
+			updateNodesWork();
+		}
 		return success;
 	}
 
@@ -581,7 +584,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		sender.setNodeAddress(detectedIp);
 		sender.setUnid(cm.getUnid());
 		if (addNode(sender)) {
-			System.err.println("added node " + sender.getUnid()); // TODO log
 			unid = sender.getUnid();
 		}
 		return unid;
