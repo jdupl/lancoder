@@ -19,14 +19,28 @@ public class Node implements Serializable {
 	private int threadCount;
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
 	private ArrayList<Codec> codecs = new ArrayList<>();
+	private boolean locked = false;
 
-	public Node(InetAddress nodeAddress, int nodePort, String name, ArrayList<Codec> codecs, int threadCount, String unid) {
+	public Node(InetAddress nodeAddress, int nodePort, String name, ArrayList<Codec> codecs, int threadCount,
+			String unid) {
 		this.nodeAddress = nodeAddress;
 		this.nodePort = nodePort;
 		this.name = name;
 		this.codecs = codecs;
 		this.unid = unid;
 		this.threadCount = threadCount;
+	}
+
+	public boolean isLocked() {
+		return locked;
+	}
+
+	public void lock() {
+		this.locked = true;
+	}
+
+	public void unlock() {
+		this.locked = false;
 	}
 
 	public int getThreadCount() {

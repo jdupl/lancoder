@@ -53,6 +53,7 @@ public abstract class Container extends RunnableService implements ServiceManage
 		for (Service s : services) {
 			s.stop();
 		}
+		services.clear();
 		this.serviceThreads.interrupt();
 	}
 
@@ -60,7 +61,6 @@ public abstract class Container extends RunnableService implements ServiceManage
 	public final void stop() {
 		super.stop();
 		stopServices();
-		shutdown();
 	}
 
 	public abstract void shutdown();

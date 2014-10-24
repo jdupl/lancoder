@@ -2,6 +2,10 @@ package org.lancoder.common.network.cluster.protocol;
 
 public enum ClusterProtocol {
 	/**
+	 * Message sent and handled successfully
+	 */
+	OK,
+	/**
 	 * Close the socket.
 	 */
 	BYE,

@@ -49,7 +49,7 @@ public class NodeCheckerPool extends Pool<Node> implements NodeCheckerListener {
 	}
 
 	@Override
-	public void readStatusReport(StatusReport statusReport) {
-		this.listener.readStatusReport(statusReport);
+	public boolean readStatusReport(StatusReport statusReport) {
+		return this.listener.readStatusReport(statusReport);
 	}
 }

@@ -15,9 +15,12 @@ import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
 import org.lancoder.common.job.Job;
+import org.lancoder.common.network.cluster.messages.AuthMessage;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.StatusReport;
+import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
 import org.lancoder.common.status.JobState;
@@ -128,7 +131,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	 */
 	private synchronized ArrayList<Node> getFreeVideoNodes() {
 		ArrayList<Node> nodes = new ArrayList<>();
-		for (Node node : this.getNodes()) {
+		for (Node node : this.getOnlineNodes()) {
 			if (node.getStatus() == NodeState.FREE) {
 				nodes.add(node);
 			}
@@ -143,7 +146,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	 */
 	private synchronized ArrayList<Node> getFreeAudioNodes() {
 		ArrayList<Node> nodes = new ArrayList<>();
-		for (Node node : this.getNodes()) {
+		for (Node node : this.getOnlineNodes()) {
 			if (node.getStatus() != NodeState.WORKING || node.getStatus() != NodeState.FREE) {
 				boolean nodeAvailable = true;
 				// check if any of the task is a video task
@@ -209,10 +212,10 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 			task.getProgress().start();
 		}
-		node.setStatus(NodeState.LOCKED);
+		node.lock();
 		task.getProgress().start();
 		node.addTask(task);
-		dispatcherPool.handle(new DispatchItem(task, node));
+		dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task), node));
 	}
 
 	private String getNewUNID(Node n) {
@@ -250,7 +253,12 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	public void disconnectNode(Node n) {
 		// remove node from list
 		removeNode(n);
-		throw new UnsupportedOperationException();
+		dispatcherPool.handle(new DispatchItem(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()), n));
+		System.out.printf("Disconnected node %s. Status is now %s.", n.getName(), n.getStatus());
+	}
+
+	public void disconnectNode(String unid) {
+		disconnectNode(identifySender(unid));
 	}
 
 	/**
@@ -270,9 +278,9 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		Node masterInstance = nodes.get(n.getUnid());
 		if (masterInstance != null && masterInstance.getStatus() == NodeState.NOT_CONNECTED) {
 			// Node with same unid reconnecting
-			nodes.get(n.getUnid()).setStatus(NodeState.NOT_CONNECTED);
+			nodes.get(n.getUnid()).setStatus(NodeState.FREE);
 		} else if (masterInstance == null) {
-			n.setStatus(NodeState.NOT_CONNECTED);
+			n.setStatus(NodeState.FREE);
 			nodes.put(n.getUnid(), n);
 			System.out.println("MASTER: Added node " + n.getName() + " with unid: " + n.getUnid());
 		} else {
@@ -351,7 +359,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		ArrayList<Node> nodes = new ArrayList<>();
 		for (Entry<String, Node> e : this.nodes.entrySet()) {
 			Node n = e.getValue();
-			if (n.getStatus() != NodeState.PAUSED && n.getStatus() != NodeState.NOT_CONNECTED) {
+			if (n.getStatus() != NodeState.PAUSED && n.getStatus() != NodeState.NOT_CONNECTED && !n.isLocked()) {
 				nodes.add(n);
 			}
 		}
@@ -367,12 +375,12 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	 */
 	public synchronized void removeNode(Node n) {
 		if (n != null) {
+			n.setStatus(NodeState.NOT_CONNECTED);
 			// Cancel node's tasks status if any
 			for (ClientTask t : n.getCurrentTasks()) {
 				t.getProgress().reset();
-				n.getCurrentTasks().remove(t);
 			}
-			n.setStatus(NodeState.NOT_CONNECTED);
+			n.getCurrentTasks().clear();
 		} else {
 			System.err.println("Could not mark node as disconnected as it was not found");
 		}
@@ -454,10 +462,14 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	 * @return true if update could be sent, false otherwise
 	 */
 	@Override
-	public void readStatusReport(StatusReport report) {
+	public boolean readStatusReport(StatusReport report) {
 		NodeState s = report.status;
 		String unid = report.getUnid();
 		Node sender = identifySender(unid);
+		if (sender == null || sender.getStatus() == NodeState.NOT_CONNECTED) {
+			return false;
+		}
+
 		if (report.getTaskReports() != null) {
 			readTaskReports(report.getTaskReports());
 		}
@@ -470,6 +482,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		} else {
 			System.out.printf("Node %s is still alive\n", sender.getName());
 		}
+		return true;
 	}
 
 	/**
@@ -525,20 +538,23 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 
 	@Override
 	public synchronized void taskRefused(DispatchItem item) {
-		ClientTask t = item.getTask();
+		System.out.println(item.getMessage());
+		ClientTask t = ((TaskRequestMessage) item.getMessage()).getTask();
 		Node n = item.getNode();
 		System.err.printf("Node %s refused task\n", n.getName());
 		t.getProgress().reset();
 		if (n.hasTask(t)) {
 			n.getCurrentTasks().remove(t);
 		}
+		n.unlock();
 		updateNodesWork();
 	}
 
 	@Override
 	public synchronized void taskAccepted(DispatchItem item) {
-		ClientTask t = item.getTask();
+		ClientTask t = ((TaskRequestMessage) item.getMessage()).getTask();
 		Node n = item.getNode();
+		n.unlock();
 		System.err.printf("Node %s accepted task %d from %s\n", n.getName(), t.getTaskId(), t.getJobId());
 	}
 

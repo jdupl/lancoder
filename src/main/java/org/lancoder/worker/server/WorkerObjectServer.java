@@ -10,6 +10,7 @@ public class WorkerObjectServer extends RunnableService {
 	private int port;
 	private HandlerPool pool;
 	private Thread poolThread;
+	private ServerSocket server;
 
 	public WorkerObjectServer(WorkerServerListener listener, int port) {
 		this.port = port;
@@ -17,9 +18,19 @@ public class WorkerObjectServer extends RunnableService {
 	}
 
 	@Override
+	public void stop() {
+		super.stop();
+		this.pool.stop();
+		poolThread.interrupt();
+		try {
+			server.close();
+		} catch (IOException e) {
+		}
+	}
+
+	@Override
 	public void run() {
-		ServerSocket server;
-		this.poolThread= new Thread(pool);
+		this.poolThread = new Thread(pool);
 		this.poolThread.start();
 		try {
 			server = new ServerSocket(port);
@@ -27,7 +38,9 @@ public class WorkerObjectServer extends RunnableService {
 				this.pool.handle(server.accept());
 			}
 		} catch (IOException e) {
-			serviceFailure(e);
+			if (!close) {
+				serviceFailure(e);
+			}
 		}
 	}
 

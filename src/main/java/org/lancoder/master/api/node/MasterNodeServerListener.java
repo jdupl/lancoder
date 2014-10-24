@@ -11,6 +11,6 @@ public interface MasterNodeServerListener {
 
 	public void disconnectRequest(ConnectMessage cm);
 
-	public void readStatusReport(StatusReport report);
+	public boolean readStatusReport(StatusReport report);
 
 }

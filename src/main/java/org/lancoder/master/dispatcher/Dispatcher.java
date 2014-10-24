@@ -7,10 +7,8 @@ import java.net.Socket;
 
 import org.lancoder.common.Node;
 import org.lancoder.common.network.cluster.messages.Message;
-import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.pool.Pooler;
-import org.lancoder.common.task.ClientTask;
 
 public class Dispatcher extends Pooler<DispatchItem> {
 
@@ -21,31 +19,34 @@ public class Dispatcher extends Pooler<DispatchItem> {
 	}
 
 	private void dispatch(DispatchItem item) {
-		ClientTask task = item.getTask();
 		Node node = item.getNode();
-
-		TaskRequestMessage trm = new TaskRequestMessage(task);
-		boolean handled = false;
+		System.out.println(node.getStatus());
+		ClusterProtocol handled = null;
 		try (Socket socket = new Socket()) {
 			InetSocketAddress addr = new InetSocketAddress(node.getNodeAddress(), node.getNodePort());
 			socket.connect(addr, 2000);
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-			out.writeObject(trm);
+			out.writeObject(item.getMessage());
 			out.flush();
 			Object o = in.readObject();
 			if (o instanceof Message) {
 				Message m = (Message) o;
-				handled = m.getCode() == ClusterProtocol.TASK_ACCEPTED;
+				handled = m.getCode();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			if (!handled) {
-				listener.taskRefused(item);
-			} else {
+			switch (handled) {
+			case TASK_ACCEPTED:
 				listener.taskAccepted(item);
+				break;
+			case TASK_REFUSED:
+				listener.taskRefused(item);
+				break;
+			default:
+				break;
 			}
 		}
 	}

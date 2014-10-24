@@ -16,5 +16,5 @@ public interface NodeCheckerListener {
 
 	public void readTaskReports(ArrayList<TaskReport> taskReports);
 
-	public void readStatusReport(StatusReport statusReport);
+	public boolean readStatusReport(StatusReport statusReport);
 }

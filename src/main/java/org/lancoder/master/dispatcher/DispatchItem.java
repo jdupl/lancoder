@@ -1,24 +1,24 @@
 package org.lancoder.master.dispatcher;
 
 import org.lancoder.common.Node;
-import org.lancoder.common.task.ClientTask;
+import org.lancoder.common.network.cluster.messages.Message;
 
 public class DispatchItem {
 
-	private ClientTask task;
+	private Message message;
 	private Node node;
 
-	public DispatchItem(ClientTask task, Node node) {
-		this.task = task;
+	public DispatchItem(Message message, Node node) {
+		this.message = message;
 		this.node = node;
 	}
 
-	public ClientTask getTask() {
-		return task;
+	public Message getMessage() {
+		return message;
 	}
 
-	public void setTask(ClientTask task) {
-		this.task = task;
+	public void setMessage(Message message) {
+		this.message = message;
 	}
 
 	public Node getNode() {
@@ -33,7 +33,7 @@ public class DispatchItem {
 	public boolean equals(Object obj) {
 		if (obj != null && obj instanceof DispatchItem) {
 			DispatchItem other = (DispatchItem) obj;
-			return other.getNode().equals(this.getNode()) && other.getTask().equals(this.getTask());
+			return other.getNode().equals(this.getNode()) && other.getMessage().equals(this.getMessage());
 		}
 		return super.equals(obj);
 	}

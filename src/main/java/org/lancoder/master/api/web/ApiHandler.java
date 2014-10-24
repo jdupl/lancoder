@@ -57,12 +57,10 @@ public class ApiHandler extends AbstractHandler {
 			br = request.getReader();
 			String unid = br.readLine();
 			if (unid != null) {
-				System.out.println("shuting down " + unid);
-				// TODO
+				master.disconnectNode(unid);
+				response.setStatus(HttpServletResponse.SC_OK);
+				baseRequest.setHandled(true);
 			}
-			response.setStatus(HttpServletResponse.SC_OK);
-			baseRequest.setHandled(true);
-			response.getWriter().println(gson.toJson(master.getNodes()));
 			break;
 		case "/jobs":
 			response.setStatus(HttpServletResponse.SC_OK);

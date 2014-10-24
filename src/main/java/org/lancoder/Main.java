@@ -52,6 +52,7 @@ public class Main {
 
 		Runnable r = isWorker ? new Worker((WorkerConfig) conf) : new Master((MasterConfig) conf);
 		new Thread(r).start();
+		conf.dump();
 	}
 
 	private static Namespace parse(String[] args) {

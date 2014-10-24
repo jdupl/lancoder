@@ -22,9 +22,9 @@ public class PoolCleanerService extends RunnableService {
 				Thread.sleep(CHECK_DELAY_MSEC);
 			} catch (InterruptedException e) {
 				System.err.println("pool cleaner interrupted");
-				e.printStackTrace();
 			}
 		}
+		System.err.println("pool cleaner closed");
 	}
 
 	public void addCleanable(Cleanable c) {

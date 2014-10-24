@@ -194,9 +194,10 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 			try {
 				dispatch(this.todo.take());
 			} catch (InterruptedException e) {
-				System.out.println("Pool interrupted");
+				System.out.printf("Pool %s interrupted.%n", this.getClass().getSimpleName());
 			}
 		}
+		System.out.printf("Pool %s closed.%n", this.getClass().getSimpleName());
 	}
 
 	public int getThreadLimit() {
@@ -206,8 +207,8 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 	@Override
 	public void stop() {
 		super.stop();
-		for (Pooler<T> converter : poolers) {
-			converter.stop();
+		for (Pooler<T> ressource : poolers) {
+			ressource.stop();
 		}
 		threads.interrupt();
 	}

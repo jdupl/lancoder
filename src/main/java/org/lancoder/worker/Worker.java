@@ -88,13 +88,11 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	public void shutdown() {
-		if (this.getStatus() != NodeState.NOT_CONNECTED) {
-			System.out.println("Sending disconnect notification to master");
-			gracefulShutdown();
-		}
-		int nbServices = services.size();
-		print("shutting down " + nbServices + " service(s).");
-		config.dump();
+		// if (this.getStatus() != NodeState.NOT_CONNECTED) {
+		// System.out.println("Sending disconnect notification to master");
+		// gracefulShutdown();
+		// }
+		this.stop();
 	}
 
 	public void print(String s) {
@@ -179,10 +177,6 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 			System.err.println("WORKER: Unhandlded status code while updating status");
 			break;
 		}
-	}
-
-	private void gracefulShutdown() {
-		throw new UnsupportedOperationException();
 	}
 
 	public synchronized void sendCrashReport(CrashReport report) {

@@ -86,6 +86,7 @@ public class ContactMasterObject extends RunnableService {
 			} catch (InterruptedException e) {
 			}
 		}
+		System.out.println("closed " + this.getClass().getSimpleName());
 	}
 
 	@Override

@@ -24,9 +24,5 @@ public enum NodeState {
 	/**
 	 * Node is crashed but is connected. No work should be sent as manual investigation is necessary.
 	 */
-	CRASHED,
-	/**
-	 * Master is currently waiting for the node
-	 */
-	LOCKED
+	CRASHED
 }

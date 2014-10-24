@@ -60,7 +60,7 @@ public class FFmpegReader extends Service {
 		System.out.println(pb.command().toString()); // DEBUG
 		Scanner s = null;
 		try {
-			Process p = pb.start();
+			p = pb.start();
 			InputStream stream = useStdErr ? p.getErrorStream() : p.getInputStream();
 			s = new Scanner(stream);
 			while (s.hasNext() && !close) {
@@ -72,7 +72,7 @@ public class FFmpegReader extends Service {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} finally {
-			if (close) {
+			if (close && p != null) {
 				p.destroy();
 			}
 			if (s != null) {

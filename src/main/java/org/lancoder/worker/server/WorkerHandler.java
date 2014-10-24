@@ -28,6 +28,10 @@ public class WorkerHandler extends Pooler<Socket> {
 			if (request instanceof Message) {
 				Message requestMessage = (Message) request;
 				switch (requestMessage.getCode()) {
+				case DISCONNECT_ME:
+					listener.shutdownWorker();
+					obj = new Message(ClusterProtocol.OK);
+					break;
 				case TASK_REQUEST:
 					if (requestMessage instanceof TaskRequestMessage) {
 						TaskRequestMessage trm = (TaskRequestMessage) requestMessage;
