@@ -254,7 +254,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		// remove node from list
 		removeNode(n);
 		dispatcherPool.handle(new DispatchItem(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()), n));
-		System.out.printf("Disconnected node %s. Status is now %s.", n.getName(), n.getStatus());
+		System.out.printf("Disconnected node %s.", n.getName(), n.getStatus());
 	}
 
 	public void disconnectNode(String unid) {
@@ -278,11 +278,12 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		Node masterInstance = nodes.get(n.getUnid());
 		if (masterInstance != null && masterInstance.getStatus() == NodeState.NOT_CONNECTED) {
 			// Node with same unid reconnecting
-			nodes.get(n.getUnid()).setStatus(NodeState.FREE);
+			masterInstance.setStatus(NodeState.FREE);
+			System.out.println("MASTER: Added node " + n.getName() + " with unid: " + n.getUnid());
 		} else if (masterInstance == null) {
 			n.setStatus(NodeState.FREE);
 			nodes.put(n.getUnid(), n);
-			System.out.println("MASTER: Added node " + n.getName() + " with unid: " + n.getUnid());
+			System.out.println("MASTER: Added new node " + n.getName() + " with unid: " + n.getUnid());
 		} else {
 			success = false;
 		}

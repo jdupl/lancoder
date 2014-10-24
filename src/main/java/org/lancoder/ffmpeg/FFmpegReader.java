@@ -70,7 +70,6 @@ public class FFmpegReader extends Service {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
 		} finally {
 			if (close && p != null) {
 				p.destroy();
