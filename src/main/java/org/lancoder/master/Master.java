@@ -39,13 +39,11 @@ import org.lancoder.master.api.node.MasterObjectServer;
 import org.lancoder.master.api.web.ApiServer;
 import org.lancoder.master.checker.NodeCheckerService;
 import org.lancoder.master.dispatcher.DispatchItem;
-import org.lancoder.master.dispatcher.DispatcherListener;
 import org.lancoder.master.dispatcher.DispatcherPool;
 import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
 
-public class Master extends Container implements MuxerListener, DispatcherListener, ServerListener,
-		JobInitiatorListener, EventListener {
+public class Master extends Container implements MuxerListener, ServerListener, JobInitiatorListener, EventListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
@@ -406,28 +404,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 
 	public void run() {
 		startServices();
-	}
-
-	@Override
-	public synchronized void taskRefused(DispatchItem item) {
-		System.out.println(item.getMessage());
-		ClientTask t = ((TaskRequestMessage) item.getMessage()).getTask();
-		Node n = item.getNode();
-		System.err.printf("Node %s refused task\n", n.getName());
-		t.getProgress().reset();
-		if (n.hasTask(t)) {
-			n.getCurrentTasks().remove(t);
-		}
-		n.unlock();
-		updateNodesWork();
-	}
-
-	@Override
-	public synchronized void taskAccepted(DispatchItem item) {
-		ClientTask t = ((TaskRequestMessage) item.getMessage()).getTask();
-		Node n = item.getNode();
-		n.unlock();
-		System.err.printf("Node %s accepted task %d from %s\n", n.getName(), t.getTaskId(), t.getJobId());
 	}
 
 	@Override
