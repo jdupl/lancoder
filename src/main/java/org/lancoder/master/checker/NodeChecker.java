@@ -8,6 +8,9 @@ import java.net.Socket;
 import java.net.SocketAddress;
 
 import org.lancoder.common.Node;
+import org.lancoder.common.events.Event;
+import org.lancoder.common.events.EventEnum;
+import org.lancoder.common.events.EventListener;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
@@ -15,9 +18,9 @@ import org.lancoder.common.pool.Pooler;
 
 public class NodeChecker extends Pooler<Node> {
 
-	private NodeCheckerListener listener;
+	private EventListener listener;
 
-	public NodeChecker(NodeCheckerListener listener) {
+	public NodeChecker(EventListener listener) {
 		this.listener = listener;
 	}
 
@@ -33,10 +36,10 @@ public class NodeChecker extends Pooler<Node> {
 			out.flush();
 			Object o = in.readObject();
 			if (o instanceof StatusReport) {
-				listener.readStatusReport((StatusReport) o);
+				listener.handle(new Event(EventEnum.STATUS_REPORT, o));
 			}
 		} catch (IOException e) {
-			listener.nodeDisconnected(n);
+			listener.handle(new Event(EventEnum.NODE_DISCONNECTED, n));
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}

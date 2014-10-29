@@ -19,8 +19,7 @@ public class NodeManager {
 	public NodeManager(NodeManagerListener listener) {
 		this.listener = listener;
 	}
-	
-	
+
 	/**
 	 * Returns a node object from a node id
 	 * 
@@ -55,7 +54,7 @@ public class NodeManager {
 		}
 		return nodes;
 	}
-	
+
 	/**
 	 * Get a list of nodes currently completely free. Video tasks will use all threads.
 	 * 
@@ -127,7 +126,7 @@ public class NodeManager {
 		}
 		return success;
 	}
-	
+
 	/**
 	 * Set disconnected status to node and cancel node's tasks. Use shutdownNode() to gracefully shutdown a node.
 	 * 

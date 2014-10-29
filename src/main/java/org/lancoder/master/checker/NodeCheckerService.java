@@ -2,17 +2,20 @@ package org.lancoder.master.checker;
 
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
+import org.lancoder.common.events.EventListener;
 import org.lancoder.master.NodeManager;
 
 public class NodeCheckerService extends RunnableService {
 
 	private final static int MS_DELAY_BETWEEN_CHECKS = 5000;
+	private static final int MAX_CHECKERS = 5;
+
 	private NodeCheckerPool pool;
 	private Thread poolThread;
 	private NodeManager nodeManager;
 
-	public NodeCheckerService(NodeCheckerListener listener, NodeManager nodeManager) {
-		this.pool = new NodeCheckerPool(listener);
+	public NodeCheckerService(EventListener listener, NodeManager nodeManager) {
+		this.pool = new NodeCheckerPool(MAX_CHECKERS, listener);
 		this.nodeManager = nodeManager;
 	}
 

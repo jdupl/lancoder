@@ -13,6 +13,8 @@ import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
 import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.events.Event;
+import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.network.cluster.messages.AuthMessage;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
@@ -36,7 +38,6 @@ import org.lancoder.common.utils.FileUtils;
 import org.lancoder.master.api.node.MasterNodeServerListener;
 import org.lancoder.master.api.node.MasterObjectServer;
 import org.lancoder.master.api.web.ApiServer;
-import org.lancoder.master.checker.NodeCheckerListener;
 import org.lancoder.master.checker.NodeCheckerService;
 import org.lancoder.master.dispatcher.DispatchItem;
 import org.lancoder.master.dispatcher.DispatcherListener;
@@ -45,7 +46,7 @@ import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
 
 public class Master extends Container implements MuxerListener, DispatcherListener, MasterNodeServerListener,
-		ServerListener, JobInitiatorListener, NodeCheckerListener, NodeManagerListener {
+		ServerListener, JobInitiatorListener, EventListener, NodeManagerListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
@@ -361,7 +362,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	 * @param reports
 	 *            The reports to read
 	 */
-	@Override
 	public void readTaskReports(ArrayList<TaskReport> reports) {
 		for (TaskReport report : reports) {
 			ClientTask reportTask = report.getTask();
@@ -429,11 +429,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	}
 
 	@Override
-	public void nodeDisconnected(Node n) {
-		nodeManager.removeNode(n);
-	}
-
-	@Override
 	public void serverShutdown(RunnableService server) {
 		// TODO Auto-generated method stub
 	}
@@ -487,6 +482,21 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	public void crash(Exception e) {
 		// TODO Auto-generated method stub
 		e.printStackTrace();
+	}
+
+	@Override
+	public void handle(Event event) {
+		// TODO
+		switch (event.getCode()) {
+		case NODE_DISCONNECTED:
+			nodeManager.removeNode((Node) event.getObject());
+			break;
+		case STATUS_REPORT:
+			this.readStatusReport((StatusReport) event.getObject());
+		default:
+			break;
+		}
+
 	}
 
 }

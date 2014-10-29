@@ -1,6 +1,7 @@
 package org.lancoder.master.checker;
 
 import org.lancoder.common.Node;
+import org.lancoder.common.events.EventListener;
 import org.lancoder.common.pool.Pool;
 import org.lancoder.common.pool.Pooler;
 
@@ -10,12 +11,10 @@ import org.lancoder.common.pool.Pooler;
  */
 public class NodeCheckerPool extends Pool<Node> {
 
-	private static final int MAX_CHECKERS = 5;
+	private EventListener listener;
 
-	private NodeCheckerListener listener;
-
-	public NodeCheckerPool(NodeCheckerListener listener) {
-		super(MAX_CHECKERS);
+	public NodeCheckerPool(int ressourceLimit, EventListener listener) {
+		super(ressourceLimit);
 		this.listener = listener;
 	}
 
@@ -23,5 +22,4 @@ public class NodeCheckerPool extends Pool<Node> {
 	protected Pooler<Node> getPoolerInstance() {
 		return new NodeChecker(listener);
 	}
-
 }
