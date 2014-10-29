@@ -2,8 +2,6 @@ package org.lancoder.master;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,13 +44,12 @@ import org.lancoder.master.dispatcher.DispatcherPool;
 import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
 
-public class Master extends Container implements MuxerListener, DispatcherListener, NodeCheckerListener,
-		MasterNodeServerListener, ServerListener, JobInitiatorListener {
+public class Master extends Container implements MuxerListener, DispatcherListener, MasterNodeServerListener,
+		ServerListener, JobInitiatorListener, NodeCheckerListener, NodeManagerListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
 	private MasterConfig config;
-	private HashMap<String, Node> nodes = new HashMap<>();
 	private HashMap<String, Job> jobs = new HashMap<>();
 	private JobInitiator jobInitiator;
 	private MasterObjectServer nodeServer;
@@ -60,6 +57,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	private ApiServer apiServer;
 	private DispatcherPool dispatcherPool;
 	private MuxerPool muxerPool;
+	private final NodeManager nodeManager = new NodeManager(this);
 
 	public Master(MasterConfig config) {
 		this.config = config;
@@ -92,14 +90,14 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 
 	public void shutdown() {
 		// save config and make sure to reset current tasks
-		for (Node n : getNodes()) {
+		for (Node n : nodeManager.getNodes()) {
 			for (ClientTask task : n.getCurrentTasks()) {
 				task.getProgress().reset();
 			}
 		}
 		config.dump();
 		// say goodbye to nodes
-		for (Node n : getOnlineNodes()) {
+		for (Node n : nodeManager.getOnlineNodes()) {
 			disconnectNode(n);
 		}
 		stopServices();
@@ -107,62 +105,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 
 	public MasterConfig getConfig() {
 		return config;
-	}
-
-	/**
-	 * Returns a node object from a node id
-	 * 
-	 * @param nodeId
-	 *            The node ID to get
-	 * @return The node object or null if not found
-	 */
-	public synchronized Node identifySender(String nodeId) {
-		Node n = this.nodes.get(nodeId);
-		if (n == null) {
-			System.err.printf("WARNING could not FIND NODE %s\n" + "Size of nodesByUNID: %d\n"
-					+ "Size of nodes arraylist:%d\n", nodeId, nodes.size(), nodes.size());
-		}
-		return n;
-	}
-
-	/**
-	 * Get a list of nodes currently completely free. Video tasks will use all threads.
-	 * 
-	 * @return A list of nodes that can accept a video task
-	 */
-	private synchronized ArrayList<Node> getFreeVideoNodes() {
-		ArrayList<Node> nodes = new ArrayList<>();
-		for (Node node : this.getOnlineNodes()) {
-			if (node.getStatus() == NodeState.FREE) {
-				nodes.add(node);
-			}
-		}
-		return nodes;
-	}
-
-	/**
-	 * Get a list of nodes that can encode audio. Audio tasks only need one thread.
-	 * 
-	 * @return A list of nodes that can accept an audio task
-	 */
-	private synchronized ArrayList<Node> getFreeAudioNodes() {
-		ArrayList<Node> nodes = new ArrayList<>();
-		for (Node node : this.getOnlineNodes()) {
-			if (node.getStatus() != NodeState.WORKING || node.getStatus() != NodeState.FREE) {
-				boolean nodeAvailable = true;
-				for (ClientTask task : node.getCurrentTasks()) {
-					if (task instanceof ClientVideoTask) {
-						nodeAvailable = false;
-						break;
-					}
-				}
-				// TODO check for each task the task's thread requirements
-				if (nodeAvailable && node.getCurrentTasks().size() < node.getThreadCount()) {
-					nodes.add(node);
-				}
-			}
-		}
-		return nodes;
 	}
 
 	private ClientAudioTask getNextAudioTask(ArrayList<Codec> codecs) {
@@ -204,14 +146,14 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	 * are capable of encoding with the desired library. Always put audio tasks in priority.
 	 */
 	public synchronized void updateNodesWork() {
-		for (Node node : this.getFreeAudioNodes()) {
+		for (Node node : nodeManager.getFreeAudioNodes()) {
 			ClientAudioTask task = getNextAudioTask(node.getCodecs());
 			if (task != null) {
 				dispatch(task, node);
 				break;
 			}
 		}
-		for (Node node : this.getFreeVideoNodes()) {
+		for (Node node : nodeManager.getFreeVideoNodes()) {
 			ClientVideoTask task = getNextVideoTask(node.getCodecs());
 			if (task != null) {
 				dispatch(task, node);
@@ -233,31 +175,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task), node));
 	}
 
-	private String getNewUNID(Node n) {
-		String result = "";
-		System.out.println("MASTER: generating a unid for node " + n.getName());
-		long ms = System.currentTimeMillis();
-		String input = ms + n.getName();
-		MessageDigest md = null;
-		try {
-			md = MessageDigest.getInstance(ALGORITHM);
-		} catch (NoSuchAlgorithmException e) {
-			// print and handle exception
-			// if a null string is given back to the client, it won't connect
-			e.printStackTrace();
-			System.out
-					.println("MASTER: could not get an instance of " + ALGORITHM + " to produce a UNID\nThis is bad.");
-			return "";
-		}
-		byte[] byteArray = md.digest(input.getBytes());
-		result = "";
-		for (int i = 0; i < byteArray.length; i++) {
-			result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
-		}
-		System.out.println("MASTER: generated " + result + " for node " + n.getName());
-		return result;
-	}
-
 	/**
 	 * Sends a disconnect request to a node, removes the node from the node list and updates the task of the node if it
 	 * had any.
@@ -267,53 +184,18 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	 */
 	public void disconnectNode(Node n) {
 		// remove node from list
-		removeNode(n);
+		nodeManager.removeNode(n);
 		dispatcherPool.handle(new DispatchItem(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()), n));
 		System.out.printf("Disconnected node %s.", n.getName(), n.getStatus());
 	}
 
 	public void disconnectNode(String unid) {
-		disconnectNode(identifySender(unid));
+		disconnectNode(nodeManager.identifySender(unid));
 	}
 
-	/**
-	 * Adds a node to the node list. Assigns a new ID to the node if it's non-existent. The node will be picked up by
-	 * the node checker automatically if work is available.
-	 * 
-	 * @param n
-	 *            The node to be added
-	 * @return if the node could be added
-	 */
-	public boolean addNode(Node n) {
-		boolean success = true;
-		// Is this a new node ?
-		if (n.getUnid() == null || n.getUnid().equals("")) {
-			n.setUnid(getNewUNID(n));
-		}
-		Node masterInstance = nodes.get(n.getUnid());
-		if (masterInstance != null && masterInstance.getStatus() == NodeState.NOT_CONNECTED) {
-			// Node with same unid reconnecting
-			masterInstance.setStatus(NodeState.FREE);
-			System.out.println("MASTER: Added node " + n.getName() + " with unid: " + n.getUnid());
-		} else if (masterInstance == null) {
-			n.setStatus(NodeState.FREE);
-			nodes.put(n.getUnid(), n);
-			System.out.println("MASTER: Added new node " + n.getName() + " with unid: " + n.getUnid());
-		} else {
-			success = false;
-		}
-		if (success) {
-			updateNodesWork();
-		}
-		return success;
-	}
-
+	@Deprecated
 	public ArrayList<Node> getNodes() {
-		ArrayList<Node> nodes = new ArrayList<>();
-		for (Entry<String, Node> e : this.nodes.entrySet()) {
-			nodes.add(e.getValue());
-		}
-		return nodes;
+		return nodeManager.getNodes();
 	}
 
 	public boolean addJob(ApiJobRequest j) {
@@ -372,37 +254,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 			jobs.add(e.getValue());
 		}
 		return jobs;
-	}
-
-	public ArrayList<Node> getOnlineNodes() {
-		ArrayList<Node> nodes = new ArrayList<>();
-		for (Entry<String, Node> e : this.nodes.entrySet()) {
-			Node n = e.getValue();
-			if (n.getStatus() != NodeState.PAUSED && n.getStatus() != NodeState.NOT_CONNECTED && !n.isLocked()) {
-				nodes.add(n);
-			}
-		}
-		return nodes;
-	}
-
-	/**
-	 * Set disconnected status to node and cancel node's tasks. Use shutdownNode() to gracefully shutdown a node.
-	 * 
-	 * 
-	 * @param n
-	 *            The node to disconnect
-	 */
-	public synchronized void removeNode(Node n) {
-		if (n != null) {
-			n.setStatus(NodeState.NOT_CONNECTED);
-			// Cancel node's tasks status if any
-			for (ClientTask t : n.getCurrentTasks()) {
-				t.getProgress().reset();
-			}
-			n.getCurrentTasks().clear();
-		} else {
-			System.err.println("Could not mark node as disconnected as it was not found");
-		}
 	}
 
 	public boolean taskUpdated(ClientTask task, Node n) {
@@ -484,7 +335,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	public boolean readStatusReport(StatusReport report) {
 		NodeState s = report.status;
 		String unid = report.getUnid();
-		Node sender = identifySender(unid);
+		Node sender = nodeManager.identifySender(unid);
 		if (sender == null || sender.getStatus() == NodeState.NOT_CONNECTED) {
 			return false;
 		}
@@ -516,7 +367,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 			ClientTask reportTask = report.getTask();
 			ClientTask actualTask = null;
 			String nodeId = report.getUnid();
-			Node sender = identifySender(nodeId);
+			Node sender = nodeManager.identifySender(nodeId);
 
 			if (sender == null || !sender.hasTask(reportTask)) {
 				System.err.printf("MASTER: Bad task update from node.");
@@ -543,7 +394,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		// from same job. After a fatal crash, leave the node connected but do
 		// not assign anything to the node.
 		// This way, node can reconnected if fatal crash is fixed.
-		Node node = identifySender(report.getUnid());
+		Node node = nodeManager.identifySender(report.getUnid());
 		if (report.getCause().isFatal()) {
 			System.err.printf("Node '%s' fatally crashed.\n", node.getName());
 		} else {
@@ -579,7 +430,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 
 	@Override
 	public void nodeDisconnected(Node n) {
-		this.removeNode(n);
+		nodeManager.removeNode(n);
 	}
 
 	@Override
@@ -598,7 +449,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		Node sender = cm.getNode();
 		sender.setNodeAddress(detectedIp);
 		sender.setUnid(cm.getUnid());
-		if (addNode(sender)) {
+		if (nodeManager.addNode(sender)) {
 			unid = sender.getUnid();
 		}
 		return unid;
@@ -606,8 +457,8 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 
 	@Override
 	public void disconnectRequest(ConnectMessage cm) {
-		Node n = identifySender(cm.getUnid());
-		this.removeNode(n);
+		Node n = nodeManager.identifySender(cm.getUnid());
+		nodeManager.removeNode(n);
 	}
 
 	@Override
@@ -636,6 +487,12 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	public void crash(Exception e) {
 		// TODO Auto-generated method stub
 		e.printStackTrace();
+	}
+
+	@Override
+	@Deprecated
+	public ArrayList<Node> getOnlineNodes() {
+		return nodeManager.getOnlineNodes();
 	}
 
 }
