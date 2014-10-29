@@ -35,7 +35,6 @@ import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
 import org.lancoder.common.third_parties.MkvMerge;
 import org.lancoder.common.utils.FileUtils;
-import org.lancoder.master.api.node.MasterNodeServerListener;
 import org.lancoder.master.api.node.MasterObjectServer;
 import org.lancoder.master.api.web.ApiServer;
 import org.lancoder.master.checker.NodeCheckerService;
@@ -45,8 +44,8 @@ import org.lancoder.master.dispatcher.DispatcherPool;
 import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
 
-public class Master extends Container implements MuxerListener, DispatcherListener, MasterNodeServerListener,
-		ServerListener, JobInitiatorListener, EventListener {
+public class Master extends Container implements MuxerListener, DispatcherListener, ServerListener,
+		JobInitiatorListener, EventListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
@@ -106,6 +105,10 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 
 	public MasterConfig getConfig() {
 		return config;
+	}
+
+	public NodeManager getNodeManager() {
+		return nodeManager;
 	}
 
 	private ClientAudioTask getNextAudioTask(ArrayList<Codec> codecs) {
@@ -233,7 +236,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		if (j == null) {
 			return false;
 		}
-		for (Node node : this.getNodes()) {
+		for (Node node : nodeManager.getNodes()) {
 			for (ClientTask task : node.getCurrentTasks()) {
 				if (task.getJobId().equals(j.getJobId())) {
 					task.getProgress().reset();
@@ -332,7 +335,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	 *            The report to be read
 	 * @return true if update could be sent, false otherwise
 	 */
-	@Override
 	public boolean readStatusReport(StatusReport report) {
 		NodeState s = report.status;
 		String unid = report.getUnid();
@@ -438,7 +440,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		// TODO Auto-generated method stub
 	}
 
-	@Override
 	public String connectRequest(ConnectMessage cm, InetAddress detectedIp) {
 		String unid = null;
 		Node sender = cm.getNode();
@@ -450,7 +451,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		return unid;
 	}
 
-	@Override
 	public void disconnectRequest(ConnectMessage cm) {
 		Node n = nodeManager.identifySender(cm.getUnid());
 		nodeManager.removeNode(n);

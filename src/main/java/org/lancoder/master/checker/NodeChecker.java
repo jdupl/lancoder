@@ -36,7 +36,7 @@ public class NodeChecker extends Pooler<Node> {
 			out.flush();
 			Object o = in.readObject();
 			if (o instanceof StatusReport) {
-				listener.handle(new Event(EventEnum.STATUS_REPORT, o));
+				listener.handle(new Event((StatusReport) o));
 			}
 		} catch (IOException e) {
 			listener.handle(new Event(EventEnum.NODE_DISCONNECTED, n));

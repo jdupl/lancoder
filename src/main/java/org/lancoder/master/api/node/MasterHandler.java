@@ -5,19 +5,21 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import org.lancoder.common.events.Event;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.master.Master;
 
 public class MasterHandler implements Runnable {
 
-	private MasterNodeServerListener listener;
+	private Master master;
 	private Socket s;
 
-	public MasterHandler(Socket s, MasterNodeServerListener listener) {
-		this.listener = listener;
+	public MasterHandler(Socket s, Master listener) {
+		this.master = listener;
 		this.s = s;
 	}
 
@@ -34,7 +36,7 @@ public class MasterHandler implements Runnable {
 					switch (requestMessage.getCode()) {
 					case CONNECT_ME:
 						if (requestMessage instanceof ConnectMessage) {
-							String unid = listener.connectRequest((ConnectMessage) requestMessage, s.getInetAddress());
+							String unid = master.connectRequest((ConnectMessage) requestMessage, s.getInetAddress());
 							out.writeObject(unid);
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
@@ -44,7 +46,7 @@ public class MasterHandler implements Runnable {
 						break;
 					case STATUS_REPORT:
 						if (requestMessage instanceof StatusReport) {
-							listener.readStatusReport((StatusReport) requestMessage);
+							master.handle(new Event((StatusReport) requestMessage));
 							out.writeObject(new Message(ClusterProtocol.BYE));
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
@@ -54,7 +56,7 @@ public class MasterHandler implements Runnable {
 						break;
 					case DISCONNECT_ME:
 						if (requestMessage instanceof ConnectMessage) {
-							listener.disconnectRequest((ConnectMessage) requestMessage);
+							master.disconnectRequest((ConnectMessage) requestMessage);
 							out.writeObject(new Message(ClusterProtocol.BYE));
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));

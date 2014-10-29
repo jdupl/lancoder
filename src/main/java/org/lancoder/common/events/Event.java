@@ -1,5 +1,7 @@
 package org.lancoder.common.events;
 
+import org.lancoder.common.network.cluster.messages.StatusReport;
+
 public class Event {
 
 	private Object object;
@@ -8,6 +10,10 @@ public class Event {
 	public Event(EventEnum code, Object object) {
 		this.object = object;
 		this.code = code;
+	}
+
+	public Event(StatusReport report) {
+		this(EventEnum.STATUS_REPORT, report);
 	}
 
 	public Event(EventEnum code) {
