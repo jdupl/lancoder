@@ -71,7 +71,7 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 		services.add(jobInitiator);
 		nodeServer = new MasterObjectServer(this, config.getNodeServerPort());
 		services.add(nodeServer);
-		nodeChecker = new NodeCheckerService(this);
+		nodeChecker = new NodeCheckerService(this, nodeManager);
 		services.add(nodeChecker);
 		apiServer = new ApiServer(this);
 		services.add(apiServer);
@@ -487,12 +487,6 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 	public void crash(Exception e) {
 		// TODO Auto-generated method stub
 		e.printStackTrace();
-	}
-
-	@Override
-	@Deprecated
-	public ArrayList<Node> getOnlineNodes() {
-		return nodeManager.getOnlineNodes();
 	}
 
 }

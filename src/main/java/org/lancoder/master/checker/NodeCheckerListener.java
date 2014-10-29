@@ -7,10 +7,6 @@ import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.task.TaskReport;
 
 public interface NodeCheckerListener {
-
-	public ArrayList<Node> getNodes();
-
-	public ArrayList<Node> getOnlineNodes();
 	
 	public void nodeDisconnected(Node n);
 
