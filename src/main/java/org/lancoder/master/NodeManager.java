@@ -7,16 +7,19 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.lancoder.common.Node;
+import org.lancoder.common.events.Event;
+import org.lancoder.common.events.EventEnum;
+import org.lancoder.common.events.EventListener;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.video.ClientVideoTask;
 
 public class NodeManager {
 
-	private NodeManagerListener listener;
+	private EventListener listener;
 	private HashMap<String, Node> nodes = new HashMap<>();
 
-	public NodeManager(NodeManagerListener listener) {
+	public NodeManager(EventListener listener) {
 		this.listener = listener;
 	}
 
@@ -122,7 +125,7 @@ public class NodeManager {
 			success = false;
 		}
 		if (success) {
-			listener.updateNodesWork();
+			listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 		}
 		return success;
 	}
@@ -142,7 +145,7 @@ public class NodeManager {
 				t.getProgress().reset();
 			}
 			n.getCurrentTasks().clear();
-			listener.updateNodesWork();
+			listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 		} else {
 			System.err.println("Could not mark node as disconnected as it was not found");
 		}

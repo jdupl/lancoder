@@ -46,7 +46,7 @@ import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
 
 public class Master extends Container implements MuxerListener, DispatcherListener, MasterNodeServerListener,
-		ServerListener, JobInitiatorListener, EventListener, NodeManagerListener {
+		ServerListener, JobInitiatorListener, EventListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
@@ -486,13 +486,16 @@ public class Master extends Container implements MuxerListener, DispatcherListen
 
 	@Override
 	public void handle(Event event) {
-		// TODO
 		switch (event.getCode()) {
 		case NODE_DISCONNECTED:
 			nodeManager.removeNode((Node) event.getObject());
 			break;
 		case STATUS_REPORT:
 			this.readStatusReport((StatusReport) event.getObject());
+			break;
+		case WORK_NEEDS_UPDATE:
+			this.updateNodesWork();
+			break;
 		default:
 			break;
 		}
