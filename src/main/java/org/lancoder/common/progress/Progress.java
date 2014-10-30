@@ -76,15 +76,19 @@ public class Progress implements Serializable {
 	 *            The units since last update
 	 * @param ms
 	 *            The msec elapsed since last update
+	 * @return if update was successful (valid speed estimate)
 	 */
-	private void updateSpeed(double units, long ms) {
+	private boolean updateSpeed(double units, long ms) {
+		boolean updated = true;
 		double estimatedSpeed = units / ms * 1000;
-		if (!Double.isInfinite(estimatedSpeed)) {
+		if (!Double.isInfinite(estimatedSpeed) && !Double.isNaN(estimatedSpeed)) {
 			this.average.add(estimatedSpeed);
 			this.speed = average.getAverage();
 		} else {
-			System.err.println("Ignoring infinite speed estimate !");
+			System.err.printf("Ignoring invalid speed estimate ! MS elapsed: %d Units completed: %f%n", ms, units);
+			updated = false;
 		}
+		return updated;
 	}
 
 	/**
