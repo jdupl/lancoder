@@ -5,17 +5,16 @@ import java.io.IOException;
 
 import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.config.Config;
-import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.pool.Pooler;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
+import org.lancoder.worker.ConverterListener;
 
 public abstract class Converter<T extends ClientTask> extends Pooler<T> implements FFmpegReaderListener {
 
 	protected String absoluteSharedFolderStr;
 	protected String tempEncodingFolderStr;
-
 	/**
 	 * /tmp/jobId/
 	 */
@@ -32,6 +31,7 @@ public abstract class Converter<T extends ClientTask> extends Pooler<T> implemen
 	protected File absoluteSharedDir;
 	protected File taskFinalFile;
 	protected Config config;
+	protected ConverterListener listener;
 
 	/**
 	 * Constructor of base converter. Initialize file names and directories from task configuration.
@@ -39,8 +39,9 @@ public abstract class Converter<T extends ClientTask> extends Pooler<T> implemen
 	 * @param task
 	 *            The ClientTask containing global task config.
 	 */
-	public Converter(PoolListener<T> listener, String absoluteSharedFolder, String tempEncodingFolder, Config config) {
-		super(listener);
+	public Converter(ConverterListener listener, String absoluteSharedFolder, String tempEncodingFolder, Config config) {
+		super();
+		this.listener = listener;
 		this.absoluteSharedFolderStr = absoluteSharedFolder;
 		this.tempEncodingFolderStr = tempEncodingFolder;
 		this.config = config;

@@ -11,10 +11,10 @@ import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
-import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.ffmpeg.FFmpegReader;
+import org.lancoder.worker.ConverterListener;
 import org.lancoder.worker.converter.Converter;
 
 public class AudioWorkThread extends Converter<ClientAudioTask> {
@@ -22,8 +22,8 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 	private static Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
 	private FFmpegReader ffmpeg = new FFmpegReader();
 
-	public AudioWorkThread(PoolListener<ClientAudioTask> listener, String absoluteSharedFolder,
-			String tempEncodingFolder, Config config) {
+	public AudioWorkThread(ConverterListener listener, String absoluteSharedFolder, String tempEncodingFolder,
+			Config config) {
 		super(listener, absoluteSharedFolder, tempEncodingFolder, config);
 	}
 
@@ -78,13 +78,13 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 
 	@Override
 	public void serviceFailure(Exception e) {
-		listener.crash(null);
+		e.printStackTrace();
 		// TODO
 	}
 
 	@Override
 	protected void start() {
-		listener.started(task);
+		listener.taskStarted(task);
 		setFiles();
 		boolean success = false;
 		createDirs();
@@ -95,9 +95,9 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 			e.printStackTrace();
 		} finally {
 			if (success) {
-				listener.completed(task);
+				listener.taskCompleted(task);
 			} else {
-				listener.failed(task);
+				listener.taskFailed(task);
 			}
 			destroyTempFolder();
 		}

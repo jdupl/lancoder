@@ -19,7 +19,6 @@ import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
-import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.TaskReport;
@@ -30,14 +29,12 @@ import org.lancoder.ffmpeg.FFmpegWrapper;
 import org.lancoder.worker.contacter.ConctactMasterListener;
 import org.lancoder.worker.contacter.ContactMasterObject;
 import org.lancoder.worker.converter.audio.AudioConverterPool;
-import org.lancoder.worker.converter.audio.AudioTaskListenerAdapter;
 import org.lancoder.worker.converter.video.VideoConverterPool;
-import org.lancoder.worker.converter.video.VideoTaskListenerAdapter;
 import org.lancoder.worker.server.WorkerObjectServer;
 import org.lancoder.worker.server.WorkerServerListener;
 
 public class Worker extends Container implements ServerListener, WorkerServerListener, ConctactMasterListener,
-		PoolListener<ClientTask> {
+		ConverterListener {
 
 	private Node node;
 	private WorkerConfig config;
@@ -79,9 +76,9 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	@Override
 	protected void registerServices() {
 		super.registerServices();
-		audioPool = new AudioConverterPool(threadCount, new AudioTaskListenerAdapter(this), config);
+		audioPool = new AudioConverterPool(threadCount, this, config);
 		services.add(audioPool);
-		videoPool = new VideoConverterPool(1, new VideoTaskListenerAdapter(this), config);
+		videoPool = new VideoConverterPool(1, this, config);
 		services.add(videoPool);
 		services.add(new WorkerObjectServer(this, config.getListenPort()));
 		services.add(new ContactMasterObject(getMasterInetAddress(), getMasterPort(), this));
@@ -285,7 +282,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	@Override
-	public synchronized void started(ClientTask task) {
+	public synchronized void taskStarted(ClientTask task) {
 		task.getProgress().start();
 		this.getCurrentTasks().add(task);
 		if (this.getStatus() != NodeState.WORKING) {
@@ -294,7 +291,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	@Override
-	public synchronized void completed(ClientTask task) {
+	public synchronized void taskCompleted(ClientTask task) {
 		System.err.println("Worker completed task");
 		task.getProgress().complete();
 		notifyMasterStatusChange();
@@ -305,7 +302,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	@Override
-	public synchronized void failed(ClientTask task) {
+	public synchronized void taskFailed(ClientTask task) {
 		System.err.println("Worker failed task " + task.getTaskId());
 		task.getProgress().reset();
 		notifyMasterStatusChange();
@@ -313,12 +310,6 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 		if (this.getCurrentTasks().isEmpty()) {
 			updateStatus(NodeState.FREE);
 		}
-	}
-
-	@Override
-	public void crash(Exception e) {
-		e.printStackTrace();
-		// TODO
 	}
 
 	@Override

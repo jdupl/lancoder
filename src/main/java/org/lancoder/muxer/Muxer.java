@@ -21,7 +21,7 @@ public class Muxer extends Pooler<Job> {
 	private String sharedFolder;
 
 	public Muxer(MuxerListener listener, String sharedFolder) {
-		super(listener);
+		super();
 		this.listener = listener;
 		this.sharedFolder = sharedFolder;
 	}
@@ -58,7 +58,7 @@ public class Muxer extends Pooler<Job> {
 				}
 			}
 		}
-		this.listener.started(task);
+		this.listener.jobMuxingStarted(task);
 		Transcoder transcoder = new Transcoder();
 		try {
 			success = transcoder.read(args);
@@ -66,9 +66,9 @@ public class Muxer extends Pooler<Job> {
 			serviceFailure(e);
 		} finally {
 			if (success) {
-				this.listener.completed(task);
+				this.listener.jobMuxingCompleted(task);
 			} else {
-				this.listener.failed(task);
+				this.listener.jobMuxingFailed(task);
 			}
 		}
 	}
@@ -76,7 +76,7 @@ public class Muxer extends Pooler<Job> {
 	@Override
 	public void serviceFailure(Exception e) {
 		e.printStackTrace();
-		this.listener.failed(task);
+		this.listener.jobMuxingFailed(task);
 	}
 
 }

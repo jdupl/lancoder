@@ -10,7 +10,7 @@ public class MuxerPool extends Pool<Job> {
 	private MuxerListener listener;
 
 	public MuxerPool(MuxerListener listener, String sharedFolder) {
-		super(1, listener);
+		super(1);
 		this.sharedFolder = sharedFolder;
 		this.listener = listener;
 	}

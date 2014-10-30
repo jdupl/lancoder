@@ -5,7 +5,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.lancoder.common.RunnableService;
 
-public abstract class Pool<T> extends RunnableService implements PoolListener<T>, Cleanable {
+public abstract class Pool<T> extends RunnableService implements Cleanable {
 
 	/**
 	 * How many poolers can be initialized in the pool
@@ -27,23 +27,14 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 	 * Thread group of the poolers
 	 */
 	protected final ThreadGroup threads = new ThreadGroup("threads");
-	/**
-	 * The listener of the pool
-	 */
-	protected PoolListener<T> listener;
-
-	public Pool(int threadLimit, PoolListener<T> listener) {
-		this(threadLimit, listener, true);
-	}
-
-	public Pool(int threadLimit, PoolListener<T> listener, boolean canQueue) {
-		this.threadLimit = threadLimit;
-		this.listener = listener;
-		this.canQueue = canQueue;
-	}
 
 	public Pool(int threadLimit) {
+		this(threadLimit, true);
+	}
+
+	public Pool(int threadLimit, boolean canQueue) {
 		this.threadLimit = threadLimit;
+		this.canQueue = canQueue;
 	}
 
 	@Override
@@ -211,23 +202,6 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 			ressource.stop();
 		}
 		threads.interrupt();
-	}
-
-	public void started(T e) {
-		listener.started(e);
-	}
-
-	public void completed(T e) {
-		listener.completed(e);
-	}
-
-	public void failed(T e) {
-		listener.failed(e);
-	}
-
-	public void crash(Exception e) {
-		// TODO
-		e.printStackTrace();
 	}
 
 	@Override

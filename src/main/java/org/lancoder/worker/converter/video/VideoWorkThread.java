@@ -12,11 +12,11 @@ import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.VideoStream;
-import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.ffmpeg.FFmpegReader;
+import org.lancoder.worker.ConverterListener;
 import org.lancoder.worker.converter.Converter;
 
 public class VideoWorkThread extends Converter<ClientVideoTask> {
@@ -29,8 +29,8 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 	private FFmpegReader ffmpeg = new FFmpegReader();
 	private Transcoder transcoder = new Transcoder();
 
-	public VideoWorkThread(PoolListener<ClientVideoTask> listener, String absoluteSharedFolder,
-			String tempEncodingFolder, Config config) {
+	public VideoWorkThread(ConverterListener listener, String absoluteSharedFolder, String tempEncodingFolder,
+			Config config) {
 		super(listener, absoluteSharedFolder, tempEncodingFolder, config);
 	}
 
@@ -106,7 +106,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 
 	@Override
 	public void serviceFailure(Exception e) {
-		this.listener.crash(e);
+		e.printStackTrace();
 	}
 
 	@Override
@@ -119,7 +119,8 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		m = missingDecoder.matcher(line);
 		if (m.find()) {
 			System.err.println("Missing decoder !");
-			listener.crash(new MissingDecoderException("Missing decoder or encoder"));
+			listener.taskFailed(task);
+			// listener.crash(new MissingDecoderException("Missing decoder or encoder"));
 		}
 	}
 
@@ -127,7 +128,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 	protected void start() {
 		boolean success = true;
 		try {
-			listener.started(task);
+			listener.taskStarted(task);
 			setFiles();
 			createDirs();
 			// use start and duration for ffmpeg legacy support
@@ -160,12 +161,14 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 				}
 			}
 		} catch (MissingThirdPartyException | MissingDecoderException e) {
-			listener.crash(e);
+			// listener.crash(e);
+			e.printStackTrace();
+			listener.taskFailed(task);
 		} finally {
 			if (success) {
-				listener.completed(task);
+				listener.taskCompleted(task);
 			} else {
-				listener.failed(task);
+				listener.taskFailed(task);
 			}
 		}
 		this.destroyTempFolder();

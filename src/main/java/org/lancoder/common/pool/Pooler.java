@@ -11,10 +11,6 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	 */
 	private LinkedBlockingDeque<T> requests = new LinkedBlockingDeque<>();
 	/**
-	 * The listener to notify
-	 */
-	protected PoolListener<T> listener;
-	/**
 	 * Currently processed element
 	 */
 	protected T task;
@@ -34,11 +30,6 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 
 	public Pooler() {
 		this.lastActivity = System.currentTimeMillis();
-	}
-
-	public Pooler(PoolListener<T> listener) {
-		this();
-		this.listener = listener;
 	}
 
 	public void setThread(Thread thread) {

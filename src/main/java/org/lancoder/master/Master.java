@@ -438,26 +438,20 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 	}
 
 	@Override
-	public void started(Job job) {
+	public void jobMuxingStarted(Job job) {
 		job.setJobStatus(JobState.JOB_MUXING);
 	}
 
 	@Override
-	public void completed(Job job) {
+	public void jobMuxingCompleted(Job job) {
 		System.out.printf("Job %s finished muxing !\n", job.getJobName());
 		job.setJobStatus(JobState.JOB_COMPLETED);
 	}
 
 	@Override
-	public void failed(Job job) {
+	public void jobMuxingFailed(Job job) {
 		System.err.printf("Muxing failed for job %s\n", job.getJobName());
 		// TODO
-	}
-
-	@Override
-	public void crash(Exception e) {
-		// TODO Auto-generated method stub
-		e.printStackTrace();
 	}
 
 	@Override
@@ -475,7 +469,5 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		default:
 			break;
 		}
-
 	}
-
 }
