@@ -3,8 +3,8 @@ package org.lancoder.worker.converter.video;
 import org.lancoder.common.pool.Pool;
 import org.lancoder.common.pool.Pooler;
 import org.lancoder.common.task.video.ClientVideoTask;
-import org.lancoder.worker.ConverterListener;
 import org.lancoder.worker.WorkerConfig;
+import org.lancoder.worker.converter.ConverterListener;
 
 public class VideoConverterPool extends Pool<ClientVideoTask> {
 

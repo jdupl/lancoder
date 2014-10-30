@@ -14,8 +14,8 @@ import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.ffmpeg.FFmpegReader;
-import org.lancoder.worker.ConverterListener;
 import org.lancoder.worker.converter.Converter;
+import org.lancoder.worker.converter.ConverterListener;
 
 public class AudioWorkThread extends Converter<ClientAudioTask> {
 

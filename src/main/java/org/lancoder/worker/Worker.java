@@ -26,14 +26,15 @@ import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.ffmpeg.FFmpegWrapper;
-import org.lancoder.worker.contacter.ConctactMasterListener;
-import org.lancoder.worker.contacter.ContactMasterObject;
+import org.lancoder.worker.contacter.MasterContacterListener;
+import org.lancoder.worker.contacter.MasterContacter;
+import org.lancoder.worker.converter.ConverterListener;
 import org.lancoder.worker.converter.audio.AudioConverterPool;
 import org.lancoder.worker.converter.video.VideoConverterPool;
 import org.lancoder.worker.server.WorkerObjectServer;
 import org.lancoder.worker.server.WorkerServerListener;
 
-public class Worker extends Container implements ServerListener, WorkerServerListener, ConctactMasterListener,
+public class Worker extends Container implements ServerListener, WorkerServerListener, MasterContacterListener,
 		ConverterListener {
 
 	private Node node;
@@ -81,7 +82,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 		videoPool = new VideoConverterPool(1, this, config);
 		services.add(videoPool);
 		services.add(new WorkerObjectServer(this, config.getListenPort()));
-		services.add(new ContactMasterObject(getMasterInetAddress(), getMasterPort(), this));
+		services.add(new MasterContacter(getMasterInetAddress(), getMasterPort(), this));
 	}
 
 	public void shutdown() {

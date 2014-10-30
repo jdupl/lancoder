@@ -3,8 +3,8 @@ package org.lancoder.worker.converter.audio;
 import org.lancoder.common.pool.Pool;
 import org.lancoder.common.pool.Pooler;
 import org.lancoder.common.task.audio.ClientAudioTask;
-import org.lancoder.worker.ConverterListener;
 import org.lancoder.worker.WorkerConfig;
+import org.lancoder.worker.converter.ConverterListener;
 
 public class AudioConverterPool extends Pool<ClientAudioTask> {
 

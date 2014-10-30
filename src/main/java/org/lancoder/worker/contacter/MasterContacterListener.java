@@ -3,7 +3,7 @@ package org.lancoder.worker.contacter;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.status.NodeState;
 
-public interface ConctactMasterListener {
+public interface MasterContacterListener {
 
 	/**
 	 * Generate a node representation extending Message to send to the master.

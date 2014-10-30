@@ -16,8 +16,8 @@ import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.ffmpeg.FFmpegReader;
-import org.lancoder.worker.ConverterListener;
 import org.lancoder.worker.converter.Converter;
+import org.lancoder.worker.converter.ConverterListener;
 
 public class VideoWorkThread extends Converter<ClientVideoTask> {
 

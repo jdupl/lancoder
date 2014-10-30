@@ -9,7 +9,6 @@ import org.lancoder.common.pool.Pooler;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
-import org.lancoder.worker.ConverterListener;
 
 public abstract class Converter<T extends ClientTask> extends Pooler<T> implements FFmpegReaderListener {
 

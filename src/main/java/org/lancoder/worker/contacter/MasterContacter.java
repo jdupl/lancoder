@@ -13,16 +13,16 @@ import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.status.NodeState;
 
-public class ContactMasterObject extends RunnableService {
+public class MasterContacter extends RunnableService {
 
 	private final static int DELAY_FAST_MSEC = 5000;
 	private final static int DELAY_LONG_MSEC = 30000;
 
-	private ConctactMasterListener listener;
+	private MasterContacterListener listener;
 	private InetAddress masterAddress;
 	private int masterPort;
 
-	public ContactMasterObject(InetAddress masterAddress, int masterPort, ConctactMasterListener listener) {
+	public MasterContacter(InetAddress masterAddress, int masterPort, MasterContacterListener listener) {
 		this.listener = listener;
 		this.masterAddress = masterAddress;
 		this.masterPort = masterPort;
