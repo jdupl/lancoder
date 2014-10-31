@@ -4,16 +4,19 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 import org.lancoder.common.RunnableService;
-import org.lancoder.master.Master;
+import org.lancoder.common.events.EventListener;
+import org.lancoder.master.NodeManager;
 
 public class MasterObjectServer extends RunnableService {
 
-	private Master master;
+	private EventListener listener;
 	private int port;
-	
-	public MasterObjectServer(Master listener, int port) {
+	private NodeManager nodeManager;
+
+	public MasterObjectServer(EventListener listener, int port, NodeManager nodeManager) {
 		this.port = port;
-		this.master = listener;
+		this.listener = listener;
+		this.nodeManager = nodeManager;
 	}
 
 	@Override
@@ -21,8 +24,8 @@ public class MasterObjectServer extends RunnableService {
 		ServerSocket server;
 		try {
 			server = new ServerSocket(port);
-			while(!close){
-				MasterHandler handler = new MasterHandler(server.accept(), master);
+			while (!close) {
+				MasterHandler handler = new MasterHandler(server.accept(), listener, nodeManager);
 				Thread t = new Thread(handler);
 				t.start();
 			}
@@ -35,7 +38,7 @@ public class MasterObjectServer extends RunnableService {
 	@Override
 	public void serviceFailure(Exception e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

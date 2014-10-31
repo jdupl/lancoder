@@ -6,21 +6,24 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import org.lancoder.common.events.Event;
+import org.lancoder.common.events.EventListener;
 import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
-import org.lancoder.master.Master;
+import org.lancoder.master.NodeManager;
 
 public class MasterHandler implements Runnable {
 
-	private Master master;
+	private EventListener listener;
+	private NodeManager nodeManager;
 	private Socket s;
 
-	public MasterHandler(Socket s, Master listener) {
-		this.master = listener;
+	public MasterHandler(Socket s, EventListener listener, NodeManager nodeManager) {
+		this.listener = listener;
 		this.s = s;
+		this.nodeManager = nodeManager;
 	}
 
 	@Override
@@ -36,7 +39,7 @@ public class MasterHandler implements Runnable {
 					switch (requestMessage.getCode()) {
 					case CONNECT_ME:
 						if (requestMessage instanceof ConnectMessage) {
-							String unid = master.connectRequest((ConnectMessage) requestMessage, s.getInetAddress());
+							String unid = nodeManager.connectRequest((ConnectMessage) requestMessage, s.getInetAddress());
 							out.writeObject(unid);
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
@@ -46,7 +49,7 @@ public class MasterHandler implements Runnable {
 						break;
 					case STATUS_REPORT:
 						if (requestMessage instanceof StatusReport) {
-							master.handle(new Event((StatusReport) requestMessage));
+							listener.handle(new Event((StatusReport) requestMessage));
 							out.writeObject(new Message(ClusterProtocol.BYE));
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
@@ -56,7 +59,7 @@ public class MasterHandler implements Runnable {
 						break;
 					case DISCONNECT_ME:
 						if (requestMessage instanceof ConnectMessage) {
-							master.disconnectRequest((ConnectMessage) requestMessage);
+							nodeManager.disconnectRequest((ConnectMessage) requestMessage);
 							out.writeObject(new Message(ClusterProtocol.BYE));
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));

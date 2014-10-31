@@ -1,5 +1,6 @@
 package org.lancoder.master;
 
+import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import org.lancoder.common.Node;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
+import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.video.ClientVideoTask;
@@ -174,6 +176,22 @@ public class NodeManager {
 		}
 		System.out.println("MASTER: generated " + result + " for node " + n.getName());
 		return result;
+	}
+
+	public String connectRequest(ConnectMessage cm, InetAddress detectedIp) {
+		String unid = null;
+		Node sender = cm.getNode();
+		sender.setNodeAddress(detectedIp);
+		sender.setUnid(cm.getUnid());
+		if (this.addNode(sender)) {
+			unid = sender.getUnid();
+		}
+		return unid;
+	}
+
+	public void disconnectRequest(ConnectMessage cm) {
+		Node n = this.identifySender(cm.getUnid());
+		this.removeNode(n);
 	}
 
 }

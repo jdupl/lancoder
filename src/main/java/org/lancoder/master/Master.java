@@ -1,7 +1,6 @@
 package org.lancoder.master;
 
 import java.io.File;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,7 +16,6 @@ import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.network.cluster.messages.AuthMessage;
-import org.lancoder.common.network.cluster.messages.ConnectMessage;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
@@ -67,7 +65,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		super.registerServices();
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
-		nodeServer = new MasterObjectServer(this, config.getNodeServerPort());
+		nodeServer = new MasterObjectServer(this, config.getNodeServerPort(), nodeManager);
 		services.add(nodeServer);
 		nodeChecker = new NodeCheckerService(this, nodeManager);
 		services.add(nodeChecker);
@@ -414,22 +412,6 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 	@Override
 	public void serverFailure(Exception e, RunnableService server) {
 		// TODO Auto-generated method stub
-	}
-
-	public String connectRequest(ConnectMessage cm, InetAddress detectedIp) {
-		String unid = null;
-		Node sender = cm.getNode();
-		sender.setNodeAddress(detectedIp);
-		sender.setUnid(cm.getUnid());
-		if (nodeManager.addNode(sender)) {
-			unid = sender.getUnid();
-		}
-		return unid;
-	}
-
-	public void disconnectRequest(ConnectMessage cm) {
-		Node n = nodeManager.identifySender(cm.getUnid());
-		nodeManager.removeNode(n);
 	}
 
 	@Override
