@@ -1,6 +1,6 @@
 package org.lancoder.worker.contacter;
 
-import org.lancoder.common.network.cluster.messages.ConnectMessage;
+import org.lancoder.common.network.cluster.messages.ConnectRequest;
 import org.lancoder.common.status.NodeState;
 
 public interface MasterContacterListener {
@@ -10,7 +10,7 @@ public interface MasterContacterListener {
 	 * 
 	 * @return
 	 */
-	public ConnectMessage getConnectMessage();
+	public ConnectRequest getConnectMessage();
 
 	/**
 	 * Master sent unique node id. This also means the Worker is now connected.

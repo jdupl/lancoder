@@ -7,7 +7,7 @@ import java.net.Socket;
 
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventListener;
-import org.lancoder.common.network.cluster.messages.ConnectMessage;
+import org.lancoder.common.network.cluster.messages.ConnectRequest;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
@@ -37,9 +37,9 @@ public class MasterHandler implements Runnable {
 				if (request instanceof Message) {
 					Message requestMessage = (Message) request;
 					switch (requestMessage.getCode()) {
-					case CONNECT_ME:
-						if (requestMessage instanceof ConnectMessage) {
-							String unid = nodeManager.connectRequest((ConnectMessage) requestMessage, s.getInetAddress());
+					case CONNECT_REQUEST:
+						if (requestMessage instanceof ConnectRequest) {
+							String unid = nodeManager.connectRequest((ConnectRequest) requestMessage, s.getInetAddress());
 							out.writeObject(unid);
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
@@ -58,8 +58,8 @@ public class MasterHandler implements Runnable {
 						s.close();
 						break;
 					case DISCONNECT_ME:
-						if (requestMessage instanceof ConnectMessage) {
-							nodeManager.disconnectRequest((ConnectMessage) requestMessage);
+						if (requestMessage instanceof ConnectRequest) {
+							nodeManager.disconnectRequest((ConnectRequest) requestMessage);
 							out.writeObject(new Message(ClusterProtocol.BYE));
 						} else {
 							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));

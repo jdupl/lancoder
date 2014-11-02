@@ -28,7 +28,7 @@ public enum ClusterProtocol {
 	/**
 	 * Connection request of node. TODO refactor this to 'connect_request'
 	 */
-	CONNECT_ME,
+	CONNECT_REQUEST,
 	/**
 	 * Disconnection request TODO refactor to 'disconnection_request'
 	 */

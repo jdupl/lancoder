@@ -61,7 +61,7 @@ public class MasterContacter extends RunnableService {
 				// TODO alert somewhere
 			}
 		} catch (IOException e) {
-			if (m.getCode() == ClusterProtocol.CONNECT_ME) {
+			if (m.getCode() == ClusterProtocol.CONNECT_REQUEST) {
 				System.err.println("Failed to contact master.");
 			} else {
 				listener.masterTimeout();

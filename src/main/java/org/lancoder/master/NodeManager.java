@@ -11,7 +11,7 @@ import org.lancoder.common.Node;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
-import org.lancoder.common.network.cluster.messages.ConnectMessage;
+import org.lancoder.common.network.cluster.messages.ConnectRequest;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.video.ClientVideoTask;
@@ -178,7 +178,7 @@ public class NodeManager {
 		return result;
 	}
 
-	public String connectRequest(ConnectMessage cm, InetAddress detectedIp) {
+	public String connectRequest(ConnectRequest cm, InetAddress detectedIp) {
 		String unid = null;
 		Node sender = cm.getNode();
 		sender.setNodeAddress(detectedIp);
@@ -189,7 +189,7 @@ public class NodeManager {
 		return unid;
 	}
 
-	public void disconnectRequest(ConnectMessage cm) {
+	public void disconnectRequest(ConnectRequest cm) {
 		Node n = this.identifySender(cm.getUnid());
 		this.removeNode(n);
 	}

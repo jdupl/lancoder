@@ -14,7 +14,7 @@ import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
-import org.lancoder.common.network.cluster.messages.ConnectMessage;
+import org.lancoder.common.network.cluster.messages.ConnectRequest;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
@@ -318,8 +318,8 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	@Override
-	public ConnectMessage getConnectMessage() {
-		return new ConnectMessage(this.node);
+	public ConnectRequest getConnectMessage() {
+		return new ConnectRequest(this.node);
 	}
 
 	@Override
