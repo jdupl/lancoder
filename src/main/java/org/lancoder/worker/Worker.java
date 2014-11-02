@@ -26,8 +26,8 @@ import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.ffmpeg.FFmpegWrapper;
-import org.lancoder.worker.contacter.MasterContacterListener;
 import org.lancoder.worker.contacter.MasterContacter;
+import org.lancoder.worker.contacter.MasterContacterListener;
 import org.lancoder.worker.converter.ConverterListener;
 import org.lancoder.worker.converter.audio.AudioConverterPool;
 import org.lancoder.worker.converter.video.VideoConverterPool;
@@ -279,6 +279,10 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	@Override
 	public void receivedUnid(String unid) {
 		setUnid(unid);
+		String protocol = "http";
+		int port = 8080;
+		System.out.printf("Worker is now connected to master. Please connect to the webui '%s://%s:%d'.%n", protocol,
+				masterInetAddress.getHostAddress(), port);
 		updateStatus(NodeState.FREE);
 	}
 
