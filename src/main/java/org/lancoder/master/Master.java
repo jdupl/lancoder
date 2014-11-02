@@ -53,7 +53,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 	private ApiServer apiServer;
 	private DispatcherPool dispatcherPool;
 	private MuxerPool muxerPool;
-	private final NodeManager nodeManager = new NodeManager(this);
+	private NodeManager nodeManager;
 
 	public Master(MasterConfig config) {
 		this.config = config;
@@ -63,6 +63,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 	@Override
 	protected void registerServices() {
 		super.registerServices();
+		nodeManager = new NodeManager(this, config);
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
 		nodeServer = new MasterObjectServer(this, config.getNodeServerPort(), nodeManager);

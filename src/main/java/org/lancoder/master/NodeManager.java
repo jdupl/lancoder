@@ -12,6 +12,7 @@ import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
+import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.video.ClientVideoTask;
@@ -20,9 +21,11 @@ public class NodeManager {
 
 	private EventListener listener;
 	private HashMap<String, Node> nodes = new HashMap<>();
+	private MasterConfig masterConfig;
 
-	public NodeManager(EventListener listener) {
+	public NodeManager(EventListener listener, MasterConfig masterConfig) {
 		this.listener = listener;
+		this.masterConfig = masterConfig;
 	}
 
 	/**
@@ -178,7 +181,7 @@ public class NodeManager {
 		return result;
 	}
 
-	public String connectRequest(ConnectRequest cm, InetAddress detectedIp) {
+	public ConnectResponse connectRequest(ConnectRequest cm, InetAddress detectedIp) {
 		String unid = null;
 		Node sender = cm.getNode();
 		sender.setNodeAddress(detectedIp);
@@ -186,7 +189,7 @@ public class NodeManager {
 		if (this.addNode(sender)) {
 			unid = sender.getUnid();
 		}
-		return unid;
+		return new ConnectResponse(unid, "http", masterConfig.getApiServerPort());
 	}
 
 	public void disconnectRequest(ConnectRequest cm) {

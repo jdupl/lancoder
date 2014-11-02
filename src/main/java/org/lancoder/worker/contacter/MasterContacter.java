@@ -8,6 +8,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.lancoder.common.RunnableService;
+import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
@@ -48,17 +49,19 @@ public class MasterContacter extends RunnableService {
 			out.writeObject(m);
 			out.flush();
 			Object res = in.readObject();
-			if (res instanceof String) {
-				String unid = (String) res;
-				if (unid != null && !unid.isEmpty()) {
-					// this will trigger a node status change that will then stop this service
-					listener.receivedUnid(unid);
-				} else {
-					System.err.println("Received null string or invalid string from master ?");
+			if (res instanceof Message) {
+				Message responseMessage = (Message) res;
+				switch (responseMessage.getCode()) {
+				case CONNECT_RESPONSE:
+					listener.onConnectResponse((ConnectResponse) responseMessage);
+					break;
+				case PONG:
+					// Successful ping to master
+					break;
+				default:
+					System.err.printf("Master sent invalid message %s%n", responseMessage.getClass().getSimpleName());
+					break;
 				}
-			} else if (!(res instanceof Message) && ((Message) res).getCode() != ClusterProtocol.PONG) {
-				System.err.println("Worker detected master fault when pinging !");
-				// TODO alert somewhere
 			}
 		} catch (IOException e) {
 			if (m.getCode() == ClusterProtocol.CONNECT_REQUEST) {

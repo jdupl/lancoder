@@ -15,6 +15,7 @@ import org.lancoder.common.ServerListener;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
+import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
@@ -277,13 +278,18 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	@Override
-	public void receivedUnid(String unid) {
-		setUnid(unid);
-		String protocol = "http";
-		int port = 8080;
-		System.out.printf("Worker is now connected to master. Please connect to the webui '%s://%s:%d'.%n", protocol,
-				masterInetAddress.getHostAddress(), port);
-		updateStatus(NodeState.FREE);
+	public void onConnectResponse(ConnectResponse responseMessage) {
+		String unid = responseMessage.getNewUnid();
+		if (unid != null && !unid.isEmpty()) {
+			setUnid(unid);
+			String protocol = responseMessage.getWebuiProtocol();
+			int port = responseMessage.getWebuiPort();
+			System.out.printf("Worker is now connected to master. Please connect to the webui at '%s://%s:%d'.%n",
+					protocol, masterInetAddress.getHostAddress(), port);
+			updateStatus(NodeState.FREE);
+		} else {
+			System.err.println("Received empty or invalid UNID from master.");
+		}
 	}
 
 	@Override
