@@ -7,13 +7,13 @@ import org.lancoder.common.RunnableService;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.master.NodeManager;
 
-public class MasterObjectServer extends RunnableService {
+public class MasterServer extends RunnableService {
 
 	private EventListener listener;
 	private int port;
 	private NodeManager nodeManager;
 
-	public MasterObjectServer(EventListener listener, int port, NodeManager nodeManager) {
+	public MasterServer(EventListener listener, int port, NodeManager nodeManager) {
 		this.port = port;
 		this.listener = listener;
 		this.nodeManager = nodeManager;

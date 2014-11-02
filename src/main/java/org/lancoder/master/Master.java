@@ -33,7 +33,7 @@ import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
 import org.lancoder.common.third_parties.MkvMerge;
 import org.lancoder.common.utils.FileUtils;
-import org.lancoder.master.api.node.MasterObjectServer;
+import org.lancoder.master.api.node.MasterServer;
 import org.lancoder.master.api.web.ApiServer;
 import org.lancoder.master.checker.NodeCheckerService;
 import org.lancoder.master.dispatcher.DispatchItem;
@@ -48,7 +48,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 	private MasterConfig config;
 	private HashMap<String, Job> jobs = new HashMap<>();
 	private JobInitiator jobInitiator;
-	private MasterObjectServer nodeServer;
+	private MasterServer nodeServer;
 	private NodeCheckerService nodeChecker;
 	private ApiServer apiServer;
 	private DispatcherPool dispatcherPool;
@@ -66,7 +66,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		nodeManager = new NodeManager(this, config);
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
-		nodeServer = new MasterObjectServer(this, config.getNodeServerPort(), nodeManager);
+		nodeServer = new MasterServer(this, config.getNodeServerPort(), nodeManager);
 		services.add(nodeServer);
 		nodeChecker = new NodeCheckerService(this, nodeManager);
 		services.add(nodeChecker);

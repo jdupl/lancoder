@@ -5,14 +5,14 @@ import java.net.ServerSocket;
 
 import org.lancoder.common.RunnableService;
 
-public class WorkerObjectServer extends RunnableService {
+public class WorkerServer extends RunnableService {
 
 	private int port;
 	private HandlerPool pool;
 	private Thread poolThread;
 	private ServerSocket server;
 
-	public WorkerObjectServer(WorkerServerListener listener, int port) {
+	public WorkerServer(WorkerServerListener listener, int port) {
 		this.port = port;
 		this.pool = new HandlerPool(100, listener);
 	}
