@@ -13,7 +13,7 @@ public class WorkerServer extends RunnableService {
 	private ServerSocket server;
 
 	public WorkerServer(WorkerServerListener listener, int port) {
-		this.port = port;
+		this.port = port; 
 		this.pool = new HandlerPool(100, listener);
 	}
 

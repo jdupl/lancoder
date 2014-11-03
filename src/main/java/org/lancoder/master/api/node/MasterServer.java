@@ -2,6 +2,7 @@ package org.lancoder.master.api.node;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.events.EventListener;
@@ -9,14 +10,12 @@ import org.lancoder.master.NodeManager;
 
 public class MasterServer extends RunnableService {
 
-	private EventListener listener;
 	private int port;
-	private NodeManager nodeManager;
+	private MasterHandlePool pool;
 
 	public MasterServer(EventListener listener, int port, NodeManager nodeManager) {
 		this.port = port;
-		this.listener = listener;
-		this.nodeManager = nodeManager;
+		this.pool = new MasterHandlePool(nodeManager, listener);
 	}
 
 	@Override
@@ -25,20 +24,20 @@ public class MasterServer extends RunnableService {
 		try {
 			server = new ServerSocket(port);
 			while (!close) {
-				MasterHandler handler = new MasterHandler(server.accept(), listener, nodeManager);
-				Thread t = new Thread(handler);
-				t.start();
+				Socket incoming = server.accept();
+				pool.handle(incoming);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (!close) {
+				e.printStackTrace();
+			}
 		}
 	}
 
 	@Override
 	public void serviceFailure(Exception e) {
 		// TODO Auto-generated method stub
-
+		e.printStackTrace();
 	}
 
 }

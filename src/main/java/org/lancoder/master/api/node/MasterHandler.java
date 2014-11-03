@@ -12,88 +12,80 @@ import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.common.pool.Pooler;
 import org.lancoder.master.NodeManager;
 
-public class MasterHandler implements Runnable {
+public class MasterHandler extends Pooler<Socket> {
 
 	private EventListener listener;
 	private NodeManager nodeManager;
-	private Socket s;
 
-	public MasterHandler(Socket s, EventListener listener, NodeManager nodeManager) {
+	public MasterHandler(EventListener listener, NodeManager nodeManager) {
 		this.listener = listener;
-		this.s = s;
 		this.nodeManager = nodeManager;
 	}
 
 	@Override
-	public void run() {
+	protected void start() {
 		try {
-			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+			ObjectOutputStream out = new ObjectOutputStream(task.getOutputStream());
+			ObjectInputStream in = new ObjectInputStream(task.getInputStream());
 			out.flush();
-			while (!s.isClosed()) {
-				Object request = in.readObject();
-				if (request instanceof Message) {
-					Message requestMessage = (Message) request;
-					switch (requestMessage.getCode()) {
-					case CONNECT_REQUEST:
-						if (requestMessage instanceof ConnectRequest) {
-							out.writeObject(nodeManager.connectRequest((ConnectRequest) requestMessage,
-									s.getInetAddress()));
-						} else {
-							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
-						}
-						out.flush();
-						s.close();
-						break;
-					case STATUS_REPORT:
-						if (requestMessage instanceof StatusReport) {
-							listener.handle(new Event((StatusReport) requestMessage));
-							out.writeObject(new Message(ClusterProtocol.BYE));
-						} else {
-							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
-						}
-						out.flush();
-						s.close();
-						break;
-					case DISCONNECT_ME:
-						if (requestMessage instanceof ConnectRequest) {
-							nodeManager.disconnectRequest((ConnectRequest) requestMessage);
-							out.writeObject(new Message(ClusterProtocol.BYE));
-						} else {
-							out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
-						}
-						out.flush();
-						s.close();
-						break;
-					case PING:
-						out.writeObject(PingMessage.getPong());
-						out.flush();
-						s.close();
-						break;
-					default:
+			Object request = in.readObject();
+			if (request instanceof Message) {
+				Message requestMessage = (Message) request;
+				switch (requestMessage.getCode()) {
+				case CONNECT_REQUEST:
+					if (requestMessage instanceof ConnectRequest) {
+						out.writeObject(nodeManager.connectRequest((ConnectRequest) requestMessage,
+								task.getInetAddress()));
+					} else {
 						out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
-						out.flush();
-						s.close();
-						break;
 					}
-				} else {
+					break;
+				case STATUS_REPORT:
+					if (requestMessage instanceof StatusReport) {
+						listener.handle(new Event((StatusReport) requestMessage));
+						out.writeObject(new Message(ClusterProtocol.BYE));
+					} else {
+						out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
+					}
+					break;
+				case DISCONNECT_ME:
+					if (requestMessage instanceof ConnectRequest) {
+						nodeManager.disconnectRequest((ConnectRequest) requestMessage);
+						out.writeObject(new Message(ClusterProtocol.BYE));
+					} else {
+						out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
+					}
+					break;
+				case PING:
+					out.writeObject(PingMessage.getPong());
+					break;
+				default:
 					out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
-					out.flush();
-					s.close();
+					break;
 				}
+			} else {
+				out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
 			}
+			out.flush();
 		} catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
 		} finally {
-			if (s != null && !s.isClosed()) {
+			if (task != null && !task.isClosed()) {
 				try {
-					s.close();
+					task.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		}
+	}
+
+	@Override
+	public void serviceFailure(Exception e) {
+		// TODO Auto-generated method stub
+
 	}
 }
