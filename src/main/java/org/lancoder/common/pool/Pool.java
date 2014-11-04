@@ -103,8 +103,8 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 		pooler.setThread(thread);
 		thread.start();
 		poolers.add(pooler);
-		System.err.printf("%s spawned new pooler ressource. Now with %d poolers.%n", this.getClass().getSimpleName(),
-				this.poolers.size());
+		// System.out.printf("%s spawned new pooler ressource. Now with %d poolers.%n", this.getClass().getSimpleName(),
+		// this.poolers.size());
 		return pooler;
 	}
 

@@ -206,7 +206,7 @@ public class JobInitiator extends RunnableService {
 		if (absoluteOutput.exists()) {
 			try {
 				// Attempt to clean
-				System.err.printf("Directory is not empty. Attempting to clean %s\n", absoluteOutput.toString());
+//				System.out.printf("Directory is not empty. Attempting to clean %s\n", absoluteOutput.toString());
 				FileUtils.cleanDirectory(absoluteOutput);
 			} catch (IOException e) {
 				e.printStackTrace();

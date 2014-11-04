@@ -20,10 +20,7 @@ public class NodeCheckerService extends RunnableService {
 	}
 
 	private void checkNodes() {
-		if (nodeManager.getNodes().isEmpty()) {
-			System.out.println("MASTER NODE CHECKER: no nodes to check!");
-		} else {
-			System.out.println("MASTER NODE CHECKER: checking if nodes are still alive");
+		if (!nodeManager.getNodes().isEmpty()) {
 			for (Node n : nodeManager.getOnlineNodes()) {
 				pool.handle(n);
 			}
@@ -39,20 +36,17 @@ public class NodeCheckerService extends RunnableService {
 
 	@Override
 	public void run() {
-		System.out.println("Starting node checker service!");
 		poolThread = new Thread(pool);
 		poolThread.start();
 		while (!close) {
 			try {
 				checkNodes();
-				System.out.println("NODE CHECKER: checking back in 5 seconds");
 				Thread.currentThread();
 				Thread.sleep(MS_DELAY_BETWEEN_CHECKS);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Closed node checker service !");
 	}
 
 	@Override

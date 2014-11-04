@@ -120,8 +120,8 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 				handle(requests.take());
 			}
 		} catch (InterruptedException e) {
-			System.err.println("Pooler ressource interrupted");
+//			System.err.println("Pooler ressource interrupted");
 		}
-		System.err.println("Pooler " + this.getClass().getSimpleName() + " ressource closed");
+//		System.err.println("Pooler " + this.getClass().getSimpleName() + " ressource closed");
 	}
 }

@@ -121,11 +121,11 @@ public class NodeManager {
 		if (masterInstance != null && masterInstance.getStatus() == NodeState.NOT_CONNECTED) {
 			// Node with same unid reconnecting
 			masterInstance.setStatus(NodeState.FREE);
-			System.out.println("MASTER: Added node " + n.getName() + " with unid: " + n.getUnid());
+			System.out.printf("Node %s with id %s reconnected.%n", n.getName(), n.getUnid());
 		} else if (masterInstance == null) {
 			n.setStatus(NodeState.FREE);
 			nodes.put(n.getUnid(), n);
-			System.out.println("MASTER: Added new node " + n.getName() + " with unid: " + n.getUnid());
+			System.out.printf("Added new node %s with id %s.%n", n.getName(), n.getUnid());
 		} else {
 			success = false;
 		}
@@ -169,7 +169,7 @@ public class NodeManager {
 			// print and handle exception
 			// if a null string is given back to the client, it won't connect
 			e.printStackTrace();
-			System.out.printf("MASTER: could not get an instance of %s to produce a UNID.%n");
+			System.out.printf("Could not get an instance of %s to produce a UNID.%n");
 			return "";
 		}
 		byte[] byteArray = md.digest(input.getBytes());
@@ -177,7 +177,6 @@ public class NodeManager {
 		for (int i = 0; i < byteArray.length; i++) {
 			result += Integer.toString((byteArray[i] & 0xff) + 0x100, 16).substring(1);
 		}
-		System.out.println("MASTER: generated " + result + " for node " + n.getName());
 		return result;
 	}
 

@@ -94,13 +94,8 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 		this.stop();
 	}
 
-	public void print(String s) {
-		System.out.println((getWorkerName().toUpperCase()) + ": " + s);
-	}
-
 	public synchronized void stopWork(ClientTask t) {
 		// TODO check which task to stop (if many tasks are implemented)
-		System.err.println("Setting current task to null");
 		this.getCurrentTasks().remove(t);
 		if (t instanceof ClientVideoTask) {
 			this.updateStatus(NodeState.FREE);
@@ -157,7 +152,6 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	public void updateStatus(NodeState statusCode) {
-		print("changing worker status to " + statusCode);
 		this.setStatus(statusCode);
 		switch (statusCode) {
 		case FREE:
@@ -173,7 +167,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 			notifyMasterStatusChange();
 			break;
 		default:
-			System.err.println("WORKER: Unhandlded status code while updating status");
+			System.err.println("Unhandlded status code while updating status");
 			break;
 		}
 	}
@@ -235,7 +229,6 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	public void setUnid(String unid) {
-		print("got id " + unid + " from master");
 		this.config.setUniqueID(unid);
 		this.config.dump();
 	}
@@ -330,7 +323,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 
 	@Override
 	public void masterTimeout() {
-		System.err.println("Master is disconnected !");
+		System.err.println("Lost connection to master !");
 		for (ClientTask task : this.getCurrentTasks()) {
 			stopWork(task);
 		}

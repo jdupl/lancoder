@@ -16,7 +16,6 @@ import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.network.cluster.messages.AuthMessage;
-import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
@@ -165,7 +164,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 	}
 
 	public void dispatch(ClientTask task, Node node) {
-		System.err.println("Trying to dispatch to " + node.getName() + " task " + task.getTaskId() + " from "
+		System.out.println("Trying to dispatch to " + node.getName() + " task " + task.getTaskId() + " from "
 				+ task.getJobId());
 		if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 			task.getProgress().start();
@@ -345,12 +344,8 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		}
 		// only update if status is changed
 		if (sender.getStatus() != report.status) {
-			System.out.printf("node %s is updating it's status from %s to %s\n", sender.getName(), sender.getStatus(),
-					report.status);
 			sender.setStatus(s);
 			updateNodesWork();
-		} else {
-			System.out.printf("Node %s is still alive\n", sender.getName());
 		}
 		return true;
 	}
@@ -376,28 +371,14 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 						actualTask = t;
 					}
 				}
-				TaskState oldState = actualTask.getProgress().getTaskState();
+//				TaskState oldState = actualTask.getProgress().getTaskState();
 				actualTask.setProgress(reportTask.getProgress());
-				if (!oldState.equals(actualTask.getProgress().getTaskState())) {
-					System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(), oldState,
-							actualTask.getProgress().getTaskState());
-				}
+//				if (!oldState.equals(actualTask.getProgress().getTaskState())) {
+//					System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(), oldState,
+//							actualTask.getProgress().getTaskState());
+//				}
 				taskUpdated(actualTask, sender);
 			}
-		}
-	}
-
-	public void readCrashReport(CrashReport report) {
-		// TODO handle non fatal crashes (worker side first)
-		// after a non-fatal crash, master should try X times to reassign tasks
-		// from same job. After a fatal crash, leave the node connected but do
-		// not assign anything to the node.
-		// This way, node can reconnected if fatal crash is fixed.
-		Node node = nodeManager.identifySender(report.getUnid());
-		if (report.getCause().isFatal()) {
-			System.err.printf("Node '%s' fatally crashed.\n", node.getName());
-		} else {
-			System.out.printf("Node %s crashed but not fatally.\n", node.getName());
 		}
 	}
 

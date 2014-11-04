@@ -40,10 +40,10 @@ public class DispatcherPool extends Pool<DispatchItem> implements DispatcherList
 
 	@Override
 	public synchronized void taskAccepted(DispatchItem item) {
-		ClientTask t = ((TaskRequestMessage) item.getMessage()).getTask();
+//		ClientTask t = ((TaskRequestMessage) item.getMessage()).getTask();
 		Node n = item.getNode();
 		n.unlock();
-		System.err.printf("Node %s accepted task %d from %s.%n", n.getName(), t.getTaskId(), t.getJobId());
+//		System.out.printf("Node %s accepted task %d from %s.%n", n.getName(), t.getTaskId(), t.getJobId());
 		listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 	}
 
