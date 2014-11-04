@@ -2,31 +2,23 @@ package org.lancoder.master;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map.Entry;
 
 import org.lancoder.common.Container;
 import org.lancoder.common.Node;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.ServerListener;
-import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.network.cluster.messages.AuthMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
-import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.NodeState;
-import org.lancoder.common.status.TaskState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.TaskReport;
-import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
@@ -45,7 +37,6 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 	public static final String ALGORITHM = "SHA-256";
 
 	private MasterConfig config;
-	private HashMap<String, Job> jobs = new HashMap<>();
 	private JobInitiator jobInitiator;
 	private MasterServer nodeServer;
 	private NodeCheckerService nodeChecker;
@@ -53,6 +44,8 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 	private DispatcherPool dispatcherPool;
 	private MuxerPool muxerPool;
 	private NodeManager nodeManager;
+
+	private JobManager jobManager;
 
 	public Master(MasterConfig config) {
 		this.config = config;
@@ -75,6 +68,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		services.add(dispatcherPool);
 		muxerPool = new MuxerPool(this, config.getAbsoluteSharedFolder());
 		services.add(muxerPool);
+		jobManager = new JobManager(this, nodeManager, dispatcherPool);
 	}
 
 	@Override
@@ -107,74 +101,6 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		return nodeManager;
 	}
 
-	private ClientAudioTask getNextAudioTask(ArrayList<Codec> codecs) {
-		ClientAudioTask task = null;
-		ArrayList<Job> jobList = new ArrayList<>(jobs.values());
-		Collections.sort(jobList);
-		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
-			Job job = itJob.next();
-			ArrayList<ClientAudioTask> tasks = job.getTodoAudioTask();
-			for (Iterator<ClientAudioTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
-				ClientAudioTask clientTask = itTask.next();
-				if (codecs.contains(clientTask.getStreamConfig().getOutStream().getCodec())) {
-					task = clientTask;
-				}
-			}
-		}
-		return task;
-	}
-
-	private ClientVideoTask getNextVideoTask(ArrayList<Codec> codecs) {
-		ClientVideoTask task = null;
-		ArrayList<Job> jobList = new ArrayList<>(jobs.values());
-		Collections.sort(jobList);
-		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
-			Job job = itJob.next();
-			ArrayList<ClientVideoTask> tasks = job.getTodoVideoTask();
-			for (Iterator<ClientVideoTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
-				ClientVideoTask clientTask = itTask.next();
-				if (codecs.contains(clientTask.getStreamConfig().getOutStream().getCodec())) {
-					task = clientTask;
-				}
-			}
-		}
-		return task;
-	}
-
-	/**
-	 * Checks if any task and nodes are available and dispatch until possible. Will only dispatch tasks to nodes that
-	 * are capable of encoding with the desired library. Always put audio tasks in priority.
-	 */
-	public synchronized void updateNodesWork() {
-		for (Node node : nodeManager.getFreeAudioNodes()) {
-			ClientAudioTask task = getNextAudioTask(node.getCodecs());
-			if (task != null) {
-				dispatch(task, node);
-				break;
-			}
-		}
-		for (Node node : nodeManager.getFreeVideoNodes()) {
-			ClientVideoTask task = getNextVideoTask(node.getCodecs());
-			if (task != null) {
-				dispatch(task, node);
-				break;
-			}
-		}
-		config.dump();
-	}
-
-	public void dispatch(ClientTask task, Node node) {
-		System.out.println("Trying to dispatch to " + node.getName() + " task " + task.getTaskId() + " from "
-				+ task.getJobId());
-		if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
-			task.getProgress().start();
-		}
-		node.lock();
-		task.getProgress().start();
-		node.addTask(task);
-		dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task), node));
-	}
-
 	/**
 	 * Sends a disconnect request to a node, removes the node from the node list and updates the task of the node if it
 	 * had any.
@@ -194,8 +120,8 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 	}
 
 	@Deprecated
-	public ArrayList<Node> getNodes() {
-		return nodeManager.getNodes();
+	public ArrayList<Job> getJobs() {
+		return jobManager.getJobs();
 	}
 
 	public boolean addJob(ApiJobRequest j) {
@@ -207,83 +133,15 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		return success;
 	}
 
-	public boolean addJob(Job j) {
-		System.out.println("job " + j.getJobName() + " added");
-		if (this.jobs.put(j.getJobId(), j) != null) {
-			return false;
-		}
-		updateNodesWork();
-		config.dump();
-		return true;
-	}
-
 	public ApiResponse apiDeleteJob(String jobId) {
 		ApiResponse response = new ApiResponse(true);
-		Job j = this.jobs.get(jobId);
+		Job j = jobManager.getJob(jobId);
 		if (j == null) {
 			response = new ApiResponse(false, String.format("Could not retrieve job %s.", jobId));
-		} else if (!deleteJob(j)) {
+		} else if (!jobManager.deleteJob(j)) {
 			response = new ApiResponse(false, String.format("Could not delete job %s.", jobId));
 		}
 		return response;
-	}
-
-	public boolean deleteJob(Job j) {
-		if (j == null) {
-			return false;
-		}
-		for (Node node : nodeManager.getNodes()) {
-			for (ClientTask task : node.getCurrentTasks()) {
-				if (task.getJobId().equals(j.getJobId())) {
-					task.getProgress().reset();
-					taskUpdated(task, node);
-				}
-			}
-		}
-		if (this.jobs.remove(j.getJobId()) == null) {
-			return false;
-		}
-		updateNodesWork();
-		config.dump();
-		return true;
-	}
-
-	public ArrayList<Job> getJobs() {
-		ArrayList<Job> jobs = new ArrayList<>();
-		for (Entry<String, Job> e : this.jobs.entrySet()) {
-			jobs.add(e.getValue());
-		}
-		return jobs;
-	}
-
-	public boolean taskUpdated(ClientTask task, Node n) {
-		TaskState updateStatus = task.getProgress().getTaskState();
-		switch (updateStatus) {
-		case TASK_COMPLETED:
-			n.getCurrentTasks().remove(task);
-			Job job = this.jobs.get(task.getJobId());
-			boolean jobDone = true;
-			for (ClientTask t : job.getClientTasks()) {
-				if (t.getProgress().getTaskState() != TaskState.TASK_COMPLETED) {
-					jobDone = false;
-					break;
-				}
-			}
-			if (jobDone) {
-				jobEncodingCompleted(job);
-			}
-			updateNodesWork();
-			break;
-		case TASK_TODO:
-		case TASK_CANCELED:
-			task.getProgress().reset();
-			n.getCurrentTasks().remove(task);
-			updateNodesWork();
-			break;
-		default:
-			break;
-		}
-		return false;
 	}
 
 	/**
@@ -345,7 +203,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		// only update if status is changed
 		if (sender.getStatus() != report.status) {
 			sender.setStatus(s);
-			updateNodesWork();
+			jobManager.updateNodesWork();
 		}
 		return true;
 	}
@@ -371,13 +229,13 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 						actualTask = t;
 					}
 				}
-//				TaskState oldState = actualTask.getProgress().getTaskState();
+				// TaskState oldState = actualTask.getProgress().getTaskState();
 				actualTask.setProgress(reportTask.getProgress());
-//				if (!oldState.equals(actualTask.getProgress().getTaskState())) {
-//					System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(), oldState,
-//							actualTask.getProgress().getTaskState());
-//				}
-				taskUpdated(actualTask, sender);
+				// if (!oldState.equals(actualTask.getProgress().getTaskState())) {
+				// System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(), oldState,
+				// actualTask.getProgress().getTaskState());
+				// }
+				jobManager.taskUpdated(actualTask, sender);
 			}
 		}
 	}
@@ -398,7 +256,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 
 	@Override
 	public void newJob(Job job) {
-		this.addJob(job);
+		this.jobManager.addJob(job);
 	}
 
 	@Override
@@ -428,7 +286,13 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 			this.readStatusReport((StatusReport) event.getObject());
 			break;
 		case WORK_NEEDS_UPDATE:
-			this.updateNodesWork();
+			this.jobManager.updateNodesWork();
+			break;
+		case JOB_ENCODING_COMPLETED:
+			jobEncodingCompleted((Job) event.getObject());
+			break;
+		case CONFIG_UPDATED:
+			this.config.dump();
 			break;
 		default:
 			break;
