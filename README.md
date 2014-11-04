@@ -18,6 +18,7 @@ Currently under development but releases are mostly stable (still in alpha).
 ### Features (in developpement)
 * Subtitles automuxing from source
 * WebM compiliance with VP8 and VP9
+* DVD and bluray folder structure ripping (no encryption)
 
 ---
 
@@ -28,7 +29,7 @@ It is important to have FFmpeg and NOT libav.
 
 Technically, libav would work, but it's filled with bugs !
 
-Bugs using libav will remain unawnsered.
+Bugs related to libav will remain unawnsered.
 
 #### Test environment
 Currently tested on 6 workers nodes and 1 master including 
