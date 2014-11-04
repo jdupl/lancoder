@@ -40,7 +40,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 	@Override
 	public boolean shouldClean() {
 		return true;
-	};
+	}
 
 	/**
 	 * Clean the resources of the pool. Allows the pool to shrink after high load.

@@ -9,13 +9,11 @@ import org.lancoder.master.NodeManager;
 
 public class MasterHandlePool extends Pool<Socket> {
 
-	private final static int MAX_HANDLERS = 100;
-
 	private NodeManager nodeManager;
 	private EventListener listener;
 
-	public MasterHandlePool(NodeManager nodeManager, EventListener listener) {
-		super(MAX_HANDLERS);
+	public MasterHandlePool(int limit, NodeManager nodeManager, EventListener listener) {
+		super(limit);
 		this.nodeManager = nodeManager;
 		this.listener = listener;
 	}

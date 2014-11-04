@@ -66,7 +66,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		nodeManager = new NodeManager(this, config);
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
-		nodeServer = new MasterServer(this, config.getNodeServerPort(), nodeManager);
+		nodeServer = new MasterServer(config.getNodeServerPort(), this, nodeManager);
 		services.add(nodeServer);
 		nodeChecker = new NodeCheckerService(this, nodeManager);
 		services.add(nodeChecker);

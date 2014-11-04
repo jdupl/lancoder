@@ -1,51 +1,19 @@
 package org.lancoder.worker.server;
 
-import java.io.IOException;
-import java.net.ServerSocket;
+import org.lancoder.common.network.cluster.Server;
 
-import org.lancoder.common.RunnableService;
+public class WorkerServer extends Server {
 
-public class WorkerServer extends RunnableService {
-
-	private int port;
-	private HandlerPool pool;
-	private Thread poolThread;
-	private ServerSocket server;
+	WorkerServerListener listener;
 
 	public WorkerServer(WorkerServerListener listener, int port) {
-		this.port = port; 
-		this.pool = new HandlerPool(100, listener);
+		super(port);
+		this.listener = listener;
 	}
 
 	@Override
-	public void stop() {
-		super.stop();
-		this.pool.stop();
-		poolThread.interrupt();
-		try {
-			server.close();
-		} catch (IOException e) {
-		}
+	protected void instanciatePool() {
+		this.pool = new WorkerHandlePool(MAX_HANDLERS, listener);
 	}
 
-	@Override
-	public void run() {
-		this.poolThread = new Thread(pool);
-		this.poolThread.start();
-		try {
-			server = new ServerSocket(port);
-			while (!close) {
-				this.pool.handle(server.accept());
-			}
-		} catch (IOException e) {
-			if (!close) {
-				serviceFailure(e);
-			}
-		}
-	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-		e.printStackTrace();
-	}
 }

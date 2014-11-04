@@ -5,11 +5,11 @@ import java.net.Socket;
 import org.lancoder.common.pool.Pool;
 import org.lancoder.common.pool.Pooler;
 
-public class HandlerPool extends Pool<Socket> {
+public class WorkerHandlePool extends Pool<Socket> {
 
 	private WorkerServerListener listener;
 
-	public HandlerPool(int threadLimit, WorkerServerListener listener) {
+	public WorkerHandlePool(int threadLimit, WorkerServerListener listener) {
 		super(threadLimit);
 		this.listener = listener;
 	}
