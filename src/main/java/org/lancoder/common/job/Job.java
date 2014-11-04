@@ -220,6 +220,28 @@ public class Job implements Comparable<Job>, Serializable {
 		}
 	}
 
+	/**
+	 * Counts if necessary the completed tasks.
+	 * 
+	 * @return The count of tasks completed
+	 */
+	public synchronized int getTaskDoneCount() {
+		switch (this.getJobStatus()) {
+		case JOB_COMPLETED:
+			return this.tasks.size();
+		case JOB_TODO:
+			return 0;
+		default:
+			int count = 0;
+			for (Task task : this.tasks) {
+				if (task.getProgress().getTaskState() == TaskState.TASK_COMPLETED) {
+					++count;
+				}
+			}
+			return count;
+		}
+	}
+
 	private ArrayList<ClientAudioTask> getClientAudioTasks() {
 		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
 		for (ClientTask task : this.clientTasks) {

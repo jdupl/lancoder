@@ -145,14 +145,7 @@ public class JobManager {
 		case TASK_COMPLETED:
 			n.getCurrentTasks().remove(task);
 			Job job = this.jobs.get(task.getJobId());
-			boolean jobDone = true;
-			for (ClientTask t : job.getClientTasks()) {
-				if (t.getProgress().getTaskState() != TaskState.TASK_COMPLETED) {
-					jobDone = false;
-					break;
-				}
-			}
-			if (jobDone) {
+			if (job.getTaskDoneCount() == job.getTaskCount()) {
 				listener.handle(new Event(EventEnum.JOB_ENCODING_COMPLETED, job));
 			}
 			updateNodesWork();
