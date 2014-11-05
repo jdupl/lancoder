@@ -101,6 +101,10 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		return nodeManager;
 	}
 
+	public JobManager getJobManager() {
+		return jobManager;
+	}
+
 	/**
 	 * Sends a disconnect request to a node, removes the node from the node list and updates the task of the node if it
 	 * had any.

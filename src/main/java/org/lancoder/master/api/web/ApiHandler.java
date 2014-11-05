@@ -47,10 +47,10 @@ public class ApiHandler extends AbstractHandler {
 		ApiResponse res = new ApiResponse(false, "Unknown error");
 		BufferedReader br = null;
 		response.setContentType("application/json");
+		response.setStatus(HttpServletResponse.SC_OK);
+		baseRequest.setHandled(true);
 		switch (target) {
 		case "/nodes":
-			response.setStatus(HttpServletResponse.SC_OK);
-			baseRequest.setHandled(true);
 			response.getWriter().println(gson.toJson(master.getNodeManager().getNodes()));
 			break;
 		case "/nodes/shutdown":
@@ -58,53 +58,32 @@ public class ApiHandler extends AbstractHandler {
 			String unid = br.readLine();
 			if (unid != null) {
 				master.disconnectNode(unid);
-				response.setStatus(HttpServletResponse.SC_OK);
-				baseRequest.setHandled(true);
 			}
 			break;
 		case "/jobs":
-			response.setStatus(HttpServletResponse.SC_OK);
-			baseRequest.setHandled(true);
-			response.getWriter().println(gson.toJson(master.getJobs()));
+			response.getWriter().println(gson.toJson(master.getJobManager().getJobs()));
 			break;
 		case "/jobs/add":
 			br = request.getReader();
-			try {
-				ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
-				if (master.addJob(req)) {
-					res = new ApiResponse(true);
-				} else {
-					res = new ApiResponse(false, "The file or directory does not exist.");
-				}
-				response.setStatus(HttpServletResponse.SC_OK);
-			} catch (Exception e) {
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
+			if (master.addJob(req)) {
+				res = new ApiResponse(true);
+			} else {
+				res = new ApiResponse(false, "The file or directory does not exist.");
 			}
 			response.getWriter().println(gson.toJson(res));
-			baseRequest.setHandled(true);
 			break;
 		case "/jobs/delete":
 			br = request.getReader();
-			try {
-				String id = br.readLine();
-				response.setStatus(HttpServletResponse.SC_OK);
-				res = master.apiDeleteJob(id);
-			} catch (Exception e) {
-				e.printStackTrace();
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			}
+			String id = br.readLine();
+			res = master.apiDeleteJob(id);
 			response.getWriter().println(gson.toJson(res));
-			baseRequest.setHandled(true);
 			break;
 		case "/codecs/audio":
-			response.setStatus(HttpServletResponse.SC_OK);
 			response.getWriter().println(gson.toJson(Codec.getAudioCodecs()));
-			baseRequest.setHandled(true);
 			break;
 		case "/codecs/video":
-			response.setStatus(HttpServletResponse.SC_OK);
 			response.getWriter().println(gson.toJson(Codec.getVideoCodecs()));
-			baseRequest.setHandled(true);
 			break;
 		default:
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
