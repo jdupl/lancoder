@@ -112,7 +112,7 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		// remove node from list
 		nodeManager.removeNode(n);
 		dispatcherPool.handle(new DispatchItem(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()), n));
-		System.out.printf("Disconnected node %s.", n.getName(), n.getStatus());
+		System.out.printf("Disconnected node %s%n.", n.getName());
 	}
 
 	public void disconnectNode(String unid) {

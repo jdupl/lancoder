@@ -13,6 +13,7 @@ import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
+import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.status.TaskState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.audio.ClientAudioTask;
@@ -48,10 +49,10 @@ public class JobManager {
 			return false;
 		}
 		for (Node node : nodeManager.getNodes()) {
-			for (ClientTask task : node.getCurrentTasks()) {
+			ArrayList<ClientTask> nodeTasks = new ArrayList<>(node.getCurrentTasks());
+			for (ClientTask task : nodeTasks) {
 				if (task.getJobId().equals(j.getJobId())) {
-					task.getProgress().reset();
-					taskUpdated(task, node);
+					unassignTask(task, node);
 				}
 			}
 		}
@@ -61,6 +62,12 @@ public class JobManager {
 		this.listener.handle(new Event(EventEnum.CONFIG_UPDATED));
 		updateNodesWork();
 		return true;
+	}
+
+	private void unassignTask(ClientTask task, Node assigne) {
+		dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task, ClusterProtocol.UNASSIGN_TASK), assigne));
+		task.getProgress().reset();
+		taskUpdated(task, assigne);
 	}
 
 	public ArrayList<Job> getJobs() {
@@ -128,8 +135,6 @@ public class JobManager {
 	}
 
 	public void dispatch(ClientTask task, Node node) {
-		System.out.println("Trying to dispatch to " + node.getName() + " task " + task.getTaskId() + " from "
-				+ task.getJobId());
 		if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 			task.getProgress().start();
 		}

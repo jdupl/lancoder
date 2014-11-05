@@ -64,5 +64,9 @@ public enum ClusterProtocol {
 	/**
 	 * Response of the ping.
 	 */
-	PONG
+	PONG,
+	/**
+	 * Message to notify node a task has been cancelled
+	 */
+	UNASSIGN_TASK
 }

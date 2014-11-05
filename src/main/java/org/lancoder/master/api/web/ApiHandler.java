@@ -90,6 +90,7 @@ public class ApiHandler extends AbstractHandler {
 				response.setStatus(HttpServletResponse.SC_OK);
 				res = master.apiDeleteJob(id);
 			} catch (Exception e) {
+				e.printStackTrace();
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			}
 			response.getWriter().println(gson.toJson(res));

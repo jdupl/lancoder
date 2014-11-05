@@ -42,6 +42,13 @@ public class WorkerHandler extends Pooler<Socket> {
 						}
 					}
 					break;
+				case UNASSIGN_TASK:
+					if (requestMessage instanceof TaskRequestMessage) {
+						TaskRequestMessage trm = (TaskRequestMessage) requestMessage;
+						listener.deleteTask(trm.getTask());
+						obj = new Message(ClusterProtocol.OK);
+					}
+					break;
 				case STATUS_REQUEST:
 					obj = listener.statusRequest();
 					break;

@@ -257,6 +257,8 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	public boolean deleteTask(ClientTask t) {
 		for (ClientTask task : this.node.getCurrentTasks()) {
 			if (task.equals(t)) {
+				System.out.printf("Stopping task %d of job %s as Master requested !%n", task.getTaskId(),
+						task.getJobId());
 				stopWork(task);
 				return true;
 			}

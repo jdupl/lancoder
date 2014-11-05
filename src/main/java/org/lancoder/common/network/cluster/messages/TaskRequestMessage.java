@@ -16,7 +16,11 @@ public class TaskRequestMessage extends Message {
 	 *            The task to request to the worker
 	 */
 	public TaskRequestMessage(ClientTask task) {
-		super(ClusterProtocol.TASK_REQUEST);
+		this(task, ClusterProtocol.TASK_REQUEST);
+	}
+
+	public TaskRequestMessage(ClientTask task, ClusterProtocol alt) {
+		super(alt);
 		this.task = task;
 	}
 
