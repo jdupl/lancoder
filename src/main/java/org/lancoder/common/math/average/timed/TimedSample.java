@@ -1,7 +1,10 @@
 package org.lancoder.common.math.average.timed;
 
-public class TimedSample<T> {
+import java.io.Serializable;
 
+public class TimedSample<T> implements Serializable {
+
+	private static final long serialVersionUID = -3208221443819797683L;
 	private long timeMSec;
 	private T sampleValue;
 

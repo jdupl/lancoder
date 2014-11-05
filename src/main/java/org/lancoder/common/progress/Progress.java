@@ -2,7 +2,7 @@ package org.lancoder.common.progress;
 
 import java.io.Serializable;
 
-import org.lancoder.common.math.MovingAverage;
+import org.lancoder.common.math.average.timed.TimedMovingAverage;
 import org.lancoder.common.status.TaskState;
 
 public class Progress implements Serializable {
@@ -49,7 +49,7 @@ public class Progress implements Serializable {
 	 */
 	protected long lastUpdate;
 
-	protected MovingAverage average = new MovingAverage(50);
+	protected TimedMovingAverage average = new TimedMovingAverage(60 * 1000);
 
 	public Progress(long units, Unit unit) {
 		this.unitsTotal = units;
@@ -82,7 +82,7 @@ public class Progress implements Serializable {
 		boolean updated = true;
 		double estimatedSpeed = units / ms * 1000;
 		if (!Double.isInfinite(estimatedSpeed) && !Double.isNaN(estimatedSpeed)) {
-			this.average.add(estimatedSpeed);
+			this.average.add(estimatedSpeed, System.currentTimeMillis());
 			this.speed = average.getAverage();
 		} else {
 			System.err.printf("Ignoring invalid speed estimate ! MS elapsed: %d Units completed: %f%n", ms, units);

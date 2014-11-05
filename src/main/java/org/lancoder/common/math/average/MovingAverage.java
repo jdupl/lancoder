@@ -1,4 +1,4 @@
-package org.lancoder.common.math;
+package org.lancoder.common.math.average;
 
 import java.io.Serializable;
 
