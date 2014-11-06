@@ -26,7 +26,14 @@ public class JobManager {
 	private EventListener listener;
 	private NodeManager nodeManager;
 	private DispatcherPool dispatcherPool;
+	/**
+	 * HashMap of the jobs. Key is the job's id for fast access.
+	 */
 	private final HashMap<String, Job> jobs = new HashMap<>();
+	/**
+	 * Mapping of the current tasks of the cluster. The key is the node processing the task.
+	 */
+	private final HashMap<ClientTask, Node> assignments = new HashMap<>();
 
 	public JobManager(EventListener listener, NodeManager nodeManager, DispatcherPool dispatcherPool) {
 		this.listener = listener;
@@ -35,11 +42,10 @@ public class JobManager {
 	}
 
 	public boolean addJob(Job j) {
-		System.out.println("job " + j.getJobName() + " added");
 		if (this.jobs.put(j.getJobId(), j) != null) {
 			return false;
 		}
-		this.listener.handle(new Event(EventEnum.CONFIG_UPDATED));
+		System.out.printf("Job %s added.%n", j.getJobName());
 		updateNodesWork();
 		return true;
 	}
@@ -135,20 +141,48 @@ public class JobManager {
 	}
 
 	public void dispatch(ClientTask task, Node node) {
-		if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
+		if (assign(task, node)) {
 			task.getProgress().start();
+			node.lock();
+			dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task), node));
 		}
-		node.lock();
-		task.getProgress().start();
-		node.addTask(task);
-		dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task), node));
+	}
+
+	/**
+	 * Internally assign node to task in cluster task-node mapping.
+	 * 
+	 * @param task
+	 *            The task (used as key)
+	 * @param node
+	 *            The node working on the task (used as value)
+	 * @return True if task was assigned. False if task is already mapped.
+	 */
+	private synchronized boolean assign(ClientTask task, Node node) {
+		boolean assigned = false;
+		if (!assignments.containsKey(task)) {
+			this.assignments.put(task, node);
+			node.addTask(task);
+			assigned = true;
+		}
+		return assigned;
+	}
+
+	private synchronized boolean unassign(ClientTask task) {
+		boolean unassigned = false;
+
+		Node previousAssignee = this.assignments.remove(task);
+		if (previousAssignee != null) {
+			unassigned = true;
+			previousAssignee.getCurrentTasks().remove(task);
+		}
+		return unassigned;
 	}
 
 	public boolean taskUpdated(ClientTask task, Node n) {
 		TaskState updateStatus = task.getProgress().getTaskState();
 		switch (updateStatus) {
 		case TASK_COMPLETED:
-			n.getCurrentTasks().remove(task);
+			unassign(task);
 			Job job = this.jobs.get(task.getJobId());
 			if (job.getTaskDoneCount() == job.getTaskCount()) {
 				listener.handle(new Event(EventEnum.JOB_ENCODING_COMPLETED, job));
@@ -157,8 +191,8 @@ public class JobManager {
 			break;
 		case TASK_TODO:
 		case TASK_CANCELED:
+			unassign(task);
 			task.getProgress().reset();
-			n.getCurrentTasks().remove(task);
 			updateNodesWork();
 			break;
 		default:
