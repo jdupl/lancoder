@@ -94,15 +94,13 @@ public abstract class Converter<T extends ClientTask> extends Pooler<T> implemen
 	 */
 	protected void destroyTempFolder() {
 		cleanTempFolder();
-		System.out.printf("WORKER: Destroying temp task folder %s.\n", taskTempOutputFolder);
+		// System.out.printf("WORKER: Destroying temp task folder %s.%n", taskTempOutputFolder); DEBUG
 		taskTempOutputFolder.delete();
 		if (jobTempOutputFolder.list().length == 0) {
-			System.out.printf("Deleting temporary job folder %s", jobTempOutputFolder);
+			// System.out.printf("Deleting temporary job folder %s%n", jobTempOutputFolder); DEBUG
 			jobTempOutputFolder.delete();
 		} else {
 			// Another worker must be using the same folder.
-			System.err.printf("Job temporary folder %s is not empty. Skipping job temp folder cleaning.\n",
-					jobTempOutputFolder);
 		}
 	}
 }
