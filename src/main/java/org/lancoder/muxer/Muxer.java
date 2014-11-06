@@ -1,6 +1,7 @@
 package org.lancoder.muxer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -66,6 +67,14 @@ public class Muxer extends Pooler<Job> {
 			serviceFailure(e);
 		} finally {
 			if (success) {
+				File partsDirectory = FileUtils
+						.getFile(sharedFolder, task.getOutputFolder(), task.getPartsFolderName());
+				try {
+					FileUtils.deleteDirectory(partsDirectory);
+				} catch (IOException e) {
+					System.err.println("Error while deleting parts of job");
+					e.printStackTrace();
+				}
 				this.listener.jobMuxingCompleted(task);
 			} else {
 				this.listener.jobMuxingFailed(task);
