@@ -169,7 +169,6 @@ public class JobManager {
 
 	private synchronized boolean unassign(ClientTask task) {
 		boolean unassigned = false;
-
 		Node previousAssignee = this.assignments.remove(task);
 		if (previousAssignee != null) {
 			unassigned = true;

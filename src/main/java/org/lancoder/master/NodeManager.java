@@ -19,6 +19,8 @@ import org.lancoder.common.task.video.ClientVideoTask;
 
 public class NodeManager {
 
+	private final static int FAILURE_THRESHOLD = 10;
+
 	private EventListener listener;
 	private HashMap<String, Node> nodes = new HashMap<>();
 	private MasterConfig masterConfig;
@@ -86,21 +88,28 @@ public class NodeManager {
 	public synchronized ArrayList<Node> getFreeAudioNodes() {
 		ArrayList<Node> nodes = new ArrayList<>();
 		for (Node node : this.getOnlineNodes()) {
-			if (node.getStatus() != NodeState.WORKING || node.getStatus() != NodeState.FREE) {
-				boolean nodeAvailable = true;
-				for (ClientTask task : node.getCurrentTasks()) {
-					if (task instanceof ClientVideoTask) {
-						nodeAvailable = false;
-						break;
-					}
-				}
-				// TODO check for each task the task's thread requirements
-				if (nodeAvailable && node.getCurrentTasks().size() < node.getThreadCount()) {
-					nodes.add(node);
-				}
+			if (isAvailable(node)) {
+				nodes.add(node);
 			}
 		}
 		return nodes;
+	}
+
+	private boolean isAvailable(Node node) {
+		boolean nodeAvailable = true;
+		// TODO allow dynamic failure threshold
+		if (node.getStatus() != NodeState.WORKING && node.getStatus() != NodeState.FREE
+				&& node.getFailureCount() < FAILURE_THRESHOLD) {
+			for (ClientTask task : node.getCurrentTasks()) {
+				if (task instanceof ClientVideoTask) {
+					nodeAvailable = false;
+					break;
+				}
+			}
+			// TODO check for each task the task's thread requirements
+			nodeAvailable = nodeAvailable && node.getCurrentTasks().size() < node.getThreadCount();
+		}
+		return nodeAvailable;
 	}
 
 	/**

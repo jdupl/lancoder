@@ -20,6 +20,7 @@ public class Node implements Serializable {
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
 	private ArrayList<Codec> codecs = new ArrayList<>();
 	private boolean locked = false;
+	private int failureCount;
 
 	public Node(InetAddress nodeAddress, int nodePort, String name, ArrayList<Codec> codecs, int threadCount,
 			String unid) {
@@ -29,6 +30,14 @@ public class Node implements Serializable {
 		this.codecs = codecs;
 		this.unid = unid;
 		this.threadCount = threadCount;
+	}
+
+	public void failure() {
+		this.failureCount++;
+	}
+
+	public int getFailureCount() {
+		return failureCount;
 	}
 
 	public boolean isLocked() {
