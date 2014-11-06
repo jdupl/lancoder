@@ -62,7 +62,7 @@ public class Progress implements Serializable {
 	 * @param units
 	 *            The current count of units completed
 	 */
-	public void update(long units) {
+	public synchronized void update(long units) {
 		long unitsSinceLast = units - unitsCompleted;
 		long msElapsed = System.currentTimeMillis() - this.lastUpdate;
 		updateSpeed(unitsSinceLast, msElapsed);
@@ -116,7 +116,7 @@ public class Progress implements Serializable {
 	/**
 	 * Reset the progress but keep the count of total units
 	 */
-	public void reset() {
+	public synchronized void reset() {
 		this.taskState = TaskState.TASK_TODO;
 		this.progress = 0;
 		this.lastUpdate = 0;
@@ -124,9 +124,10 @@ public class Progress implements Serializable {
 		this.timeEstimated = 0;
 		this.timeStarted = 0;
 		this.unitsCompleted = 0;
+		this.average.clear();
 	}
 
-	public void complete() {
+	public synchronized void complete() {
 		this.taskState = TaskState.TASK_COMPLETED;
 		this.progress = 100.0;
 		this.lastUpdate = System.currentTimeMillis();
@@ -134,5 +135,6 @@ public class Progress implements Serializable {
 		this.timeEstimated = 0;
 		this.speed = 0;
 		this.unitsCompleted = unitsTotal;
+		this.average.clear();
 	}
 }

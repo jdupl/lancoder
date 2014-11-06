@@ -43,6 +43,10 @@ public class TimedMovingAverage implements Serializable {
 		this.samples.add(new TimedSample<Double>(time, sample));
 	}
 
+	public void clear() {
+		this.samples.clear();
+	}
+
 	public double getAverage() {
 		double total = 0;
 		clean();
