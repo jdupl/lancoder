@@ -35,10 +35,16 @@ public class JobManager {
 	 */
 	private final HashMap<ClientTask, Node> assignments = new HashMap<>();
 
-	public JobManager(EventListener listener, NodeManager nodeManager, DispatcherPool dispatcherPool) {
+	public JobManager(EventListener listener, NodeManager nodeManager, DispatcherPool dispatcherPool,
+			MasterSavedInstance savedInstance) {
 		this.listener = listener;
 		this.nodeManager = nodeManager;
 		this.dispatcherPool = dispatcherPool;
+		this.jobs.putAll(savedInstance.getJobs());
+	}
+
+	public HashMap<String, Job> getJobHashMap() {
+		return jobs;
 	}
 
 	public boolean addJob(Job j) {

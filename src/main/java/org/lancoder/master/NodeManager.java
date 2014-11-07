@@ -22,12 +22,19 @@ public class NodeManager {
 	private final static int FAILURE_THRESHOLD = 10;
 
 	private EventListener listener;
-	private HashMap<String, Node> nodes = new HashMap<>();
 	private MasterConfig masterConfig;
+	private final HashMap<String, Node> nodes = new HashMap<>();
 
-	public NodeManager(EventListener listener, MasterConfig masterConfig) {
+	public NodeManager(EventListener listener, MasterConfig masterConfig, MasterSavedInstance instance) {
 		this.listener = listener;
 		this.masterConfig = masterConfig;
+		if (instance != null) {
+			nodes.putAll(instance.getNodes());
+		}
+	}
+
+	public HashMap<String, Node> getNodeHashMap() {
+		return this.nodes;
 	}
 
 	/**

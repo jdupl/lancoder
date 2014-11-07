@@ -1,12 +1,9 @@
 package org.lancoder.master;
 
 import java.io.File;
-import java.util.ArrayList;
 
-import org.lancoder.common.Node;
 import org.lancoder.common.annotations.Prompt;
 import org.lancoder.common.config.Config;
-import org.lancoder.common.job.Job;
 
 public class MasterConfig extends Config {
 
@@ -37,8 +34,8 @@ public class MasterConfig extends Config {
 	@Prompt(message = "MkvMerge's path")
 	private String mkvMergePath;
 
-	private ArrayList<Node> nodeList = new ArrayList<>();
-	public ArrayList<Job> jobList = new ArrayList<>();
+	private String savedInstancePath = new File(System.getProperty("user.home"),
+			".config/lancoder/saved/master_instance.bin").getPath();
 
 	public MasterConfig() {
 		nodeServerPort = DEFAULT_NODE_LISTEN_PORT;
@@ -50,28 +47,16 @@ public class MasterConfig extends Config {
 		mkvMergePath = DEFAULT_MKV_MERGE_PATH;
 	}
 
+	public String getSavedInstancePath() {
+		return savedInstancePath;
+	}
+
 	public String getMkvMergePath() {
 		return mkvMergePath;
 	}
 
 	public String getFFprobePath() {
 		return ffprobePath;
-	}
-
-	public ArrayList<Job> getJobList() {
-		return jobList;
-	}
-
-	public void setJobList(ArrayList<Job> jobList) {
-		this.jobList = jobList;
-	}
-
-	public ArrayList<Node> getNodeList() {
-		return nodeList;
-	}
-
-	public void setNodeList(ArrayList<Node> nodeList) {
-		this.nodeList = nodeList;
 	}
 
 	public String getAbsoluteSharedFolder() {
