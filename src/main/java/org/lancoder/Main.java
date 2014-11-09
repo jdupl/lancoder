@@ -15,7 +15,7 @@ import org.lancoder.worker.WorkerConfig;
 
 public class Main {
 
-	private final static String LANCODER_VERSION = "0.1.0-alpha";
+	private final static String LANCODER_VERSION = "0.1.0-alpha-1";
 
 	/**
 	 * CLI entry point
