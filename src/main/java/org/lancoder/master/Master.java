@@ -136,11 +136,6 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 		disconnectNode(nodeManager.identifySender(unid));
 	}
 
-	@Deprecated
-	public ArrayList<Job> getJobs() {
-		return jobManager.getJobs();
-	}
-
 	public boolean addJob(ApiJobRequest j) {
 		boolean success = false;
 		if (new File(this.getConfig().getAbsoluteSharedFolder(), j.getInputFile()).exists()) {
