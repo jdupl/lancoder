@@ -3,6 +3,7 @@ package org.lancoder.worker;
 import java.io.File;
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import org.lancoder.common.annotations.Prompt;
 import org.lancoder.common.config.Config;
@@ -44,6 +45,11 @@ public class WorkerConfig extends Config implements Serializable {
 		this.uniqueID = DEFAULT_UNID;
 		this.name = DEFAULT_NAME;
 		this.tempEncodingFolder = DEFAULT_TEMP_DIRECTORY;
+		try {
+			this.name = InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			System.err.println("Could not find local hostname.");
+		}
 	}
 
 	@Override
