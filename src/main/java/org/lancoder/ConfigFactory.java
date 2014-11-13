@@ -119,6 +119,13 @@ public class ConfigFactory<T extends Config> {
 
 	private HashMap<Field, String> getFields() {
 		HashMap<Field, String> fields = new HashMap<>();
+		fields.putAll(getFieldsFromClass(clazz));
+		fields.putAll(getFieldsFromClass(clazz.getSuperclass()));
+		return fields;
+	}
+
+	private HashMap<Field, String> getFieldsFromClass(Class<?> clazz) {
+		HashMap<Field, String> fields = new HashMap<>();
 		for (Field field : clazz.getDeclaredFields()) {
 			Prompt p = field.getAnnotation(Prompt.class);
 			if (p != null) {

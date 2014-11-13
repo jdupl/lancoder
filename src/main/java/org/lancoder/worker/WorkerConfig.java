@@ -10,8 +10,7 @@ import org.lancoder.common.config.Config;
 public class WorkerConfig extends Config implements Serializable {
 
 	private static final long serialVersionUID = 4279318303054715575L;
-
-	private final static String DEFAULT_PATH = new File(System.getProperty("user.home"),
+	private static final String DEFAULT_PATH = new File(System.getProperty("user.home"),
 			".config/lancoder/worker_config.json").getPath();
 
 	/**
@@ -23,7 +22,6 @@ public class WorkerConfig extends Config implements Serializable {
 	private static final String DEFAULT_TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
 	private static final String DEFAULT_UNID = "";
 	private static final String DEFAULT_NAME = InetAddress.getLoopbackAddress().getCanonicalHostName();
-	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
 
 	@Prompt(message = "master ip address")
 	private String masterIpAddress;
@@ -31,33 +29,30 @@ public class WorkerConfig extends Config implements Serializable {
 	private int masterPort;
 	@Prompt(message = "worker port")
 	private int listenPort;
-	private String uniqueID;
 	@Prompt(message = "worker's name")
 	private String name;
-	@Prompt(message = "shared folder root")
-	private String absoluteSharedFolder;
 	@Prompt(message = "temporary files location")
 	private String tempEncodingFolder;
-	@Prompt(message = "FFmpeg's path")
-	private String ffmpegPath;
+
+	private String uniqueID;
 
 	public WorkerConfig() {
+		super();
 		this.masterIpAddress = DEFAULT_MASTER_IP;
 		this.masterPort = DEFAULT_MASTER_PORT;
 		this.listenPort = DEFAULT_LISTEN_PORT;
 		this.uniqueID = DEFAULT_UNID;
 		this.name = DEFAULT_NAME;
-		this.absoluteSharedFolder = DEFAULT_ABSOLUTE_PATH;
 		this.tempEncodingFolder = DEFAULT_TEMP_DIRECTORY;
-		this.ffmpegPath = DEFAULT_FFMPEG_PATH;
 	}
 
-	public String getAbsoluteSharedFolder() {
-		return absoluteSharedFolder;
-	}
-
-	public void setAbsoluteSharedFolder(String absoluteSharedFolder) {
-		this.absoluteSharedFolder = absoluteSharedFolder;
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(super.toString());
+		sb.append(String.format("Will be contacting master at: %s:%d.%n", this.getMasterIpAddress(),
+				this.getMasterPort()));
+		return sb.toString();
 	}
 
 	public String getTempEncodingFolder() {
@@ -112,10 +107,4 @@ public class WorkerConfig extends Config implements Serializable {
 	public String getDefaultPath() {
 		return DEFAULT_PATH;
 	}
-
-	@Override
-	public String getFFmpegPath() {
-		return ffmpegPath;
-	}
-
 }

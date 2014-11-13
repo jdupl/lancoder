@@ -54,6 +54,7 @@ public class Main {
 		Class<? extends Config> clazz = isWorker ? WorkerConfig.class : MasterConfig.class;
 		ConfigFactory<? extends Config> factory = new ConfigFactory<>(clazz, config);
 		final Config conf = mustInit ? factory.init(promptInit, overwrite) : factory.load();
+		System.out.print(conf.toString());
 
 		final Container container = isWorker ? new Worker((WorkerConfig) conf) : new Master((MasterConfig) conf);
 		Runtime.getRuntime().addShutdownHook(new Thread() {
