@@ -42,8 +42,9 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	private DispatcherPool dispatcherPool;
 	private MuxerPool muxerPool;
 	private NodeManager nodeManager;
-
 	private JobManager jobManager;
+
+	private MasterSavedInstance savedInstance;
 
 	public Master(MasterConfig config) {
 		this.config = config;
@@ -51,9 +52,19 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	}
 
 	@Override
+	protected void bootstrap() {
+		loadLastInstance();
+		super.bootstrap();
+	}
+
+	private void loadLastInstance() {
+		this.savedInstance = MasterSavedInstance.load(new File(config.getSavedInstancePath()));
+	}
+
+	@Override
 	protected void registerServices() {
 		super.registerServices();
-		nodeManager = new NodeManager(this, config);
+		nodeManager = new NodeManager(this, config, savedInstance);
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
 		nodeServer = new MasterServer(config.getNodeServerPort(), this, nodeManager);
@@ -66,7 +77,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		services.add(dispatcherPool);
 		muxerPool = new MuxerPool(this, config.getAbsoluteSharedFolder());
 		services.add(muxerPool);
-		jobManager = new JobManager(this, nodeManager, dispatcherPool);
+		jobManager = new JobManager(this, nodeManager, dispatcherPool, savedInstance);
 	}
 
 	@Override
@@ -89,6 +100,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			disconnectNode(n);
 		}
 		stopServices();
+		MasterSavedInstance current = new MasterSavedInstance(nodeManager.getNodeHashMap(), jobManager.getJobHashMap());
+		MasterSavedInstance.save(new File(config.getSavedInstancePath()), current);
 	}
 
 	public MasterConfig getConfig() {
@@ -119,11 +132,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	public void disconnectNode(String unid) {
 		disconnectNode(nodeManager.identifySender(unid));
-	}
-
-	@Deprecated
-	public ArrayList<Job> getJobs() {
-		return jobManager.getJobs();
 	}
 
 	public boolean addJob(ApiJobRequest j) {
