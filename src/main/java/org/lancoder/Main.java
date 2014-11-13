@@ -6,6 +6,7 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
 import net.sourceforge.argparse4j.inf.Namespace;
 
+import org.lancoder.common.Container;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.master.Master;
@@ -52,11 +53,17 @@ public class Main {
 
 		Class<? extends Config> clazz = isWorker ? WorkerConfig.class : MasterConfig.class;
 		ConfigFactory<? extends Config> factory = new ConfigFactory<>(clazz, config);
-		Config conf = mustInit ? factory.init(promptInit, overwrite) : factory.load();
+		final Config conf = mustInit ? factory.init(promptInit, overwrite) : factory.load();
 
-		Runnable r = isWorker ? new Worker((WorkerConfig) conf) : new Master((MasterConfig) conf);
-		new Thread(r).start();
-		conf.dump();
+		final Container container = isWorker ? new Worker((WorkerConfig) conf) : new Master((MasterConfig) conf);
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				container.shutdown();
+				conf.dump();
+			}
+		});
+		new Thread(container).start();
 	}
 
 	private static Namespace parse(String[] args) {
