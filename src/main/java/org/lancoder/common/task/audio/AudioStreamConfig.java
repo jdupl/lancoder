@@ -16,7 +16,6 @@ public class AudioStreamConfig extends StreamConfig {
 
 	@Override
 	public AudioStream getOrignalStream() {
-		// TODO Auto-generated method stub
 		return (AudioStream) this.orignalStream;
 	}
 

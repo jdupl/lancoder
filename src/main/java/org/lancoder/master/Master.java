@@ -5,8 +5,6 @@ import java.util.ArrayList;
 
 import org.lancoder.common.Container;
 import org.lancoder.common.Node;
-import org.lancoder.common.RunnableService;
-import org.lancoder.common.ServerListener;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
@@ -32,7 +30,7 @@ import org.lancoder.master.dispatcher.DispatcherPool;
 import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
 
-public class Master extends Container implements MuxerListener, ServerListener, JobInitiatorListener, EventListener {
+public class Master extends Container implements MuxerListener, JobInitiatorListener, EventListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
@@ -246,16 +244,6 @@ public class Master extends Container implements MuxerListener, ServerListener, 
 
 	public void run() {
 		startServices();
-	}
-
-	@Override
-	public void serverShutdown(RunnableService server) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void serverFailure(Exception e, RunnableService server) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override

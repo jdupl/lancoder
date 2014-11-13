@@ -10,8 +10,6 @@ import java.util.ArrayList;
 
 import org.lancoder.common.Container;
 import org.lancoder.common.Node;
-import org.lancoder.common.RunnableService;
-import org.lancoder.common.ServerListener;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
@@ -35,8 +33,7 @@ import org.lancoder.worker.converter.video.VideoConverterPool;
 import org.lancoder.worker.server.WorkerServer;
 import org.lancoder.worker.server.WorkerServerListener;
 
-public class Worker extends Container implements ServerListener, WorkerServerListener, MasterContacterListener,
-		ConverterListener {
+public class Worker extends Container implements WorkerServerListener, MasterContacterListener, ConverterListener {
 
 	private Node node;
 	private WorkerConfig config;
@@ -241,16 +238,6 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	@Override
 	public StatusReport statusRequest() {
 		return getStatusReport();
-	}
-
-	@Override
-	public void serverShutdown(RunnableService server) {
-		this.services.remove(server);
-	}
-
-	@Override
-	public void serverFailure(Exception e, RunnableService server) {
-		e.printStackTrace();
 	}
 
 	@Override
