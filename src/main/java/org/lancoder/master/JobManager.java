@@ -40,7 +40,9 @@ public class JobManager {
 		this.listener = listener;
 		this.nodeManager = nodeManager;
 		this.dispatcherPool = dispatcherPool;
-		this.jobs.putAll(savedInstance.getJobs());
+		if (savedInstance != null) {
+			this.jobs.putAll(savedInstance.getJobs());
+		}
 	}
 
 	public HashMap<String, Job> getJobHashMap() {
