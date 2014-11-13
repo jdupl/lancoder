@@ -35,7 +35,7 @@ public class MasterConfig extends Config {
 	private String mkvMergePath;
 
 	private String savedInstancePath = new File(System.getProperty("user.home"),
-			".config/lancoder/saved/master_instance.bin").getPath();
+			".local/share/lancoder/master_instance.bin").getPath();
 
 	public MasterConfig() {
 		nodeServerPort = DEFAULT_NODE_LISTEN_PORT;
