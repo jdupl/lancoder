@@ -227,7 +227,6 @@ public class JobInitiator extends RunnableService {
 				processJobRequest(requests.take());
 			}
 		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 	}
 

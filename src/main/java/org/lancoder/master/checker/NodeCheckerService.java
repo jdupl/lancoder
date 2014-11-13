@@ -44,7 +44,6 @@ public class NodeCheckerService extends RunnableService {
 				Thread.currentThread();
 				Thread.sleep(MS_DELAY_BETWEEN_CHECKS);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
 			}
 		}
 	}

@@ -88,6 +88,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	}
 
 	public void shutdown() {
+		System.out.printf("Executing master shutdown routine.%n"
+				+ "Ctrl+C again for immediate shutdown (not recommended).%n");
 		// save config and make sure to reset current tasks
 		for (Node n : nodeManager.getNodes()) {
 			for (ClientTask task : n.getCurrentTasks()) {
@@ -100,8 +102,13 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			disconnectNode(n);
 		}
 		stopServices();
+		saveInternalState();
+	}
+
+	private void saveInternalState() {
+		File file = new File(config.getSavedInstancePath());
 		MasterSavedInstance current = new MasterSavedInstance(nodeManager.getNodeHashMap(), jobManager.getJobHashMap());
-		MasterSavedInstance.save(new File(config.getSavedInstancePath()), current);
+		MasterSavedInstance.save(file, current);
 	}
 
 	public MasterConfig getConfig() {

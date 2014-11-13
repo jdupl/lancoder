@@ -60,7 +60,7 @@ public class Main {
 			@Override
 			public void run() {
 				container.shutdown();
-				conf.dump();
+				System.out.println("Lancoder exited cleanly !");
 			}
 		});
 		new Thread(container).start();

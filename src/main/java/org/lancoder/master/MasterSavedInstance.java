@@ -29,7 +29,7 @@ public class MasterSavedInstance implements Serializable {
 	}
 
 	public static void save(File file, MasterSavedInstance current) {
-		System.err.println("saving to " + file.getAbsolutePath());
+		System.out.printf("Saving master's task list to %s.%n", file.getAbsolutePath());
 		if (!file.getParentFile().exists()) {
 			file.getParentFile().mkdirs();
 		}
