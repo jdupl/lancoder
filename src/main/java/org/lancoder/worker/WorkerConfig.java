@@ -20,7 +20,6 @@ public class WorkerConfig extends Config implements Serializable {
 	private static final int DEFAULT_MASTER_PORT = 1337;
 	private static final int DEFAULT_LISTEN_PORT = 1338;
 	private static final String DEFAULT_MASTER_IP = InetAddress.getLoopbackAddress().getHostAddress();
-	private static final String DEFAULT_TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
 	private static final String DEFAULT_UNID = "";
 	private static final String DEFAULT_NAME = InetAddress.getLoopbackAddress().getCanonicalHostName();
 
@@ -32,8 +31,6 @@ public class WorkerConfig extends Config implements Serializable {
 	private int listenPort;
 	@Prompt(message = "worker's name")
 	private String name;
-	@Prompt(message = "temporary files location")
-	private String tempEncodingFolder;
 
 	private String uniqueID;
 
@@ -44,7 +41,6 @@ public class WorkerConfig extends Config implements Serializable {
 		this.listenPort = DEFAULT_LISTEN_PORT;
 		this.uniqueID = DEFAULT_UNID;
 		this.name = DEFAULT_NAME;
-		this.tempEncodingFolder = DEFAULT_TEMP_DIRECTORY;
 		try {
 			this.name = InetAddress.getLocalHost().getHostName();
 		} catch (UnknownHostException e) {
@@ -59,14 +55,6 @@ public class WorkerConfig extends Config implements Serializable {
 		sb.append(String.format("Will be contacting master at: %s:%d.%n", this.getMasterIpAddress(),
 				this.getMasterPort()));
 		return sb.toString();
-	}
-
-	public String getTempEncodingFolder() {
-		return tempEncodingFolder;
-	}
-
-	public void setTempEncodingFolder(String tempEncodingFolder) {
-		this.tempEncodingFolder = tempEncodingFolder;
 	}
 
 	public String getName() {

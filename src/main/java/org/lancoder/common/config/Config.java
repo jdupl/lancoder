@@ -12,17 +12,21 @@ import com.google.gson.GsonBuilder;
 
 public abstract class Config {
 
-	protected static final String DEFAULT_FFMPEG_PATH = "ffmpeg";
+	private static final String DEFAULT_FFMPEG_PATH = "ffmpeg";
 	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
+	private static final String DEFAULT_TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
 
 	protected transient String configPath;
 	@Prompt(message = "shared folder root")
 	protected String absoluteSharedFolder;
 	@Prompt(message = "FFmpeg's path")
 	protected String ffmpegPath;
+	@Prompt(message = "temporary files location")
+	protected String tempEncodingFolder;
 
 	protected Config() {
 		this.ffmpegPath = DEFAULT_FFMPEG_PATH;
+		this.tempEncodingFolder = DEFAULT_TEMP_DIRECTORY;
 		this.absoluteSharedFolder = DEFAULT_ABSOLUTE_PATH;
 	}
 
@@ -50,6 +54,14 @@ public abstract class Config {
 	@Override
 	public String toString() {
 		return String.format("Shared folder location: %s.%n", this.getAbsoluteSharedFolder());
+	}
+
+	public String getTempEncodingFolder() {
+		return tempEncodingFolder;
+	}
+
+	public void setTempEncodingFolder(String tempEncodingFolder) {
+		this.tempEncodingFolder = tempEncodingFolder;
 	}
 
 	public String getAbsoluteSharedFolder() {
