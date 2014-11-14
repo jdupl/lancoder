@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.lancoder.common.FilePathManager;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
@@ -19,18 +20,18 @@ import org.lancoder.worker.converter.video.Transcoder;
 public class Muxer extends Pooler<Job> {
 
 	private MuxerListener listener;
-	private String sharedFolder;
+	private FilePathManager filePathManager;
 
-	public Muxer(MuxerListener listener, String sharedFolder) {
+	public Muxer(MuxerListener listener, FilePathManager filePathManager) {
 		super();
 		this.listener = listener;
-		this.sharedFolder = sharedFolder;
+		this.filePathManager = filePathManager;
 	}
 
 	@Override
 	protected void start() {
 		boolean success = false;
-		File muxOutputFile = FileUtils.getFile(sharedFolder, task.getOutputFolder(), task.getOutputFileName());
+		File muxOutputFile = filePathManager.getSharedFinalFile(task);
 		ArrayList<String> args = new ArrayList<>();
 		Collections.addAll(args, new String[] { "mkvmerge", "-o", muxOutputFile.getAbsolutePath() });
 		// Iterate through original streams
@@ -41,7 +42,7 @@ public class Muxer extends Pooler<Job> {
 			args.add("0:no");
 			Stream stream = streamIterator.next();
 			if (stream.getCodec() == Codec.COPY) {
-				File streamOrigin = new File(sharedFolder, task.getSourceFile());
+				File streamOrigin = filePathManager.getSharedSourceFile(task);
 				args.addAll(stream.getStreamCopyMapping());
 				args.add(streamOrigin.getPath());
 			} else {
@@ -50,7 +51,7 @@ public class Muxer extends Pooler<Job> {
 				Iterator<ClientTask> taskIterator = tasks.iterator();
 				while (taskIterator.hasNext()) {
 					ClientTask t = taskIterator.next();
-					File partFile = FileUtils.getFile(sharedFolder, t.getTempFile());
+					File partFile = filePathManager.getSharedFinalFile(t);
 					args.add(partFile.getAbsolutePath());
 					if (taskIterator.hasNext()) {
 						// Concatenate to the next task
@@ -67,8 +68,7 @@ public class Muxer extends Pooler<Job> {
 			serviceFailure(e);
 		} finally {
 			if (success) {
-				File partsDirectory = FileUtils
-						.getFile(sharedFolder, task.getOutputFolder(), task.getPartsFolderName());
+				File partsDirectory = filePathManager.getSharedPartsFolder(task);
 				try {
 					FileUtils.deleteDirectory(partsDirectory);
 				} catch (IOException e) {

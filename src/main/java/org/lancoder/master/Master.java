@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 import org.lancoder.common.Container;
+import org.lancoder.common.FilePathManager;
 import org.lancoder.common.Node;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventListener;
@@ -43,6 +44,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	private MuxerPool muxerPool;
 	private NodeManager nodeManager;
 	private JobManager jobManager;
+	private FilePathManager filePathManager;
 
 	private MasterSavedInstance savedInstance;
 
@@ -64,6 +66,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	@Override
 	protected void registerServices() {
 		super.registerServices();
+		filePathManager = new FilePathManager(config);
 		nodeManager = new NodeManager(this, config, savedInstance);
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
@@ -75,7 +78,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		services.add(apiServer);
 		dispatcherPool = new DispatcherPool(this);
 		services.add(dispatcherPool);
-		muxerPool = new MuxerPool(this, config.getAbsoluteSharedFolder());
+		muxerPool = new MuxerPool(this, filePathManager);
 		services.add(muxerPool);
 		jobManager = new JobManager(this, nodeManager, dispatcherPool, savedInstance);
 	}

@@ -35,4 +35,8 @@ public class FilePathManager {
 		return FileUtils.getFile(config.getTempEncodingFolder(), job.getJobId());
 	}
 
+	public File getSharedSourceFile(Job job) {
+		return FileUtils.getFile(config.getAbsoluteSharedFolder(), job.getSourceFile());
+	}
+
 }
