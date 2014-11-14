@@ -1,13 +1,11 @@
 package org.lancoder.common.job;
 
-import java.io.File;
 import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.annotations.NoWebUI;
 import org.lancoder.common.file_components.FileInfo;
@@ -18,6 +16,7 @@ import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.Task;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
+import org.lancoder.common.utils.FileUtils;
 
 /**
  * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all
@@ -76,8 +75,7 @@ public class Job implements Comparable<Job>, Serializable {
 		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 		// Set output's filename
 		this.outputFileName = String.format("%s.mkv", FilenameUtils.getBaseName(sourceFile));
-		File relativeEncodingOutput = FileUtils.getFile(encodingOutputFolder, jobName);
-		this.outputFolder = relativeEncodingOutput.getPath();
+		this.outputFolder = FileUtils.getFile(encodingOutputFolder, jobName).getPath();
 		this.jobId = generateId(sourceFile, jobName);
 	}
 
