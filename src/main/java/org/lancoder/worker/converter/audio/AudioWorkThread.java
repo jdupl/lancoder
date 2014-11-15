@@ -31,7 +31,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		AudioStream outStream = task.getStreamConfig().getOutStream();
 		AudioStream inStream = task.getStreamConfig().getOrignalStream();
 
-		String absoluteInput = FileUtils.getFile(absoluteSharedDir, inStream.getRelativeFile()).getAbsolutePath();
+		String absoluteInput = filePathManager.getSharedSourceFile(task).getPath();
 
 		String streamMapping = String.format("0:%d", inStream.getIndex());
 		String channelDisposition = String.valueOf(outStream.getChannels().getCount());
@@ -56,13 +56,13 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		// Meta-data mapping
 		args.add("-map_metadata");
 		args.add(String.format("0:s:%d", inStream.getIndex()));
-		args.add(taskTempOutputFile.getPath());
+		args.add(filePathManager.getLocalTempFile(task).getPath());
 		return args;
 	}
 
 	private boolean moveFile() {
 		try {
-			FileUtils.moveFile(taskTempOutputFile, taskFinalFile);
+			FileUtils.moveFile(filePathManager.getLocalTempFile(task), filePathManager.getSharedFinalFile(task));
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;

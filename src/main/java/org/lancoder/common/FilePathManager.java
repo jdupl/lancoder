@@ -39,4 +39,9 @@ public class FilePathManager {
 		return FileUtils.getFile(config.getAbsoluteSharedFolder(), job.getSourceFile());
 	}
 
+	public File getSharedSourceFile(ClientTask task) {
+		return FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getStreamConfig().getOrignalStream()
+				.getRelativeFile());
+	}
+
 }
