@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import org.lancoder.common.Container;
+import org.lancoder.common.FilePathManager;
 import org.lancoder.common.Node;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
@@ -75,9 +76,10 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	@Override
 	protected void registerServices() {
 		super.registerServices();
-		audioPool = new AudioConverterPool(threadCount, this, config);
+		filePathManager = new FilePathManager(config);
+		audioPool = new AudioConverterPool(threadCount, this, filePathManager);
 		services.add(audioPool);
-		videoPool = new VideoConverterPool(1, this, config);
+		videoPool = new VideoConverterPool(1, this, filePathManager);
 		services.add(videoPool);
 		services.add(new WorkerServer(this, config.getListenPort()));
 		services.add(new MasterContacter(getMasterInetAddress(), getMasterPort(), this));

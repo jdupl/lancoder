@@ -44,7 +44,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	private MuxerPool muxerPool;
 	private NodeManager nodeManager;
 	private JobManager jobManager;
-	private FilePathManager filePathManager;
 
 	private MasterSavedInstance savedInstance;
 

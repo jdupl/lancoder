@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
-import org.lancoder.common.config.Config;
+import org.lancoder.common.FilePathManager;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
@@ -22,9 +22,8 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 	private static Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
 	private FFmpegReader ffmpeg = new FFmpegReader();
 
-	public AudioWorkThread(ConverterListener listener, String absoluteSharedFolder, String tempEncodingFolder,
-			Config config) {
-		super(listener, absoluteSharedFolder, tempEncodingFolder, config);
+	public AudioWorkThread(ConverterListener listener, FilePathManager filePathManager) {
+		super(listener, filePathManager);
 	}
 
 	private ArrayList<String> getArgs(ClientAudioTask task) {
@@ -33,6 +32,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		AudioStream inStream = task.getStreamConfig().getOrignalStream();
 
 		String absoluteInput = FileUtils.getFile(absoluteSharedDir, inStream.getRelativeFile()).getAbsolutePath();
+
 		String streamMapping = String.format("0:%d", inStream.getIndex());
 		String channelDisposition = String.valueOf(outStream.getChannels().getCount());
 		String sampleRate = String.valueOf(outStream.getSampleRate());

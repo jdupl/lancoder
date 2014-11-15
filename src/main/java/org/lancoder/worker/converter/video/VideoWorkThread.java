@@ -7,8 +7,8 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.lancoder.common.FilePathManager;
 import org.lancoder.common.codecs.Codec;
-import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.VideoStream;
@@ -29,9 +29,8 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 	private FFmpegReader ffmpeg = new FFmpegReader();
 	private Transcoder transcoder = new Transcoder();
 
-	public VideoWorkThread(ConverterListener listener, String absoluteSharedFolder, String tempEncodingFolder,
-			Config config) {
-		super(listener, absoluteSharedFolder, tempEncodingFolder, config);
+	public VideoWorkThread(ConverterListener listener, FilePathManager filePathManager) {
+		super(listener, filePathManager);
 	}
 
 	@Override

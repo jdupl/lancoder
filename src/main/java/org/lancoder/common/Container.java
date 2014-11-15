@@ -13,6 +13,7 @@ public abstract class Container extends RunnableService implements ServiceManage
 	protected final ArrayList<ThirdParty> thirdParties = new ArrayList<>();
 	protected final ThreadGroup serviceThreads = new ThreadGroup("services");
 	protected PoolCleanerService poolCleaner;
+	protected FilePathManager filePathManager;
 
 	protected void bootstrap() {
 		registerThirdParties();
