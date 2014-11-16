@@ -70,7 +70,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	protected void registerThirdParties() {
-		this.thirdParties.add(new FFmpeg(config));
+		registerThirdParty(new FFmpeg(config));
 	}
 
 	@Override
@@ -78,10 +78,10 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		super.registerServices();
 		filePathManager = new FilePathManager(config);
 		// TODO change to current instance
-		audioPool = new AudioConverterPool(threadCount, this, filePathManager, new FFmpeg(config));
+		audioPool = new AudioConverterPool(threadCount, this, filePathManager, getFFmpeg());
 		services.add(audioPool);
 		// TODO change to current instance
-		videoPool = new VideoConverterPool(1, this, filePathManager, new FFmpeg(config));
+		videoPool = new VideoConverterPool(1, this, filePathManager, getFFmpeg());
 		services.add(videoPool);
 		services.add(new WorkerServer(this, config.getListenPort()));
 		services.add(new MasterContacter(getMasterInetAddress(), getMasterPort(), this));

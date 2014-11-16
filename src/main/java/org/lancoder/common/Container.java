@@ -1,16 +1,21 @@
 package org.lancoder.common;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.pool.Cleanable;
 import org.lancoder.common.pool.PoolCleanerService;
+import org.lancoder.common.third_parties.FFmpeg;
+import org.lancoder.common.third_parties.FFprobe;
+import org.lancoder.common.third_parties.MkvMerge;
 import org.lancoder.common.third_parties.ThirdParty;
 
 public abstract class Container extends RunnableService implements ServiceManager {
 
+	private final HashMap<Class<? extends ThirdParty>, ThirdParty> thirdParties = new HashMap<>();
+
 	protected final ArrayList<Service> services = new ArrayList<>();
-	protected final ArrayList<ThirdParty> thirdParties = new ArrayList<>();
 	protected final ThreadGroup serviceThreads = new ThreadGroup("services");
 	protected PoolCleanerService poolCleaner;
 	protected FilePathManager filePathManager;
@@ -21,10 +26,30 @@ public abstract class Container extends RunnableService implements ServiceManage
 		registerServices();
 	}
 
+	protected FFmpeg getFFmpeg() {
+		return (FFmpeg) getThirdParty(FFmpeg.class);
+	}
+
+	protected FFprobe getFFprobe() {
+		return (FFprobe) getThirdParty(FFprobe.class);
+	}
+
+	protected MkvMerge getMkvMerge() {
+		return (MkvMerge) getThirdParty(MkvMerge.class);
+	}
+
+	private ThirdParty getThirdParty(Class<? extends ThirdParty> clazz) {
+		return thirdParties.get(clazz);
+	}
+
 	protected abstract void registerThirdParties();
 
+	protected void registerThirdParty(ThirdParty thirdParty) {
+		thirdParties.put(thirdParty.getClass(), thirdParty);
+	}
+
 	protected void checkThirdParties() {
-		for (ThirdParty thirdParty : thirdParties) {
+		for (ThirdParty thirdParty : thirdParties.values()) {
 			if (!thirdParty.isInstalled()) {
 				throw new MissingThirdPartyException(thirdParty);
 			}

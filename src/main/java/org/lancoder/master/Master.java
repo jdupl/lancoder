@@ -84,9 +84,9 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	@Override
 	protected void registerThirdParties() {
-		this.thirdParties.add(new FFmpeg(config));
-		this.thirdParties.add(new FFprobe(config));
-		this.thirdParties.add(new MkvMerge(config));
+		registerThirdParty(new FFmpeg(config));
+		registerThirdParty(new FFprobe(config));
+		registerThirdParty(new MkvMerge(config));
 	}
 
 	public void shutdown() {
