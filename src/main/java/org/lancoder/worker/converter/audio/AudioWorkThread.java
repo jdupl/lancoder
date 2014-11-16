@@ -12,6 +12,7 @@ import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.task.audio.ClientAudioTask;
+import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.utils.TimeUtils;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.worker.converter.Converter;
@@ -20,10 +21,10 @@ import org.lancoder.worker.converter.ConverterListener;
 public class AudioWorkThread extends Converter<ClientAudioTask> {
 
 	private static Pattern timePattern = Pattern.compile("time=([0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{2,3})");
-	private FFmpegReader ffmpeg = new FFmpegReader();
+	private FFmpegReader ffMpegWrapper = new FFmpegReader();
 
-	public AudioWorkThread(ConverterListener listener, FilePathManager filePathManager) {
-		super(listener, filePathManager);
+	public AudioWorkThread(ConverterListener listener, FilePathManager filePathManager, FFmpeg ffMpeg) {
+		super(listener, filePathManager, ffMpeg);
 	}
 
 	private ArrayList<String> getArgs(ClientAudioTask task) {
@@ -37,8 +38,8 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		String channelDisposition = String.valueOf(outStream.getChannels().getCount());
 		String sampleRate = String.valueOf(outStream.getSampleRate());
 
-		String[] baseArgs = new String[] { config.getFFmpegPath(), "-i", absoluteInput, "-vn", "-sn", "-map",
-				streamMapping, "-ac", channelDisposition, "-ar", sampleRate, "-c:a", outStream.getCodec().getEncoder() };
+		String[] baseArgs = new String[] { ffMpeg.getPath(), "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping,
+				"-ac", channelDisposition, "-ar", sampleRate, "-c:a", outStream.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
 		switch (outStream.getCodec()) {
 		case VORBIS:
@@ -73,7 +74,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 	@Override
 	public void stop() {
 		super.stop();
-		ffmpeg.stop();
+		ffMpegWrapper.stop();
 	}
 
 	@Override
@@ -90,7 +91,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		createDirs();
 		ArrayList<String> args = getArgs(task);
 		try {
-			success = ffmpeg.read(args, this, true) && moveFile();
+			success = ffMpegWrapper.read(args, this, true) && moveFile();
 		} catch (MissingThirdPartyException e) {
 			e.printStackTrace();
 		} finally {

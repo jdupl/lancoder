@@ -77,9 +77,11 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	protected void registerServices() {
 		super.registerServices();
 		filePathManager = new FilePathManager(config);
-		audioPool = new AudioConverterPool(threadCount, this, filePathManager);
+		// TODO change to current instance
+		audioPool = new AudioConverterPool(threadCount, this, filePathManager, new FFmpeg(config));
 		services.add(audioPool);
-		videoPool = new VideoConverterPool(1, this, filePathManager);
+		// TODO change to current instance
+		videoPool = new VideoConverterPool(1, this, filePathManager, new FFmpeg(config));
 		services.add(videoPool);
 		services.add(new WorkerServer(this, config.getListenPort()));
 		services.add(new MasterContacter(getMasterInetAddress(), getMasterPort(), this));
