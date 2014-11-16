@@ -13,6 +13,7 @@ import org.apache.commons.io.input.CloseShieldInputStream;
 import org.lancoder.common.annotations.Prompt;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
+import org.lancoder.worker.WorkerConfig;
 
 import com.google.gson.Gson;
 
@@ -58,6 +59,11 @@ public class ConfigFactory<T extends Config> {
 		File f = new File(instance.getConfigPath());
 		if (!overwrite && f.exists()) {
 			throw new InvalidConfigurationException(String.format(CONF_EXISTS, f.getAbsoluteFile()));
+		}
+		if (instance instanceof WorkerConfig) {
+			// Hackish way to retrieve localhost only when neccessary
+			// Some systems do reverse DNS lookups and may block for quite a long time
+			((WorkerConfig) instance).setNameFromHostName();
 		}
 		T config = (userInput ? promptUser() : instance);
 		config.dump();

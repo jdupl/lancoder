@@ -41,7 +41,15 @@ public class WorkerConfig extends Config implements Serializable {
 		this.listenPort = DEFAULT_LISTEN_PORT;
 		this.uniqueID = DEFAULT_UNID;
 		this.name = DEFAULT_NAME;
+	}
+
+	/**
+	 * Try to set worker name to the local hostname. Calls to this method can block for ~5 seconds on some systems. This
+	 * would otherwise always be called in the constructor otherwise.
+	 */
+	public void setNameFromHostName() {
 		try {
+			System.out.println("Trying to resolve local hostname.");
 			this.name = InetAddress.getLocalHost().getHostName();
 		} catch (UnknownHostException e) {
 			System.err.println("Could not find local hostname.");
