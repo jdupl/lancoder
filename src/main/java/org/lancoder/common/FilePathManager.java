@@ -2,6 +2,7 @@ package org.lancoder.common;
 
 import java.io.File;
 
+import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.task.ClientTask;
@@ -28,6 +29,11 @@ public class FilePathManager {
 	}
 
 	public File getLocalTempFile(ClientTask task) {
+		return FileUtils.getFile(config.getTempEncodingFolder(), task.getJobId(), String.valueOf(task.getTaskId()),
+				FilenameUtils.getName(task.getTempFile()));
+	}
+
+	public File getLocalTempFolder(ClientTask task) {
 		return FileUtils.getFile(config.getTempEncodingFolder(), task.getJobId(), String.valueOf(task.getTaskId()));
 	}
 

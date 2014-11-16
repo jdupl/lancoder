@@ -86,7 +86,6 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 	@Override
 	protected void start() {
 		listener.taskStarted(task);
-		setFiles();
 		boolean success = false;
 		createDirs();
 		ArrayList<String> args = getArgs(task);

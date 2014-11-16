@@ -134,7 +134,6 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		boolean success = true;
 		try {
 			listener.taskStarted(task);
-			setFiles();
 			createDirs();
 			// use start and duration for ffmpeg legacy support
 			long durationMs = task.getEncodingEndTime() - task.getEncodingStartTime();
