@@ -25,8 +25,8 @@ public class VideoStream extends Stream {
 	private int stepCount = 1;
 
 	public VideoStream(int index, Codec codec, double frameRate, int rate, RateControlType rateControlType,
-			FFmpegPreset preset, int width, int height, long unitCount, Unit unit, int stepCount) {
-		super(index, codec, unitCount);
+			FFmpegPreset preset, int width, int height, long unitCount, Unit unit, int stepCount, String relativeFile) {
+		super(index, codec, unitCount, relativeFile);
 		this.frameRate = frameRate;
 		this.rate = rate;
 		this.rateControlType = rateControlType;

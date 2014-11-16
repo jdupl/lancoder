@@ -97,7 +97,8 @@ public class JobInitiator extends RunnableService {
 		for (VideoStream stream : fileInfo.getVideoStreams()) {
 			double frameRate = requestFrameRate < 1 ? stream.getFrameRate() : requestFrameRate;
 			VideoStream streamToEncode = new VideoStream(stream.getIndex(), videoCodec, frameRate, req.getRate(),
-					videoRateControlType, preset, width, height, fileInfo.getDuration(), Unit.SECONDS, req.getPasses());
+					videoRateControlType, preset, width, height, fileInfo.getDuration(), Unit.SECONDS, req.getPasses(),
+					stream.getRelativeFile());
 			VideoStreamConfig config = new VideoStreamConfig(job.getJobId(), extraEncoderArgs, passes, stream,
 					streamToEncode);
 			job.addStream(streamToEncode, createTasks(config, job));
@@ -105,7 +106,7 @@ public class JobInitiator extends RunnableService {
 
 		for (AudioStream stream : fileInfo.getAudioStreams()) {
 			AudioStream streamToEncode = new AudioStream(stream.getIndex(), audioCodec, stream.getUnitCount(),
-					audioRate, audioRCT, audioChannels, audioSampleRate, Unit.SECONDS);
+					audioRate, audioRCT, audioChannels, audioSampleRate, Unit.SECONDS, stream.getRelativeFile());
 			AudioStreamConfig config = new AudioStreamConfig(job.getJobId(), extraEncoderArgs, stream, streamToEncode);
 			job.addStream(streamToEncode, createTasks(config, job));
 			// TODO Sanitize channel disposition (upmix protection)

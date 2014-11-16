@@ -21,10 +21,11 @@ public abstract class Stream implements Serializable {
 	protected boolean isDefault = false;
 	protected long unitCount;
 
-	public Stream(int index, Codec codec, long units) {
+	public Stream(int index, Codec codec, long units, String relativeFile) {
 		this.index = index;
 		this.codec = codec;
 		this.unitCount = units;
+		this.relativeFile = relativeFile;
 	}
 
 	/**

@@ -21,8 +21,8 @@ public class AudioStream extends Stream {
 	protected Unit unit = Unit.SECONDS;
 
 	public AudioStream(int index, Codec codec, long units, int rate, RateControlType rateControlType,
-			ChannelDisposition channels, int sampleRate, Unit unit) {
-		super(index, codec, units);
+			ChannelDisposition channels, int sampleRate, Unit unit, String relativeFile) {
+		super(index, codec, units, relativeFile);
 		this.rate = rate;
 		this.rateControlType = rateControlType;
 		this.channels = channels;

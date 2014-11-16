@@ -49,8 +49,8 @@ public class Main {
 		boolean defaultInit = parsed.getBoolean("init_default");
 		boolean overwrite = parsed.getBoolean("overwrite");
 		String config = parsed.getString("config");
-		boolean mustInit = promptInit || defaultInit;
 
+		boolean mustInit = promptInit || defaultInit;
 		Class<? extends Config> clazz = isWorker ? WorkerConfig.class : MasterConfig.class;
 		ConfigFactory<? extends Config> factory = new ConfigFactory<>(clazz, config);
 		final Config conf = mustInit ? factory.init(promptInit, overwrite) : factory.load();
