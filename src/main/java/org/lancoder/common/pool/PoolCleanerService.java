@@ -14,14 +14,11 @@ public class PoolCleanerService extends RunnableService {
 	public void run() {
 		while (!close) {
 			try {
-				for (Cleanable cleanable : cleanables) {
-					if (cleanable.clean()) {
-//						System.out.printf("Cleaned %s%n", cleanable.getClass().getSimpleName());
-					}
-				}
 				Thread.sleep(CHECK_DELAY_MSEC);
+				for (Cleanable cleanable : cleanables) {
+					cleanable.clean();
+				}
 			} catch (InterruptedException e) {
-//				System.err.println("pool cleaner interrupted");
 			}
 		}
 	}
