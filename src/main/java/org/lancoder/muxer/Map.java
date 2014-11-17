@@ -2,17 +2,17 @@ package org.lancoder.muxer;
 
 public class Map {
 
-	private int inputFileIndex;
+	private Input input;
 	private int inputStreamIndex;
 
-	public Map(int inputFileIndex, int streamIndex) {
-		this.inputFileIndex = inputFileIndex;
+	public Map(Input input, int streamIndex) {
+		this.input = input;
 		this.inputStreamIndex = streamIndex;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%d:%d", inputFileIndex, inputStreamIndex);
+		return String.format("%d:%d", input.getIndex(), inputStreamIndex);
 	}
 
 }

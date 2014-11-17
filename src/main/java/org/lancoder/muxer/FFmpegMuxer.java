@@ -32,7 +32,7 @@ public class FFmpegMuxer extends Pooler<Job> {
 	/**
 	 * Map of the input files without the duplicated. Value is the position in ffmpeg file mapping. (file:stream)
 	 */
-	private HashMap<String, Integer> inputs = new HashMap<>();
+	private HashMap<String, Input> inputs = new HashMap<>();
 
 	public FFmpegMuxer(MuxerListener listener, FilePathManager filePathManager, FFmpeg ffMpeg) {
 		super();
@@ -41,9 +41,9 @@ public class FFmpegMuxer extends Pooler<Job> {
 		this.ffMpeg = ffMpeg;
 	}
 
-	private int getInputIndex(String input) {
+	private Input getInput(String input) {
 		if (!inputs.containsKey(input)) {
-			inputs.put(input, inputs.size());
+			inputs.put(input, new Input(input, inputs.size()));
 		}
 		return inputs.get(input);
 	}
@@ -92,7 +92,7 @@ public class FFmpegMuxer extends Pooler<Job> {
 				streamIndex = 0;
 			}
 		}
-		return new Map(getInputIndex(input), streamIndex);
+		return new Map(getInput(input), streamIndex);
 	}
 
 	/**
@@ -119,11 +119,14 @@ public class FFmpegMuxer extends Pooler<Job> {
 		ArrayList<Map> mapping = buildMapping();
 
 		args.add(ffMpeg.getPath());
-		// Add input files
-		for (String input : inputs.keySet()) {
-			// TODO check if order is reliable
+		// Add input files and correct their index according to the position in the arguments
+		ArrayList<Input> inputArray = new ArrayList<>(inputs.values());
+		for (int i = 0; i < inputArray.size(); i++) {
+			Input input = inputArray.get(i);
 			args.add("-i");
-			args.add(input);
+			args.add(input.getInputFile());
+			// Correct the order
+			input.setIndex(i);
 		}
 		// Add mapping
 		for (Map map : mapping) {
