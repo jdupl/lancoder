@@ -94,6 +94,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		} catch (MissingThirdPartyException e) {
 			e.printStackTrace();
 		} finally {
+			this.active = false;
 			if (success) {
 				listener.taskCompleted(task);
 			} else {

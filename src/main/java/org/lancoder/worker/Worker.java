@@ -289,7 +289,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public synchronized void taskCompleted(ClientTask task) {
-		System.err.println("Worker completed task");
 		task.getProgress().complete();
 		notifyMasterStatusChange();
 		this.getCurrentTasks().remove(task);
@@ -300,7 +299,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public synchronized void taskFailed(ClientTask task) {
-		System.err.println("Worker failed task " + task.getTaskId());
 		task.getProgress().reset();
 		notifyMasterStatusChange();
 		this.getCurrentTasks().remove(task);

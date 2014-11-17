@@ -187,7 +187,6 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 			} catch (InterruptedException e) {
 			}
 		}
-		System.out.printf("Pool %s closed.%n", this.getClass().getSimpleName());
 	}
 
 	public int getThreadLimit() {

@@ -80,7 +80,7 @@ public class NodeManager {
 	public synchronized ArrayList<Node> getFreeVideoNodes() {
 		ArrayList<Node> nodes = new ArrayList<>();
 		for (Node node : this.getOnlineNodes()) {
-			if (node.getStatus() == NodeState.FREE) {
+			if (node.getCurrentTasks().size() == 0) {
 				nodes.add(node);
 			}
 		}
@@ -102,19 +102,23 @@ public class NodeManager {
 		return nodes;
 	}
 
+	/**
+	 * Check if a node is available for work.
+	 * 
+	 * @param node
+	 * @return
+	 */
 	private boolean isAvailable(Node node) {
-		boolean nodeAvailable = true;
 		// TODO allow dynamic failure threshold
-		if (node.getStatus() != NodeState.WORKING && node.getStatus() != NodeState.FREE
-				&& node.getFailureCount() < FAILURE_THRESHOLD) {
+		boolean nodeAvailable = node.getFailureCount() < FAILURE_THRESHOLD
+				&& node.getCurrentTasks().size() < node.getThreadCount();
+		if (nodeAvailable) {
 			for (ClientTask task : node.getCurrentTasks()) {
 				if (task instanceof ClientVideoTask) {
 					nodeAvailable = false;
 					break;
 				}
 			}
-			// TODO check for each task the task's thread requirements
-			nodeAvailable = nodeAvailable && node.getCurrentTasks().size() < node.getThreadCount();
 		}
 		return nodeAvailable;
 	}

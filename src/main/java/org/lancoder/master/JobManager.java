@@ -191,17 +191,16 @@ public class JobManager {
 		switch (updateStatus) {
 		case TASK_COMPLETED:
 			unassign(task);
+			System.out.printf("Worker %s completed task %s%n", n.getName(), task.getTaskId());
 			Job job = this.jobs.get(task.getJobId());
 			if (job.getTaskDoneCount() == job.getTaskCount()) {
 				listener.handle(new Event(EventEnum.JOB_ENCODING_COMPLETED, job));
 			}
-			updateNodesWork();
 			break;
 		case TASK_TODO:
 		case TASK_CANCELED:
 			unassign(task);
 			task.getProgress().reset();
-			updateNodesWork();
 			break;
 		case TASK_COMPUTING:
 		case TASK_ASSIGNED:
@@ -210,6 +209,7 @@ public class JobManager {
 				dispatched.setJobStatus(JobState.JOB_COMPUTING);
 			}
 		}
+		updateNodesWork();
 		return false;
 	}
 
