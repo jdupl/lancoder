@@ -280,7 +280,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	@Override
 	public void jobMuxingFailed(Job job) {
 		System.err.printf("Muxing failed for job %s\n", job.getJobName());
-		// TODO
+		job.setJobStatus(JobState.JOB_FAILED);
 	}
 
 	@Override

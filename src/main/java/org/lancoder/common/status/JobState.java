@@ -28,5 +28,10 @@ public enum JobState {
 	/**
 	 * All tasks in the job are encoded and muxed.
 	 */
-	JOB_COMPLETED
+	JOB_COMPLETED,
+	/**
+	 * Fatal failure occurred. Most likely a muxing error.
+	 */
+	JOB_FAILED
+
 }

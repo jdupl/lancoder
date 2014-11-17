@@ -70,7 +70,7 @@ controllers.controller('jobs', function($scope, $http, $interval) {
               case 'JOB_COMPLETED':
                 data[i].panel = 'panel-success';
                 break;
-              case 'JOB_CRASHED':
+              case 'JOB_FAILED':
                 data[i].panel = 'panel-danger';
                 break;
               case 'JOB_COMPUTING':
