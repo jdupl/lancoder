@@ -54,10 +54,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		// Get number of available threads
 		threadCount = Runtime.getRuntime().availableProcessors();
 		System.out.printf("Detected %d threads available.%n", threadCount);
-		super.bootstrap();
-		// Get codecs
-		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
-		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
 		// Parse master ip address or host name
 		try {
 			this.masterInetAddress = InetAddress.getByName(config.getMasterIpAddress());
@@ -65,6 +61,10 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 			throw new InvalidConfigurationException(String.format("Master's host name '%s' could not be resolved !"
 					+ "\nOriginal exception: '%s'", config.getMasterIpAddress(), e.getMessage()));
 		}
+		super.bootstrap();
+		// Get codecs
+		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
+		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
 		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount, config.getUniqueID());
 	}
 
