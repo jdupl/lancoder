@@ -8,7 +8,6 @@ import org.lancoder.common.pool.Cleanable;
 import org.lancoder.common.pool.PoolCleanerService;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
-import org.lancoder.common.third_parties.MkvMerge;
 import org.lancoder.common.third_parties.ThirdParty;
 
 public abstract class Container extends RunnableService implements ServiceManager {
@@ -32,10 +31,6 @@ public abstract class Container extends RunnableService implements ServiceManage
 
 	protected FFprobe getFFprobe() {
 		return (FFprobe) getThirdParty(FFprobe.class);
-	}
-
-	protected MkvMerge getMkvMerge() {
-		return (MkvMerge) getThirdParty(MkvMerge.class);
 	}
 
 	private ThirdParty getThirdParty(Class<? extends ThirdParty> clazz) {

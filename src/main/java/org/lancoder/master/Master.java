@@ -21,7 +21,6 @@ import org.lancoder.common.task.TaskReport;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
-import org.lancoder.common.third_parties.MkvMerge;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.master.api.node.MasterServer;
 import org.lancoder.master.api.web.ApiServer;
@@ -86,7 +85,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	protected void registerThirdParties() {
 		registerThirdParty(new FFmpeg(config));
 		registerThirdParty(new FFprobe(config));
-		registerThirdParty(new MkvMerge(config));
 	}
 
 	public void shutdown() {

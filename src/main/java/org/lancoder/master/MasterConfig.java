@@ -18,7 +18,6 @@ public class MasterConfig extends Config implements Serializable {
 	private static final int DEFAULT_API_LISTEN_PORT = 8080;
 	private static final String DEFAULT_ENCODE_DESTINATION = "encodes";
 	private static final String DEFAULT_FFPROBE_PATH = "ffprobe";
-	private static final String DEFAULT_MKV_MERGE_PATH = "mkvmerge";
 
 	@Prompt(message = "master's listening port")
 	private int nodeServerPort;
@@ -28,8 +27,6 @@ public class MasterConfig extends Config implements Serializable {
 	private String finalEncodingFolder;
 	@Prompt(message = "FFprobe's path")
 	private String ffprobePath;
-	@Prompt(message = "MkvMerge's path")
-	private String mkvMergePath;
 
 	private String savedInstancePath = new File(System.getProperty("user.home"),
 			".local/share/lancoder/master_instance.bin").getPath();
@@ -40,7 +37,6 @@ public class MasterConfig extends Config implements Serializable {
 		finalEncodingFolder = DEFAULT_ENCODE_DESTINATION;
 		apiServerPort = DEFAULT_API_LISTEN_PORT;
 		ffprobePath = DEFAULT_FFPROBE_PATH;
-		mkvMergePath = DEFAULT_MKV_MERGE_PATH;
 	}
 
 	@Override
@@ -54,10 +50,6 @@ public class MasterConfig extends Config implements Serializable {
 
 	public String getSavedInstancePath() {
 		return savedInstancePath;
-	}
-
-	public String getMkvMergePath() {
-		return mkvMergePath;
 	}
 
 	public String getFFprobePath() {
