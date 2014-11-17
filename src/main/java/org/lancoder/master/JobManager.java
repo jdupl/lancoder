@@ -14,6 +14,7 @@ import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.TaskState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.audio.ClientAudioTask;
@@ -202,8 +203,12 @@ public class JobManager {
 			task.getProgress().reset();
 			updateNodesWork();
 			break;
-		default:
-			break;
+		case TASK_COMPUTING:
+		case TASK_ASSIGNED:
+			Job dispatched = this.getJob(task.getJobId());
+			if (dispatched.getJobStatus() == JobState.JOB_TODO) {
+				dispatched.setJobStatus(JobState.JOB_COMPUTING);
+			}
 		}
 		return false;
 	}

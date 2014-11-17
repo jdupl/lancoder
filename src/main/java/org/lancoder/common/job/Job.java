@@ -167,10 +167,6 @@ public class Job implements Comparable<Job>, Serializable {
 	public synchronized ArrayList<ClientVideoTask> getTodoVideoTask() {
 		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
 		if (getTaskRemainingCount() != 0) {
-			if (this.getJobStatus() == JobState.JOB_TODO) {
-				// TODO move this to job manager
-				this.setJobStatus(JobState.JOB_COMPUTING);
-			}
 			for (ClientVideoTask task : this.getClientVideoTasks()) {
 				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 					tasks.add(task);
@@ -183,10 +179,6 @@ public class Job implements Comparable<Job>, Serializable {
 	public ArrayList<ClientAudioTask> getTodoAudioTask() {
 		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
 		if (getTaskRemainingCount() != 0) {
-			if (this.getJobStatus() == JobState.JOB_TODO) {
-				// TODO move this to job manager
-				this.setJobStatus(JobState.JOB_COMPUTING);
-			}
 			for (ClientAudioTask task : this.getClientAudioTasks()) {
 				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 					tasks.add(task);
