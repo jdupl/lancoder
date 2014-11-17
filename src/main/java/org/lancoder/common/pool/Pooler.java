@@ -9,7 +9,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	/**
 	 * List of elements to process
 	 */
-	private LinkedBlockingDeque<T> requests = new LinkedBlockingDeque<>();
+	private volatile LinkedBlockingDeque<T> requests = new LinkedBlockingDeque<>();
 	/**
 	 * Currently processed element
 	 */
@@ -17,7 +17,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	/**
 	 * Is the ressource currently in use
 	 */
-	protected boolean active;
+	protected volatile boolean active;
 	/**
 	 * Timestamp in unix msec of last activity
 	 */
@@ -39,7 +39,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	/**
 	 * Decide if the pooler should be closed. Super implementation provides a time based decision from last activity.
 	 * 
-	 * @return if current pooler should be closed
+	 * @return True if current pooler should be closed
 	 */
 	private boolean expired() {
 		return System.currentTimeMillis() - this.lastActivity > CLEAN_DELAY_MSEC;
@@ -67,24 +67,37 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	 * 
 	 * @return The element
 	 */
-	public T getPoolable() {
+	public synchronized T getPoolable() {
 		return this.task;
 	}
 
+	/**
+	 * Returns the state of the worker.
+	 * 
+	 * @return True is pooler is busy.
+	 */
 	public synchronized boolean isActive() {
 		return this.active;
 	}
 
-	public void add(T request) {
-		if (active) {
-			throw new IllegalStateException("Pooler ressource is busy !");
-		} else {
-			if (this.requests.size() > 0) {
-				System.err.printf("Warning: pooler ressource %s now has %d tasks in backlog.%n", this.getClass()
-						.getSimpleName(), this.requests.size());
-			}
-			requests.add(request);
+	/**
+	 * Check if requests queue is empty. Pooler should not pile up items.
+	 * 
+	 * @return True if empty.
+	 */
+	public synchronized boolean isFree() {
+		return this.requests.isEmpty() && !isActive();
+	}
+
+	public synchronized void add(T request) {
+		if (!isFree()) {
+			System.err.printf("Warning: pooler ressource %s now has %d tasks in backlog.%n", this.getClass()
+					.getSimpleName(), this.requests.size());
 		}
+		if (isActive()) {
+			System.err.printf("Pooler ressource is busy !");
+		}
+		requests.add(request);
 	}
 
 	/**
@@ -96,9 +109,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	 */
 	private void handle(T request) {
 		this.task = request;
-		this.active = true;
 		start(); // pooler thread is now busy and blocks here
-		this.active = false;
 		this.lastActivity = System.currentTimeMillis();
 	}
 
@@ -117,11 +128,12 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	public final void run() {
 		try {
 			while (!close) {
-				handle(requests.take());
+				T task = requests.take();
+				active = true;
+				handle(task);
+				active = false;
 			}
 		} catch (InterruptedException e) {
-//			System.err.println("Pooler ressource interrupted");
 		}
-//		System.err.println("Pooler " + this.getClass().getSimpleName() + " ressource closed");
 	}
 }

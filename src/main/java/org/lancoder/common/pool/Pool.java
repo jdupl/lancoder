@@ -127,10 +127,10 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 		return pooler;
 	}
 
-	private Pooler<T> getFreePooler() {
+	private synchronized Pooler<T> getFreePooler() {
 		Pooler<T> pooler = null;
 		for (Pooler<T> p : poolers) {
-			if (!p.isActive()) {
+			if (p.isFree()) {
 				pooler = p;
 			}
 		}
