@@ -149,6 +149,7 @@ public class FFmpegMuxer extends Pooler<Job> {
 		} catch (MissingDecoderException | MissingThirdPartyException e) {
 			serviceFailure(e);
 		} finally {
+			inputs.clear();
 			if (success) {
 				File partsDirectory = filePathManager.getSharedPartsFolder(task);
 				try {
