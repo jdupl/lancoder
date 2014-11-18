@@ -209,9 +209,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 	 */
 	private synchronized void dispatch(T task) {
 		Pooler<T> pooler = this.getAvailablePooler();
-		if (pooler != null) {
-			pooler.add(task);
-		} else {
+		if (pooler == null || !pooler.add(task)) {
 			System.err.println("Warning: could not find free pooler ressource.");
 			try {
 				Thread.sleep(500);

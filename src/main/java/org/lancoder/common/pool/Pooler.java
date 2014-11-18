@@ -89,15 +89,23 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 		return this.requests.isEmpty() && !isActive();
 	}
 
-	public synchronized void add(T request) {
+	/**
+	 * Add a task to the pooler.
+	 * 
+	 * @param request
+	 *            The task to complete
+	 */
+	public synchronized boolean add(T request) {
+		boolean handled = false;
 		if (!isFree()) {
 			System.err.printf("Warning: pooler ressource %s now has %d tasks in backlog.%n", this.getClass()
 					.getSimpleName(), this.requests.size());
-		}
-		if (isActive()) {
+		} else if (isActive()) {
 			System.err.printf("Pooler ressource is busy !");
+		} else {
+			handled = requests.add(request);
 		}
-		requests.add(request);
+		return handled;
 	}
 
 	/**
