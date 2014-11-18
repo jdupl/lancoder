@@ -44,7 +44,7 @@ public class JobInitiator extends RunnableService {
 		this.requests.add(request);
 	}
 
-	private void createJob(ApiJobRequest req, File sourceFile, String jobName) {
+	private void createJob(ApiJobRequest req, String jobName, File sourceFile, File outputFolder) {
 		// Get meta-data from source file
 		File absoluteFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), sourceFile.getPath());
 		FileInfo fileInfo = FFmpegWrapper.getFileInfo(absoluteFile, sourceFile.getPath(), new FFprobe(config));
@@ -92,7 +92,7 @@ public class JobInitiator extends RunnableService {
 			audioRate = req.getRate();
 			break;
 		}
-		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo);
+		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder);
 
 		for (VideoStream stream : fileInfo.getVideoStreams()) {
 			double frameRate = requestFrameRate < 1 ? stream.getFrameRate() : requestFrameRate;
@@ -114,6 +114,10 @@ public class JobInitiator extends RunnableService {
 		}
 		prepareFileSystem(job);
 		listener.newJob(job);
+	}
+
+	private void createJob(ApiJobRequest req, String jobName, File sourceFile) {
+		createJob(req, jobName, sourceFile, FileUtils.getFile(config.getFinalEncodingFolder(), jobName));
 	}
 
 	private ArrayList<ClientTask> createTasks(AudioStreamConfig config, Job job) {
@@ -173,21 +177,22 @@ public class JobInitiator extends RunnableService {
 	}
 
 	private void createJob(ApiJobRequest req, File sourcefile) {
-		createJob(req, sourcefile, req.getName());
+		createJob(req, req.getName(), sourcefile);
 	}
 
 	private void processBatchRequest(ApiJobRequest req) {
-		System.out.println("Directory given");
 		File absoluteFolder = new File(new File(config.getAbsoluteSharedFolder()), req.getInputFile());
 		Collection<File> toProcess = FileUtils.listFiles(absoluteFolder, new String[] { "mkv", "mp4", "avi", "mov" },
 				true);
+		String globalJobName = req.getName();
+		File globalOutput = new File(globalJobName);
 		for (File absoluteFile : toProcess) {
 			String relativePath = new File(config.getAbsoluteSharedFolder()).toURI().relativize(absoluteFile.toURI())
 					.getPath();
 			File relativeFile = new File(relativePath);
 			String fileName = FilenameUtils.removeExtension(relativeFile.getName());
-			String jobName = String.format("%s - %s", req.getName(), fileName);
-			createJob(req, relativeFile, jobName);
+			String localJobName = String.format("%s - %s ", globalJobName, fileName);
+			createJob(req, localJobName, relativeFile, globalOutput);
 		}
 	}
 
