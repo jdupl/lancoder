@@ -1,10 +1,18 @@
 package org.lancoder.common.pool;
 
 import java.util.ArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import org.lancoder.common.RunnableService;
 
+/**
+ * Generic pool used to handle threaded tasks. Allows threads to be reused.
+ * 
+ * @author Justin Duplessis
+ *
+ * @param <T>
+ *            The type of tasks to be handled by the pool
+ */
 public abstract class Pool<T> extends RunnableService implements Cleanable {
 
 	/**
@@ -22,30 +30,48 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 	/**
 	 * Contains the tasks to send to poolers
 	 */
-	protected final LinkedBlockingQueue<T> todo = new LinkedBlockingQueue<>();
+	protected final LinkedBlockingDeque<T> todo = new LinkedBlockingDeque<>();
 	/**
 	 * Thread group of the poolers
 	 */
 	protected final ThreadGroup threads = new ThreadGroup("threads");
 
+	/**
+	 * Create a default pool with a defined thread limit. Pool will queue items without limitations.
+	 * 
+	 * @param threadLimit
+	 *            The maximum number of poolers to handle
+	 */
 	public Pool(int threadLimit) {
 		this(threadLimit, true);
 	}
 
+	/**
+	 * Create a pool with a defined thread limit.
+	 * 
+	 * @param threadLimit
+	 *            The maximum number of poolers to handle
+	 * @param canQueue
+	 *            False if pool should no pile up tasks
+	 */
 	public Pool(int threadLimit, boolean canQueue) {
 		this.threadLimit = threadLimit;
 		this.canQueue = canQueue;
 	}
 
+	/**
+	 * Returns true if the pool should be cleaned.
+	 */
 	@Override
 	public boolean shouldClean() {
+		// As cleaning the pool involves logic from the poolers, always assume we should clean the pool.
 		return true;
 	}
 
 	/**
-	 * Clean the resources of the pool. Allows the pool to shrink after high load.
+	 * Clean the resources of the pool. Allows the pool to shrink after higher load.
 	 * 
-	 * @return if any resource was cleaned
+	 * @return True if any resource was cleaned
 	 */
 	@Override
 	public boolean clean() {
@@ -108,8 +134,18 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 		return pooler;
 	}
 
+	/**
+	 * Instanciate a pooler ressource without starting it.
+	 * 
+	 * @return The pooler ressource
+	 */
 	protected abstract Pooler<T> getPoolerInstance();
 
+	/**
+	 * Decides if pool has space to spawn a new ressource.
+	 * 
+	 * @return True if pool can spawn a ressource
+	 */
 	private boolean canSpawn() {
 		return poolers.size() < threadLimit;
 	}
@@ -117,7 +153,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 	/**
 	 * Get a free pooler resource or create a new one.
 	 * 
-	 * @return A free pooler or null if no pooler are available.
+	 * @return A free pooler or null if no pooler are available and pool is full
 	 */
 	private Pooler<T> getAvailablePooler() {
 		Pooler<T> pooler = getFreePooler();
@@ -127,6 +163,11 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 		return pooler;
 	}
 
+	/**
+	 * Get a currently free pooler.
+	 * 
+	 * @return The free ressource or null if none is avaiable.
+	 */
 	private synchronized Pooler<T> getFreePooler() {
 		Pooler<T> pooler = null;
 		for (Pooler<T> p : poolers) {
@@ -153,17 +194,12 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 	 *            The element to handle
 	 * @return If element could be added to queue
 	 */
-	public boolean handle(T element) {
+	public synchronized boolean handle(T element) {
 		if (!canQueue && todo.size() > 0) {
 			System.err.printf("Warning pool %s seems to be overflowing. Current todo list has %s elements.", this
 					.getClass().getSimpleName(), todo.size());
 		}
-		return this.todo.add(element);
-	}
-
-	public String toString() {
-		return String.format("%s has %d poolers and %d todos", this.getClass().getSimpleName(), this.poolers.size(),
-				this.todo.size());
+		return todo.add(element);
 	}
 
 	/**
@@ -177,9 +213,17 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 			pooler.add(task);
 		} else {
 			System.err.println("Warning: could not find free pooler ressource.");
+			try {
+				Thread.sleep(500);
+				todo.addFirst(task);
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 
+	/**
+	 * Actually start the pool and start accepting tasks.
+	 */
 	public void run() {
 		while (!close) {
 			try {
@@ -189,10 +233,9 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 		}
 	}
 
-	public int getThreadLimit() {
-		return threadLimit;
-	}
-
+	/**
+	 * Gracefully close pool and it's resources by interrupting resources threads.
+	 */
 	@Override
 	public void stop() {
 		super.stop();
