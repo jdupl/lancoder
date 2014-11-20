@@ -65,20 +65,20 @@ public class Job implements Comparable<Job>, Serializable {
 	private HashMap<Stream, ArrayList<ClientTask>> streamTaskMapping = new HashMap<>();
 
 	public Job(String jobName, String sourceFile, int lengthOfTasks, FileInfo fileInfo, File outputFolder) {
+		this.jobId = generateId(sourceFile, jobName);
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
 		this.frameRate = fileInfo.getMainVideoStream().getFrameRate();
 		this.sourceFile = sourceFile;
-		this.partsFolderName = FileUtils.getFile("parts", jobName).getPath();
+		this.partsFolderName = FileUtils.getFile("parts", jobId).getPath();
 
 		// Estimate the frame count from the frame rate and length
 		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 		// Set output's filename
 		this.outputFileName = String.format("%s.mkv", FilenameUtils.getBaseName(sourceFile));
-//		this.outputFolder = FileUtils.getFile(encodingOutputFolder, jobName).getPath();
+		// this.outputFolder = FileUtils.getFile(encodingOutputFolder, jobName).getPath();
 		this.outputFolder = outputFolder.getPath();
-		this.jobId = generateId(sourceFile, jobName);
 	}
 
 	/**

@@ -1,7 +1,6 @@
 package org.lancoder.master;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -31,7 +30,7 @@ import org.lancoder.ffmpeg.FFmpegWrapper;
 
 public class JobInitiator extends RunnableService {
 
-	private LinkedBlockingDeque<ApiJobRequest> requests = new LinkedBlockingDeque<>();
+	private final LinkedBlockingDeque<ApiJobRequest> requests = new LinkedBlockingDeque<>();
 	private JobInitiatorListener listener;
 	private MasterConfig config;
 
@@ -185,7 +184,14 @@ public class JobInitiator extends RunnableService {
 		Collection<File> toProcess = FileUtils.listFiles(absoluteFolder, new String[] { "mkv", "mp4", "avi", "mov" },
 				true);
 		String globalJobName = req.getName();
-		File globalOutput = new File(globalJobName);
+		File globalOutput = new File(config.getFinalEncodingFolder(), globalJobName);
+
+		// clean shared folder if it already exists
+		File sharedParts = new File(config.getFinalEncodingFolder(), "parts");
+		if (sharedParts.exists()) {
+			sharedParts.delete(); // be hard on others
+		}
+		// Create all jobs
 		for (File absoluteFile : toProcess) {
 			String relativePath = new File(config.getAbsoluteSharedFolder()).toURI().relativize(absoluteFile.toURI())
 					.getPath();
@@ -210,20 +216,12 @@ public class JobInitiator extends RunnableService {
 		// Create base folders
 		File absoluteOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getOutputFolder());
 		File absolutePartsOutput = FileUtils.getFile(absoluteOutput, j.getPartsFolderName());
-		if (absoluteOutput.exists()) {
-			try {
-				// Attempt to clean
-				// System.out.printf("Directory is not empty. Attempting to clean %s\n", absoluteOutput.toString());
-				FileUtils.cleanDirectory(absoluteOutput);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} else {
+		if (!absoluteOutput.exists()) {
 			absoluteOutput.mkdirs();
+			FileUtils.givePerms(absoluteOutput, false);
 		}
-		FileUtils.givePerms(absoluteOutput, false);
-		absolutePartsOutput.mkdir();
-		FileUtils.givePerms(absolutePartsOutput, false);
+		absolutePartsOutput.mkdirs();
+		FileUtils.givePerms(absoluteOutput, true);
 	}
 
 	@Override
