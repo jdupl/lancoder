@@ -21,7 +21,7 @@ public class FilePathManager {
 	}
 
 	public File getSharedPartsFolder(Job job) {
-		return FileUtils.getFile(config.getAbsoluteSharedFolder(), job.getOutputFolder(), job.getPartsFolderName());
+		return FileUtils.getFile(config.getAbsoluteSharedFolder(), job.getPartsFolderName());
 	}
 
 	public File getSharedFinalFile(ClientTask task) {

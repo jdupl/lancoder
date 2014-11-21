@@ -1,11 +1,13 @@
 package org.lancoder.master;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.io.FilenameUtils;
+import org.lancoder.common.FilePathManager;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.Codec;
@@ -30,6 +32,8 @@ import org.lancoder.ffmpeg.FFmpegWrapper;
 
 public class JobInitiator extends RunnableService {
 
+	private final static String[] EXTENSIONS = new String[] { "mkv", "mp4", "avi", "mov" };
+
 	private final LinkedBlockingDeque<ApiJobRequest> requests = new LinkedBlockingDeque<>();
 	private JobInitiatorListener listener;
 	private MasterConfig config;
@@ -43,7 +47,7 @@ public class JobInitiator extends RunnableService {
 		this.requests.add(request);
 	}
 
-	private void createJob(ApiJobRequest req, String jobName, File sourceFile, File outputFolder) {
+	private void createJob(ApiJobRequest req, String jobName, File sourceFile, File outputFolder, File baseOutputFolder) {
 		// Get meta-data from source file
 		File absoluteFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), sourceFile.getPath());
 		FileInfo fileInfo = FFmpegWrapper.getFileInfo(absoluteFile, sourceFile.getPath(), new FFprobe(config));
@@ -91,7 +95,7 @@ public class JobInitiator extends RunnableService {
 			audioRate = req.getRate();
 			break;
 		}
-		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder);
+		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder, baseOutputFolder);
 
 		for (VideoStream stream : fileInfo.getVideoStreams()) {
 			double frameRate = requestFrameRate < 1 ? stream.getFrameRate() : requestFrameRate;
@@ -116,7 +120,8 @@ public class JobInitiator extends RunnableService {
 	}
 
 	private void createJob(ApiJobRequest req, String jobName, File sourceFile) {
-		createJob(req, jobName, sourceFile, FileUtils.getFile(config.getFinalEncodingFolder(), jobName));
+		File output = FileUtils.getFile(config.getFinalEncodingFolder(), jobName);
+		createJob(req, jobName, sourceFile, output, output);
 	}
 
 	private ArrayList<ClientTask> createTasks(AudioStreamConfig config, Job job) {
@@ -124,7 +129,7 @@ public class JobInitiator extends RunnableService {
 		AudioStream outStream = config.getOutStream();
 		if (outStream.getCodec() != Codec.COPY) {
 			int taskId = job.getTaskCount();
-			File relativeTasksOutput = FileUtils.getFile(job.getOutputFolder(), job.getPartsFolderName());
+			File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
 			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
 					String.format("part-%d.%s", taskId, outStream.getCodec().getContainer()));
 			AudioTask task = new AudioTask(taskId, job.getJobId(), 0, outStream.getUnitCount(),
@@ -149,7 +154,7 @@ public class JobInitiator extends RunnableService {
 				remaining = inStream.getUnitCount() * 1000;
 			}
 			long currentMs = 0;
-			File relativeTasksOutput = FileUtils.getFile(job.getOutputFolder(), job.getPartsFolderName());
+			File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
 			while (remaining > 0) {
 				long start = currentMs;
 				long end = 0;
@@ -180,26 +185,37 @@ public class JobInitiator extends RunnableService {
 	}
 
 	private void processBatchRequest(ApiJobRequest req) {
-		File absoluteFolder = new File(new File(config.getAbsoluteSharedFolder()), req.getInputFile());
-		Collection<File> toProcess = FileUtils.listFiles(absoluteFolder, new String[] { "mkv", "mp4", "avi", "mov" },
-				true);
+		File baseSourceFolder = FileUtils.getFile(config.getAbsoluteSharedFolder(), req.getInputFile());
 		String globalJobName = req.getName();
-		File globalOutput = new File(config.getFinalEncodingFolder(), globalJobName);
+		File relGlobalOutput = FileUtils.getFile(config.getFinalEncodingFolder(), globalJobName);
+		// clean shared folder if it already exists TODO
+		// File sharedParts = new File(config.getFinalEncodingFolder(), "parts");
+		// if (sharedParts.exists()) {
+		// sharedParts.delete(); // be hard on others
+		// }
 
-		// clean shared folder if it already exists
-		File sharedParts = new File(config.getFinalEncodingFolder(), "parts");
-		if (sharedParts.exists()) {
-			sharedParts.delete(); // be hard on others
-		}
 		// Create all jobs
+		Collection<File> toProcess = FileUtils.listFiles(baseSourceFolder, EXTENSIONS, true);
 		for (File absoluteFile : toProcess) {
-			String relativePath = new File(config.getAbsoluteSharedFolder()).toURI().relativize(absoluteFile.toURI())
-					.getPath();
-			File relativeFile = new File(relativePath);
-			String fileName = FilenameUtils.removeExtension(relativeFile.getName());
-			String localJobName = String.format("%s - %s ", globalJobName, fileName);
-			createJob(req, localJobName, relativeFile, globalOutput);
+			File relativeJobFile = new File(relativize(absoluteFile));
+			String fileName = FilenameUtils.removeExtension(relativeJobFile.getName());
+			URI jobOutputUri = baseSourceFolder.toURI().relativize(absoluteFile.getParentFile().toURI());
+			File jobOutput = new File(relGlobalOutput, jobOutputUri.getPath());
+			String jobName = String.format("%s - %s ", globalJobName, fileName);
+			createJob(req, jobName, relativeJobFile, jobOutput, relGlobalOutput);
 		}
+	}
+
+	/**
+	 * Relativize file from shared directory
+	 * 
+	 * @param file
+	 *            The absolute file
+	 * @return The relative representation of the file
+	 */
+	private String relativize(File file) {
+		URI uri = new File(config.getAbsoluteSharedFolder()).toURI().relativize(file.toURI());
+		return uri.getPath();
 	}
 
 	private void processJobRequest(ApiJobRequest req) {
@@ -215,7 +231,8 @@ public class JobInitiator extends RunnableService {
 	private void prepareFileSystem(Job j) {
 		// Create base folders
 		File absoluteOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getOutputFolder());
-		File absolutePartsOutput = FileUtils.getFile(absoluteOutput, j.getPartsFolderName());
+		// TODO replace with file path manager
+		File absolutePartsOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getPartsFolderName());
 		if (!absoluteOutput.exists()) {
 			absoluteOutput.mkdirs();
 			FileUtils.givePerms(absoluteOutput, false);

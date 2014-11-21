@@ -64,14 +64,15 @@ public class Job implements Comparable<Job>, Serializable {
 	@NoWebUI
 	private HashMap<Stream, ArrayList<ClientTask>> streamTaskMapping = new HashMap<>();
 
-	public Job(String jobName, String sourceFile, int lengthOfTasks, FileInfo fileInfo, File outputFolder) {
+	public Job(String jobName, String sourceFile, int lengthOfTasks, FileInfo fileInfo, File outputFolder,
+			File baseOutputFolder) {
 		this.jobId = generateId(sourceFile, jobName);
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
 		this.frameRate = fileInfo.getMainVideoStream().getFrameRate();
 		this.sourceFile = sourceFile;
-		this.partsFolderName = FileUtils.getFile("parts", jobId).getPath();
+		this.partsFolderName = FileUtils.getFile(baseOutputFolder, "parts", jobId).getPath();
 
 		// Estimate the frame count from the frame rate and length
 		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
