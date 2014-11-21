@@ -153,7 +153,13 @@ public class FFmpegMuxer extends Pooler<Job> {
 			if (success) {
 				File partsDirectory = filePathManager.getSharedPartsFolder(task);
 				try {
+					// Clean job's parts
 					FileUtils.deleteDirectory(partsDirectory);
+					// Clean batch's parts folder if empty
+					File superPartsDirectory = partsDirectory.getParentFile();
+					if (superPartsDirectory.list().length == 0) {
+						superPartsDirectory.delete();
+					}
 				} catch (IOException e) {
 					System.err.println("Error while deleting parts of job");
 					e.printStackTrace();
