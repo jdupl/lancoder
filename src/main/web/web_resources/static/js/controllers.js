@@ -1,7 +1,20 @@
 var controllers = angular.module('lancoder.controllers', ['lancoder.services']);
 controllers.controller('nodes', function($scope, $http, $interval, apiService) {
   var refreshNodes = $scope.refreshNodes = function() {
+    var old = $scope.nodes;
     apiService.nodes().then(function(nodes) {
+      if (old) {
+        var state = {};
+        for (var i = 0; i < old.length;i++) {
+          var oldNode = $scope.nodes[i];
+          state[oldNode.unid] = oldNode.showCodecs;
+        }
+        for (var i = 0; i < nodes.length;i++) {
+          if (state[nodes[i].unid]) {
+            nodes[i].showCodecs = state[nodes[i].unid];
+          }
+        }
+      }
       $scope.nodes = nodes;
     });
   };
