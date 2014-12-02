@@ -4,13 +4,15 @@
         {{nodes.error}}
     </div>
 </div>
-<div class="row btn-group" role="group">
-    <div class="col-md-12">
-        <button type="button" class="btn btn-info" ng-click="showNodeFilter = !showNodeFilter">
-            Search/filter
-        </button>
+<p>
+    <div class="row btn-group" role="group">
+        <div class="col-md-12">
+            <button type="button" class="btn btn-info" ng-click="showNodeFilter = !showNodeFilter">
+                Search/filter
+            </button>
+        </div>
     </div>
-</div>
+</p>
 <div class="panel panel-default" ng-if="showNodeFilter">
     <div class="panel-body row">
         <form class="form-inline col-md-3">
