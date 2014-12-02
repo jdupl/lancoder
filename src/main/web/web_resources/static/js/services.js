@@ -25,6 +25,7 @@ services.factory('apiService', function ($http) {
           nodes[i].panel = 'panel-warning';
           break;
         case 'NOT_CONNECTED':
+          nodes[i].offline = true;
           nodes[i].panel = 'panel-info';
           break;
         default:
