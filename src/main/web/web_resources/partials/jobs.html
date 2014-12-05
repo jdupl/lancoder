@@ -10,7 +10,7 @@
             <button type="button" class="btn btn-info" ng-click="showAddJobPanel = !showAddJobPanel; showJobsFilter = false">
                 Add new job
             </button>
-            <button type="button" class="btn btn-info" ng-click="showJobsFilter = !showJobsFilter;showAddJobPanel = false ">
+            <button type="button" class="btn btn-info" ng-click="showJobsFilter = !showJobsFilter; showAddJobPanel = false">
                 Search/filter
             </button>
         </div>
@@ -164,7 +164,9 @@
                     <div class="col-md-12">
                         <p>{{job.completedTasks}} of out {{job.taskCount}} tasks completed</p>
                         <div class="progress">
-                            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{job.completedTasks}}" aria-valuemin="0" aria-valuemax="{{job.taskCount}}" style="width: {{job.completedTasks / job.taskCount * 100}}%" >
+                            <div class="progress-bar progress-bar-success" role="progressbar"
+                                aria-valuenow="{{job.completedTasks}}" aria-valuemin="0" aria-valuemax="{{job.taskCount}}"
+                                style="width: {{job.completedTasks / job.taskCount * 100}}%" >
                             </div>
                         </div>
                         <div class="btn-group">

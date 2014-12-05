@@ -15,10 +15,8 @@
 </p>
 <div class="panel panel-default" ng-if="showNodeFilter">
     <div class="panel-body row">
-        <form class="form-inline col-md-3">
+        <form class="form-inline col-md-6">
             <input ng-model="$parent.nodeQuery" type="text" placeholder="Filter by node name">
-        </form>
-        <form class="form-inline col-md-3">
             <input ng-model="$parent.showOfflineNodes" type="checkbox"> Show offline nodes
         </form>
     </div>
@@ -50,13 +48,13 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6">
-                                <p>Encoding at {{currentTask.taskProgress.currentStep.speed| number:1}} {{currentTask.taskProgress.currentStep.prettyUnit}}.
+                                <p>Encoding at {{currentTask.taskProgress.currentStep.speed | number:1}} {{currentTask.taskProgress.currentStep.prettyUnit}}.
                                     Estimated time to finish this pass:
-                                    {{currentTask.taskProgress.currentStep.timeEstimated / 1000| number:0}}
+                                    {{currentTask.taskProgress.currentStep.timeEstimated / 1000 | number:0}}
                                     s</p>
                             </div>
                             <div class="col-md-6">
-                                <p style="text-align: right">{{currentTask.taskProgress.currentStep.progress| number:2}}% complete</p>
+                                <p style="text-align: right">{{currentTask.taskProgress.currentStep.progress | number:2}}% complete</p>
                             </div>
                         </div>
                     </div>
@@ -67,7 +65,7 @@
                 <button type="button" class="btn btn-warning" disabled="disabled">
                     Pause node
                 </button>
-                <button type="button" class="btn btn-danger" ng-disabled="node.status === 'NOT_CONNECTED'"  ng-click="shutdown(node)">
+                <button type="button" class="btn btn-danger" ng-disabled="node.offline" ng-click="shutdown(node)">
                     Shutdown node
                 </button>
             </div>
