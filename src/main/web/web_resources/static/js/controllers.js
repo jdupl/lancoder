@@ -148,6 +148,12 @@ controllers.controller('jobs', function($scope, $http, $interval) {
       alert('Network failure');
     });
   };
+  $scope.cleanJobs = function() {
+    $http({method: 'POST', url: '/api/jobs/clean'})
+    .success(function(data) {
+        refreshJobs();
+    });
+  };
   refreshJobs();
   $scope.jobsAutoRefresh();
 }).controller('HeaderController', function($scope, $location) {

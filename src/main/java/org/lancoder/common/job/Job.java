@@ -360,4 +360,8 @@ public class Job implements Comparable<Job>, Serializable {
 		streams.addAll(this.streamTaskMapping.keySet());
 		return streams;
 	}
+
+	public boolean isCompleted() {
+		return getJobStatus() == JobState.JOB_COMPLETED;
+	}
 }

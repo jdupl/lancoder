@@ -216,4 +216,19 @@ public class JobManager {
 	public Job getJob(String jobId) {
 		return jobs.get(jobId);
 	}
+
+	/**
+	 * Remove completed jobs from job list.
+	 */
+	public void cleanJobs() {
+		ArrayList<Job> toClean = new ArrayList<>();
+		for (Job job : getJobs()) {
+			if (job.isCompleted()) {
+				toClean.add(job);
+			}
+		}
+		for (Job job : toClean) {
+			deleteJob(job);
+		}
+	}
 }

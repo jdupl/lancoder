@@ -13,6 +13,9 @@
             <button type="button" class="btn btn-info" ng-click="showJobsFilter = !showJobsFilter; showAddJobPanel = false">
                 Search/filter
             </button>
+            <button type="button" class="btn btn-info" ng-click="cleanJobs()">
+                Clear completed jobs
+            </button>
         </div>
     </div>
 </p>
@@ -170,7 +173,7 @@
                             </div>
                         </div>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-warning">
+                            <button type="button" class="btn btn-warning disabled">
                                 Pause
                             </button>
                             <button type="button" class="btn btn-danger" ng-click="deletejob(job.jobId)">

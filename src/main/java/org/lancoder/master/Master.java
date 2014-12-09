@@ -305,4 +305,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			break;
 		}
 	}
+
+	public void cleanJobs() {
+		jobManager.cleanJobs();
+	}
 }

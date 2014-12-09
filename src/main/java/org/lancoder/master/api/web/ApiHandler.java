@@ -79,6 +79,9 @@ public class ApiHandler extends AbstractHandler {
 			res = master.apiDeleteJob(id);
 			response.getWriter().println(gson.toJson(res));
 			break;
+		case "/jobs/clean":
+			master.cleanJobs();
+			break;
 		case "/codecs/audio":
 			response.getWriter().println(gson.toJson(Codec.getAudioCodecs()));
 			break;
