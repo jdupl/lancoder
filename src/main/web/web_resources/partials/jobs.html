@@ -7,7 +7,7 @@
 <p>
     <div class="row btn-group" role="group">
         <div class="col-md-12">
-            <button type="button" class="btn btn-info" ng-click="showAddJobPanel = !showAddJobPanel; showJobsFilter = false">
+            <button type="button" class="btn btn-success" ng-click="showAddJobPanel = !showAddJobPanel; showJobsFilter = false">
                 Add new job
             </button>
             <button type="button" class="btn btn-info" ng-click="showJobsFilter = !showJobsFilter; showAddJobPanel = false">
@@ -153,6 +153,26 @@
                 </div>
             </form>
         </div>
+    </div>
+</div>
+
+<div ng-show="false">
+    <div class="bs-callout bs-callout-danger">
+        <h4>No nodes are connected !</h4>
+        Connect nodes to master to start dispatching work.
+    </div>
+</div>
+<div ng-show="jobs.length == 0">
+    <div class="bs-callout bs-callout-info">
+        <h4>No jobs in list</h4>
+        Please add jobs to start encoding.
+    </div>
+</div>
+<div ng-show="false">
+    <div class="bs-callout bs-callout-success">
+        <h4>All jobs have been encoded !</h4>
+        <p>Check to ensure no errors were encountered !</p>
+        <p>Add new jobs or clear the history with the button above.</p>
     </div>
 </div>
 
