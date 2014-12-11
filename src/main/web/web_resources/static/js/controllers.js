@@ -29,7 +29,7 @@ controllers.controller('nodes', function($scope, $http, $interval, apiService) {
   refreshNodes();
   $scope.nodesAutoRefresh();
 });
-controllers.controller('jobs', function($scope, $http, $interval) {
+controllers.controller('jobs', function($scope, $http, $interval, apiService) {
   $http({method: 'GET', url: '/api/codecs/audio'})
       .success(function(data) {
         $scope.audioCodecs = data;
@@ -75,47 +75,8 @@ controllers.controller('jobs', function($scope, $http, $interval) {
   $scope.passes = [1, 2];
 
   var refreshJobs = $scope.refreshJobs = function() {
-    // Get jobs
-    $http({method: 'GET', url: '/api/jobs'})
-        .success(function(data, status, headers, config) {
-          for (var i = 0; i < data.length; i++) {
-            switch (data[i].jobStatus) {
-              case 'JOB_COMPLETED':
-                data[i].panel = 'panel-success';
-                break;
-              case 'JOB_FAILED':
-                data[i].panel = 'panel-danger';
-                break;
-              case 'JOB_COMPUTING':
-                data[i].panel = 'panel-primary';
-                break;
-              case 'JOB_PAUSED':
-                data[i].panel = 'panel-warning';
-                break;
-              case 'JOB_TODO':
-                data[i].panel = 'panel-info';
-                break;
-              default:
-                data[i].panel = 'panel-default';
-            }
-            data[i].completedTasks = 0;
-            data[i].taskCount = data[i].tasks.length;
-            data[i].totalFps = 0;
-            for (var j = 0; j < data[i].taskCount; j++) {
-              switch (data[i].tasks[j].taskProgress.taskState) {
-                case 'TASK_COMPLETED':
-                  data[i].completedTasks++;
-                  break;
-                case 'TASK_COMPUTING':
-                  data[i].totalFps += data[i].tasks[j].taskProgress.fps;
-                  break;
-              }
-            }
-          }
-          $scope.jobs = data;
-        }).error(function() {
-      $scope.jobs = [];
-      $scope.jobs.error = 'Cannot not reach master server.';
+    apiService.jobs().then(function(jobs) {
+      $scope.jobs = jobs;
     });
   };
   $scope.jobsAutoRefresh = function() {
