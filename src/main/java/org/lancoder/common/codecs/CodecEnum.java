@@ -2,7 +2,7 @@ package org.lancoder.common.codecs;
 
 import java.io.Serializable;
 
-public enum Codec implements Serializable {
+public enum CodecEnum implements Serializable {
 	// Special codecs
 	/**
 	 * Unknown (unsupported) codec
@@ -79,7 +79,7 @@ public enum Codec implements Serializable {
 	private String container;
 	private boolean lossless;
 
-	private Codec(String name, String ffMpegName, String encoder, String container, boolean lossless) {
+	private CodecEnum(String name, String ffMpegName, String encoder, String container, boolean lossless) {
 		this.prettyName = name;
 		this.ffMpegName = ffMpegName;
 		this.encoder = encoder;
@@ -107,8 +107,8 @@ public enum Codec implements Serializable {
 		return ffMpegName;
 	}
 
-	public static Codec findByLib(String libname) {
-		for (Codec codec : Codec.values()) {
+	public static CodecEnum findByLib(String libname) {
+		for (CodecEnum codec : CodecEnum.values()) {
 			if (codec.getEncoder().equals(libname)) {
 				return codec;
 			}
@@ -116,12 +116,12 @@ public enum Codec implements Serializable {
 		return UNKNOWN;
 	}
 
-	public static Codec[] getAudioCodecs() {
-		return new Codec[] { AAC, APE, DTS, FLAC, MP3, OPUS, SPEEX, VORBIS, WAVPACK };
+	public static CodecEnum[] getAudioCodecs() {
+		return new CodecEnum[] { AAC, APE, DTS, FLAC, MP3, OPUS, SPEEX, VORBIS, WAVPACK };
 	}
 
-	public static Codec[] getVideoCodecs() {
-		return new Codec[] { H264, H265, VP9, VP8 };
+	public static CodecEnum[] getVideoCodecs() {
+		return new CodecEnum[] { H264, H265, VP9, VP8 };
 	}
 
 }

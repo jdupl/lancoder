@@ -3,7 +3,7 @@ package org.lancoder.common.file_components.streams;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.base.VideoCodec;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.progress.Unit;
@@ -24,7 +24,7 @@ public class VideoStream extends Stream {
 	private Unit unit = Unit.SECONDS;
 	private int stepCount = 1;
 
-	public VideoStream(int index, Codec codec, double frameRate, int rate, RateControlType rateControlType,
+	public VideoStream(int index, VideoCodec codec, double frameRate, int rate, RateControlType rateControlType,
 			FFmpegPreset preset, int width, int height, long unitCount, Unit unit, int stepCount, String relativeFile) {
 		super(index, codec, unitCount, relativeFile);
 		this.frameRate = frameRate;

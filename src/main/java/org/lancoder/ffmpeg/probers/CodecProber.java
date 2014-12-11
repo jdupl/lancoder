@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.ffmpeg.FFmpegReader;
@@ -13,14 +13,14 @@ import org.lancoder.ffmpeg.FFmpegReaderListener;
 public class CodecProber implements FFmpegReaderListener {
 
 	private static Pattern codecPattern = Pattern.compile("[VASFSXBD\\s\\.]{6,8}([\\p{Lower}\\d\\-]+)");
-	private final ArrayList<Codec> codecs = new ArrayList<>();
+	private final ArrayList<CodecEnum> codecs = new ArrayList<>();
 
 	/**
 	 * Return a list of supported codecs from the current system.
 	 * 
 	 * @return
 	 */
-	public ArrayList<Codec> getNodeCapabilities(FFmpeg module) {
+	public ArrayList<CodecEnum> getNodeCapabilities(FFmpeg module) {
 		FFmpegReader reader = new FFmpegReader();
 		ArrayList<String> args = new ArrayList<>();
 		args.add(module.getPath());
@@ -38,8 +38,8 @@ public class CodecProber implements FFmpegReaderListener {
 		Matcher m = codecPattern.matcher(line);
 		if (m.find() && m.groupCount() == 1) {
 			String s = m.group(1);
-			Codec c = Codec.findByLib(s);
-			if (c != Codec.UNKNOWN) {
+			CodecEnum c = CodecEnum.findByLib(s);
+			if (c != CodecEnum.UNKNOWN) {
 				codecs.add(c);
 			}
 		}

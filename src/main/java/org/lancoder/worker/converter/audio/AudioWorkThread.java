@@ -8,9 +8,11 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.lancoder.common.FilePathManager;
+import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.job.RateControlType;
+import org.lancoder.common.task.EncodingStrategy;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.utils.TimeUtils;
@@ -41,6 +43,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		String[] baseArgs = new String[] { ffMpeg.getPath(), "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping,
 				"-ac", channelDisposition, "-ar", sampleRate, "-c:a", outStream.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
+
 		switch (outStream.getCodec()) {
 		case VORBIS:
 			String rateControlString = outStream.getRateControlType() == RateControlType.CRF ? "-q:a" : "-b:a";

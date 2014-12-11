@@ -3,7 +3,8 @@ package org.lancoder.common.file_components.streams;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecFactory;
+import org.lancoder.common.codecs.base.AbstractCodec;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -14,14 +15,15 @@ public abstract class Stream implements Serializable {
 
 	protected String relativeFile;
 	protected int index;
-	protected Codec codec = Codec.UNKNOWN;
+	protected AbstractCodec codec;
+//	protected CodecEnum codec = CodecEnum.UNKNOWN;
 
 	protected String title = "";
 	protected String language = "und";
 	protected boolean isDefault = false;
 	protected long unitCount;
 
-	public Stream(int index, Codec codec, long units, String relativeFile) {
+	public Stream(int index, AbstractCodec codec, long units, String relativeFile) {
 		this.index = index;
 		this.codec = codec;
 		this.unitCount = units;
@@ -43,12 +45,13 @@ public abstract class Stream implements Serializable {
 		this.index = json.get("index").getAsInt();
 		this.unitCount = unitCount;
 		String unknownCodec = json.get("codec_name").getAsString();
-		for (Codec codec : Codec.values()) {
-			if (codec.getFFMpegName().equalsIgnoreCase(unknownCodec)) {
-				this.codec = codec;
-				break;
-			}
-		}
+		this.codec = CodecFactory.fromString(unknownCodec);
+//		for (CodecEnum codec : CodecEnum.values()) {
+//			if (codec.getFFMpegName().equalsIgnoreCase(unknownCodec)) {
+//				this.codec = codec;
+//				break;
+//			}
+//		}
 		JsonElement tagsElement = json.get("tags");
 		if (tagsElement != null) {
 			JsonObject tags = tagsElement.getAsJsonObject();
@@ -81,6 +84,7 @@ public abstract class Stream implements Serializable {
 		return false;
 	}
 
+	@Deprecated
 	public abstract ArrayList<String> getStreamCopyMapping();
 
 	public long getUnitCount() {
@@ -95,7 +99,7 @@ public abstract class Stream implements Serializable {
 		return index;
 	}
 
-	public Codec getCodec() {
+	public AbstractCodec getCodec() {
 		return codec;
 	}
 

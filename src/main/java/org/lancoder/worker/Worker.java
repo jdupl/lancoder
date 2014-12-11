@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import org.lancoder.common.Container;
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.Node;
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
 import org.lancoder.common.network.cluster.messages.ConnectResponse;
@@ -63,7 +63,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		}
 		super.bootstrap();
 		// Get codecs
-		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
+		ArrayList<CodecEnum> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
 		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
 		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount, config.getUniqueID());
 	}
