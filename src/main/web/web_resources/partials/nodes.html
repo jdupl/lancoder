@@ -61,7 +61,7 @@
                 </div>
             </div>
             <div class="btn-group">
-                <button ng-click="node.showCodecs = !node.showCodecs" class="btn btn-default">View Codecs</button>
+                <button ng-click="nodesShowCodec[node.unid] = !nodesShowCodec[node.unid]" class="btn btn-default">View Codecs</button>
                 <button type="button" class="btn btn-warning" disabled="disabled">
                     Pause node
                 </button>
@@ -69,7 +69,7 @@
                     Shutdown node
                 </button>
             </div>
-            <div collapse="!node.showCodecs">
+            <div collapse="!nodesShowCodec[node.unid]">
                 <div ng-repeat="codec in node.codecs">
                     {{codec.name}}
                 </div>
