@@ -18,7 +18,10 @@ controllers.controller('nodes', function($scope, $http, $interval, apiService) {
   };
 
   $scope.shutdown = function(node) {
-    $http({method: 'POST', url: '/api/nodes/shutdown', data: node['unid']});
+    $http({method: 'POST', url: '/api/nodes/shutdown', data: node['unid']})
+        .success(function(){
+          $scope.refresh();
+        });
   };
 
   $scope.autoRefresh = function() {
@@ -100,7 +103,7 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
     $http({method: 'POST', url: '/api/jobs/add', data: newjob})
         .success(function(data) {
           if (data.success) {
-            refreshJobs();
+            $scope.refresh();
             $scope.showAddJobPanel = false;
           } else {
             alert(data.message);
@@ -114,7 +117,7 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
     $http({method: 'POST', url: '/api/jobs/delete', data: oldjob})
         .success(function(data) {
           if (data.success) {
-            refreshJobs();
+            $scope.refresh();
           } else {
             alert(data.message);
           }
