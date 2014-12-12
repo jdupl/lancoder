@@ -2,10 +2,14 @@ var controllers = angular.module('lancoder.controllers', ['lancoder.services']);
 
 controllers.controller('nodes', function($scope, $http, $interval, apiService) {
 
+  $scope.getJobNameFromID = function(jobId) {
+    return $scope.jobs.filter(function(job) { return job.jobId == jobId })[0].jobName;
+  }
+
   $scope.refresh = function() {
     apiService.jobs().then(function(jobs) {
       $scope.jobs = jobs;
-      $scope.complJobCount = jobs.filter(function(job) { return job.jobStatus == JOB_COMPLETED }).length;
+      $scope.complJobCount = jobs.filter(function(job) { return job.jobStatus == "JOB_COMPLETED" }).length;
     });
     apiService.nodes().then(function(nodes) {
       $scope.nodes = nodes;

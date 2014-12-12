@@ -38,7 +38,7 @@
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p>Encoding part {{currentTask.taskId}} of file {{currentTask.tempFile}}</p>
+                                <p>Encoding part {{currentTask.taskId}} of job {{getJobNameFromID(currentTask.jobId)}}</p>
                                 <div ng-if="currentTask.taskProgress.stepCount > 1">
                                     <p>Pass {{currentTask.taskProgress.currentPassIndex}} of {{currentTask.taskProgress.stepCount}}</p>
                                 </div>
