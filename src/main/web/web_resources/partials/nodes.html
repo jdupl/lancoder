@@ -21,6 +21,12 @@
         </form>
     </div>
 </div>
+<div ng-show="connectedCount == 0 && jobs.length == 0">
+  <div class="bs-callout bs-callout-warning">
+    <h4>No nodes are connected !</h4>
+    Connect nodes to master to start dispatching work.
+  </div>
+</div>
 <div class="animate-repeat" ng-repeat="node in nodes | filter:{name: nodeQuery}">
     <div class="panel {{node.panel}}" ng-if="showOfflineNodes && node.offline || !node.offline">
         <div class="panel-heading">

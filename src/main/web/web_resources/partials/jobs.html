@@ -156,7 +156,7 @@
     </div>
 </div>
 
-<div ng-show="false">
+<div ng-show="connectedCount == 0">
     <div class="bs-callout bs-callout-danger">
         <h4>No nodes are connected !</h4>
         Connect nodes to master to start dispatching work.
@@ -168,7 +168,7 @@
         Please add jobs to start encoding.
     </div>
 </div>
-<div ng-show="false">
+<div ng-show="complJobCount == jobs.length">
     <div class="bs-callout bs-callout-success">
         <h4>All jobs have been encoded !</h4>
         <p>Check to ensure no errors were encountered !</p>
