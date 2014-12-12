@@ -27,6 +27,8 @@ controllers.controller('nodes', function($scope, $http, $interval, apiService) {
     }, 5000);
   };
 
+  $scope.nodesShowCodec = {};
+
   $scope.refresh();
   $scope.autoRefresh();
 });
