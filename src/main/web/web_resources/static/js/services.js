@@ -26,6 +26,7 @@ services.factory('apiService', function ($http) {
         jobs[i].panel = 'panel-danger';
         break;
         case 'JOB_COMPUTING':
+        case 'JOB_MUXING':
         jobs[i].panel = 'panel-primary';
         break;
         case 'JOB_PAUSED':

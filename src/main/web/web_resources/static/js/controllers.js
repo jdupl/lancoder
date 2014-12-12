@@ -80,6 +80,7 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
   $scope.refresh = function() {
     apiService.jobs().then(function(jobs) {
       $scope.jobs = jobs;
+      $scope.complJobCount = jobs.filter(function(job) { return job.jobStatus == "JOB_COMPLETED" }).length;
     });
     apiService.nodes().then(function(nodes) {
       $scope.nodes = nodes;
