@@ -1,11 +1,19 @@
 package org.lancoder.common.pool;
 
 import java.util.ArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import org.lancoder.common.RunnableService;
 
-public abstract class Pool<T> extends RunnableService implements PoolListener<T>, Cleanable {
+/**
+ * Generic pool used to handle threaded tasks. Allows threads to be reused.
+ * 
+ * @author Justin Duplessis
+ *
+ * @param <T>
+ *            The type of tasks to be handled by the pool
+ */
+public abstract class Pool<T> extends RunnableService implements Cleanable {
 
 	/**
 	 * How many poolers can be initialized in the pool
@@ -22,39 +30,48 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 	/**
 	 * Contains the tasks to send to poolers
 	 */
-	protected final LinkedBlockingQueue<T> todo = new LinkedBlockingQueue<>();
+	protected final LinkedBlockingDeque<T> todo = new LinkedBlockingDeque<>();
 	/**
 	 * Thread group of the poolers
 	 */
 	protected final ThreadGroup threads = new ThreadGroup("threads");
-	/**
-	 * The listener of the pool
-	 */
-	protected PoolListener<T> listener;
 
-	public Pool(int threadLimit, PoolListener<T> listener) {
-		this(threadLimit, listener, true);
+	/**
+	 * Create a default pool with a defined thread limit. Pool will queue items without limitations.
+	 * 
+	 * @param threadLimit
+	 *            The maximum number of poolers to handle
+	 */
+	public Pool(int threadLimit) {
+		this(threadLimit, true);
 	}
 
-	public Pool(int threadLimit, PoolListener<T> listener, boolean canQueue) {
+	/**
+	 * Create a pool with a defined thread limit.
+	 * 
+	 * @param threadLimit
+	 *            The maximum number of poolers to handle
+	 * @param canQueue
+	 *            False if pool should no pile up tasks
+	 */
+	public Pool(int threadLimit, boolean canQueue) {
 		this.threadLimit = threadLimit;
-		this.listener = listener;
 		this.canQueue = canQueue;
 	}
 
-	public Pool(int threadLimit) {
-		this.threadLimit = threadLimit;
-	}
-
+	/**
+	 * Returns true if the pool should be cleaned.
+	 */
 	@Override
 	public boolean shouldClean() {
+		// As cleaning the pool involves logic from the poolers, always assume we should clean the pool.
 		return true;
-	};
+	}
 
 	/**
-	 * Clean the resources of the pool. Allows the pool to shrink after high load.
+	 * Clean the resources of the pool. Allows the pool to shrink after higher load.
 	 * 
-	 * @return if any resource was cleaned
+	 * @return True if any resource was cleaned
 	 */
 	@Override
 	public boolean clean() {
@@ -112,13 +129,23 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 		pooler.setThread(thread);
 		thread.start();
 		poolers.add(pooler);
-		System.err.printf("%s spawned new pooler ressource. Now with %d poolers.%n", this.getClass().getSimpleName(),
-				this.poolers.size());
+		// System.out.printf("%s spawned new pooler ressource. Now with %d poolers.%n", this.getClass().getSimpleName(),
+		// this.poolers.size());
 		return pooler;
 	}
 
+	/**
+	 * Instanciate a pooler ressource without starting it.
+	 * 
+	 * @return The pooler ressource
+	 */
 	protected abstract Pooler<T> getPoolerInstance();
 
+	/**
+	 * Decides if pool has space to spawn a new ressource.
+	 * 
+	 * @return True if pool can spawn a ressource
+	 */
 	private boolean canSpawn() {
 		return poolers.size() < threadLimit;
 	}
@@ -126,7 +153,7 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 	/**
 	 * Get a free pooler resource or create a new one.
 	 * 
-	 * @return A free pooler or null if no pooler are available.
+	 * @return A free pooler or null if no pooler are available and pool is full
 	 */
 	private Pooler<T> getAvailablePooler() {
 		Pooler<T> pooler = getFreePooler();
@@ -136,10 +163,15 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 		return pooler;
 	}
 
-	private Pooler<T> getFreePooler() {
+	/**
+	 * Get a currently free pooler.
+	 * 
+	 * @return The free ressource or null if none is avaiable.
+	 */
+	private synchronized Pooler<T> getFreePooler() {
 		Pooler<T> pooler = null;
 		for (Pooler<T> p : poolers) {
-			if (!p.isActive()) {
+			if (p.isFree()) {
 				pooler = p;
 			}
 		}
@@ -162,17 +194,12 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 	 *            The element to handle
 	 * @return If element could be added to queue
 	 */
-	public boolean handle(T element) {
+	public synchronized boolean handle(T element) {
 		if (!canQueue && todo.size() > 0) {
 			System.err.printf("Warning pool %s seems to be overflowing. Current todo list has %s elements.", this
 					.getClass().getSimpleName(), todo.size());
 		}
-		return this.todo.add(element);
-	}
-
-	public String toString() {
-		return String.format("%s has %d poolers and %d todos", this.getClass().getSimpleName(), this.poolers.size(),
-				this.todo.size());
+		return todo.add(element);
 	}
 
 	/**
@@ -182,28 +209,31 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 	 */
 	private synchronized void dispatch(T task) {
 		Pooler<T> pooler = this.getAvailablePooler();
-		if (pooler != null) {
-			pooler.add(task);
-		} else {
+		if (pooler == null || !pooler.add(task)) {
 			System.err.println("Warning: could not find free pooler ressource.");
+			try {
+				Thread.sleep(500);
+				todo.addFirst(task);
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 
+	/**
+	 * Actually start the pool and start accepting tasks.
+	 */
 	public void run() {
 		while (!close) {
 			try {
 				dispatch(this.todo.take());
 			} catch (InterruptedException e) {
-				System.out.printf("Pool %s interrupted.%n", this.getClass().getSimpleName());
 			}
 		}
-		System.out.printf("Pool %s closed.%n", this.getClass().getSimpleName());
 	}
 
-	public int getThreadLimit() {
-		return threadLimit;
-	}
-
+	/**
+	 * Gracefully close pool and it's resources by interrupting resources threads.
+	 */
 	@Override
 	public void stop() {
 		super.stop();
@@ -211,23 +241,6 @@ public abstract class Pool<T> extends RunnableService implements PoolListener<T>
 			ressource.stop();
 		}
 		threads.interrupt();
-	}
-
-	public void started(T e) {
-		listener.started(e);
-	}
-
-	public void completed(T e) {
-		listener.completed(e);
-	}
-
-	public void failed(T e) {
-		listener.failed(e);
-	}
-
-	public void crash(Exception e) {
-		// TODO
-		e.printStackTrace();
 	}
 
 	@Override

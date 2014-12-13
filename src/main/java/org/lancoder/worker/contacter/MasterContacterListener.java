@@ -1,23 +1,24 @@
 package org.lancoder.worker.contacter;
 
-import org.lancoder.common.network.cluster.messages.ConnectMessage;
+import org.lancoder.common.network.cluster.messages.ConnectRequest;
+import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.status.NodeState;
 
-public interface ConctactMasterListener {
+public interface MasterContacterListener {
 
 	/**
 	 * Generate a node representation extending Message to send to the master.
 	 * 
 	 * @return
 	 */
-	public ConnectMessage getConnectMessage();
+	public ConnectRequest getConnectMessage();
 
 	/**
 	 * Master sent unique node id. This also means the Worker is now connected.
 	 * 
-	 * @param unid
+	 * @param responseMessage
 	 */
-	public void receivedUnid(String unid);
+	public void onConnectResponse(ConnectResponse responseMessage);
 
 	/**
 	 * Behavior when master is not reachable

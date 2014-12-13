@@ -5,14 +5,30 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import org.lancoder.common.annotations.Prompt;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public abstract class Config {
 
-	protected static final String DEFAULT_FFMPEG_PATH = "ffmpeg";
+	private static final String DEFAULT_FFMPEG_PATH = "ffmpeg";
+	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
+	private static final String DEFAULT_TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
 
 	protected transient String configPath;
+	@Prompt(message = "shared folder root")
+	protected String absoluteSharedFolder;
+	@Prompt(message = "FFmpeg's path")
+	protected String ffmpegPath;
+	@Prompt(message = "temporary files location")
+	protected String tempEncodingFolder;
+
+	protected Config() {
+		this.ffmpegPath = DEFAULT_FFMPEG_PATH;
+		this.tempEncodingFolder = DEFAULT_TEMP_DIRECTORY;
+		this.absoluteSharedFolder = DEFAULT_ABSOLUTE_PATH;
+	}
 
 	/**
 	 * Serializes current config to disk as JSON object.
@@ -35,9 +51,28 @@ public abstract class Config {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("Shared folder location: %s.%n", this.getAbsoluteSharedFolder());
+	}
+
+	public String getTempEncodingFolder() {
+		return tempEncodingFolder;
+	}
+
+	public void setTempEncodingFolder(String tempEncodingFolder) {
+		this.tempEncodingFolder = tempEncodingFolder;
+	}
+
+	public String getAbsoluteSharedFolder() {
+		return absoluteSharedFolder;
+	}
+
 	public abstract String getDefaultPath();
-	
-	public abstract String getFFmpegPath();
+
+	public String getFFmpegPath() {
+		return ffmpegPath;
+	}
 
 	public String getConfigPath() {
 		return configPath;

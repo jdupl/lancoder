@@ -26,9 +26,13 @@ public enum ClusterProtocol {
 	 */
 	CRASH_REPORT,
 	/**
-	 * Connection request of node. TODO refactor this to 'connect_request'
+	 * Connection request of node.
 	 */
-	CONNECT_ME,
+	CONNECT_REQUEST,
+	/**
+	 * Connection response of master.
+	 */
+	CONNECT_RESPONSE,
 	/**
 	 * Disconnection request TODO refactor to 'disconnection_request'
 	 */
@@ -60,5 +64,9 @@ public enum ClusterProtocol {
 	/**
 	 * Response of the ping.
 	 */
-	PONG
+	PONG,
+	/**
+	 * Message to notify node a task has been cancelled
+	 */
+	UNASSIGN_TASK
 }

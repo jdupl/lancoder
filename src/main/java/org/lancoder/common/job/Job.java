@@ -7,7 +7,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.annotations.NoWebUI;
 import org.lancoder.common.file_components.FileInfo;
@@ -18,6 +17,7 @@ import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.Task;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
+import org.lancoder.common.utils.FileUtils;
 
 /**
  * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all
@@ -64,21 +64,22 @@ public class Job implements Comparable<Job>, Serializable {
 	@NoWebUI
 	private HashMap<Stream, ArrayList<ClientTask>> streamTaskMapping = new HashMap<>();
 
-	public Job(String jobName, String sourceFile, int lengthOfTasks, String encodingOutputFolder, FileInfo fileInfo) {
+	public Job(String jobName, String sourceFile, int lengthOfTasks, FileInfo fileInfo, File outputFolder,
+			File baseOutputFolder) {
+		this.jobId = generateId(sourceFile, jobName);
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
 		this.frameRate = fileInfo.getMainVideoStream().getFrameRate();
 		this.sourceFile = sourceFile;
-		this.partsFolderName = "parts"; // TODO Why would this change ? Perhaps move to constant.
+		this.partsFolderName = FileUtils.getFile(baseOutputFolder, "parts", jobId).getPath();
 
 		// Estimate the frame count from the frame rate and length
 		this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 		// Set output's filename
 		this.outputFileName = String.format("%s.mkv", FilenameUtils.getBaseName(sourceFile));
-		File relativeEncodingOutput = FileUtils.getFile(encodingOutputFolder, jobName);
-		this.outputFolder = relativeEncodingOutput.getPath();
-		this.jobId = generateId(sourceFile, jobName);
+		// this.outputFolder = FileUtils.getFile(encodingOutputFolder, jobName).getPath();
+		this.outputFolder = outputFolder.getPath();
 	}
 
 	/**
@@ -169,10 +170,6 @@ public class Job implements Comparable<Job>, Serializable {
 	public synchronized ArrayList<ClientVideoTask> getTodoVideoTask() {
 		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
 		if (getTaskRemainingCount() != 0) {
-			if (this.getJobStatus() == JobState.JOB_TODO) {
-				// TODO move this to job manager
-				this.setJobStatus(JobState.JOB_COMPUTING);
-			}
 			for (ClientVideoTask task : this.getClientVideoTasks()) {
 				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 					tasks.add(task);
@@ -185,10 +182,6 @@ public class Job implements Comparable<Job>, Serializable {
 	public ArrayList<ClientAudioTask> getTodoAudioTask() {
 		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
 		if (getTaskRemainingCount() != 0) {
-			if (this.getJobStatus() == JobState.JOB_TODO) {
-				// TODO move this to job manager
-				this.setJobStatus(JobState.JOB_COMPUTING);
-			}
 			for (ClientAudioTask task : this.getClientAudioTasks()) {
 				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 					tasks.add(task);
@@ -213,6 +206,28 @@ public class Job implements Comparable<Job>, Serializable {
 			int count = 0;
 			for (Task task : this.tasks) {
 				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
+					++count;
+				}
+			}
+			return count;
+		}
+	}
+
+	/**
+	 * Counts if necessary the completed tasks.
+	 * 
+	 * @return The count of tasks completed
+	 */
+	public synchronized int getTaskDoneCount() {
+		switch (this.getJobStatus()) {
+		case JOB_COMPLETED:
+			return this.tasks.size();
+		case JOB_TODO:
+			return 0;
+		default:
+			int count = 0;
+			for (Task task : this.tasks) {
+				if (task.getProgress().getTaskState() == TaskState.TASK_COMPLETED) {
 					++count;
 				}
 			}
@@ -344,5 +359,9 @@ public class Job implements Comparable<Job>, Serializable {
 		ArrayList<Stream> streams = new ArrayList<>();
 		streams.addAll(this.streamTaskMapping.keySet());
 		return streams;
+	}
+
+	public boolean isCompleted() {
+		return getJobStatus() == JobState.JOB_COMPLETED;
 	}
 }

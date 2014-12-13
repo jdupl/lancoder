@@ -1,12 +1,13 @@
 package org.lancoder.master;
 
 import java.io.File;
-import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.io.FilenameUtils;
+import org.lancoder.common.FilePathManager;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.Codec;
@@ -31,7 +32,9 @@ import org.lancoder.ffmpeg.FFmpegWrapper;
 
 public class JobInitiator extends RunnableService {
 
-	private LinkedBlockingDeque<ApiJobRequest> requests = new LinkedBlockingDeque<>();
+	private final static String[] EXTENSIONS = new String[] { "mkv", "mp4", "avi", "mov" };
+
+	private final LinkedBlockingDeque<ApiJobRequest> requests = new LinkedBlockingDeque<>();
 	private JobInitiatorListener listener;
 	private MasterConfig config;
 
@@ -44,7 +47,7 @@ public class JobInitiator extends RunnableService {
 		this.requests.add(request);
 	}
 
-	private void createJob(ApiJobRequest req, File sourceFile, String jobName) {
+	private void createJob(ApiJobRequest req, String jobName, File sourceFile, File outputFolder, File baseOutputFolder) {
 		// Get meta-data from source file
 		File absoluteFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), sourceFile.getPath());
 		FileInfo fileInfo = FFmpegWrapper.getFileInfo(absoluteFile, sourceFile.getPath(), new FFprobe(config));
@@ -92,12 +95,13 @@ public class JobInitiator extends RunnableService {
 			audioRate = req.getRate();
 			break;
 		}
-		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, config.getFinalEncodingFolder(), fileInfo);
+		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder, baseOutputFolder);
 
 		for (VideoStream stream : fileInfo.getVideoStreams()) {
 			double frameRate = requestFrameRate < 1 ? stream.getFrameRate() : requestFrameRate;
 			VideoStream streamToEncode = new VideoStream(stream.getIndex(), videoCodec, frameRate, req.getRate(),
-					videoRateControlType, preset, width, height, fileInfo.getDuration(), Unit.SECONDS, req.getPasses());
+					videoRateControlType, preset, width, height, fileInfo.getDuration(), Unit.SECONDS, req.getPasses(),
+					stream.getRelativeFile());
 			VideoStreamConfig config = new VideoStreamConfig(job.getJobId(), extraEncoderArgs, passes, stream,
 					streamToEncode);
 			job.addStream(streamToEncode, createTasks(config, job));
@@ -105,7 +109,7 @@ public class JobInitiator extends RunnableService {
 
 		for (AudioStream stream : fileInfo.getAudioStreams()) {
 			AudioStream streamToEncode = new AudioStream(stream.getIndex(), audioCodec, stream.getUnitCount(),
-					audioRate, audioRCT, audioChannels, audioSampleRate, Unit.SECONDS);
+					audioRate, audioRCT, audioChannels, audioSampleRate, Unit.SECONDS, stream.getRelativeFile());
 			AudioStreamConfig config = new AudioStreamConfig(job.getJobId(), extraEncoderArgs, stream, streamToEncode);
 			job.addStream(streamToEncode, createTasks(config, job));
 			// TODO Sanitize channel disposition (upmix protection)
@@ -115,12 +119,17 @@ public class JobInitiator extends RunnableService {
 		listener.newJob(job);
 	}
 
+	private void createJob(ApiJobRequest req, String jobName, File sourceFile) {
+		File output = FileUtils.getFile(config.getFinalEncodingFolder(), jobName);
+		createJob(req, jobName, sourceFile, output, output);
+	}
+
 	private ArrayList<ClientTask> createTasks(AudioStreamConfig config, Job job) {
 		ArrayList<ClientTask> tasks = new ArrayList<>();
 		AudioStream outStream = config.getOutStream();
 		if (outStream.getCodec() != Codec.COPY) {
 			int taskId = job.getTaskCount();
-			File relativeTasksOutput = FileUtils.getFile(job.getOutputFolder(), job.getPartsFolderName());
+			File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
 			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
 					String.format("part-%d.%s", taskId, outStream.getCodec().getContainer()));
 			AudioTask task = new AudioTask(taskId, job.getJobId(), 0, outStream.getUnitCount(),
@@ -145,7 +154,7 @@ public class JobInitiator extends RunnableService {
 				remaining = inStream.getUnitCount() * 1000;
 			}
 			long currentMs = 0;
-			File relativeTasksOutput = FileUtils.getFile(job.getOutputFolder(), job.getPartsFolderName());
+			File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
 			while (remaining > 0) {
 				long start = currentMs;
 				long end = 0;
@@ -172,22 +181,41 @@ public class JobInitiator extends RunnableService {
 	}
 
 	private void createJob(ApiJobRequest req, File sourcefile) {
-		createJob(req, sourcefile, req.getName());
+		createJob(req, req.getName(), sourcefile);
 	}
 
 	private void processBatchRequest(ApiJobRequest req) {
-		System.out.println("Directory given");
-		File absoluteFolder = new File(new File(config.getAbsoluteSharedFolder()), req.getInputFile());
-		Collection<File> toProcess = FileUtils.listFiles(absoluteFolder, new String[] { "mkv", "mp4", "avi", "mov" },
-				true);
+		File baseSourceFolder = FileUtils.getFile(config.getAbsoluteSharedFolder(), req.getInputFile());
+		String globalJobName = req.getName();
+		File relGlobalOutput = FileUtils.getFile(config.getFinalEncodingFolder(), globalJobName);
+		// clean shared folder if it already exists TODO
+		// File sharedParts = new File(config.getFinalEncodingFolder(), "parts");
+		// if (sharedParts.exists()) {
+		// sharedParts.delete(); // be hard on others
+		// }
+
+		// Create all jobs
+		Collection<File> toProcess = FileUtils.listFiles(baseSourceFolder, EXTENSIONS, true);
 		for (File absoluteFile : toProcess) {
-			String relativePath = new File(config.getAbsoluteSharedFolder()).toURI().relativize(absoluteFile.toURI())
-					.getPath();
-			File relativeFile = new File(relativePath);
-			String fileName = FilenameUtils.removeExtension(relativeFile.getName());
-			String jobName = String.format("%s - %s", req.getName(), fileName);
-			createJob(req, relativeFile, jobName);
+			File relativeJobFile = new File(relativize(absoluteFile));
+			String fileName = FilenameUtils.removeExtension(relativeJobFile.getName());
+			URI jobOutputUri = baseSourceFolder.toURI().relativize(absoluteFile.getParentFile().toURI());
+			File jobOutput = new File(relGlobalOutput, jobOutputUri.getPath());
+			String jobName = String.format("%s - %s ", globalJobName, fileName);
+			createJob(req, jobName, relativeJobFile, jobOutput, relGlobalOutput);
 		}
+	}
+
+	/**
+	 * Relativize file from shared directory
+	 * 
+	 * @param file
+	 *            The absolute file
+	 * @return The relative representation of the file
+	 */
+	private String relativize(File file) {
+		URI uri = new File(config.getAbsoluteSharedFolder()).toURI().relativize(file.toURI());
+		return uri.getPath();
 	}
 
 	private void processJobRequest(ApiJobRequest req) {
@@ -203,21 +231,14 @@ public class JobInitiator extends RunnableService {
 	private void prepareFileSystem(Job j) {
 		// Create base folders
 		File absoluteOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getOutputFolder());
-		File absolutePartsOutput = FileUtils.getFile(absoluteOutput, j.getPartsFolderName());
-		if (absoluteOutput.exists()) {
-			try {
-				// Attempt to clean
-				System.err.printf("Directory is not empty. Attempting to clean %s\n", absoluteOutput.toString());
-				FileUtils.cleanDirectory(absoluteOutput);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} else {
+		// TODO replace with file path manager
+		File absolutePartsOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getPartsFolderName());
+		if (!absoluteOutput.exists()) {
 			absoluteOutput.mkdirs();
+			FileUtils.givePerms(absoluteOutput, false);
 		}
-		FileUtils.givePerms(absoluteOutput, false);
-		absolutePartsOutput.mkdir();
-		FileUtils.givePerms(absolutePartsOutput, false);
+		absolutePartsOutput.mkdirs();
+		FileUtils.givePerms(absoluteOutput, true);
 	}
 
 	@Override
@@ -227,7 +248,6 @@ public class JobInitiator extends RunnableService {
 				processJobRequest(requests.take());
 			}
 		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 	}
 

@@ -1,22 +1,39 @@
 var controllers = angular.module('lancoder.controllers', ['lancoder.services']);
+
 controllers.controller('nodes', function($scope, $http, $interval, apiService) {
-  var refreshNodes = $scope.refreshNodes = function() {
+
+  $scope.getJobNameFromID = function(jobId) {
+    return $scope.jobs.filter(function(job) { return job.jobId == jobId })[0].jobName;
+  }
+
+  $scope.refresh = function() {
+    apiService.jobs().then(function(jobs) {
+      $scope.jobs = jobs;
+      $scope.complJobCount = jobs.filter(function(job) { return job.jobStatus == "JOB_COMPLETED" }).length;
+    });
     apiService.nodes().then(function(nodes) {
       $scope.nodes = nodes;
+      $scope.connectedCount = nodes.filter(function(node) { return !node.offline }).length;
     });
   };
+
   $scope.shutdown = function(node) {
-    $http({method: 'POST', url: '/api/nodes/shutdown', data: node['unid']});
+    $http({method: 'POST', url: '/api/nodes/shutdown', data: node['unid']})
+        .success(function(){
+          $scope.refresh();
+        });
   };
-  $scope.nodesAutoRefresh = function() {
-    $interval(function() {
-      $scope.refreshNodes();
+
+  $scope.nodesShowCodec = {};
+  $scope.refresh();
+  var intervalPromise = $interval(function() {
+      $scope.refresh();
     }, 5000);
-  };
-  refreshNodes();
-  $scope.nodesAutoRefresh();
+  $scope.$on('$destroy', function () { $interval.cancel(intervalPromise); });
 });
-controllers.controller('jobs', function($scope, $http, $interval) {
+
+controllers.controller('jobs', function($scope, $http, $interval, apiService) {
+
   $http({method: 'GET', url: '/api/codecs/audio'})
       .success(function(data) {
         $scope.audioCodecs = data;
@@ -61,60 +78,22 @@ controllers.controller('jobs', function($scope, $http, $interval) {
   $scope.audioSampleRates = [8000, 11025, 22050, 44100, 48000, 88200, 96000];
   $scope.passes = [1, 2];
 
-  var refreshJobs = $scope.refreshJobs = function() {
-    // Get jobs
-    $http({method: 'GET', url: '/api/jobs'})
-        .success(function(data, status, headers, config) {
-          for (var i = 0; i < data.length; i++) {
-            switch (data[i].jobStatus) {
-              case 'JOB_COMPLETED':
-                data[i].panel = 'panel-success';
-                break;
-              case 'JOB_CRASHED':
-                data[i].panel = 'panel-danger';
-                break;
-              case 'JOB_COMPUTING':
-                data[i].panel = 'panel-primary';
-                break;
-              case 'JOB_PAUSED':
-                data[i].panel = 'panel-warning';
-                break;
-              case 'JOB_TODO':
-                data[i].panel = 'panel-info';
-                break;
-              default:
-                data[i].panel = 'panel-default';
-            }
-            data[i].completedTasks = 0;
-            data[i].taskCount = data[i].tasks.length;
-            data[i].totalFps = 0;
-            for (var j = 0; j < data[i].taskCount; j++) {
-              switch (data[i].tasks[j].taskProgress.taskState) {
-                case 'TASK_COMPLETED':
-                  data[i].completedTasks++;
-                  break;
-                case 'TASK_COMPUTING':
-                  data[i].totalFps += data[i].tasks[j].taskProgress.fps;
-                  break;
-              }
-            }
-          }
-          $scope.jobs = data;
-        }).error(function() {
-      $scope.jobs = [];
-      $scope.jobs.error = 'Cannot not reach master server.';
+  $scope.refresh = function() {
+    apiService.jobs().then(function(jobs) {
+      $scope.jobs = jobs;
+      $scope.complJobCount = jobs.filter(function(job) { return job.jobStatus == "JOB_COMPLETED" }).length;
+    });
+    apiService.nodes().then(function(nodes) {
+      $scope.nodes = nodes;
+      $scope.connectedCount = nodes.filter(function(node) { return !node.offline }).length;
     });
   };
-  $scope.jobsAutoRefresh = function() {
-    $interval(function() {
-      $scope.refreshJobs();
-    }, 5000);
-  };
+
   $scope.addjob = function(newjob) {
     $http({method: 'POST', url: '/api/jobs/add', data: newjob})
         .success(function(data) {
           if (data.success) {
-            refreshJobs();
+            $scope.refresh();
             $scope.showAddJobPanel = false;
           } else {
             alert(data.message);
@@ -123,11 +102,12 @@ controllers.controller('jobs', function($scope, $http, $interval) {
       alert('Network failure');
     });
   };
+
   $scope.deletejob = function(oldjob) {
     $http({method: 'POST', url: '/api/jobs/delete', data: oldjob})
         .success(function(data) {
           if (data.success) {
-            refreshJobs();
+            $scope.refresh();
           } else {
             alert(data.message);
           }
@@ -135,8 +115,21 @@ controllers.controller('jobs', function($scope, $http, $interval) {
       alert('Network failure');
     });
   };
-  refreshJobs();
-  $scope.jobsAutoRefresh();
+
+  $scope.cleanJobs = function() {
+    $http({method: 'POST', url: '/api/jobs/clean'})
+    .success(function(data) {
+        $scope.refresh();
+    });
+  }
+
+  $scope.newJob = {};
+  $scope.refresh();
+
+  var intervalPromise = $interval(function() {
+    $scope.refresh();
+  }, 5000);
+  $scope.$on('$destroy', function () { $interval.cancel(intervalPromise); });
 }).controller('HeaderController', function($scope, $location) {
   $scope.isActive = function(viewLocation) {
     return viewLocation === $location.path();

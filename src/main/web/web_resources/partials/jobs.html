@@ -1,145 +1,182 @@
-<p>Here is the current job list of the master server</p>
-<div ng-show="jobs.error">
+<div ng-show="jobs.error" class="row">
     <div class="alert alert-danger alert-dismissable">
         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
         {{jobs.error}}
     </div>
 </div>
-<div class="row">
-    <div class="col-md-12">
-        <button type="button" class="btn btn-info" ng-click="showAddJobPanel = true">
-            Add new job
-        </button>
+<p>
+    <div class="row btn-group" role="group">
+        <div class="col-md-12">
+            <button type="button" class="btn btn-success" ng-click="showAddJobPanel = !showAddJobPanel; showJobsFilter = false">
+                Add new job
+            </button>
+            <button type="button" class="btn btn-info" ng-click="showJobsFilter = !showJobsFilter; showAddJobPanel = false">
+                Search/filter
+            </button>
+            <button type="button" class="btn btn-info" ng-click="cleanJobs()">
+                Clear completed jobs
+            </button>
+        </div>
+    </div>
+</p>
+<div class="panel panel-default" ng-if="showJobsFilter">
+    <div class="panel-body row">
+        <form class="form-inline col-md-3">
+            <input ng-model="$parent.jobQuery" type="text" placeholder="Filter by job name">
+        </form>
     </div>
 </div>
-<div ng-show="showAddJobPanel" class="row">
-    <form role="form">
-        <div class="col-md-12">
-            <div class="well well-sm">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Job name</label>
-                            <input type="text" class="form-control" placeholder="Job name" ng-model="newJob.name">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Input File</label>
-                            <input type="text" class="form-control" placeholder="Source file" ng-model="newJob.inputFile">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="panel panel-default">
-                <div class="panel-heading">Video settings</div>
-                <div class="panel-body">
+<div ng-show="showAddJobPanel">
+    <div class="panel panel-default">
+        <div class="panel-heading">Add new job</div>
+        <div class="panel-body">
+            <form role="form">
+                <div class="well well-sm">
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label>Video codec</label>
-                                <select class="form-control" ng-model="newJob.videoCodec"  ng-options="codec as codec.name for codec in videoCodecs"></select>
+                                <label>Job name</label>
+                                <input type="text" class="form-control" placeholder="Job name" ng-model="newJob.name">
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label>Rate control type</label>
-                                <select class="form-control" ng-model="newJob.rateControlType" ng-init="newJob.rateControlType = 'VBR'" ng-options="ct.value as ct.name for ct in controlTypes"></select>
-                            </div>
-                        </div>
-                        <div class="col-md-3" ng-show="newJob.rateControlType === 'VBR'">
-                            <div class="form-group">
-                                <label>Passes</label>
-                                <select class="form-control" ng-model="newJob.passes" ng-init="newJob.passes = 1" ng-options="pass for pass in passes"></select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <div ng-switch on="newJob.rateControlType">
-                                    <div ng-switch-when="CRF">
-                                        <label>Rate factor (18~23)</label>
-                                    </div>
-                                    <div ng-switch-default>
-                                        <label>Video Bitrate (kbit/s)</label>
-                                    </div>
-                                </div>
-                                <input type="number" class="form-control" ng-model="newJob.rate" ng-init="newJob.rate = 1500">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Video Preset</label>
-                                <select class="form-control" ng-model="newJob.preset" ng-init="newJob.preset = 'MEDIUM'" ng-options="preset for preset in presets"></select>
+                                <label>Input File</label>
+                                <input type="text" class="form-control" placeholder="Source file" ng-model="newJob.inputFile">
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="panel panel-default">
-                <div class="panel-heading">Audio settings</div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Audio processing</label>
-                                <select class="form-control" ng-model="newJob.audioConfig" ng-init="newJob.audioConfig = 'AUTO'" ng-options="config.value as config.name for config in audioConfigs"></select>
-                            </div>
-                        </div>
-                        <div ng-show="newJob.audioConfig === 'MANUAL'">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Video settings</div>
+                    <div class="panel-body">
+                        <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label>Audio codec</label>
-                                    <select class="form-control" ng-model="newJob.audioCodec"  ng-options="codec as codec.name for codec in audioCodecs"></select>
+                                    <label>Video codec</label>
+                                    <select class="form-control" ng-model="newJob.videoCodec"  ng-options="codec as codec.name for codec in videoCodecs"></select>
                                 </div>
                             </div>
-                            <div ng-hide="newJob.audioCodec.lossless">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>Audio rate control type</label>
-                                        <select class="form-control" ng-model="newJob.audioRateControlType" ng-init="newJob.audioRateControlType = 'CRF'" ng-options="ct.value as ct.name for ct in audioControlTypes"></select>
-                                    </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Rate control type</label>
+                                    <select class="form-control" ng-model="newJob.rateControlType" ng-init="newJob.rateControlType = 'VBR'" ng-options="ct.value as ct.name for ct in controlTypes"></select>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <div ng-switch on="newJob.audioRateControlType">
-                                            <div ng-switch-when="CRF">
-                                                <label>Audio Rate factor (3~6)</label>
-                                            </div>
-                                            <div ng-switch-default>
-                                                <label>Audio Bitrate (kbit/s)</label>
-                                            </div>
+                            </div>
+                            <div class="col-md-3" ng-show="newJob.rateControlType === 'VBR'">
+                                <div class="form-group">
+                                    <label>Passes</label>
+                                    <select class="form-control" ng-model="newJob.passes" ng-init="newJob.passes = 1" ng-options="pass for pass in passes"></select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <div ng-switch on="newJob.rateControlType">
+                                        <div ng-switch-when="CRF">
+                                            <label>Rate factor (18~23)</label>
                                         </div>
-                                        <input type="number" class="form-control" ng-model="newJob.audioRate" ng-init="newJob.audioRate = 5">
+                                        <div ng-switch-default>
+                                            <label>Video Bitrate (kbit/s)</label>
+                                        </div>
                                     </div>
+                                    <input type="number" class="form-control" ng-model="newJob.rate" ng-init="newJob.rate = 1500">
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="row" ng-show="newJob.audioConfig === 'MANUAL'">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Audio channels</label>
-                                <select class="form-control" ng-model="newJob.audioChannels" ng-init="newJob.audioChannels = 'STEREO'" ng-options="channel.value as channel.name for channel in audioChannels"></select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Audio sample rate</label>
-                                <select class="form-control" ng-model="newJob.audioSampleRate" ng-init="newJob.audioSampleRate = 48000" ng-options="s as s for s in audioSampleRates"></select>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Video Preset</label>
+                                    <select class="form-control" ng-model="newJob.preset" ng-init="newJob.preset = 'MEDIUM'" ng-options="preset for preset in presets"></select>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">Audio settings</div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Audio processing</label>
+                                    <select class="form-control" ng-model="newJob.audioConfig" ng-init="newJob.audioConfig = 'AUTO'" ng-options="config.value as config.name for config in audioConfigs"></select>
+                                </div>
+                            </div>
+                            <div ng-show="newJob.audioConfig === 'MANUAL'">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Audio codec</label>
+                                        <select class="form-control" ng-model="newJob.audioCodec"  ng-options="codec as codec.name for codec in audioCodecs"></select>
+                                    </div>
+                                </div>
+                                <div ng-hide="newJob.audioCodec.lossless">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Audio rate control type</label>
+                                            <select class="form-control" ng-model="newJob.audioRateControlType" ng-init="newJob.audioRateControlType = 'CRF'" ng-options="ct.value as ct.name for ct in audioControlTypes"></select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <div ng-switch on="newJob.audioRateControlType">
+                                                <div ng-switch-when="CRF">
+                                                    <label>Audio Rate factor (3~6)</label>
+                                                </div>
+                                                <div ng-switch-default>
+                                                    <label>Audio Bitrate (kbit/s)</label>
+                                                </div>
+                                            </div>
+                                            <input type="number" class="form-control" ng-model="newJob.audioRate" ng-init="newJob.audioRate = 5">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" ng-show="newJob.audioConfig === 'MANUAL'">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Audio channels</label>
+                                    <select class="form-control" ng-model="newJob.audioChannels" ng-init="newJob.audioChannels = 'STEREO'" ng-options="channel.value as channel.name for channel in audioChannels"></select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Audio sample rate</label>
+                                    <select class="form-control" ng-model="newJob.audioSampleRate" ng-init="newJob.audioSampleRate = 48000" ng-options="s as s for s in audioSampleRates"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success" ng-click="addjob(newJob)">Save and add</button>
+                    <button type="button" class="btn btn-danger" ng-click="showAddJobPanel = false">Cancel</button>
+                </div>
+            </form>
         </div>
-        <div class="btn-group">
-            <button type="button" class="btn btn-success" ng-click="addjob(newJob)">Save and add</button>
-            <button type="button" class="btn btn-danger" ng-click="showAddJobPanel = false">Cancel</button>
-        </div>
-    </form>
+    </div>
 </div>
 
-<div ng-repeat="job in jobs" class="row">
+<div ng-show="connectedCount == 0">
+    <div class="bs-callout bs-callout-danger">
+        <h4>No nodes are connected !</h4>
+        Connect nodes to master to start dispatching work.
+    </div>
+</div>
+<div ng-show="jobs.length == 0">
+    <div class="bs-callout bs-callout-info">
+        <h4>No jobs in list</h4>
+        Please add jobs to start encoding.
+    </div>
+</div>
+<div ng-show="complJobCount == jobs.length && jobs.length > 0">
+    <div class="bs-callout bs-callout-success">
+        <h4>All jobs have been encoded !</h4>
+        <p>Check to ensure no errors were encountered !</p>
+        <p>Add new jobs or clear the history with the button above.</p>
+    </div>
+</div>
+
+<div ng-repeat="job in jobs | filter: {jobName: jobQuery}" class="row">
     <div class="col-md-12">
         <div class="panel {{job.panel}}">
             <div class="panel-heading">
@@ -150,11 +187,13 @@
                     <div class="col-md-12">
                         <p>{{job.completedTasks}} of out {{job.taskCount}} tasks completed</p>
                         <div class="progress">
-                            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{job.completedTasks}}" aria-valuemin="0" aria-valuemax="{{job.taskCount}}" style="width: {{job.completedTasks / job.taskCount * 100}}%" >
+                            <div class="progress-bar progress-bar-success" role="progressbar"
+                                aria-valuenow="{{job.completedTasks}}" aria-valuemin="0" aria-valuemax="{{job.taskCount}}"
+                                style="width: {{job.completedTasks / job.taskCount * 100}}%" >
                             </div>
                         </div>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-warning">
+                            <button type="button" class="btn btn-warning disabled">
                                 Pause
                             </button>
                             <button type="button" class="btn btn-danger" ng-click="deletejob(job.jobId)">

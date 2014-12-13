@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lancoder.common.codecs.Codec;
-import org.lancoder.common.config.Config;
 import org.lancoder.common.file_components.FileInfo;
+import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
 import org.lancoder.ffmpeg.probers.CodecProber;
 import org.lancoder.ffmpeg.probers.FileProber;
@@ -14,18 +14,18 @@ import org.lancoder.ffmpeg.probers.VersionProber;
 
 public class FFmpegWrapper {
 
-	public static ArrayList<Codec> getAvailableCodecs(Config config) {
+	public static ArrayList<Codec> getAvailableCodecs(FFmpeg module) {
 		CodecProber prober = new CodecProber();
-		return prober.getNodeCapabilities(config);
+		return prober.getNodeCapabilities(module);
 	}
 
-	public static FileInfo getFileInfo(File absoluteFile, String relativePath, FFprobe fFProbe) {
+	public static FileInfo getFileInfo(File absoluteFile, String relativePath, FFprobe module) {
 		FileProber prober = new FileProber();
-		return prober.getFileInfo(absoluteFile, relativePath, fFProbe);
+		return prober.getFileInfo(absoluteFile, relativePath, module);
 	}
 
-	public static HashMap<String, String> getVersions(Config config) {
+	public static HashMap<String, String> getVersions(FFmpeg module) {
 		VersionProber prober = new VersionProber();
-		return prober.getVersions(config);
+		return prober.getVersions(module);
 	}
 }

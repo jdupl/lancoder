@@ -6,6 +6,7 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
 import net.sourceforge.argparse4j.inf.Namespace;
 
+import org.lancoder.common.Container;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.master.Master;
@@ -48,35 +49,54 @@ public class Main {
 		boolean defaultInit = parsed.getBoolean("init_default");
 		boolean overwrite = parsed.getBoolean("overwrite");
 		String config = parsed.getString("config");
-		boolean mustInit = promptInit || defaultInit;
 
+		boolean mustInit = promptInit || defaultInit;
 		Class<? extends Config> clazz = isWorker ? WorkerConfig.class : MasterConfig.class;
 		ConfigFactory<? extends Config> factory = new ConfigFactory<>(clazz, config);
-		Config conf = mustInit ? factory.init(promptInit, overwrite) : factory.load();
+		final Config conf = mustInit ? factory.init(promptInit, overwrite) : factory.load();
+		System.out.print(conf.toString());
 
-		Runnable r = isWorker ? new Worker((WorkerConfig) conf) : new Master((MasterConfig) conf);
-		new Thread(r).start();
-		conf.dump();
+		final Container container = isWorker ? new Worker((WorkerConfig) conf) : new Master((MasterConfig) conf);
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				container.shutdown();
+				System.out.println("Lancoder exited cleanly !");
+			}
+		});
+		new Thread(container).start();
 	}
 
 	private static Namespace parse(String[] args) {
-		ArgumentParser parser = ArgumentParsers.newArgumentParser("lancoder").defaultHelp(false)
+		ArgumentParser parser = ArgumentParsers.newArgumentParser("lancoder")
+				.defaultHelp(false)
 				.version("${prog} " + LANCODER_VERSION);
-		parser.addArgument("--version", "-v").action(Arguments.version()).help("show the current version and exit");
+		parser.addArgument("--version", "-v")
+				.action(Arguments.version())
+				.help("show the current version and exit");
 
-		MutuallyExclusiveGroup group = parser.addMutuallyExclusiveGroup().required(true)
+		MutuallyExclusiveGroup group = parser.addMutuallyExclusiveGroup()
+				.required(true)
 				.description("Run a master or worker instance");
-		group.addArgument("--worker", "-w").action(Arguments.storeTrue()).help("run the worker");
-		group.addArgument("--master", "-m").action(Arguments.storeTrue()).help("run the master");
+		group.addArgument("--worker", "-w")
+				.action(Arguments.storeTrue())
+				.help("run the worker");
+		group.addArgument("--master", "-m")
+				.action(Arguments.storeTrue())
+				.help("run the master");
 
 		MutuallyExclusiveGroup group2 = parser.addMutuallyExclusiveGroup();
-		group2.addArgument("--init-prompt", "-i").action(Arguments.storeTrue())
+		group2.addArgument("--init-prompt", "-i")
+				.action(Arguments.storeTrue())
 				.help("intialize configuration and prompt user");
-		group2.addArgument("--init-default", "-I").action(Arguments.storeTrue())
+		group2.addArgument("--init-default", "-I")
+				.action(Arguments.storeTrue())
 				.help("initialise default config (you should edit that file after afterwards)");
 
-		parser.addArgument("--config", "-c").help("specify the config file");
-		parser.addArgument("--overwrite", "-o").action(Arguments.storeTrue())
+		parser.addArgument("--config", "-c")
+				.help("specify the config file");
+		parser.addArgument("--overwrite", "-o")
+				.action(Arguments.storeTrue())
 				.help("if flag is set, overwrite old config");
 		return parser.parseArgsOrFail(args);
 	}

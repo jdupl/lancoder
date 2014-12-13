@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
+import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.ffmpeg.FFmpegReader;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
 
@@ -17,10 +17,10 @@ public class VersionProber implements FFmpegReaderListener {
 			.compile("^(lib[a-z]+)\\s*([0-9]+).\\s*([0-9]+).\\s*([0-9]+)");
 	private final HashMap<String, String> versions = new HashMap<>();
 
-	public HashMap<String, String> getVersions(Config config) {
+	public HashMap<String, String> getVersions(FFmpeg module) {
 		FFmpegReader ffmpeg = new FFmpegReader();
 		ArrayList<String> args = new ArrayList<>();
-		args.add(config.getFFmpegPath());
+		args.add(module.getPath());
 		args.add("-version");
 		try {
 			ffmpeg.read(args, this, false);

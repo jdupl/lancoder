@@ -1,55 +1,25 @@
 package org.lancoder.master.checker;
 
-import java.util.ArrayList;
-
 import org.lancoder.common.Node;
-import org.lancoder.common.network.cluster.messages.StatusReport;
+import org.lancoder.common.events.EventListener;
 import org.lancoder.common.pool.Pool;
 import org.lancoder.common.pool.Pooler;
-import org.lancoder.common.task.TaskReport;
 
 /**
  * Loose pool implementation for node checking with custom listener interface
  *
  */
-public class NodeCheckerPool extends Pool<Node> implements NodeCheckerListener {
+public class NodeCheckerPool extends Pool<Node> {
 
-	private static final int MAX_CHECKERS = 5;
+	private EventListener listener;
 
-	private NodeCheckerListener listener;
-
-	public NodeCheckerPool(NodeCheckerListener listener) {
-		super(MAX_CHECKERS);
+	public NodeCheckerPool(int ressourceLimit, EventListener listener) {
+		super(ressourceLimit);
 		this.listener = listener;
 	}
 
 	@Override
 	protected Pooler<Node> getPoolerInstance() {
-		return new NodeChecker(this);
-	}
-
-	@Override
-	public ArrayList<Node> getNodes() {
-		return this.listener.getNodes();
-	}
-
-	@Override
-	public ArrayList<Node> getOnlineNodes() {
-		return this.listener.getOnlineNodes();
-	}
-
-	@Override
-	public void nodeDisconnected(Node n) {
-		this.listener.nodeDisconnected(n);
-	}
-
-	@Override
-	public void readTaskReports(ArrayList<TaskReport> taskReports) {
-		this.listener.readTaskReports(taskReports);
-	}
-
-	@Override
-	public boolean readStatusReport(StatusReport statusReport) {
-		return this.listener.readStatusReport(statusReport);
+		return new NodeChecker(listener);
 	}
 }

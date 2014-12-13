@@ -1,21 +1,26 @@
-package org.lancoder.worker.server;
+package org.lancoder.common.network.cluster;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 
 import org.lancoder.common.RunnableService;
+import org.lancoder.common.pool.Pool;
 
-public class WorkerObjectServer extends RunnableService {
+public abstract class Server extends RunnableService {
 
-	private int port;
-	private HandlerPool pool;
-	private Thread poolThread;
-	private ServerSocket server;
+	protected final static int MAX_HANDLERS = 100;
 
-	public WorkerObjectServer(WorkerServerListener listener, int port) {
+	protected int port;
+	protected ServerSocket server;
+	protected Pool<Socket> pool;
+	protected Thread poolThread;
+
+	public Server(int port) {
 		this.port = port;
-		this.pool = new HandlerPool(100, listener);
 	}
+
+	protected abstract void instanciatePool();
 
 	@Override
 	public void stop() {
@@ -30,12 +35,14 @@ public class WorkerObjectServer extends RunnableService {
 
 	@Override
 	public void run() {
+		instanciatePool();
 		this.poolThread = new Thread(pool);
 		this.poolThread.start();
 		try {
 			server = new ServerSocket(port);
 			while (!close) {
-				this.pool.handle(server.accept());
+				Socket incoming = server.accept();
+				this.pool.handle(incoming);
 			}
 		} catch (IOException e) {
 			if (!close) {
@@ -48,4 +55,5 @@ public class WorkerObjectServer extends RunnableService {
 	public void serviceFailure(Exception e) {
 		e.printStackTrace();
 	}
+
 }

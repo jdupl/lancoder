@@ -9,17 +9,16 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import org.lancoder.common.Container;
+import org.lancoder.common.FilePathManager;
 import org.lancoder.common.Node;
-import org.lancoder.common.RunnableService;
-import org.lancoder.common.ServerListener;
 import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
-import org.lancoder.common.network.cluster.messages.ConnectMessage;
+import org.lancoder.common.network.cluster.messages.ConnectRequest;
+import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
-import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.TaskReport;
@@ -27,17 +26,15 @@ import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.ffmpeg.FFmpegWrapper;
-import org.lancoder.worker.contacter.ConctactMasterListener;
-import org.lancoder.worker.contacter.ContactMasterObject;
+import org.lancoder.worker.contacter.MasterContacter;
+import org.lancoder.worker.contacter.MasterContacterListener;
+import org.lancoder.worker.converter.ConverterListener;
 import org.lancoder.worker.converter.audio.AudioConverterPool;
-import org.lancoder.worker.converter.audio.AudioTaskListenerAdapter;
 import org.lancoder.worker.converter.video.VideoConverterPool;
-import org.lancoder.worker.converter.video.VideoTaskListenerAdapter;
-import org.lancoder.worker.server.WorkerObjectServer;
+import org.lancoder.worker.server.WorkerServer;
 import org.lancoder.worker.server.WorkerServerListener;
 
-public class Worker extends Container implements ServerListener, WorkerServerListener, ConctactMasterListener,
-		PoolListener<ClientTask> {
+public class Worker extends Container implements WorkerServerListener, MasterContacterListener, ConverterListener {
 
 	private Node node;
 	private WorkerConfig config;
@@ -54,9 +51,6 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 
 	@Override
 	protected void bootstrap() {
-		// Get codecs
-		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(config);
-		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
 		// Get number of available threads
 		threadCount = Runtime.getRuntime().availableProcessors();
 		System.out.printf("Detected %d threads available.%n", threadCount);
@@ -68,23 +62,29 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 					+ "\nOriginal exception: '%s'", config.getMasterIpAddress(), e.getMessage()));
 		}
 		super.bootstrap();
+		// Get codecs
+		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
+		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
 		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount, config.getUniqueID());
 	}
 
 	@Override
 	protected void registerThirdParties() {
-		this.thirdParties.add(new FFmpeg(config));
+		registerThirdParty(new FFmpeg(config));
 	}
 
 	@Override
 	protected void registerServices() {
 		super.registerServices();
-		audioPool = new AudioConverterPool(threadCount, new AudioTaskListenerAdapter(this), config);
+		filePathManager = new FilePathManager(config);
+		// TODO change to current instance
+		audioPool = new AudioConverterPool(threadCount, this, filePathManager, getFFmpeg());
 		services.add(audioPool);
-		videoPool = new VideoConverterPool(1, new VideoTaskListenerAdapter(this), config);
+		// TODO change to current instance
+		videoPool = new VideoConverterPool(1, this, filePathManager, getFFmpeg());
 		services.add(videoPool);
-		services.add(new WorkerObjectServer(this, config.getListenPort()));
-		services.add(new ContactMasterObject(getMasterInetAddress(), getMasterPort(), this));
+		services.add(new WorkerServer(this, config.getListenPort()));
+		services.add(new MasterContacter(getMasterInetAddress(), getMasterPort(), this));
 	}
 
 	public void shutdown() {
@@ -95,13 +95,8 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 		this.stop();
 	}
 
-	public void print(String s) {
-		System.out.println((getWorkerName().toUpperCase()) + ": " + s);
-	}
-
 	public synchronized void stopWork(ClientTask t) {
 		// TODO check which task to stop (if many tasks are implemented)
-		System.err.println("Setting current task to null");
 		this.getCurrentTasks().remove(t);
 		if (t instanceof ClientVideoTask) {
 			this.updateStatus(NodeState.FREE);
@@ -158,7 +153,6 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	public void updateStatus(NodeState statusCode) {
-		print("changing worker status to " + statusCode);
 		this.setStatus(statusCode);
 		switch (statusCode) {
 		case FREE:
@@ -174,7 +168,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 			notifyMasterStatusChange();
 			break;
 		default:
-			System.err.println("WORKER: Unhandlded status code while updating status");
+			System.err.println("Unhandlded status code while updating status");
 			break;
 		}
 	}
@@ -236,7 +230,6 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	public void setUnid(String unid) {
-		print("got id " + unid + " from master");
 		this.config.setUniqueID(unid);
 		this.config.dump();
 	}
@@ -252,19 +245,11 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	@Override
-	public void serverShutdown(RunnableService server) {
-		this.services.remove(server);
-	}
-
-	@Override
-	public void serverFailure(Exception e, RunnableService server) {
-		e.printStackTrace();
-	}
-
-	@Override
 	public boolean deleteTask(ClientTask t) {
 		for (ClientTask task : this.node.getCurrentTasks()) {
 			if (task.equals(t)) {
+				System.out.printf("Stopping task %d of job %s as Master requested !%n", task.getTaskId(),
+						task.getJobId());
 				stopWork(task);
 				return true;
 			}
@@ -279,13 +264,22 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	@Override
-	public void receivedUnid(String unid) {
-		setUnid(unid);
-		updateStatus(NodeState.FREE);
+	public void onConnectResponse(ConnectResponse responseMessage) {
+		String unid = responseMessage.getNewUnid();
+		if (unid != null && !unid.isEmpty()) {
+			setUnid(unid);
+			String protocol = responseMessage.getWebuiProtocol();
+			int port = responseMessage.getWebuiPort();
+			System.out.printf("Worker is now connected to master. Please connect to the webui at '%s://%s:%d'.%n",
+					protocol, masterInetAddress.getHostAddress(), port);
+			updateStatus(NodeState.FREE);
+		} else {
+			System.err.println("Received empty or invalid UNID from master.");
+		}
 	}
 
 	@Override
-	public synchronized void started(ClientTask task) {
+	public synchronized void taskStarted(ClientTask task) {
 		task.getProgress().start();
 		this.getCurrentTasks().add(task);
 		if (this.getStatus() != NodeState.WORKING) {
@@ -294,8 +288,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	@Override
-	public synchronized void completed(ClientTask task) {
-		System.err.println("Worker completed task");
+	public synchronized void taskCompleted(ClientTask task) {
 		task.getProgress().complete();
 		notifyMasterStatusChange();
 		this.getCurrentTasks().remove(task);
@@ -305,8 +298,7 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	@Override
-	public synchronized void failed(ClientTask task) {
-		System.err.println("Worker failed task " + task.getTaskId());
+	public synchronized void taskFailed(ClientTask task) {
 		task.getProgress().reset();
 		notifyMasterStatusChange();
 		this.getCurrentTasks().remove(task);
@@ -316,19 +308,13 @@ public class Worker extends Container implements ServerListener, WorkerServerLis
 	}
 
 	@Override
-	public void crash(Exception e) {
-		e.printStackTrace();
-		// TODO
-	}
-
-	@Override
-	public ConnectMessage getConnectMessage() {
-		return new ConnectMessage(this.node);
+	public ConnectRequest getConnectMessage() {
+		return new ConnectRequest(this.node);
 	}
 
 	@Override
 	public void masterTimeout() {
-		System.err.println("Master is disconnected !");
+		System.err.println("Lost connection to master !");
 		for (ClientTask task : this.getCurrentTasks()) {
 			stopWork(task);
 		}

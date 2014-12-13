@@ -1,22 +1,44 @@
-<div ng-if="nodes.error">
+<div ng-if="nodes.error" class="row">
     <div class="alert alert-danger alert-dismissable">
         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
         {{nodes.error}}
     </div>
 </div>
-<div class="animate-repeat" ng-repeat="node in nodes">
-    <div class="panel {{node.panel}}">
+<p>
+    <div class="row btn-group" role="group">
+        <div class="col-md-12">
+            <button type="button" class="btn btn-info" ng-click="showNodeFilter = !showNodeFilter">
+                Search/filter
+            </button>
+        </div>
+    </div>
+</p>
+<div class="panel panel-default" ng-if="showNodeFilter">
+    <div class="panel-body row">
+        <form class="form-inline col-md-6">
+            <input ng-model="$parent.nodeQuery" type="text" placeholder="Filter by node name">
+            <input ng-model="$parent.showOfflineNodes" type="checkbox"> Show offline nodes
+        </form>
+    </div>
+</div>
+<div ng-show="connectedCount == 0 && jobs.length == 0">
+  <div class="bs-callout bs-callout-warning">
+    <h4>No nodes are connected !</h4>
+    Connect nodes to master to start dispatching work.
+  </div>
+</div>
+<div class="animate-repeat" ng-repeat="node in nodes | filter:{name: nodeQuery}">
+    <div class="panel {{node.panel}}" ng-if="showOfflineNodes && node.offline || !node.offline">
         <div class="panel-heading">
             <h3 class="panel-title">{{node.name}} | {{node.nodeAddress}}:{{node.nodePort}} | {{node.status}}</h3>
         </div>
         <div class="panel-body">
-            <button popover-title="Available codecs" popover="{{node.cleanCodecs}}" popover-placement="right" class="btn btn-default">View Codecs</button>
             <div class="animate-repeat" ng-repeat="task in node.currentTasks">
                 <div class="panel {{node.panel}}" ng-init="currentTask = task.task">
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p>Encoding part {{currentTask.taskId}} of file {{currentTask.tempFile}}</p>
+                                <p>Encoding part {{currentTask.taskId}} of job {{getJobNameFromID(currentTask.jobId)}}</p>
                                 <div ng-if="currentTask.taskProgress.stepCount > 1">
                                     <p>Pass {{currentTask.taskProgress.currentPassIndex}} of {{currentTask.taskProgress.stepCount}}</p>
                                 </div>
@@ -32,25 +54,31 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6">
-                                <p>Encoding at {{currentTask.taskProgress.currentStep.speed| number:1}} {{currentTask.taskProgress.currentStep.prettyUnit}}.
+                                <p>Encoding at {{currentTask.taskProgress.currentStep.speed | number:1}} {{currentTask.taskProgress.currentStep.prettyUnit}}.
                                     Estimated time to finish this pass:
-                                    {{currentTask.taskProgress.currentStep.timeEstimated / 1000| number:0}}
+                                    {{currentTask.taskProgress.currentStep.timeEstimated / 1000 | number:0}}
                                     s</p>
                             </div>
                             <div class="col-md-6">
-                                <p style="text-align: right">{{currentTask.taskProgress.currentStep.progress| number:2}}% complete</p>
+                                <p style="text-align: right">{{currentTask.taskProgress.currentStep.progress | number:2}}% complete</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="btn-group">
+                <button ng-click="nodesShowCodec[node.unid] = !nodesShowCodec[node.unid]" class="btn btn-default">View Codecs</button>
                 <button type="button" class="btn btn-warning" disabled="disabled">
                     Pause node
                 </button>
-                <button type="button" class="btn btn-danger" ng-click="shutdown(node)">
+                <button type="button" class="btn btn-danger" ng-disabled="node.offline" ng-click="shutdown(node)">
                     Shutdown node
                 </button>
+            </div>
+            <div collapse="!nodesShowCodec[node.unid]">
+                <div ng-repeat="codec in node.codecs">
+                    {{codec.name}}
+                </div>
             </div>
         </div>
     </div>

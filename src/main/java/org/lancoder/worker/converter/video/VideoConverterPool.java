@@ -1,24 +1,28 @@
 package org.lancoder.worker.converter.video;
 
+import org.lancoder.common.FilePathManager;
 import org.lancoder.common.pool.Pool;
-import org.lancoder.common.pool.PoolListener;
 import org.lancoder.common.pool.Pooler;
 import org.lancoder.common.task.video.ClientVideoTask;
-import org.lancoder.worker.WorkerConfig;
+import org.lancoder.common.third_parties.FFmpeg;
+import org.lancoder.worker.converter.ConverterListener;
 
 public class VideoConverterPool extends Pool<ClientVideoTask> {
 
-	private WorkerConfig config;
+	private ConverterListener listener;
+	private FilePathManager filePathManager;
+	private FFmpeg ffMpeg;
 
-	public VideoConverterPool(int threads, PoolListener<ClientVideoTask> listener, WorkerConfig config) {
-		super(threads, listener, false);
-		this.config = config;
+	public VideoConverterPool(int threads, ConverterListener listener, FilePathManager filePathManager, FFmpeg ffMpeg) {
+		super(threads, false);
+		this.listener = listener;
+		this.filePathManager = filePathManager;
+		this.ffMpeg = ffMpeg;
 	}
 
 	@Override
 	protected Pooler<ClientVideoTask> getPoolerInstance() {
-		return new VideoWorkThread(listener, this.config.getAbsoluteSharedFolder(),
-				this.config.getTempEncodingFolder(), config);
+		return new VideoWorkThread(listener, filePathManager, ffMpeg);
 	}
 
 }

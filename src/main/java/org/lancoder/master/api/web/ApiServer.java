@@ -67,7 +67,7 @@ public class ApiServer extends RunnableService {
 
 	@Override
 	public void serviceFailure(Exception e) {
-		master.serverFailure(e, this);
+		 e.printStackTrace();
 	}
 
 }

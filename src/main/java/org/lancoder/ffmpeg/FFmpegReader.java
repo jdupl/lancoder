@@ -57,7 +57,7 @@ public class FFmpegReader extends Service {
 		boolean success = false;
 		ProcessBuilder pb = new ProcessBuilder(args);
 		pb.directory(processDirectory);
-		System.out.println(pb.command().toString()); // DEBUG
+		// System.out.println(pb.command().toString()); // DEBUG
 		Scanner s = null;
 		try {
 			p = pb.start();
