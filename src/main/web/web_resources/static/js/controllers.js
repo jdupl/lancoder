@@ -24,20 +24,16 @@ controllers.controller('nodes', function($scope, $http, $interval, apiService) {
         });
   };
 
-  $scope.autoRefresh = function() {
-    $interval(function() {
+  $scope.nodesShowCodec = {};
+  $scope.refresh();
+  var intervalPromise = $interval(function() {
       $scope.refresh();
     }, 5000);
-  };
-
-  $scope.nodesShowCodec = {};
-
-  $scope.refresh();
-  $scope.autoRefresh();
+  $scope.$on('$destroy', function () { $interval.cancel(intervalPromise); });
 });
 
 controllers.controller('jobs', function($scope, $http, $interval, apiService) {
-  $scope.newJob = {};
+
   $http({method: 'GET', url: '/api/codecs/audio'})
       .success(function(data) {
         $scope.audioCodecs = data;
@@ -93,12 +89,6 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
     });
   };
 
-  $scope.autoRefresh = function() {
-    $interval(function() {
-      $scope.refresh();
-    }, 5000);
-  };
-
   $scope.addjob = function(newjob) {
     $http({method: 'POST', url: '/api/jobs/add', data: newjob})
         .success(function(data) {
@@ -133,8 +123,13 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
     });
   }
 
+  $scope.newJob = {};
   $scope.refresh();
-  $scope.autoRefresh();
+
+  var intervalPromise = $interval(function() {
+    $scope.refresh();
+  }, 5000);
+  $scope.$on('$destroy', function () { $interval.cancel(intervalPromise); });
 }).controller('HeaderController', function($scope, $location) {
   $scope.isActive = function(viewLocation) {
     return viewLocation === $location.path();
