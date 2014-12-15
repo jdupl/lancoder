@@ -68,6 +68,26 @@ public class MasterConfig extends Config implements Serializable {
 		return apiServerPort;
 	}
 
+	public void setNodeServerPort(int nodeServerPort) {
+		this.nodeServerPort = nodeServerPort;
+	}
+
+	public void setApiServerPort(int apiServerPort) {
+		this.apiServerPort = apiServerPort;
+	}
+
+	public void setFinalEncodingFolder(String finalEncodingFolder) {
+		this.finalEncodingFolder = finalEncodingFolder;
+	}
+
+	public void setFfprobePath(String ffprobePath) {
+		this.ffprobePath = ffprobePath;
+	}
+
+	public void setSavedInstancePath(String savedInstancePath) {
+		this.savedInstancePath = savedInstancePath;
+	}
+
 	@Override
 	public String getDefaultPath() {
 		return DEFAULT_PATH;

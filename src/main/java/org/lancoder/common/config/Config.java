@@ -6,9 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.lancoder.common.annotations.Prompt;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import org.yaml.snakeyaml.Yaml;
 
 public abstract class Config {
 
@@ -31,14 +29,14 @@ public abstract class Config {
 	}
 
 	/**
-	 * Serializes current config to disk as JSON object.
+	 * Serializes current config to disk as YAML object.
 	 * 
 	 * @return True if could write config to disk. Otherwise, return false.
 	 */
 	public synchronized boolean dump() {
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		String s = gson.toJson(this);
 		File config = new File(configPath);
+		Yaml yaml = new Yaml();
+		String s = yaml.dumpAsMap(this);
 		try {
 			if (!config.exists()) {
 				config.getParentFile().mkdirs();
@@ -49,6 +47,14 @@ public abstract class Config {
 			return false;
 		}
 		return true;
+	}
+
+	public void setAbsoluteSharedFolder(String absoluteSharedFolder) {
+		this.absoluteSharedFolder = absoluteSharedFolder;
+	}
+
+	public void setFfmpegPath(String ffmpegPath) {
+		this.ffmpegPath = ffmpegPath;
 	}
 
 	@Override
