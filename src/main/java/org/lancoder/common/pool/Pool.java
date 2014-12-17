@@ -13,7 +13,7 @@ import org.lancoder.common.RunnableService;
  * @param <T>
  *            The type of tasks to be handled by the pool
  */
-public abstract class Pool<T> extends RunnableService implements Cleanable {
+public abstract class Pool<T> extends RunnableService implements Cleanable, PoolerListener {
 
 	/**
 	 * How many poolers can be initialized in the pool
@@ -57,6 +57,10 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 	public Pool(int threadLimit, boolean canQueue) {
 		this.threadLimit = threadLimit;
 		this.canQueue = canQueue;
+	}
+
+	public void completed() {
+		// TODO
 	}
 
 	/**
@@ -129,7 +133,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 	private Pooler<T> spawn() {
 		Pooler<T> pooler = null;
 		if (canSpawn()) {
-			pooler = getPoolerInstance();
+			pooler = getPoolerInstance(this);
 		} else {
 			System.err.printf("A maximum of %d element(s) has been reached in pool %s ! Cannot create new instance.",
 					threadLimit, this.getClass().getSimpleName());
@@ -138,8 +142,6 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 		pooler.setThread(thread);
 		thread.start();
 		poolers.add(pooler);
-		// System.out.printf("%s spawned new pooler ressource. Now with %d poolers.%n", this.getClass().getSimpleName(),
-		// this.poolers.size());
 		return pooler;
 	}
 
@@ -149,6 +151,12 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 	 * @return The pooler ressource
 	 */
 	protected abstract Pooler<T> getPoolerInstance();
+
+	private final Pooler<T> getPoolerInstance(PoolerListener poolerListener) {
+		Pooler<T> ressource = getPoolerInstance();
+		ressource.setPoolerListener(poolerListener);
+		return ressource;
+	}
 
 	/**
 	 * Decides if pool has space to spawn a new ressource.

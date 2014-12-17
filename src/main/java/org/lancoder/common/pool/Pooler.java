@@ -15,7 +15,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	 */
 	protected T task;
 	/**
-	 * Is the ressource currently in use
+	 * Is the resource currently in use
 	 */
 	protected volatile boolean active;
 	/**
@@ -24,14 +24,39 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	private long lastActivity;
 
 	/**
-	 * The thread used by the pooler ressource
+	 * The thread used by the pooler resource
 	 */
 	private Thread thread;
 
+	/**
+	 * The pool to notify on task completion
+	 */
+	private PoolerListener pool;
+
+	/**
+	 * Constructor of a base pooler resource. Sets last activity time to current time.
+	 * 
+	 */
 	public Pooler() {
 		this.lastActivity = System.currentTimeMillis();
 	}
 
+	/**
+	 * Set the parent pooler listening to this ressource.
+	 * 
+	 * @param pool
+	 *            The parent pool waiting for this resource to perform an action
+	 */
+	public void setPoolerListener(PoolerListener pool) {
+		this.pool = pool;
+	}
+
+	/**
+	 * Allow pooler to know it's execution thread.
+	 * 
+	 * @param thread
+	 *            The execution thread of the resource
+	 */
 	public void setThread(Thread thread) {
 		this.thread = thread;
 	}
@@ -51,7 +76,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	}
 
 	/**
-	 * Stop and clean ressource if necessary
+	 * Stop and clean resource if necessary.
 	 */
 	public final boolean clean() {
 		boolean closed = false;
@@ -74,7 +99,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	/**
 	 * Returns the state of the worker.
 	 * 
-	 * @return True is pooler is busy.
+	 * @return True is pooler is busy
 	 */
 	public synchronized boolean isActive() {
 		return this.active;
@@ -83,7 +108,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	/**
 	 * Check if requests queue is empty. Pooler should not pile up items.
 	 * 
-	 * @return True if empty.
+	 * @return True if empty
 	 */
 	public synchronized boolean isFree() {
 		return this.requests.isEmpty() && !isActive();
@@ -148,6 +173,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 				active = true;
 				handle(task);
 				active = false;
+				pool.completed();
 			}
 		} catch (InterruptedException e) {
 		}
