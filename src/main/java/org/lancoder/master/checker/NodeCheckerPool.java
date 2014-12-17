@@ -4,7 +4,6 @@ import org.lancoder.common.Node;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.pool.Pool;
 import org.lancoder.common.pool.Pooler;
-import org.lancoder.common.pool.PoolerListener;
 
 /**
  * Loose pool implementation for node checking with custom listener interface

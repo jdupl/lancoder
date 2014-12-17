@@ -94,7 +94,6 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		} catch (MissingThirdPartyException e) {
 			e.printStackTrace();
 		} finally {
-			this.active = false;
 			if (success) {
 				listener.taskCompleted(task);
 			} else {
@@ -116,7 +115,6 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 	@Override
 	public void cancelTask(Object task) {
 		if (this.task != null && this.task.equals(task)) {
-			this.active = false;
 			this.ffMpegWrapper.stop();
 		}
 	}

@@ -15,6 +15,8 @@ import org.lancoder.common.RunnableService;
  */
 public abstract class Pool<T> extends RunnableService implements Cleanable, PoolerListener {
 
+	private Object poolMonitor = new Object();
+
 	/**
 	 * How many poolers can be initialized in the pool
 	 */
@@ -35,6 +37,8 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * Thread group of the poolers
 	 */
 	protected final ThreadGroup threads = new ThreadGroup("threads");
+
+	private volatile int activeCount = 0;
 
 	/**
 	 * Create a default pool with a defined thread limit. Pool will queue items without limitations.
@@ -59,8 +63,27 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 		this.canQueue = canQueue;
 	}
 
-	public void completed() {
-		// TODO
+	@Override
+	public void run() {
+		while (!close) {
+			try {
+				synchronized (poolMonitor) {
+					poolMonitor.wait();
+					if (!todo.isEmpty()) {
+						T item = this.todo.poll();
+						if (!dispatch(item)) {
+							this.todo.addFirst(item);
+						}
+					}
+					setActiveCount();
+
+				}
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 	/**
@@ -92,19 +115,14 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 		return toClean.size() != 0;
 	}
 
-	/**
-	 * Count the number of currently busy pooler resource
-	 * 
-	 * @return The busy pooler count
-	 */
-	public synchronized int getActiveCount() {
+	private synchronized final void setActiveCount() {
 		int count = 0;
 		for (Pooler<T> pooler : this.poolers) {
 			if (pooler.isActive()) {
 				count++;
 			}
 		}
-		return count;
+		this.activeCount = count;
 	}
 
 	/**
@@ -122,7 +140,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * @return True if some poolers are busy
 	 */
 	public synchronized boolean hasWorking() {
-		return getActiveCount() > 0;
+		return activeCount > 0;
 	}
 
 	/**
@@ -134,14 +152,15 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 		Pooler<T> pooler = null;
 		if (canSpawn()) {
 			pooler = getPoolerInstance(this);
-		} else {
-			System.err.printf("A maximum of %d element(s) has been reached in pool %s ! Cannot create new instance.",
-					threadLimit, this.getClass().getSimpleName());
+			Thread thread = new Thread(threads, pooler);
+			pooler.setThread(thread);
+			thread.start();
+			poolers.add(pooler);
+			try {
+				Thread.sleep(1); // wait for thread to start
+			} catch (InterruptedException e) {
+			}
 		}
-		Thread thread = new Thread(threads, pooler);
-		pooler.setThread(thread);
-		thread.start();
-		poolers.add(pooler);
 		return pooler;
 	}
 
@@ -201,7 +220,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * @return
 	 */
 	protected boolean hasFree() {
-		return getActiveCount() < threadLimit;
+		return activeCount < threadLimit;
 	}
 
 	/**
@@ -212,39 +231,42 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * @return If element could be added to queue
 	 */
 	public synchronized boolean handle(T element) {
+		boolean handled = false;
 		if (!canQueue && todo.size() > 0) {
 			System.err.printf("Warning pool %s seems to be overflowing. Current todo list has %s elements.", this
 					.getClass().getSimpleName(), todo.size());
 		}
-		return todo.add(element);
+		handled = dispatch(element);
+		if (!handled) {
+			handled = todo.add(element);
+		}
+		setActiveCount();
+		return handled;
 	}
 
 	/**
 	 * Sends task to a pooler or adds it back to the queue if no pooler can be used.
 	 * 
 	 * @param task
+	 *            The work to dispatch
+	 * 
+	 * @return True if a pool worker accepted
 	 */
-	private synchronized void dispatch(T task) {
+	private synchronized boolean dispatch(T task) {
+		boolean dispatched = true;
 		Pooler<T> pooler = this.getAvailablePooler();
-		if (pooler == null || !pooler.add(task)) {
-			System.err.println("Warning: could not find free pooler ressource.");
-			try {
-				Thread.sleep(500);
-				todo.addFirst(task);
-			} catch (InterruptedException e) {
-			}
+		if (pooler == null || !pooler.handle(task)) {
+			dispatched = false;
 		}
+		return dispatched;
 	}
 
 	/**
-	 * Actually start the pool and start accepting tasks.
+	 * Called when a resource completed it's task and is now free. Notifies pool's thread to refresh it's state.
 	 */
-	public void run() {
-		while (!close) {
-			try {
-				dispatch(this.todo.take());
-			} catch (InterruptedException e) {
-			}
+	public void completed() {
+		synchronized (poolMonitor) {
+			poolMonitor.notify();
 		}
 	}
 
@@ -264,4 +286,5 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	public void serviceFailure(Exception e) {
 		e.printStackTrace();
 	}
+
 }

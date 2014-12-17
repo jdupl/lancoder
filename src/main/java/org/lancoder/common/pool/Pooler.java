@@ -1,23 +1,15 @@
 package org.lancoder.common.pool;
 
-import java.util.concurrent.LinkedBlockingDeque;
-
 import org.lancoder.common.RunnableService;
 
 public abstract class Pooler<T> extends RunnableService implements Cleanable {
 
-	/**
-	 * List of elements to process
-	 */
-	private volatile LinkedBlockingDeque<T> requests = new LinkedBlockingDeque<>();
+	Object monitor = new Object();
+
 	/**
 	 * Currently processed element
 	 */
 	protected T task;
-	/**
-	 * Is the resource currently in use
-	 */
-	protected volatile boolean active;
 	/**
 	 * Timestamp in unix msec of last activity
 	 */
@@ -61,6 +53,10 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 		this.thread = thread;
 	}
 
+	public Thread getThread() {
+		return thread;
+	}
+
 	/**
 	 * Decide if the pooler should be closed. Super implementation provides a time based decision from last activity.
 	 * 
@@ -102,16 +98,16 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	 * @return True is pooler is busy
 	 */
 	public synchronized boolean isActive() {
-		return this.active;
+		return this.task != null;
 	}
 
 	/**
-	 * Check if requests queue is empty. Pooler should not pile up items.
+	 * Check if worker is empty
 	 * 
 	 * @return True if empty
 	 */
 	public synchronized boolean isFree() {
-		return this.requests.isEmpty() && !isActive();
+		return !isActive();
 	}
 
 	/**
@@ -120,31 +116,16 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	 * @param request
 	 *            The task to complete
 	 */
-	public synchronized boolean add(T request) {
+	public synchronized boolean handle(T request) {
 		boolean handled = false;
-		if (!isFree()) {
-			System.err.printf("Warning: pooler ressource %s now has %d tasks in backlog.%n", this.getClass()
-					.getSimpleName(), this.requests.size());
-		} else if (isActive()) {
-			System.err.printf("Pooler ressource is busy !");
-		} else {
-			handled = requests.add(request);
+		synchronized (monitor) {
+			if (!isActive()) {
+				this.task = request;
+				monitor.notifyAll();
+				handled = true;
+			}
 		}
 		return handled;
-	}
-
-	/**
-	 * Start the actual request. Assigns request to the pooler's current task. Calls custom start implementation of the
-	 * pooler.
-	 * 
-	 * @param request
-	 *            The request ready to start.
-	 */
-	private void handle(T request) {
-		this.task = request;
-		start(); // pooler thread is now busy and blocks here
-		this.lastActivity = System.currentTimeMillis();
-		this.task = null;
 	}
 
 	@Override
@@ -169,13 +150,16 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	public final void run() {
 		try {
 			while (!close) {
-				T task = requests.take();
-				active = true;
-				handle(task);
-				active = false;
-				pool.completed();
+				synchronized (monitor) {
+					monitor.wait();
+					start(); // pooler thread is now busy and blocks here
+					this.lastActivity = System.currentTimeMillis();
+					this.task = null;
+					pool.completed();
+				}
 			}
 		} catch (InterruptedException e) {
 		}
+
 	}
 }
