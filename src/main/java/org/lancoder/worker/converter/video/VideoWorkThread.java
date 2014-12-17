@@ -180,4 +180,14 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		}
 		this.destroyTempFolder();
 	}
+
+	@Override
+	public void cancelTask(Object task) {
+		if (this.task != null && this.task.equals(task)) {
+			this.ffMpegWrapper.stop();
+			if (transcoder != null) {
+				this.transcoder.stop();
+			}
+		}
+	}
 }

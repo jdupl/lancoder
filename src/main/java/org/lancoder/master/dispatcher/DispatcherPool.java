@@ -29,14 +29,14 @@ public class DispatcherPool extends Pool<DispatchItem> implements DispatcherList
 	public synchronized void taskRefused(DispatchItem item) {
 		ClientTask t = ((TaskRequestMessage) item.getMessage()).getTask();
 		Node node = item.getNode();
-		System.err.printf("Node %s refused task.%n", node.getName());
+		System.err.printf("Node %s refused task %d from job %s.%n", node.getName(), t.getTaskId(), t.getJobId());
 		t.getProgress().reset();
 		if (node.hasTask(t)) {
 			node.getCurrentTasks().remove(t);
 		}
 		node.unlock();
 		node.failure();
-		listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
+		listener.handle(new Event(EventEnum.DISPATCH_ITEM_REFUSED, item));
 	}
 
 	@Override

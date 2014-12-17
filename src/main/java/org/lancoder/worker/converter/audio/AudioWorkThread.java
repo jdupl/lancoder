@@ -112,4 +112,12 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 			task.getProgress().update(TimeUtils.getMsFromString(m.group(1)) / 1000);
 		}
 	}
+
+	@Override
+	public void cancelTask(Object task) {
+		if (this.task != null && this.task.equals(task)) {
+			this.active = false;
+			this.ffMpegWrapper.stop();
+		}
+	}
 }

@@ -22,7 +22,7 @@ import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.master.dispatcher.DispatchItem;
 import org.lancoder.master.dispatcher.DispatcherPool;
 
-public class JobManager {
+public class JobManager implements EventListener {
 
 	private EventListener listener;
 	private NodeManager nodeManager;
@@ -63,6 +63,7 @@ public class JobManager {
 		if (j == null) {
 			return false;
 		}
+		j.setJobStatus(JobState.JOB_CANCELED);
 		for (Node node : nodeManager.getNodes()) {
 			ArrayList<ClientTask> nodeTasks = new ArrayList<>(node.getCurrentTasks());
 			for (ClientTask task : nodeTasks) {
@@ -79,9 +80,17 @@ public class JobManager {
 		return true;
 	}
 
+	/**
+	 * Notify a node that a task was unassigned.
+	 * 
+	 * @param task
+	 *            The task to unassign
+	 * @param assigne
+	 *            The node currently processing the task
+	 */
 	private void unassignTask(ClientTask task, Node assigne) {
 		dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task, ClusterProtocol.UNASSIGN_TASK), assigne));
-		task.getProgress().reset();
+		task.getProgress().cancel();
 		taskUpdated(task, assigne);
 	}
 
@@ -93,9 +102,20 @@ public class JobManager {
 		return jobs;
 	}
 
+	public ArrayList<Job> getAvailableJobs() {
+		ArrayList<Job> jobs = new ArrayList<>();
+		for (Entry<String, Job> e : this.jobs.entrySet()) {
+			Job job = e.getValue();
+			if (job.getJobStatus() == JobState.JOB_COMPUTING || job.getJobStatus() == JobState.JOB_TODO) {
+				jobs.add(e.getValue());
+			}
+		}
+		return jobs;
+	}
+
 	private ClientAudioTask getNextAudioTask(ArrayList<Codec> codecs) {
 		ClientAudioTask task = null;
-		ArrayList<Job> jobList = new ArrayList<>(jobs.values());
+		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
 		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
 			Job job = itJob.next();
@@ -112,7 +132,7 @@ public class JobManager {
 
 	private ClientVideoTask getNextVideoTask(ArrayList<Codec> codecs) {
 		ClientVideoTask task = null;
-		ArrayList<Job> jobList = new ArrayList<>(jobs.values());
+		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
 		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
 			Job job = itJob.next();
@@ -176,6 +196,13 @@ public class JobManager {
 		return assigned;
 	}
 
+	/**
+	 * Unassign a node from a task.
+	 * 
+	 * @param task
+	 *            The task to be unassigned.
+	 * @return True if task could be unassigned
+	 */
 	private synchronized boolean unassign(ClientTask task) {
 		boolean unassigned = false;
 		Node previousAssignee = this.assignments.remove(task);
@@ -229,6 +256,19 @@ public class JobManager {
 		}
 		for (Job job : toClean) {
 			deleteJob(job);
+		}
+	}
+
+	@Override
+	public void handle(Event event) {
+		switch (event.getCode()) {
+		case DISPATCH_ITEM_REFUSED:
+			DispatchItem item = (DispatchItem) event.getObject();
+			ClientTask task = ((TaskRequestMessage) item.getMessage()).getTask();
+			unassign(task);
+			break;
+		default:
+			break;
 		}
 	}
 }

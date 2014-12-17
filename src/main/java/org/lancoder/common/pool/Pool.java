@@ -93,7 +93,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 	 * 
 	 * @return The busy pooler count
 	 */
-	public int getActiveCount() {
+	public synchronized int getActiveCount() {
 		int count = 0;
 		for (Pooler<T> pooler : this.poolers) {
 			if (pooler.isActive()) {
@@ -110,6 +110,15 @@ public abstract class Pool<T> extends RunnableService implements Cleanable {
 	 */
 	public synchronized boolean hasFreeConverters() {
 		return hasFree();
+	}
+
+	/**
+	 * Public synchronized call to known if pool is working.
+	 * 
+	 * @return True if some poolers are busy
+	 */
+	public synchronized boolean hasWorking() {
+		return getActiveCount() > 0;
 	}
 
 	/**

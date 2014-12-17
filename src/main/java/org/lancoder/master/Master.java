@@ -207,8 +207,9 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 * @return true if update could be sent, false otherwise
 	 */
 	public boolean readStatusReport(StatusReport report) {
-		NodeState s = report.status;
+		NodeState newNodeState = report.status;
 		String unid = report.getUnid();
+		// identify node to get it's instance
 		Node sender = nodeManager.identifySender(unid);
 		if (sender == null || sender.getStatus() == NodeState.NOT_CONNECTED) {
 			return false;
@@ -218,10 +219,10 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			readTaskReports(report.getTaskReports());
 		}
 		// only update if status is changed
-		if (sender.getStatus() != report.status) {
-			sender.setStatus(s);
-			jobManager.updateNodesWork();
+		if (sender.getStatus() != newNodeState) {
+			sender.setStatus(newNodeState);
 		}
+		jobManager.updateNodesWork();
 		return true;
 	}
 
@@ -300,6 +301,9 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			break;
 		case CONFIG_UPDATED:
 			this.config.dump();
+			break;
+		case DISPATCH_ITEM_REFUSED:
+			jobManager.handle(event);
 			break;
 		default:
 			break;

@@ -1,13 +1,13 @@
 package org.lancoder.worker.converter.video;
 
 import org.lancoder.common.FilePathManager;
-import org.lancoder.common.pool.Pool;
 import org.lancoder.common.pool.Pooler;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.worker.converter.ConverterListener;
+import org.lancoder.worker.converter.ConverterPool;
 
-public class VideoConverterPool extends Pool<ClientVideoTask> {
+public class VideoConverterPool extends ConverterPool<ClientVideoTask> {
 
 	private ConverterListener listener;
 	private FilePathManager filePathManager;

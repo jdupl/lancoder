@@ -119,12 +119,20 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 		this.task = request;
 		start(); // pooler thread is now busy and blocks here
 		this.lastActivity = System.currentTimeMillis();
+		this.task = null;
 	}
 
 	@Override
 	public void stop() {
 		super.stop();
 		this.thread.interrupt();
+	}
+
+	public void cancelTask(Object task) {
+		if (this.task != null && this.task.equals(task)) {
+			throw new UnsupportedOperationException("Task cancellation is not supported for "
+					+ this.getClass().getSimpleName() + " !");
+		}
 	}
 
 	protected abstract void start();

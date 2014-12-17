@@ -29,6 +29,9 @@ public abstract class Converter<T extends ClientTask> extends Pooler<T> implemen
 		this.ffMpeg = fFmpeg;
 	}
 
+	@Override
+	public abstract void cancelTask(Object task);
+
 	/**
 	 * Create or clean task's and job's folders.
 	 */

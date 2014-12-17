@@ -40,7 +40,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	private WorkerConfig config;
 	private AudioConverterPool audioPool;
 	private VideoConverterPool videoPool;
-
 	private InetAddress masterInetAddress = null;
 	private int threadCount;
 
@@ -98,9 +97,12 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	public synchronized void stopWork(ClientTask t) {
 		// TODO check which task to stop (if many tasks are implemented)
 		this.getCurrentTasks().remove(t);
-		if (t instanceof ClientVideoTask) {
+		audioPool.cancel(t);
+		videoPool.cancel(t);
+		if (getCurrentTasks().size() == 0) {
 			this.updateStatus(NodeState.FREE);
 		}
+		this.notifyMasterStatusChange();
 	}
 
 	private ArrayList<ClientTask> getCurrentTasks() {

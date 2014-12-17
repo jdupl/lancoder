@@ -16,6 +16,10 @@ public abstract class ClientTask implements Serializable {
 		this.streamConfig = streamConfig;
 	}
 
+	public void cancel() {
+		this.task.getProgress().cancel();
+	}
+
 	public abstract Task getTask();
 
 	public StreamConfig getStreamConfig() {
@@ -66,7 +70,7 @@ public abstract class ClientTask implements Serializable {
 	public boolean equals(Object obj) {
 		if (obj != null && obj instanceof ClientTask) {
 			ClientTask other = (ClientTask) obj;
-			return other.task.equals(this.task);
+			return other.getJobId().equals(this.getJobId()) && other.getTaskId() == this.getTaskId();
 		}
 		return super.equals(obj);
 	}
