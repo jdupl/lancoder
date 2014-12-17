@@ -18,21 +18,22 @@ controllers.controller('nodes', function($scope, $http, $interval, apiService) {
   };
 
   $scope.shutdown = function(node) {
-    $http({method: 'POST', url: '/api/nodes/shutdown', data: node['unid']});
+    $http({method: 'POST', url: '/api/nodes/shutdown', data: node['unid']})
+        .success(function(){
+          $scope.refresh();
+        });
   };
 
-  $scope.autoRefresh = function() {
-    $interval(function() {
+  $scope.nodesShowCodec = {};
+  $scope.refresh();
+  var intervalPromise = $interval(function() {
       $scope.refresh();
     }, 5000);
-  };
-
-  $scope.refresh();
-  $scope.autoRefresh();
+  $scope.$on('$destroy', function () { $interval.cancel(intervalPromise); });
 });
 
 controllers.controller('jobs', function($scope, $http, $interval, apiService) {
-  $scope.newJob = {};
+
   $http({method: 'GET', url: '/api/codecs/audio'})
       .success(function(data) {
         $scope.audioCodecs = data;
@@ -88,17 +89,11 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
     });
   };
 
-  $scope.autoRefresh = function() {
-    $interval(function() {
-      $scope.refresh();
-    }, 5000);
-  };
-
   $scope.addjob = function(newjob) {
     $http({method: 'POST', url: '/api/jobs/add', data: newjob})
         .success(function(data) {
           if (data.success) {
-            refreshJobs();
+            $scope.refresh();
             $scope.showAddJobPanel = false;
           } else {
             alert(data.message);
@@ -112,7 +107,7 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
     $http({method: 'POST', url: '/api/jobs/delete', data: oldjob})
         .success(function(data) {
           if (data.success) {
-            refreshJobs();
+            $scope.refresh();
           } else {
             alert(data.message);
           }
@@ -128,8 +123,13 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
     });
   }
 
+  $scope.newJob = {};
   $scope.refresh();
-  $scope.autoRefresh();
+
+  var intervalPromise = $interval(function() {
+    $scope.refresh();
+  }, 5000);
+  $scope.$on('$destroy', function () { $interval.cancel(intervalPromise); });
 }).controller('HeaderController', function($scope, $location) {
   $scope.isActive = function(viewLocation) {
     return viewLocation === $location.path();
