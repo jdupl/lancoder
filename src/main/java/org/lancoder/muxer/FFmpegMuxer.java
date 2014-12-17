@@ -12,7 +12,7 @@ import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.Job;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.utils.FileUtils;
@@ -24,7 +24,7 @@ import org.lancoder.worker.converter.video.Transcoder;
  * @author justin
  *
  */
-public class FFmpegMuxer extends Pooler<Job> {
+public class FFmpegMuxer extends PoolWorker<Job> {
 
 	private MuxerListener listener;
 	private FilePathManager filePathManager;

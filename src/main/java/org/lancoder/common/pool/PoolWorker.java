@@ -2,7 +2,7 @@ package org.lancoder.common.pool;
 
 import org.lancoder.common.RunnableService;
 
-public abstract class Pooler<T> extends RunnableService implements Cleanable {
+public abstract class PoolWorker<T> extends RunnableService implements Cleanable {
 
 	Object monitor = new Object();
 
@@ -16,35 +16,35 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	private long lastActivity;
 
 	/**
-	 * The thread used by the pooler resource
+	 * The thread used by the worker resource
 	 */
 	private Thread thread;
 
 	/**
 	 * The pool to notify on task completion
 	 */
-	private PoolerListener pool;
+	private PoolWorkerListener pool;
 
 	/**
-	 * Constructor of a base pooler resource. Sets last activity time to current time.
+	 * Constructor of a base worker resource. Sets last activity time to current time.
 	 * 
 	 */
-	public Pooler() {
+	public PoolWorker() {
 		this.lastActivity = System.currentTimeMillis();
 	}
 
 	/**
-	 * Set the parent pooler listening to this ressource.
+	 * Set the parent worker listening to this ressource.
 	 * 
 	 * @param pool
 	 *            The parent pool waiting for this resource to perform an action
 	 */
-	public void setPoolerListener(PoolerListener pool) {
+	public void setPoolWorkerListener(PoolWorkerListener pool) {
 		this.pool = pool;
 	}
 
 	/**
-	 * Allow pooler to know it's execution thread.
+	 * Allow worker to know it's execution thread.
 	 * 
 	 * @param thread
 	 *            The execution thread of the resource
@@ -58,9 +58,9 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	}
 
 	/**
-	 * Decide if the pooler should be closed. Super implementation provides a time based decision from last activity.
+	 * Decide if the worker should be closed. Super implementation provides a time based decision from last activity.
 	 * 
-	 * @return True if current pooler should be closed
+	 * @return True if current worker should be closed
 	 */
 	private boolean expired() {
 		return System.currentTimeMillis() - this.lastActivity > CLEAN_DELAY_MSEC;
@@ -84,9 +84,9 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	}
 
 	/**
-	 * Get poolable element currently processed by pooler.
+	 * Get the task currently processed by the worker.
 	 * 
-	 * @return The element
+	 * @return The task
 	 */
 	public synchronized T getPoolable() {
 		return this.task;
@@ -95,7 +95,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	/**
 	 * Returns the state of the worker.
 	 * 
-	 * @return True is pooler is busy
+	 * @return True is worker is busy
 	 */
 	public synchronized boolean isActive() {
 		return this.task != null;
@@ -111,7 +111,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	}
 
 	/**
-	 * Add a task to the pooler.
+	 * Add a task to the worker.
 	 * 
 	 * @param request
 	 *            The task to complete
@@ -144,7 +144,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 	protected abstract void start();
 
 	/**
-	 * While the pooler thread is running start tasks when requests gets elements.
+	 * While the worker thread is running start tasks when requests gets elements.
 	 */
 	@Override
 	public final void run() {
@@ -152,7 +152,7 @@ public abstract class Pooler<T> extends RunnableService implements Cleanable {
 			while (!close) {
 				synchronized (monitor) {
 					monitor.wait();
-					start(); // pooler thread is now busy and blocks here
+					start(); // Pool worker thread is now busy and blocks here
 					this.lastActivity = System.currentTimeMillis();
 					this.task = null;
 					pool.completed();

@@ -1,7 +1,7 @@
 package org.lancoder.worker.converter.video;
 
 import org.lancoder.common.FilePathManager;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.worker.converter.ConverterListener;
@@ -21,7 +21,7 @@ public class VideoConverterPool extends ConverterPool<ClientVideoTask> {
 	}
 
 	@Override
-	protected Pooler<ClientVideoTask> getPoolerInstance() {
+	protected PoolWorker<ClientVideoTask> getPoolWorkerInstance() {
 		return new VideoWorkThread(listener, filePathManager, ffMpeg);
 	}
 

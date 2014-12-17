@@ -39,7 +39,7 @@ public class TestPool {
 		}
 
 		@Override
-		protected Pooler<Object> getPoolerInstance() {
+		protected PoolWorker<Object> getPoolWorkerInstance() {
 			return new DummyPoolWorker();
 		}
 
@@ -49,7 +49,7 @@ public class TestPool {
 
 	}
 
-	class DummyPoolWorker extends Pooler<Object> {
+	class DummyPoolWorker extends PoolWorker<Object> {
 
 		@Override
 		protected void start() {

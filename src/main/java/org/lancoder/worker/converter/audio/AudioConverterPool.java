@@ -1,7 +1,7 @@
 package org.lancoder.worker.converter.audio;
 
 import org.lancoder.common.FilePathManager;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.worker.converter.ConverterListener;
@@ -21,7 +21,7 @@ public class AudioConverterPool extends ConverterPool<ClientAudioTask> {
 	}
 
 	@Override
-	protected Pooler<ClientAudioTask> getPoolerInstance() {
+	protected PoolWorker<ClientAudioTask> getPoolWorkerInstance() {
 		return new AudioWorkThread(listener, filePathManager, ffMpeg);
 	}
 

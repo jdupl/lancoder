@@ -6,7 +6,7 @@ import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.pool.Pool;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.ClientTask;
 
 public class DispatcherPool extends Pool<DispatchItem> implements DispatcherListener {
@@ -21,7 +21,7 @@ public class DispatcherPool extends Pool<DispatchItem> implements DispatcherList
 	}
 
 	@Override
-	protected Pooler<DispatchItem> getPoolerInstance() {
+	protected PoolWorker<DispatchItem> getPoolWorkerInstance() {
 		return new Dispatcher(this);
 	}
 

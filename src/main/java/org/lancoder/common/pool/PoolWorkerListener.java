@@ -1,6 +1,6 @@
 package org.lancoder.common.pool;
 
-public interface PoolerListener {
+public interface PoolWorkerListener {
 
 	public void completed();
 

@@ -13,28 +13,28 @@ import org.lancoder.common.RunnableService;
  * @param <T>
  *            The type of tasks to be handled by the pool
  */
-public abstract class Pool<T> extends RunnableService implements Cleanable, PoolerListener {
+public abstract class Pool<T> extends RunnableService implements Cleanable, PoolWorkerListener {
 
 	private Object poolMonitor = new Object();
 
 	/**
-	 * How many poolers can be initialized in the pool
+	 * How many pool workers can be initialized in the pool
 	 */
 	private int threadLimit;
 	/**
-	 * The pool will accept tasks and send to a queue if no pooler can be used. Otherwise,
+	 * The pool will accept tasks and send to a queue if no pool worker can be used. Otherwise,
 	 */
 	private boolean canQueue;
 	/**
-	 * List of the initialized poolers in the pool
+	 * List of the initialized pool workers in the pool
 	 */
-	protected final ArrayList<Pooler<T>> poolers = new ArrayList<>();
+	protected final ArrayList<PoolWorker<T>> workers = new ArrayList<>();
 	/**
-	 * Contains the tasks to send to poolers
+	 * Contains the tasks to send to pool workers
 	 */
 	protected final LinkedBlockingDeque<T> todo = new LinkedBlockingDeque<>();
 	/**
-	 * Thread group of the poolers
+	 * Thread group of the pool workers
 	 */
 	protected final ThreadGroup threads = new ThreadGroup("threads");
 
@@ -44,7 +44,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * Create a default pool with a defined thread limit. Pool will queue items without limitations.
 	 * 
 	 * @param threadLimit
-	 *            The maximum number of poolers to handle
+	 *            The maximum number of pool workers to handle
 	 */
 	public Pool(int threadLimit) {
 		this(threadLimit, true);
@@ -54,7 +54,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * Create a pool with a defined thread limit.
 	 * 
 	 * @param threadLimit
-	 *            The maximum number of poolers to handle
+	 *            The maximum number of pool workers to handle
 	 * @param canQueue
 	 *            False if pool should no pile up tasks
 	 */
@@ -76,14 +76,10 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 						}
 					}
 					setActiveCount();
-
 				}
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 		}
-
 	}
 
 	/**
@@ -91,7 +87,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 */
 	@Override
 	public boolean shouldClean() {
-		// As cleaning the pool involves logic from the poolers, always assume we should clean the pool.
+		// As cleaning the pool involves logic from the pool workers, always assume we should clean the pool.
 		return true;
 	}
 
@@ -102,23 +98,23 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 */
 	@Override
 	public boolean clean() {
-		ArrayList<Pooler<T>> toClean = new ArrayList<>();
-		for (Pooler<T> pooler : poolers) {
-			if (pooler.shouldClean()) {
-				toClean.add(pooler);
+		ArrayList<PoolWorker<T>> toClean = new ArrayList<>();
+		for (PoolWorker<T> poolWorker : workers) {
+			if (poolWorker.shouldClean()) {
+				toClean.add(poolWorker);
 			}
 		}
-		for (Pooler<T> pooler : toClean) {
-			pooler.clean();
-			this.poolers.remove(pooler);
+		for (PoolWorker<T> poolWorker : toClean) {
+			poolWorker.clean();
+			this.workers.remove(poolWorker);
 		}
 		return toClean.size() != 0;
 	}
 
 	private synchronized final void setActiveCount() {
 		int count = 0;
-		for (Pooler<T> pooler : this.poolers) {
-			if (pooler.isActive()) {
+		for (PoolWorker<T> poolWorker : this.workers) {
+			if (poolWorker.isActive()) {
 				count++;
 			}
 		}
@@ -137,7 +133,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	/**
 	 * Public synchronized call to known if pool is working.
 	 * 
-	 * @return True if some poolers are busy
+	 * @return True if some pool workers are busy
 	 */
 	public synchronized boolean hasWorking() {
 		return activeCount > 0;
@@ -148,32 +144,32 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * 
 	 * @return
 	 */
-	private Pooler<T> spawn() {
-		Pooler<T> pooler = null;
+	private PoolWorker<T> spawn() {
+		PoolWorker<T> poolWorker = null;
 		if (canSpawn()) {
-			pooler = getPoolerInstance(this);
-			Thread thread = new Thread(threads, pooler);
-			pooler.setThread(thread);
+			poolWorker = getPoolWorkerInstance(this);
+			Thread thread = new Thread(threads, poolWorker);
+			poolWorker.setThread(thread);
 			thread.start();
-			poolers.add(pooler);
+			workers.add(poolWorker);
 			try {
 				Thread.sleep(1); // wait for thread to start
 			} catch (InterruptedException e) {
 			}
 		}
-		return pooler;
+		return poolWorker;
 	}
 
 	/**
-	 * Instanciate a pooler ressource without starting it.
+	 * Instanciate a pool worker ressource without starting it.
 	 * 
-	 * @return The pooler ressource
+	 * @return The pool worker
 	 */
-	protected abstract Pooler<T> getPoolerInstance();
+	protected abstract PoolWorker<T> getPoolWorkerInstance();
 
-	private final Pooler<T> getPoolerInstance(PoolerListener poolerListener) {
-		Pooler<T> ressource = getPoolerInstance();
-		ressource.setPoolerListener(poolerListener);
+	private final PoolWorker<T> getPoolWorkerInstance(PoolWorkerListener workerListener) {
+		PoolWorker<T> ressource = getPoolWorkerInstance();
+		ressource.setPoolWorkerListener(workerListener);
 		return ressource;
 	}
 
@@ -183,39 +179,39 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * @return True if pool can spawn a ressource
 	 */
 	private boolean canSpawn() {
-		return poolers.size() < threadLimit;
+		return workers.size() < threadLimit;
 	}
 
 	/**
-	 * Get a free pooler resource or create a new one.
+	 * Get a free pool worker resource or create a new one.
 	 * 
-	 * @return A free pooler or null if no pooler are available and pool is full
+	 * @return A free pool worker or null if no pool worker are available and pool is full
 	 */
-	private Pooler<T> getAvailablePooler() {
-		Pooler<T> pooler = getFreePooler();
-		if (pooler == null) {
-			pooler = spawn();
+	private PoolWorker<T> getAvailableWorker() {
+		PoolWorker<T> poolWorker = getFreeWorker();
+		if (poolWorker == null) {
+			poolWorker = spawn();
 		}
-		return pooler;
+		return poolWorker;
 	}
 
 	/**
-	 * Get a currently free pooler.
+	 * Get a currently free pool worker.
 	 * 
-	 * @return The free ressource or null if none is avaiable.
+	 * @return The free resource or null if none is available.
 	 */
-	private synchronized Pooler<T> getFreePooler() {
-		Pooler<T> pooler = null;
-		for (Pooler<T> p : poolers) {
+	private synchronized PoolWorker<T> getFreeWorker() {
+		PoolWorker<T> poolWorker = null;
+		for (PoolWorker<T> p : workers) {
 			if (p.isFree()) {
-				pooler = p;
+				poolWorker = p;
 			}
 		}
-		return pooler;
+		return poolWorker;
 	}
 
 	/**
-	 * Get if any currently initialized pooler is free
+	 * Get if any currently initialized pool worker is free
 	 * 
 	 * @return
 	 */
@@ -224,7 +220,8 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	}
 
 	/**
-	 * Try to add an item to the pool. If pool is not allowed to have a queue and all poolers are busy, return false.
+	 * Try to add an item to the pool. If pool is not allowed to have a queue and all pool workers are busy, return
+	 * false.
 	 * 
 	 * @param element
 	 *            The element to handle
@@ -245,7 +242,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	}
 
 	/**
-	 * Sends task to a pooler or adds it back to the queue if no pooler can be used.
+	 * Sends task to a pool worker or adds it back to the queue if no pool worker can be used.
 	 * 
 	 * @param task
 	 *            The work to dispatch
@@ -254,8 +251,8 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 */
 	private synchronized boolean dispatch(T task) {
 		boolean dispatched = true;
-		Pooler<T> pooler = this.getAvailablePooler();
-		if (pooler == null || !pooler.handle(task)) {
+		PoolWorker<T> poolWorker = this.getAvailableWorker();
+		if (poolWorker == null || !poolWorker.handle(task)) {
 			dispatched = false;
 		}
 		return dispatched;
@@ -276,7 +273,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	@Override
 	public void stop() {
 		super.stop();
-		for (Pooler<T> ressource : poolers) {
+		for (PoolWorker<T> ressource : workers) {
 			ressource.stop();
 		}
 		threads.interrupt();

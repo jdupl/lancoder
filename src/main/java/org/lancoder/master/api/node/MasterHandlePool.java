@@ -4,7 +4,7 @@ import java.net.Socket;
 
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.pool.Pool;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.master.NodeManager;
 
 public class MasterHandlePool extends Pool<Socket> {
@@ -19,7 +19,7 @@ public class MasterHandlePool extends Pool<Socket> {
 	}
 
 	@Override
-	protected Pooler<Socket> getPoolerInstance() {
+	protected PoolWorker<Socket> getPoolWorkerInstance() {
 		return new MasterHandler(listener, nodeManager);
 	}
 

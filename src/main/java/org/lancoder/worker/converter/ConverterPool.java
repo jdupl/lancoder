@@ -1,7 +1,7 @@
 package org.lancoder.worker.converter;
 
 import org.lancoder.common.pool.Pool;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.ClientTask;
 
 public abstract class ConverterPool<T extends ClientTask> extends Pool<T> {
@@ -11,9 +11,9 @@ public abstract class ConverterPool<T extends ClientTask> extends Pool<T> {
 	}
 
 	public synchronized void cancel(Object task) {
-		for (Pooler<? extends ClientTask> pooler : this.poolers) {
-			if (pooler.isActive() && pooler.getPoolable().equals(task)) {
-				pooler.cancelTask(task);
+		for (PoolWorker<? extends ClientTask> poolWorker : this.workers) {
+			if (poolWorker.isActive() && poolWorker.getPoolable().equals(task)) {
+				poolWorker.cancelTask(task);
 			}
 		}
 	}
