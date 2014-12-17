@@ -165,11 +165,6 @@ public class NodeManager {
 	public synchronized void removeNode(Node n) {
 		if (n != null) {
 			n.setStatus(NodeState.NOT_CONNECTED);
-			// Cancel node's tasks status if any
-			for (ClientTask t : n.getCurrentTasks()) {
-				t.getProgress().reset();
-			}
-			n.getCurrentTasks().clear();
 			listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 		} else {
 			System.err.println("Could not mark node as disconnected as it was not found");

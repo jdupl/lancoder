@@ -271,4 +271,19 @@ public class JobManager implements EventListener {
 			break;
 		}
 	}
+
+	/**
+	 * Unassign all tasks of the node.
+	 * 
+	 * @param n
+	 *            The node to remove all tasks
+	 */
+	public void unassingAll(Node n) {
+		ArrayList<ClientTask> tasks = n.getCurrentTasks();
+		for (ClientTask clientTask : tasks) {
+			assignments.remove(clientTask);
+			clientTask.getProgress().reset();
+		}
+		n.getCurrentTasks().clear();
+	}
 }

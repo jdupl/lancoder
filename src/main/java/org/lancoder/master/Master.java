@@ -132,6 +132,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 */
 	public void disconnectNode(Node n) {
 		// remove node from list
+		jobManager.unassingAll(n);
 		nodeManager.removeNode(n);
 		dispatcherPool.handle(new DispatchItem(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()), n));
 		System.out.printf("Disconnected node %s.%n", n.getName());
@@ -288,7 +289,9 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	public void handle(Event event) {
 		switch (event.getCode()) {
 		case NODE_DISCONNECTED:
-			nodeManager.removeNode((Node) event.getObject());
+			Node disconnectedNode = (Node) event.getObject();
+			jobManager.unassingAll(disconnectedNode);
+			nodeManager.removeNode(disconnectedNode);
 			break;
 		case STATUS_REPORT:
 			this.readStatusReport((StatusReport) event.getObject());
