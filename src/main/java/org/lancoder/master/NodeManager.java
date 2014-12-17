@@ -17,7 +17,7 @@ import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.video.ClientVideoTask;
 
-public class NodeManager {
+public class NodeManager implements EventListener {
 
 	private final static int FAILURE_THRESHOLD = 10;
 
@@ -209,6 +209,18 @@ public class NodeManager {
 	public void disconnectRequest(ConnectRequest cm) {
 		Node n = this.identifySender(cm.getUnid());
 		this.removeNode(n);
+	}
+
+	@Override
+	public void handle(Event event) {
+		switch (event.getCode()) {
+		case NODE_DISCONNECTED:
+			Node disconnectedNode = (Node) event.getObject();
+			removeNode(disconnectedNode);
+			break;
+		default:
+			break;
+		}
 	}
 
 }

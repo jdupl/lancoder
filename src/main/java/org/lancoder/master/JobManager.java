@@ -267,6 +267,10 @@ public class JobManager implements EventListener {
 			ClientTask task = ((TaskRequestMessage) item.getMessage()).getTask();
 			unassign(task);
 			break;
+		case NODE_DISCONNECTED:
+			Node disconnectedNode = (Node) event.getObject();
+			unassingAll(disconnectedNode);
+			break;
 		default:
 			break;
 		}

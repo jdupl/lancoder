@@ -44,6 +44,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	private NodeManager nodeManager;
 	private JobManager jobManager;
 
+	private ArrayList<EventListener> eventListeners = new ArrayList<>();
+
 	private MasterSavedInstance savedInstance;
 
 	public Master(MasterConfig config) {
@@ -66,6 +68,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		super.registerServices();
 		filePathManager = new FilePathManager(config);
 		nodeManager = new NodeManager(this, config, savedInstance);
+		eventListeners.add(nodeManager);
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
 		nodeServer = new MasterServer(config.getNodeServerPort(), this, nodeManager);
@@ -79,6 +82,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		muxerPool = new MuxerPool(this, filePathManager, getFFmpeg());
 		services.add(muxerPool);
 		jobManager = new JobManager(this, nodeManager, dispatcherPool, savedInstance);
+		eventListeners.add(jobManager);
 	}
 
 	@Override
@@ -288,16 +292,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	@Override
 	public void handle(Event event) {
 		switch (event.getCode()) {
-		case NODE_DISCONNECTED:
-			Node disconnectedNode = (Node) event.getObject();
-			jobManager.unassingAll(disconnectedNode);
-			nodeManager.removeNode(disconnectedNode);
-			break;
 		case STATUS_REPORT:
 			this.readStatusReport((StatusReport) event.getObject());
-			break;
-		case WORK_NEEDS_UPDATE:
-			this.jobManager.updateNodesWork();
 			break;
 		case JOB_ENCODING_COMPLETED:
 			jobEncodingCompleted((Job) event.getObject());
@@ -305,10 +301,10 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		case CONFIG_UPDATED:
 			this.config.dump();
 			break;
-		case DISPATCH_ITEM_REFUSED:
-			jobManager.handle(event);
-			break;
 		default:
+			for (EventListener eventListener : eventListeners) {
+				eventListener.handle(event);
+			}
 			break;
 		}
 	}
