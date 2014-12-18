@@ -2,7 +2,7 @@ package org.lancoder.common.task.video;
 
 import java.util.ArrayList;
 
-import org.lancoder.common.codecs.CodecFactory;
+import org.lancoder.common.codecs.CodecLoader;
 import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.task.ClientTask;
@@ -24,7 +24,7 @@ public class ClientVideoTask extends ClientTask {
 	public ArrayList<String> getRateControlArgs() {
 		ArrayList<String> args = new ArrayList<>();
 		VideoStream stream = this.getStreamConfig().getOutStream();
-		AbstractCodec codecInstance = CodecFactory.fromCodec(stream.getCodec());
+		AbstractCodec codecInstance = CodecLoader.fromCodec(stream.getCodec());
 		switch (stream.getRateControlType()) {
 		case VBR:
 			args.add(codecInstance.getVBRSwitchArg());
@@ -44,7 +44,7 @@ public class ClientVideoTask extends ClientTask {
 	public ArrayList<String> getPresetArg() {
 		ArrayList<String> args = new ArrayList<>();
 		VideoStream stream = this.getStreamConfig().getOutStream();
-		AbstractCodec codecInstance = CodecFactory.fromCodec(stream.getCodec());
+		AbstractCodec codecInstance = CodecLoader.fromCodec(stream.getCodec());
 		if (stream.getPreset() != null && codecInstance.supportsPresets()) {
 			args.add("-preset");
 			args.add(stream.getPreset().toString());
