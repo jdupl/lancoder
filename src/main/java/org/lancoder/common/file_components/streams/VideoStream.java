@@ -3,7 +3,7 @@ package org.lancoder.common.file_components.streams;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import org.lancoder.common.codecs.CodecEnum;
+import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.progress.Unit;
@@ -16,19 +16,16 @@ public class VideoStream extends Stream {
 	private static final long serialVersionUID = -2445363550218345849L;
 
 	private double frameRate = 0;
-	private int rate;
-	private RateControlType rateControlType = RateControlType.AUTO;
 	private FFmpegPreset preset = FFmpegPreset.MEDIUM;
 	private int width = 0;
 	private int height = 0;
 	private Unit unit = Unit.SECONDS;
 	private int stepCount = 1;
 
-	public VideoStream(int index, CodecEnum codec, double frameRate, int rate, RateControlType rateControlType,
+	public VideoStream(int index, AbstractCodec codec, double frameRate, int rate, RateControlType rateControlType,
 			FFmpegPreset preset, int width, int height, long unitCount, Unit unit, int stepCount, String relativeFile) {
-		super(index, codec, unitCount, relativeFile);
+		super(index, codec, unitCount, relativeFile, rateControlType, rate);
 		this.frameRate = frameRate;
-		this.rate = rate;
 		this.rateControlType = rateControlType;
 		this.preset = preset;
 		this.width = width;

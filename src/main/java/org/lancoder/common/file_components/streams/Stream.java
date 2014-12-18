@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.lancoder.common.codecs.CodecEnum;
+import org.lancoder.common.codecs.CodecLoader;
+import org.lancoder.common.codecs.base.AbstractCodec;
+import org.lancoder.common.job.RateControlType;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -14,18 +17,23 @@ public abstract class Stream implements Serializable {
 
 	protected String relativeFile;
 	protected int index;
-	protected CodecEnum codec = CodecEnum.UNKNOWN;
+	protected AbstractCodec codec;
+	protected RateControlType rateControlType;
+	protected int rate;
 
 	protected String title = "";
 	protected String language = "und";
 	protected boolean isDefault = false;
 	protected long unitCount;
 
-	public Stream(int index, CodecEnum codec, long units, String relativeFile) {
+	public Stream(int index, AbstractCodec codec, long units, String relativeFile, RateControlType rateControlType,
+			int rate) {
 		this.index = index;
 		this.codec = codec;
 		this.unitCount = units;
 		this.relativeFile = relativeFile;
+		this.rateControlType = rateControlType;
+		this.rate = rate;
 	}
 
 	/**
@@ -43,13 +51,8 @@ public abstract class Stream implements Serializable {
 		this.index = json.get("index").getAsInt();
 		this.unitCount = unitCount;
 		String unknownCodec = json.get("codec_name").getAsString();
-		this.codec = CodecEnum.findByLib(unknownCodec);
-//		for (CodecEnum codec : CodecEnum.values()) {
-//			if (codec.getFFMpegName().equalsIgnoreCase(unknownCodec)) {
-//				this.codec = codec;
-//				break;
-//			}
-//		}
+		CodecEnum codecEnum = CodecEnum.findByLib(unknownCodec);
+		this.codec = CodecLoader.fromCodec(codecEnum);
 		JsonElement tagsElement = json.get("tags");
 		if (tagsElement != null) {
 			JsonObject tags = tagsElement.getAsJsonObject();
@@ -82,6 +85,17 @@ public abstract class Stream implements Serializable {
 		return false;
 	}
 
+	public ArrayList<String> getRateControlArgs() {
+		String rateControlArg = rateControlType == RateControlType.VBR ? codec.getVBRSwitchArg() : codec
+				.getCRFSwitchArg();
+		String rateArg = rateControlType == RateControlType.VBR ? codec.formatBitrate(this.rate) : String
+				.valueOf(this.rate);
+		ArrayList<String> args = new ArrayList<String>();
+		args.add(rateControlArg);
+		args.add(rateArg);
+		return args;
+	}
+
 	@Deprecated
 	public abstract ArrayList<String> getStreamCopyMapping();
 
@@ -97,7 +111,7 @@ public abstract class Stream implements Serializable {
 		return index;
 	}
 
-	public CodecEnum getCodec() {
+	public AbstractCodec getCodec() {
 		return codec;
 	}
 

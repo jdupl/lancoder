@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 
 import org.lancoder.common.codecs.CodecEnum;
+import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 
@@ -77,7 +78,7 @@ public class Node implements Serializable {
 	 * @return True if node can handle the task
 	 */
 	public boolean canHandle(ClientTask task) {
-		CodecEnum taskCodec = task.getStreamConfig().getOutStream().getCodec();
+		AbstractCodec taskCodec = task.getStreamConfig().getOutStream().getCodec();
 		return this.codecs.contains(taskCodec);
 	}
 

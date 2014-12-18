@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.lancoder.common.FilePathManager;
-import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.VideoStream;
@@ -60,8 +59,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		// Add base args to process builder
 		Collections.addAll(ffmpegArgs, baseArgs);
 
-		ffmpegArgs.addAll(task.getRateControlArgs());
-		ffmpegArgs.addAll(task.getPresetArg());
+		ffmpegArgs.addAll(outStream.getRateControlArgs());
 
 		// output file and pass arguments
 		File outFile = filePathManager.getLocalTempFile(task);
@@ -152,7 +150,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 			}
 			if (success) {
 				// TODO move to a codec strategy
-				if (task.getStreamConfig().getOutStream().getCodec() == CodecEnum.H264) {
+				if (task.getStreamConfig().getOutStream().getCodec().needsTranscode()) {
 					success = transcodeToMpegTs();
 				} else {
 					try {

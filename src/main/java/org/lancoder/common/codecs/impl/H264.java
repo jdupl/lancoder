@@ -13,4 +13,9 @@ public class H264 extends VideoCodec {
 	public boolean supportsPresets() {
 		return true;
 	}
+
+	@Override
+	public boolean needsTranscode() {
+		return true;
+	}
 }

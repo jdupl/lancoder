@@ -76,4 +76,8 @@ public abstract class AbstractCodec {
 		return lossless;
 	}
 
+	public boolean needsTranscode() {
+		return false;
+	}
+
 }

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.lancoder.common.codecs.ChannelDisposition;
-import org.lancoder.common.codecs.CodecEnum;
+import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.progress.Unit;
 
@@ -14,15 +14,13 @@ import com.google.gson.JsonObject;
 public class AudioStream extends Stream {
 
 	private static final long serialVersionUID = 4813380418557482787L;
-	private int rate;
-	private RateControlType rateControlType = RateControlType.AUTO;
 	private ChannelDisposition channels = ChannelDisposition.ORIGINAL;
 	private int sampleRate;
 	protected Unit unit = Unit.SECONDS;
 
-	public AudioStream(int index, CodecEnum codec, long units, int rate, RateControlType rateControlType,
+	public AudioStream(int index, AbstractCodec codec, long units, int rate, RateControlType rateControlType,
 			ChannelDisposition channels, int sampleRate, Unit unit, String relativeFile) {
-		super(index, codec, units, relativeFile);
+		super(index, codec, units, relativeFile, rateControlType, rate);
 		this.rate = rate;
 		this.rateControlType = rateControlType;
 		this.channels = channels;

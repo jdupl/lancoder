@@ -10,6 +10,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.CodecEnum;
+import org.lancoder.common.codecs.CodecLoader;
+import org.lancoder.common.codecs.base.AudioCodec;
+import org.lancoder.common.codecs.base.VideoCodec;
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.file_components.streams.VideoStream;
@@ -53,7 +56,8 @@ public class JobInitiator extends RunnableService {
 
 		FFmpegPreset preset = req.getPreset();
 		RateControlType videoRateControlType = req.getRateControlType();
-		CodecEnum videoCodec = req.getVideoCodec();
+		CodecEnum videoCodecEnum = req.getVideoCodec();
+		VideoCodec videoCodec = (VideoCodec) CodecLoader.fromCodec(videoCodecEnum);
 		double requestFrameRate = 0;
 		int width = 0;
 		int height = 0;
@@ -71,29 +75,30 @@ public class JobInitiator extends RunnableService {
 		RateControlType audioRCT = null;
 		int audioRate = 0;
 		int audioSampleRate = 0;
-		CodecEnum audioCodec = null;
+		CodecEnum audioCodecEnum = null;
 		ChannelDisposition audioChannels = null;
 		switch (req.getAudioPreset()) {
 		case COPY:
-			audioCodec = CodecEnum.COPY;
+			audioCodecEnum = CodecEnum.COPY;
 			break;
 		case AUTO:
 			// Set default values
 			audioRCT = RateControlType.CRF;
 			audioRate = 5;
 			audioSampleRate = 48000;
-			audioCodec = CodecEnum.VORBIS;
+			audioCodecEnum = CodecEnum.VORBIS;
 			audioChannels = ChannelDisposition.STEREO;
 			break;
 		case MANUAL:
 			// Set values from user's request
 			audioRCT = req.getAudioRateControlType();
-			audioCodec = req.getAudioCodec();
+			audioCodecEnum = req.getAudioCodec();
 			audioChannels = req.getAudioChannels();
 			audioSampleRate = req.getAudioSampleRate();
 			audioRate = req.getRate();
 			break;
 		}
+		AudioCodec audioCodec = (AudioCodec) CodecLoader.fromCodec(audioCodecEnum);
 		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder, baseOutputFolder);
 
 		for (VideoStream stream : fileInfo.getVideoStreams()) {

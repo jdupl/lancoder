@@ -10,7 +10,6 @@ import org.apache.commons.io.FileUtils;
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.AudioStream;
-import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.utils.TimeUtils;
@@ -42,19 +41,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 				"-ac", channelDisposition, "-ar", sampleRate, "-c:a", outStream.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
 
-		switch (outStream.getCodec()) {
-		case VORBIS:
-			String rateControlString = outStream.getRateControlType() == RateControlType.CRF ? "-q:a" : "-b:a";
-			String rate = outStream.getRateControlType() == RateControlType.CRF ? String.valueOf(outStream.getRate())
-					: String.format("%dk", outStream.getRate());
-			args.add(rateControlString);
-			args.add(rate);
-			break;
-		// TODO support other codecs
-		default:
-			// TODO unknown codec exception
-			break;
-		}
+		args.addAll(outStream.getRateControlArgs());
 		// Meta-data mapping
 		args.add("-map_metadata");
 		args.add(String.format("0:s:%d", inStream.getIndex()));
