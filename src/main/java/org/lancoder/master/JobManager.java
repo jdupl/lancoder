@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.lancoder.common.Node;
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
@@ -113,7 +113,7 @@ public class JobManager implements EventListener {
 		return jobs;
 	}
 
-	private ClientAudioTask getNextAudioTask(ArrayList<Codec> codecs) {
+	private ClientAudioTask getNextAudioTask(ArrayList<CodecEnum> codecs) {
 		ClientAudioTask task = null;
 		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
@@ -130,7 +130,7 @@ public class JobManager implements EventListener {
 		return task;
 	}
 
-	private ClientVideoTask getNextVideoTask(ArrayList<Codec> codecs) {
+	private ClientVideoTask getNextVideoTask(ArrayList<CodecEnum> codecs) {
 		ClientVideoTask task = null;
 		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);

@@ -2,7 +2,8 @@ package org.lancoder.common.task.video;
 
 import java.util.ArrayList;
 
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecFactory;
+import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.Task;
@@ -23,13 +24,14 @@ public class ClientVideoTask extends ClientTask {
 	public ArrayList<String> getRateControlArgs() {
 		ArrayList<String> args = new ArrayList<>();
 		VideoStream stream = this.getStreamConfig().getOutStream();
+		AbstractCodec codecInstance = CodecFactory.fromCodec(stream.getCodec());
 		switch (stream.getRateControlType()) {
 		case VBR:
-			args.add("-b:v");
+			args.add(codecInstance.getVBRSwitchArg());
 			args.add(String.format("%dk", stream.getRate()));
 			break;
 		case CRF:
-			args.add("-crf");
+			args.add(codecInstance.getCRFSwitchArg());
 			args.add(String.format("%d", stream.getRate()));
 			break;
 		default:
@@ -42,7 +44,8 @@ public class ClientVideoTask extends ClientTask {
 	public ArrayList<String> getPresetArg() {
 		ArrayList<String> args = new ArrayList<>();
 		VideoStream stream = this.getStreamConfig().getOutStream();
-		if (stream.getPreset() != null && stream.getCodec() == Codec.H264) {
+		AbstractCodec codecInstance = CodecFactory.fromCodec(stream.getCodec());
+		if (stream.getPreset() != null && codecInstance.supportsPresets()) {
 			args.add("-preset");
 			args.add(stream.getPreset().toString());
 		}

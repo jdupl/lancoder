@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
@@ -14,7 +14,7 @@ import org.lancoder.ffmpeg.probers.VersionProber;
 
 public class FFmpegWrapper {
 
-	public static ArrayList<Codec> getAvailableCodecs(FFmpeg module) {
+	public static ArrayList<CodecEnum> getAvailableCodecs(FFmpeg module) {
 		CodecProber prober = new CodecProber();
 		return prober.getNodeCapabilities(module);
 	}

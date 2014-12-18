@@ -9,14 +9,14 @@ import com.google.gson.stream.JsonWriter;
 /**
  * Type adapter for Gson serialization
  */
-public class CodecTypeAdapter<T> extends TypeAdapter<Codec> {
+public class CodecTypeAdapter<T> extends TypeAdapter<CodecEnum> {
 
-	public void write(JsonWriter out, Codec value) throws IOException {
+	public void write(JsonWriter out, CodecEnum value) throws IOException {
 		if (value == null) {
 			out.nullValue();
 			return;
 		}
-		Codec codec = value;
+		CodecEnum codec = value;
 		out.beginObject();
 		out.name("value");
 		out.value(codec.name());
@@ -30,11 +30,11 @@ public class CodecTypeAdapter<T> extends TypeAdapter<Codec> {
 	}
 
 	@Override
-	public Codec read(JsonReader in) throws IOException {
+	public CodecEnum read(JsonReader in) throws IOException {
 		in.beginObject();
 		while (in.hasNext()) {
 			if (in.nextName().equals("library")) {
-				Codec c = Codec.findByLib(in.nextString());
+				CodecEnum c = CodecEnum.findByLib(in.nextString());
 				in.endObject();
 				return c;
 			} else {

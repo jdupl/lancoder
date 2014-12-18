@@ -9,7 +9,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.RunnableService;
 import org.lancoder.common.codecs.ChannelDisposition;
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.file_components.streams.VideoStream;
@@ -53,7 +53,7 @@ public class JobInitiator extends RunnableService {
 
 		FFmpegPreset preset = req.getPreset();
 		RateControlType videoRateControlType = req.getRateControlType();
-		Codec videoCodec = req.getVideoCodec();
+		CodecEnum videoCodec = req.getVideoCodec();
 		double requestFrameRate = 0;
 		int width = 0;
 		int height = 0;
@@ -71,18 +71,18 @@ public class JobInitiator extends RunnableService {
 		RateControlType audioRCT = null;
 		int audioRate = 0;
 		int audioSampleRate = 0;
-		Codec audioCodec = null;
+		CodecEnum audioCodec = null;
 		ChannelDisposition audioChannels = null;
 		switch (req.getAudioPreset()) {
 		case COPY:
-			audioCodec = Codec.COPY;
+			audioCodec = CodecEnum.COPY;
 			break;
 		case AUTO:
 			// Set default values
 			audioRCT = RateControlType.CRF;
 			audioRate = 5;
 			audioSampleRate = 48000;
-			audioCodec = Codec.VORBIS;
+			audioCodec = CodecEnum.VORBIS;
 			audioChannels = ChannelDisposition.STEREO;
 			break;
 		case MANUAL:
@@ -126,7 +126,7 @@ public class JobInitiator extends RunnableService {
 	private ArrayList<ClientTask> createTasks(AudioStreamConfig config, Job job) {
 		ArrayList<ClientTask> tasks = new ArrayList<>();
 		AudioStream outStream = config.getOutStream();
-		if (outStream.getCodec() != Codec.COPY) {
+		if (outStream.getCodec() != CodecEnum.COPY) {
 			int taskId = job.getTaskCount();
 			File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
 			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
@@ -144,7 +144,7 @@ public class JobInitiator extends RunnableService {
 		ArrayList<ClientTask> tasks = new ArrayList<>();
 		int taskId = job.getTaskCount();
 		// exclude copy streams from task creation
-		if (outStream.getCodec() != Codec.COPY) {
+		if (outStream.getCodec() != CodecEnum.COPY) {
 			long remaining = 0;
 			if (inStream.getUnit() == Unit.FRAMES) {
 				remaining = (long) (inStream.getUnitCount() / inStream.getFrameRate());
@@ -165,7 +165,7 @@ public class JobInitiator extends RunnableService {
 					remaining -= job.getLengthOfTasks();
 					currentMs += job.getLengthOfTasks();
 				}
-				String extension = outStream.getCodec() == Codec.H264 ? "mpeg.ts" : outStream.getCodec().getContainer();
+				String extension = outStream.getCodec() == CodecEnum.H264 ? "mpeg.ts" : outStream.getCodec().getContainer();
 				File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
 						String.format("part-%d.%s", taskId, extension));
 				long ms = end - start;

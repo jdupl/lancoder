@@ -41,6 +41,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		String[] baseArgs = new String[] { ffMpeg.getPath(), "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping,
 				"-ac", channelDisposition, "-ar", sampleRate, "-c:a", outStream.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
+
 		switch (outStream.getCodec()) {
 		case VORBIS:
 			String rateControlString = outStream.getRateControlType() == RateControlType.CRF ? "-q:a" : "-b:a";

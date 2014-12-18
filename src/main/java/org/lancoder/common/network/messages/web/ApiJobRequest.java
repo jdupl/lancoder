@@ -1,7 +1,7 @@
 package org.lancoder.common.network.messages.web;
 
 import org.lancoder.common.codecs.ChannelDisposition;
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.RateControlType;
 
@@ -12,18 +12,18 @@ public class ApiJobRequest {
 	// Video
 	private int rate;
 	private int passes;
-	private Codec videoCodec;
+	private CodecEnum videoCodec;
 	private FFmpegPreset preset;
 	private RateControlType rateControlType;
 	// Audio
 	private UserAudioPreset audioConfig;
-	private Codec audioCodec;
+	private CodecEnum audioCodec;
 	private RateControlType audioRateControlType;
 	private int audioRate;
 	private ChannelDisposition audioChannels;
 	private int audioSampleRate;
 
-	public Codec getVideoCodec() {
+	public CodecEnum getVideoCodec() {
 		return videoCodec;
 	}
 
@@ -67,11 +67,11 @@ public class ApiJobRequest {
 		this.audioSampleRate = audioSampleRate;
 	}
 
-	public Codec getAudioCodec() {
+	public CodecEnum getAudioCodec() {
 		return audioCodec;
 	}
 
-	public void setAudioCodec(Codec audioCodec) {
+	public void setAudioCodec(CodecEnum audioCodec) {
 		this.audioCodec = audioCodec;
 	}
 
