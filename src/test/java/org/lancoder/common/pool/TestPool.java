@@ -18,6 +18,7 @@ public class TestPool {
 
 	@Test
 	public void testDispatchingSingleWorker() {
+		pool.setThreadLimit(1);
 		assertTrue(pool.hasFreeConverters());
 		assertTrue(pool.handle(new Object()));
 		assertTrue(pool.hasWorking());
@@ -30,6 +31,21 @@ public class TestPool {
 		}
 		assertFalse(pool.hasWorking());
 		assertTrue(pool.hasFreeConverters());
+	}
+
+	@Test
+	public void testDispatchingMultipleWorkers() {
+		pool.setThreadLimit(10);
+		for (int i = 0; i < 20; i++) {
+			pool.handle(new Object());
+		}
+		assertTrue(pool.hasWorking());
+		assertFalse(pool.hasFreeConverters());
+		try {
+			Thread.sleep(250);
+		} catch (Exception e) {
+		}
+		assertFalse(pool.hasWorking());
 	}
 
 	class DummyPool extends Pool<Object> {

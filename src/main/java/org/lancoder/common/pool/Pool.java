@@ -154,7 +154,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	}
 
 	/**
-	 * Instanciate a pool worker ressource without starting it.
+	 * Instantiate a pool worker without starting it.
 	 * 
 	 * @return The pool worker
 	 */
@@ -167,9 +167,18 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	}
 
 	/**
-	 * Decides if pool has space to spawn a new ressource.
+	 * Checks if pool has free worker or worker slot
 	 * 
-	 * @return True if pool can spawn a ressource
+	 * @return
+	 */
+	protected boolean hasFree() {
+		return getActiveCount() < threadLimit;
+	}
+
+	/**
+	 * Decides if pool has space to spawn a new pool worker.
+	 * 
+	 * @return True if pool can spawn a pool worker
 	 */
 	private boolean canSpawn() {
 		return workers.size() < threadLimit;
@@ -201,15 +210,6 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 			}
 		}
 		return poolWorker;
-	}
-
-	/**
-	 * Get if any currently initialized pool worker is free
-	 * 
-	 * @return
-	 */
-	protected boolean hasFree() {
-		return getActiveCount() < threadLimit;
 	}
 
 	/**
@@ -274,8 +274,8 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	@Override
 	public void stop() {
 		super.stop();
-		for (PoolWorker<T> ressource : workers) {
-			ressource.stop();
+		for (PoolWorker<T> worker : workers) {
+			worker.stop();
 		}
 		threads.interrupt();
 	}
@@ -283,6 +283,10 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	@Override
 	public void serviceFailure(Exception e) {
 		e.printStackTrace();
+	}
+
+	public void setThreadLimit(int threadLimit) {
+		this.threadLimit = threadLimit;
 	}
 
 }
