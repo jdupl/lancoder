@@ -1,8 +1,5 @@
 package org.lancoder.common.file_components.streams;
 
-import java.util.ArrayList;
-import java.util.Collections;
-
 import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.RateControlType;
@@ -74,13 +71,6 @@ public class VideoStream extends Stream {
 
 	public Unit getUnit() {
 		return unit;
-	}
-
-	@Override
-	public ArrayList<String> getStreamCopyMapping() {
-		ArrayList<String> args = new ArrayList<>();
-		Collections.addAll(args, "-A", "-S", "-B", "-M", "--no-global-tags");
-		return args;
 	}
 
 	public FFmpegPreset getPreset() {

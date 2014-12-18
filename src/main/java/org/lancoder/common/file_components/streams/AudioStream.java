@@ -1,8 +1,5 @@
 package org.lancoder.common.file_components.streams;
 
-import java.util.ArrayList;
-import java.util.Collections;
-
 import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.job.RateControlType;
@@ -62,11 +59,4 @@ public class AudioStream extends Stream {
 		return sampleRate;
 	}
 
-	@Override
-	public ArrayList<String> getStreamCopyMapping() {
-		ArrayList<String> args = new ArrayList<>();
-		Collections.addAll(args, "-D", "-S", "-B", "--no-chapters", "-M", "--no-global-tags", "-a",
-				String.valueOf(this.index));
-		return args;
-	}
 }

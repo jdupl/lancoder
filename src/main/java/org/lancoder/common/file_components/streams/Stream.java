@@ -96,9 +96,6 @@ public abstract class Stream implements Serializable {
 		return args;
 	}
 
-	@Deprecated
-	public abstract ArrayList<String> getStreamCopyMapping();
-
 	public long getUnitCount() {
 		return unitCount;
 	}
