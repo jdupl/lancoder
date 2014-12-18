@@ -1,7 +1,8 @@
 package org.lancoder.common.pool;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.Deque;
 
 import org.lancoder.common.RunnableService;
 
@@ -32,13 +33,11 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	/**
 	 * Contains the tasks to send to pool workers
 	 */
-	protected final LinkedBlockingDeque<T> todo = new LinkedBlockingDeque<>();
+	protected final Deque<T> todo = new ArrayDeque<>();
 	/**
 	 * Thread group of the pool workers
 	 */
 	protected final ThreadGroup threads = new ThreadGroup("threads");
-
-	private volatile int activeCount = 0;
 
 	/**
 	 * Create a default pool with a defined thread limit. Pool will queue items without limitations.
@@ -69,13 +68,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 			try {
 				synchronized (poolMonitor) {
 					poolMonitor.wait();
-					if (!todo.isEmpty()) {
-						T item = this.todo.poll();
-						if (!dispatch(item)) {
-							this.todo.addFirst(item);
-						}
-					}
-					setActiveCount();
+					refresh();
 				}
 			} catch (InterruptedException e) {
 			}
@@ -111,14 +104,14 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 		return toClean.size() != 0;
 	}
 
-	private synchronized final void setActiveCount() {
+	public synchronized final int getActiveCount() {
 		int count = 0;
 		for (PoolWorker<T> poolWorker : this.workers) {
 			if (poolWorker.isActive()) {
 				count++;
 			}
 		}
-		this.activeCount = count;
+		return count;
 	}
 
 	/**
@@ -136,7 +129,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * @return True if some pool workers are busy
 	 */
 	public synchronized boolean hasWorking() {
-		return activeCount > 0;
+		return getActiveCount() > 0;
 	}
 
 	/**
@@ -216,7 +209,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * @return
 	 */
 	protected boolean hasFree() {
-		return activeCount < threadLimit;
+		return getActiveCount() < threadLimit;
 	}
 
 	/**
@@ -237,7 +230,6 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 		if (!handled) {
 			handled = todo.add(element);
 		}
-		setActiveCount();
 		return handled;
 	}
 
@@ -256,6 +248,15 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 			dispatched = false;
 		}
 		return dispatched;
+	}
+
+	private synchronized void refresh() {
+		if (!todo.isEmpty()) {
+			T item = this.todo.poll();
+			if (!dispatch(item)) {
+				this.todo.addFirst(item);
+			}
+		}
 	}
 
 	/**
