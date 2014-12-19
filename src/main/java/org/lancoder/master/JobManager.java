@@ -157,7 +157,6 @@ public class JobManager implements EventListener {
 	 */
 	public synchronized void updateNodesWork() {
 		for (Node node : nodeManager.getFreeAudioNodes()) {
-			System.out.println("node " + node.getName());
 			ClientAudioTask task = getNextAudioTask(node.getCodecs());
 			if (task != null) {
 				dispatch(task, node);

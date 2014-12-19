@@ -18,6 +18,7 @@ import org.lancoder.common.utils.FileUtils;
 
 public class VideoEncodeStrategy extends EncodeStrategy {
 
+	private static final long serialVersionUID = 4179288217629677026L;
 	private double frameRate = 0;
 	private FFmpegPreset preset = FFmpegPreset.MEDIUM;
 	private int width = 0;
@@ -81,14 +82,13 @@ public class VideoEncodeStrategy extends EncodeStrategy {
 				remaining -= job.getLengthOfTasks();
 				currentMs += job.getLengthOfTasks();
 			}
-			String extension = getCodec().needsTranscode() ? "mpeg.ts" : getCodec()
-					.getContainer();
+			String extension = getCodec().needsTranscode() ? "mpeg.ts" : getCodec().getContainer();
 			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
 					String.format("part-%d.%s", taskId, extension));
 			long ms = end - start;
 			long unitCount = (long) Math.floor((ms / 1000 * getFrameRate()));
-			VideoTask task = new VideoTask(taskId, job.getJobId(), getStepCount(), start, end,
-					unitCount, Unit.FRAMES, relativeTaskOutputFile.getPath());
+			VideoTask task = new VideoTask(taskId, job.getJobId(), getStepCount(), start, end, unitCount, Unit.FRAMES,
+					relativeTaskOutputFile.getPath());
 			tasks.add(new ClientVideoTask(task, streamConfig));
 			taskId++;
 		}

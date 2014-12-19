@@ -18,6 +18,7 @@ import org.lancoder.common.utils.FileUtils;
 
 public class AudioEncodeStrategy extends EncodeStrategy {
 
+	private static final long serialVersionUID = -62089041693461179L;
 	private ChannelDisposition channels = ChannelDisposition.ORIGINAL;
 	private int sampleRate;
 

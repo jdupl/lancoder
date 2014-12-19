@@ -8,6 +8,8 @@ import org.lancoder.common.task.StreamConfig;
 
 public class CopyStrategy extends StreamHandlingStrategy {
 
+	private static final long serialVersionUID = -3804413668867598267L;
+
 	@Override
 	public ArrayList<String> getRateControlArgs() {
 		return new ArrayList<>();

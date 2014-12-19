@@ -7,6 +7,7 @@ import org.lancoder.common.job.RateControlType;
 
 public abstract class EncodeStrategy extends StreamHandlingStrategy {
 
+	private static final long serialVersionUID = -7078509107858295060L;
 	protected AbstractCodec codec;
 	protected RateControlType rateControlType;
 	protected int rate;

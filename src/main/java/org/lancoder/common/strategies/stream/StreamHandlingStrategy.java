@@ -9,6 +9,8 @@ import org.lancoder.common.task.StreamConfig;
 
 public abstract class StreamHandlingStrategy implements Serializable {
 
+	private static final long serialVersionUID = -2050092926317106808L;
+
 	public abstract ArrayList<String> getRateControlArgs();
 
 	public boolean isCopy() {
