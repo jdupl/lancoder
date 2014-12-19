@@ -53,6 +53,10 @@ public abstract class Config {
 		this.absoluteSharedFolder = absoluteSharedFolder;
 	}
 
+	public String getFfmpegPath() {
+		return ffmpegPath;
+	}
+
 	public void setFfmpegPath(String ffmpegPath) {
 		this.ffmpegPath = ffmpegPath;
 	}
