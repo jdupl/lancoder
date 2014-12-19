@@ -2,7 +2,7 @@ package org.lancoder.common.task.video;
 
 import java.util.ArrayList;
 
-import org.lancoder.common.file_components.streams.VideoStream;
+import org.lancoder.common.strategies.stream.VideoEncodeStrategy;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.Task;
 
@@ -21,10 +21,10 @@ public class ClientVideoTask extends ClientTask {
 
 	public ArrayList<String> getPresetArg() {
 		ArrayList<String> args = new ArrayList<>();
-		VideoStream stream = this.getStreamConfig().getOutStream();
-		if (stream.getPreset() != null && stream.getCodec().supportsPresets()) {
+		VideoEncodeStrategy streamStrategy = (VideoEncodeStrategy) this.getStreamConfig().getOutStream().getStrategy();
+		if (streamStrategy.getPreset() != null && streamStrategy.getCodec().supportsPresets()) {
 			args.add("-preset");
-			args.add(stream.getPreset().toString());
+			args.add(streamStrategy.getPreset().toString());
 		}
 		return args;
 	}

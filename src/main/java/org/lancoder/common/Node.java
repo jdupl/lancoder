@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 
 import org.lancoder.common.codecs.CodecEnum;
+import org.lancoder.common.codecs.CodecLoader;
 import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
@@ -19,7 +20,7 @@ public class Node implements Serializable {
 	private String unid;
 	private int threadCount;
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
-	private ArrayList<CodecEnum> codecs = new ArrayList<>();
+	private ArrayList<AbstractCodec> codecs = new ArrayList<>();
 	private boolean locked = false;
 	private int failureCount;
 
@@ -28,7 +29,9 @@ public class Node implements Serializable {
 		this.nodeAddress = nodeAddress;
 		this.nodePort = nodePort;
 		this.name = name;
-		this.codecs = codecs;
+		for (CodecEnum codecEnum : codecs) {
+			this.codecs.add(CodecLoader.fromCodec(codecEnum));
+		}
 		this.unid = unid;
 		this.threadCount = threadCount;
 	}
@@ -57,7 +60,7 @@ public class Node implements Serializable {
 		return threadCount;
 	}
 
-	public ArrayList<CodecEnum> getCodecs() {
+	public ArrayList<AbstractCodec> getCodecs() {
 		return codecs;
 	}
 
@@ -71,7 +74,7 @@ public class Node implements Serializable {
 	}
 
 	/**
-	 * Methd to check if the current supports the codec of the output stream of a task.
+	 * Method to check if the current supports the codec of the output stream of a task.
 	 * 
 	 * @param task
 	 *            The task to check

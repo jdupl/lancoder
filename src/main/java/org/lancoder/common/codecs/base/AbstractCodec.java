@@ -1,9 +1,12 @@
 package org.lancoder.common.codecs.base;
 
+import java.io.Serializable;
+
 import org.lancoder.common.codecs.CodecEnum;
 
-public abstract class AbstractCodec {
+public abstract class AbstractCodec implements Serializable {
 
+	private static final long serialVersionUID = -3632642598335400603L;
 	private String prettyName;
 	private String ffMpegName;
 	private String encoder;
@@ -33,7 +36,7 @@ public abstract class AbstractCodec {
 	 * @return The ffmpeg's notation for this codec.
 	 */
 	public String formatBitrate(int bitrate) {
-		return String.format("%dk");
+		return String.format("%dk", bitrate);
 	}
 
 	public boolean supportsPresets() {
@@ -54,6 +57,15 @@ public abstract class AbstractCodec {
 
 	protected String getVBRSwitch() {
 		return "b";
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof AbstractCodec) {
+			AbstractCodec other = (AbstractCodec) obj;
+			return other.ffMpegName.equals(this.ffMpegName);
+		}
+		return false;
 	}
 
 	public String getPrettyName() {

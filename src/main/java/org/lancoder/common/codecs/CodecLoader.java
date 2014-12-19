@@ -4,12 +4,7 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 
 import org.lancoder.common.codecs.base.AbstractCodec;
-import org.lancoder.common.codecs.impl.Flac;
-import org.lancoder.common.codecs.impl.H264;
-import org.lancoder.common.codecs.impl.H265;
-import org.lancoder.common.codecs.impl.Mp3;
-import org.lancoder.common.codecs.impl.Opus;
-import org.lancoder.common.codecs.impl.Vorbis;
+import org.lancoder.common.codecs.impl.*;
 
 public class CodecLoader {
 
@@ -17,12 +12,19 @@ public class CodecLoader {
 	private static HashMap<CodecEnum, AbstractCodec> codecInstances = new HashMap<>();
 
 	static {
+		codecClasses.put(CodecEnum.AAC, AAC.class);
+		codecClasses.put(CodecEnum.APE, Ape.class);
+		codecClasses.put(CodecEnum.DTS, DTS.class);
+		codecClasses.put(CodecEnum.FLAC, Flac.class);
 		codecClasses.put(CodecEnum.H264, H264.class);
 		codecClasses.put(CodecEnum.H265, H265.class);
-		codecClasses.put(CodecEnum.FLAC, Flac.class);
-		codecClasses.put(CodecEnum.OPUS, Opus.class);
-		codecClasses.put(CodecEnum.VORBIS, Vorbis.class);
 		codecClasses.put(CodecEnum.MP3, Mp3.class);
+		codecClasses.put(CodecEnum.OPUS, Opus.class);
+		codecClasses.put(CodecEnum.SPEEX, Speex.class);
+		codecClasses.put(CodecEnum.VORBIS, Vorbis.class);
+		codecClasses.put(CodecEnum.VP8, Vp8.class);
+		codecClasses.put(CodecEnum.VP9, Vp9.class);
+		codecClasses.put(CodecEnum.WAVPACK, Wavpack.class);
 	}
 
 	public static AbstractCodec fromCodec(CodecEnum codecEnum) {
@@ -44,6 +46,9 @@ public class CodecLoader {
 		AbstractCodec codecInstance = null;
 		try {
 			Class<? extends AbstractCodec> clazz = codecClasses.get(codecEnum);
+			if (clazz == null) {
+				System.err.println("Unsupported codec: " + codecEnum.getPrettyName());
+			}
 			Constructor<? extends AbstractCodec> cons = clazz.getDeclaredConstructor();
 			cons.setAccessible(true); // Constructor is protected
 			codecInstance = cons.newInstance();

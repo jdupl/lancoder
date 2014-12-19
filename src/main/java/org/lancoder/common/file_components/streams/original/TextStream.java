@@ -1,8 +1,8 @@
-package org.lancoder.common.file_components.streams;
+package org.lancoder.common.file_components.streams.original;
 
 import com.google.gson.JsonObject;
 
-public class TextStream extends Stream {
+public class TextStream extends OriginalStream {
 
 	private static final long serialVersionUID = -5962727176951376293L;
 

@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.lancoder.common.Node;
-import org.lancoder.common.codecs.CodecEnum;
+import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
@@ -16,6 +16,7 @@ import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.TaskState;
+import org.lancoder.common.strategies.stream.EncodeStrategy;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
@@ -113,7 +114,7 @@ public class JobManager implements EventListener {
 		return jobs;
 	}
 
-	private ClientAudioTask getNextAudioTask(ArrayList<CodecEnum> codecs) {
+	private ClientAudioTask getNextAudioTask(ArrayList<AbstractCodec> codecs) {
 		ClientAudioTask task = null;
 		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
@@ -122,7 +123,8 @@ public class JobManager implements EventListener {
 			ArrayList<ClientAudioTask> tasks = job.getTodoAudioTask();
 			for (Iterator<ClientAudioTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
 				ClientAudioTask clientTask = itTask.next();
-				if (codecs.contains(clientTask.getStreamConfig().getOutStream().getCodec())) {
+				EncodeStrategy strategy = (EncodeStrategy) clientTask.getStreamConfig().getOutStream().getStrategy();
+				if (codecs.contains(strategy.getCodec())) {
 					task = clientTask;
 				}
 			}
@@ -130,7 +132,7 @@ public class JobManager implements EventListener {
 		return task;
 	}
 
-	private ClientVideoTask getNextVideoTask(ArrayList<CodecEnum> codecs) {
+	private ClientVideoTask getNextVideoTask(ArrayList<AbstractCodec> codecs) {
 		ClientVideoTask task = null;
 		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
@@ -139,7 +141,9 @@ public class JobManager implements EventListener {
 			ArrayList<ClientVideoTask> tasks = job.getTodoVideoTask();
 			for (Iterator<ClientVideoTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
 				ClientVideoTask clientTask = itTask.next();
-				if (codecs.contains(clientTask.getStreamConfig().getOutStream().getCodec())) {
+				EncodeStrategy encodeStrategy = (EncodeStrategy) clientTask.getStreamConfig().getOutStream()
+						.getStrategy();
+				if (codecs.contains(encodeStrategy.getCodec())) {
 					task = clientTask;
 				}
 			}
@@ -153,6 +157,7 @@ public class JobManager implements EventListener {
 	 */
 	public synchronized void updateNodesWork() {
 		for (Node node : nodeManager.getFreeAudioNodes()) {
+			System.out.println("node " + node.getName());
 			ClientAudioTask task = getNextAudioTask(node.getCodecs());
 			if (task != null) {
 				dispatch(task, node);

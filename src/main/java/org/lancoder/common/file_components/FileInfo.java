@@ -3,10 +3,10 @@ package org.lancoder.common.file_components;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import org.lancoder.common.file_components.streams.AudioStream;
-import org.lancoder.common.file_components.streams.Stream;
-import org.lancoder.common.file_components.streams.TextStream;
-import org.lancoder.common.file_components.streams.VideoStream;
+import org.lancoder.common.file_components.streams.original.OriginalAudioStream;
+import org.lancoder.common.file_components.streams.original.OriginalStream;
+import org.lancoder.common.file_components.streams.original.OriginalVideoStream;
+import org.lancoder.common.file_components.streams.original.TextStream;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -33,12 +33,20 @@ public class FileInfo implements Serializable {
 	/**
 	 * Streams of the file
 	 */
-	private final ArrayList<Stream> streams = new ArrayList<>();
+	private final ArrayList<OriginalStream> streams = new ArrayList<>();
 	/**
 	 * Relative path of this file
 	 */
 	private String relativeSource;
 
+	/**
+	 * Construct file info from streams in json object.
+	 * 
+	 * @param json
+	 *            The json object from ffprobe
+	 * @param relativeSource
+	 *            The relative path of the source file
+	 */
 	public FileInfo(JsonObject json, String relativeSource) {
 		this.relativeSource = relativeSource;
 		JsonObject format = json.get("format").getAsJsonObject();
@@ -52,10 +60,10 @@ public class FileInfo implements Serializable {
 			JsonObject jsonObject = jsonStream.getAsJsonObject();
 			switch (jsonObject.get("codec_type").getAsString()) {
 			case "video":
-				this.getStreams().add(new VideoStream(jsonObject, relativeSource, duration));
+				this.getStreams().add(new OriginalVideoStream(jsonObject, relativeSource, duration));
 				break;
 			case "audio":
-				this.getStreams().add(new AudioStream(jsonObject, relativeSource, duration));
+				this.getStreams().add(new OriginalAudioStream(jsonObject, relativeSource, duration));
 				break;
 			case "subtitle":
 				this.getStreams().add(new TextStream(jsonObject, relativeSource));
@@ -66,13 +74,8 @@ public class FileInfo implements Serializable {
 		}
 	}
 
-	public VideoStream getMainVideoStream() {
-		ArrayList<VideoStream> vStreams = new ArrayList<>();
-		for (Stream stream : streams) {
-			if (stream instanceof VideoStream) {
-				vStreams.add((VideoStream) stream);
-			}
-		}
+	public OriginalVideoStream getMainVideoStream() {
+		ArrayList<OriginalVideoStream> vStreams = getVideoStreams();
 		if (vStreams.size() > 0) {
 			return vStreams.get(0);
 		} else {
@@ -80,21 +83,21 @@ public class FileInfo implements Serializable {
 		}
 	}
 
-	public ArrayList<VideoStream> getVideoStreams() {
-		ArrayList<VideoStream> vStreams = new ArrayList<>();
-		for (Stream stream : streams) {
-			if (stream instanceof VideoStream) {
-				vStreams.add((VideoStream) stream);
+	public ArrayList<OriginalVideoStream> getVideoStreams() {
+		ArrayList<OriginalVideoStream> vStreams = new ArrayList<>();
+		for (OriginalStream stream : streams) {
+			if (stream instanceof OriginalVideoStream) {
+				vStreams.add((OriginalVideoStream) stream);
 			}
 		}
 		return vStreams;
 	}
 
-	public ArrayList<AudioStream> getAudioStreams() {
-		ArrayList<AudioStream> aStreams = new ArrayList<>();
-		for (Stream stream : streams) {
-			if (stream instanceof AudioStream) {
-				aStreams.add((AudioStream) stream);
+	public ArrayList<OriginalAudioStream> getAudioStreams() {
+		ArrayList<OriginalAudioStream> aStreams = new ArrayList<>();
+		for (OriginalStream stream : streams) {
+			if (stream instanceof OriginalAudioStream) {
+				aStreams.add((OriginalAudioStream) stream);
 			}
 		}
 		return aStreams;
@@ -102,7 +105,7 @@ public class FileInfo implements Serializable {
 
 	public ArrayList<TextStream> getTextStreams() {
 		ArrayList<TextStream> tStreams = new ArrayList<>();
-		for (Stream stream : streams) {
+		for (OriginalStream stream : streams) {
 			if (stream instanceof TextStream) {
 				tStreams.add((TextStream) stream);
 			}
@@ -146,7 +149,7 @@ public class FileInfo implements Serializable {
 		this.format = format;
 	}
 
-	public ArrayList<Stream> getStreams() {
+	public ArrayList<OriginalStream> getStreams() {
 		return streams;
 	}
 

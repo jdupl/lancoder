@@ -9,7 +9,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
-import org.lancoder.common.file_components.streams.AudioStream;
+import org.lancoder.common.file_components.streams.original.OriginalAudioStream;
+import org.lancoder.common.strategies.stream.AudioEncodeStrategy;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.utils.TimeUtils;
@@ -28,20 +29,20 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 
 	private ArrayList<String> getArgs(ClientAudioTask task) {
 		ArrayList<String> args = new ArrayList<>();
-		AudioStream outStream = task.getStreamConfig().getOutStream();
-		AudioStream inStream = task.getStreamConfig().getOrignalStream();
+		AudioEncodeStrategy audioEncodeStrategy = (AudioEncodeStrategy) task.getStreamConfig().getOutStream().getStrategy();
+		OriginalAudioStream inStream = task.getStreamConfig().getOrignalStream();
 
 		String absoluteInput = filePathManager.getSharedSourceFile(task).getPath();
 
 		String streamMapping = String.format("0:%d", inStream.getIndex());
-		String channelDisposition = String.valueOf(outStream.getChannels().getCount());
-		String sampleRate = String.valueOf(outStream.getSampleRate());
+		String channelDisposition = String.valueOf(audioEncodeStrategy.getChannels().getCount());
+		String sampleRate = String.valueOf(audioEncodeStrategy.getSampleRate());
 
 		String[] baseArgs = new String[] { ffMpeg.getPath(), "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping,
-				"-ac", channelDisposition, "-ar", sampleRate, "-c:a", outStream.getCodec().getEncoder() };
+				"-ac", channelDisposition, "-ar", sampleRate, "-c:a", audioEncodeStrategy.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
 
-		args.addAll(outStream.getRateControlArgs());
+		args.addAll(audioEncodeStrategy.getRateControlArgs());
 		// Meta-data mapping
 		args.add("-map_metadata");
 		args.add(String.format("0:s:%d", inStream.getIndex()));

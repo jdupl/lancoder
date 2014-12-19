@@ -1,100 +1,13 @@
 package org.lancoder.common.file_components.streams;
 
-import org.lancoder.common.codecs.base.AbstractCodec;
-import org.lancoder.common.job.FFmpegPreset;
-import org.lancoder.common.job.RateControlType;
-import org.lancoder.common.progress.Unit;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import org.lancoder.common.strategies.stream.VideoEncodeStrategy;
 
 public class VideoStream extends Stream {
 
 	private static final long serialVersionUID = -2445363550218345849L;
 
-	private double frameRate = 0;
-	private FFmpegPreset preset = FFmpegPreset.MEDIUM;
-	private int width = 0;
-	private int height = 0;
-	private Unit unit = Unit.SECONDS;
-	private int stepCount = 1;
-
-	public VideoStream(int index, AbstractCodec codec, double frameRate, int rate, RateControlType rateControlType,
-			FFmpegPreset preset, int width, int height, long unitCount, Unit unit, int stepCount, String relativeFile) {
-		super(index, codec, unitCount, relativeFile, rateControlType, rate);
-		this.frameRate = frameRate;
-		this.rateControlType = rateControlType;
-		this.preset = preset;
-		this.width = width;
-		this.height = height;
-		this.unit = unit;
-		this.stepCount = stepCount;
-		if (unit == Unit.SECONDS && this.frameRate > 0) {
-			unitCount = (long) (this.frameRate * unitCount);
-			this.unit = Unit.FRAMES;
-		}
-	}
-
-	public VideoStream(JsonObject json, String relativeSource, long unitCount) {
-		super(json, relativeSource, unitCount);
-		this.unit = Unit.SECONDS;
-		JsonElement element = null;
-		if ((element = json.get("r_frame_rate")) != null) {
-			// raw frame rate is noted as 24000/1001 or 24/1
-			String rawFrameRate = element.getAsString();
-			String[] values = rawFrameRate.split("/");
-			if (values.length == 2) {
-				int decimals = values[1].length() - 1;
-				this.frameRate = (Double.parseDouble(values[0]) / Double.parseDouble(values[1]));
-				this.frameRate = Math.floor(this.frameRate * Math.pow(10, decimals)) / Math.pow(10, decimals);
-			}
-		}
-		if ((element = json.get("width")) != null) {
-			this.width = element.getAsInt();
-		}
-		if ((element = json.get("height")) != null) {
-			this.height = element.getAsInt();
-		}
-		if (frameRate != 0) {
-			this.unitCount = (long) (frameRate * this.unitCount);
-			this.unit = Unit.FRAMES;
-		}
-	}
-
-	public int getStepCount() {
-		return stepCount;
-	}
-
-	public double getFrameRate() {
-		return frameRate;
-	}
-
-	public Unit getUnit() {
-		return unit;
-	}
-
-	public FFmpegPreset getPreset() {
-		return preset;
-	}
-
-	public int getRate() {
-		return rate;
-	}
-
-	public RateControlType getRateControlType() {
-		return rateControlType;
-	}
-
-	public int getWidth() {
-		return width;
-	}
-
-	public int getHeight() {
-		return height;
-	}
-
-	public long getUnitCount() {
-		return unitCount;
+	public VideoStream(VideoEncodeStrategy strategy, String relativeFile, int index) {
+		super(strategy, relativeFile, index);
 	}
 
 }

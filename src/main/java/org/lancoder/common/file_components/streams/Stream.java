@@ -1,76 +1,34 @@
 package org.lancoder.common.file_components.streams;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
-import org.lancoder.common.codecs.CodecEnum;
-import org.lancoder.common.codecs.CodecLoader;
 import org.lancoder.common.codecs.base.AbstractCodec;
-import org.lancoder.common.job.RateControlType;
+import org.lancoder.common.strategies.stream.EncodeStrategy;
+import org.lancoder.common.strategies.stream.StreamHandlingStrategy;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-public abstract class Stream implements Serializable {
+public abstract class Stream extends BaseStream {
 
 	private static final long serialVersionUID = -1867430611531693710L;
 
-	protected String relativeFile;
-	protected int index;
-	protected AbstractCodec codec;
-	protected RateControlType rateControlType;
-	protected int rate;
+	protected StreamHandlingStrategy strategy;
 
-	protected String title = "";
-	protected String language = "und";
-	protected boolean isDefault = false;
-	protected long unitCount;
-
-	public Stream(int index, AbstractCodec codec, long units, String relativeFile, RateControlType rateControlType,
-			int rate) {
-		this.index = index;
-		this.codec = codec;
-		this.unitCount = units;
+	public Stream(StreamHandlingStrategy strategy, String relativeFile, int index) {
+		this.strategy = strategy;
 		this.relativeFile = relativeFile;
-		this.rateControlType = rateControlType;
-		this.rate = rate;
+		this.index = index;
 	}
 
-	/**
-	 * Parse a json object and instantiate a stream with it's properties.
-	 * 
-	 * @param json
-	 *            the json stream object to parse
-	 * @param relativeFile
-	 *            The relative source file of this stream
-	 * @param unitCount
-	 * 
-	 */
-	public Stream(JsonObject json, String relativeFile, long unitCount) {
-		this.relativeFile = relativeFile;
-		this.index = json.get("index").getAsInt();
-		this.unitCount = unitCount;
-		String unknownCodec = json.get("codec_name").getAsString();
-		CodecEnum codecEnum = CodecEnum.findByLib(unknownCodec);
-		this.codec = CodecLoader.fromCodec(codecEnum);
-		JsonElement tagsElement = json.get("tags");
-		if (tagsElement != null) {
-			JsonObject tags = tagsElement.getAsJsonObject();
-			if (tags.get("title") != null) {
-				this.title = tags.get("title").getAsString();
-			}
-			if (tags.get("language") != null) {
-				this.language = tags.get("language").getAsString();
-			}
-		}
+	public StreamHandlingStrategy getStrategy() {
+		return strategy;
+	}
 
-		JsonElement dispositionElement = json.get("disposition");
-		if (dispositionElement != null) {
-			JsonObject disposition = dispositionElement.getAsJsonObject();
-			if (disposition.get("default") != null) {
-				this.isDefault = disposition.get("default").getAsInt() == 0 ? false : true;
-			}
+	@Override
+	public AbstractCodec getCodec() {
+		AbstractCodec codec = null;
+		if (strategy instanceof EncodeStrategy) {
+			codec = ((EncodeStrategy) strategy).getCodec();
 		}
+		return codec;
 	}
 
 	@Override
@@ -86,41 +44,7 @@ public abstract class Stream implements Serializable {
 	}
 
 	public ArrayList<String> getRateControlArgs() {
-		String rateControlArg = rateControlType == RateControlType.VBR ? codec.getVBRSwitchArg() : codec
-				.getCRFSwitchArg();
-		String rateArg = rateControlType == RateControlType.VBR ? codec.formatBitrate(this.rate) : String
-				.valueOf(this.rate);
-		ArrayList<String> args = new ArrayList<String>();
-		args.add(rateControlArg);
-		args.add(rateArg);
-		return args;
+		return strategy.getRateControlArgs();
 	}
 
-	public long getUnitCount() {
-		return unitCount;
-	}
-
-	public String getRelativeFile() {
-		return relativeFile;
-	}
-
-	public int getIndex() {
-		return index;
-	}
-
-	public AbstractCodec getCodec() {
-		return codec;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public String getLanguage() {
-		return language;
-	}
-
-	public boolean isDefault() {
-		return isDefault;
-	}
 }

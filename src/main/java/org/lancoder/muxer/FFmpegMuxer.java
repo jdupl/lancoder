@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.lancoder.common.FilePathManager;
-import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.Stream;
@@ -59,8 +58,7 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 		int streamIndex = 0;
 		String input = null;
 
-		// TODO move input file to strategy
-		if (stream.getCodec() == CodecEnum.COPY) {
+		if (stream.getStrategy().isCopy()) { // TODO move input file to strategy
 			// Use original source file and stream id
 			// ffmpeg -i source.mkv -map 0:streamId -c copy final.mkv
 			input = filePathManager.getSharedSourceFile(task).getAbsolutePath();

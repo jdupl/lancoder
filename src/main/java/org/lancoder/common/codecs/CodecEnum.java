@@ -3,19 +3,10 @@ package org.lancoder.common.codecs;
 import java.io.Serializable;
 
 public enum CodecEnum implements Serializable {
-	// Special codecs
 	/**
 	 * Unknown (unsupported) codec
 	 */
 	UNKNOWN("Unknown", "none", "unknown", "unknown", false),
-	/**
-	 * Ignore the stream. Don't copy or encode the stream to the final file.
-	 */
-	IGNORE("Ingore stream", "none", "ignore", "", false),
-	/**
-	 * Copy the original stream
-	 */
-	COPY("Copy audio stream", "none", "copy", "mkv", false),
 
 	// Audio codecs
 	/**
@@ -109,7 +100,7 @@ public enum CodecEnum implements Serializable {
 
 	public static CodecEnum findByLib(String libname) {
 		for (CodecEnum codec : CodecEnum.values()) {
-			if (codec.getEncoder().equals(libname)) {
+			if (codec.getEncoder().equals(libname) || codec.getFFMpegName().equalsIgnoreCase(libname)) {
 				return codec;
 			}
 		}

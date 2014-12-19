@@ -29,8 +29,8 @@ public class ApiServer extends RunnableService {
 		// static resources handler
 		ResourceHandler staticHandler = new ResourceHandler();
 
-		 staticHandler.setResourceBase(this.getClass().getClassLoader().getResource(WEB_DIR).toExternalForm());
-//		staticHandler.setResourceBase("src/main/web/web_resources"); // avoid repackaging jar and rerun application on
+//		 staticHandler.setResourceBase(this.getClass().getClassLoader().getResource(WEB_DIR).toExternalForm());
+		staticHandler.setResourceBase("src/main/web/web_resources"); // avoid repackaging jar and rerun application on
 																		// web files change
 		staticHandler.setDirectoriesListed(true);
 		ctxStatic.setHandler(staticHandler);

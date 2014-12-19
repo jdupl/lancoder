@@ -11,6 +11,7 @@ import org.lancoder.common.FilePathManager;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.VideoStream;
+import org.lancoder.common.file_components.streams.original.OriginalVideoStream;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.utils.FileUtils;
@@ -46,7 +47,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 
 	public boolean encodePass(String startTimeStr, String durationStr) throws MissingDecoderException,
 			MissingThirdPartyException {
-		VideoStream inStream = task.getStreamConfig().getOrignalStream();
+		OriginalVideoStream inStream = task.getStreamConfig().getOrignalStream();
 		VideoStream outStream = task.getStreamConfig().getOutStream();
 		String encodingLibrary = outStream.getCodec().getEncoder();
 		File inputFile = filePathManager.getSharedSourceFile(task);
