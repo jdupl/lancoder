@@ -1,4 +1,4 @@
-package org.lancoder.common.file_components.streams;
+package org.lancoder.common.file_components.streams.original;
 
 import java.io.Serializable;
 
@@ -17,6 +17,17 @@ public abstract class BaseStream implements Serializable {
 	protected boolean isDefault = false;
 	protected long unitCount;
 	protected Unit unit = Unit.SECONDS;
+
+	BaseStream() {
+	}
+
+	public BaseStream(String relativeFile, int index, AbstractCodec codec, long unitCount, Unit unit) {
+		this.relativeFile = relativeFile;
+		this.index = index;
+		this.codec = codec;
+		this.unitCount = unitCount;
+		this.unit = unit;
+	}
 
 	public String getRelativeFile() {
 		return relativeFile;

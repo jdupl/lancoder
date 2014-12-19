@@ -2,8 +2,8 @@ package org.lancoder.common.file_components.streams;
 
 import java.util.ArrayList;
 
-import org.lancoder.common.codecs.base.AbstractCodec;
-import org.lancoder.common.strategies.stream.EncodeStrategy;
+import org.lancoder.common.file_components.streams.original.BaseStream;
+import org.lancoder.common.file_components.streams.original.OriginalStream;
 import org.lancoder.common.strategies.stream.StreamHandlingStrategy;
 
 public abstract class Stream extends BaseStream {
@@ -12,23 +12,14 @@ public abstract class Stream extends BaseStream {
 
 	protected StreamHandlingStrategy strategy;
 
-	public Stream(StreamHandlingStrategy strategy, String relativeFile, int index) {
+	public Stream(StreamHandlingStrategy strategy, OriginalStream originalStream, int index) {
+		super(originalStream.getRelativeFile(), index, strategy.getCodec(), originalStream.getUnitCount(), originalStream.getUnit());
 		this.strategy = strategy;
-		this.relativeFile = relativeFile;
-		this.index = index;
+		this.codec = strategy.getCodec();
 	}
 
 	public StreamHandlingStrategy getStrategy() {
 		return strategy;
-	}
-
-	@Override
-	public AbstractCodec getCodec() {
-		AbstractCodec codec = null;
-		if (strategy instanceof EncodeStrategy) {
-			codec = ((EncodeStrategy) strategy).getCodec();
-		}
-		return codec;
 	}
 
 	@Override

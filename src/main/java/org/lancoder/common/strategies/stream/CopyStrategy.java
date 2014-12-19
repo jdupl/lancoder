@@ -2,6 +2,7 @@ package org.lancoder.common.strategies.stream;
 
 import java.util.ArrayList;
 
+import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.StreamConfig;
@@ -23,6 +24,11 @@ public class CopyStrategy extends StreamHandlingStrategy {
 	@Override
 	public ArrayList<ClientTask> createTasks(Job job, StreamConfig config) {
 		return new ArrayList<>();
+	}
+
+	@Override
+	public AbstractCodec getCodec() {
+		return null;
 	}
 
 }

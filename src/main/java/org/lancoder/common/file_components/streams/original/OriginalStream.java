@@ -2,7 +2,6 @@ package org.lancoder.common.file_components.streams.original;
 
 import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.codecs.CodecLoader;
-import org.lancoder.common.file_components.streams.BaseStream;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -47,5 +46,4 @@ public abstract class OriginalStream extends BaseStream {
 			}
 		}
 	}
-
 }
