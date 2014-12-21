@@ -21,6 +21,7 @@ public class CodecLoader {
 		codecClasses.put(CodecEnum.MP3, Mp3.class);
 		codecClasses.put(CodecEnum.OPUS, Opus.class);
 		codecClasses.put(CodecEnum.SPEEX, Speex.class);
+		codecClasses.put(CodecEnum.THEORA, Theora.class);
 		codecClasses.put(CodecEnum.VORBIS, Vorbis.class);
 		codecClasses.put(CodecEnum.VP8, Vp8.class);
 		codecClasses.put(CodecEnum.VP9, Vp9.class);

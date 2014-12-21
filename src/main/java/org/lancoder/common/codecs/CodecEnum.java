@@ -55,12 +55,14 @@ public enum CodecEnum implements Serializable {
 	 * H.265 (This encoding is not yet supported by most systems.)
 	 */
 	H265("HEVC/H.265", "h265", "libx265", "mkv", false),
+
+	THEORA("Theora", "theora", "libtheora", "ogg", false),
 	/**
-	 * Experimental codec by ffmpeg. Not supported for muxing (in test)
+	 * Experimental codec by ffmpeg.
 	 */
 	VP8("WebM Vp8", "vp8", "libvpx", "webm", false),
 	/**
-	 * Experimental codec by ffmpeg. Not supported for muxing (in test)
+	 * Experimental codec by ffmpeg.
 	 */
 	VP9("WebM Vp9", "vp9", "libvpx-vp9", "webm", false);
 
@@ -112,7 +114,7 @@ public enum CodecEnum implements Serializable {
 	}
 
 	public static CodecEnum[] getVideoCodecs() {
-		return new CodecEnum[] { H264, H265, VP9, VP8 };
+		return new CodecEnum[] { H264, H265, THEORA, VP9, VP8 };
 	}
 
 }
