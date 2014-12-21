@@ -92,4 +92,23 @@ public abstract class AbstractCodec implements Serializable {
 		return false;
 	}
 
+	public String formatQuality(int rate) {
+		return String.valueOf(rate);
+	}
+
+	/**
+	 * Allows some codec to block or silently change some unsupported sampling rates.
+	 * 
+	 * @param hz
+	 *            The sample frequency in hz.
+	 * @return The corresponding string representing the nearest frequency
+	 */
+	public String formatHz(int hz) {
+		return String.valueOf(hz);
+	}
+
+	public String formatHz(String sampleRate) {
+		return formatHz(Integer.parseInt(sampleRate));
+	}
+
 }

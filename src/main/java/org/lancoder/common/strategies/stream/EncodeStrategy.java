@@ -21,8 +21,7 @@ public abstract class EncodeStrategy extends StreamHandlingStrategy {
 	public ArrayList<String> getRateControlArgs() {
 		String rateControlArg = rateControlType == RateControlType.VBR ? codec.getVBRSwitchArg() : codec
 				.getCRFSwitchArg();
-		String rateArg = rateControlType == RateControlType.VBR ? codec.formatBitrate(this.rate) : String
-				.valueOf(this.rate);
+		String rateArg = rateControlType == RateControlType.VBR ? codec.formatBitrate(this.rate) : codec.formatQuality(this.rate);
 		ArrayList<String> args = new ArrayList<String>();
 		args.add(rateControlArg);
 		args.add(rateArg);

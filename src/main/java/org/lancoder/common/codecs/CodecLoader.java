@@ -48,11 +48,12 @@ public class CodecLoader {
 			Class<? extends AbstractCodec> clazz = codecClasses.get(codecEnum);
 			if (clazz == null) {
 				System.err.println("Unsupported codec: " + codecEnum.getPrettyName());
+			} else {
+				Constructor<? extends AbstractCodec> cons = clazz.getDeclaredConstructor();
+				cons.setAccessible(true); // Constructor is protected
+				codecInstance = cons.newInstance();
+				codecInstances.put(codecEnum, codecInstance);
 			}
-			Constructor<? extends AbstractCodec> cons = clazz.getDeclaredConstructor();
-			cons.setAccessible(true); // Constructor is protected
-			codecInstance = cons.newInstance();
-			codecInstances.put(codecEnum, codecInstance);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

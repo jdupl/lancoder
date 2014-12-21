@@ -98,6 +98,9 @@ public class JobInitiator extends RunnableService {
 			// Set values from user's request
 			audioRCT = req.getAudioRateControlType();
 			audioCodecEnum = req.getAudioCodec();
+			if (audioCodecEnum == CodecEnum.UNKNOWN) {
+				throw new IllegalArgumentException("audio codec is unknown");
+			}
 			audioChannels = req.getAudioChannels();
 			audioSampleRate = req.getAudioSampleRate();
 			audioRate = req.getRate();

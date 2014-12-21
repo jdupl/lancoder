@@ -12,7 +12,29 @@ public class Opus extends AudioCodec {
 	}
 
 	@Override
-	public String getCRFSwitch() {
-		return "compression_level";
+	public String getCRFSwitchArg() {
+		return getVBRSwitchArg();
+	}
+
+	/**
+	 * Opus does not support quality based encoding...
+	 */
+	@Override
+	public String formatQuality(int rate) {
+		return formatBitrate(96);
+	}
+
+	@Override
+	public String formatHz(int originalFrenquency) {
+		int[] frequencies = new int[] { 8000, 12000, 16000, 24000, 48000 };
+		int closestValue = Integer.MAX_VALUE;
+
+		for (int frenquency : frequencies) {
+			int diff = Math.abs(frenquency - originalFrenquency);
+			if (diff < Math.abs(closestValue - originalFrenquency)) {
+				closestValue = frenquency;
+			}
+		}
+		return String.valueOf(closestValue);
 	}
 }
