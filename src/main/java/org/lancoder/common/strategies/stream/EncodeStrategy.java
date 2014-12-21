@@ -19,10 +19,14 @@ public abstract class EncodeStrategy extends StreamHandlingStrategy {
 	}
 
 	public ArrayList<String> getRateControlArgs() {
+		ArrayList<String> args = new ArrayList<String>();
+		if (codec.isLossless()) {
+			return args;
+		}
 		String rateControlArg = rateControlType == RateControlType.VBR ? codec.getVBRSwitchArg() : codec
 				.getCRFSwitchArg();
-		String rateArg = rateControlType == RateControlType.VBR ? codec.formatBitrate(this.rate) : codec.formatQuality(this.rate);
-		ArrayList<String> args = new ArrayList<String>();
+		String rateArg = rateControlType == RateControlType.VBR ? codec.formatBitrate(this.rate) : codec
+				.formatQuality(this.rate);
 		args.add(rateControlArg);
 		args.add(rateArg);
 		return args;

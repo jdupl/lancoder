@@ -40,8 +40,8 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		String sampleRate = String.valueOf(audioEncodeStrategy.getSampleRate());
 
 		String[] baseArgs = new String[] { ffMpeg.getPath(), "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping,
-				"-ac", channelDisposition, "-ar", audioEncodeStrategy.getCodec().formatHz(sampleRate), "-c:a",
-				audioEncodeStrategy.getCodec().getEncoder() };
+				"-strict", "-2", "-ac", channelDisposition, "-ar", audioEncodeStrategy.getCodec().formatHz(sampleRate),
+				"-c:a", audioEncodeStrategy.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
 
 		args.addAll(audioEncodeStrategy.getRateControlArgs());
