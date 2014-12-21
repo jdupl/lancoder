@@ -108,7 +108,6 @@ public class JobInitiator extends RunnableService {
 			AudioCodec audioCodec = (AudioCodec) CodecLoader.fromCodec(audioCodecEnum);
 			strategy = new AudioEncodeStrategy(audioCodec, audioRCT, audioRate, audioChannels, audioSampleRate);
 		}
-		// AudioCodec audioCodec = (AudioCodec) CodecLoader.fromCodec(audioCodecEnum);
 		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder, baseOutputFolder);
 
 		for (OriginalVideoStream originalStream : fileInfo.getVideoStreams()) {

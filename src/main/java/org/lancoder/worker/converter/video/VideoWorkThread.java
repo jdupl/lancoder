@@ -173,14 +173,13 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 			e.printStackTrace();
 			listener.taskFailed(task);
 		} finally {
-			this.active = false;
+			this.destroyTempFolder();
 			if (success) {
 				listener.taskCompleted(task);
 			} else {
 				listener.taskFailed(task);
 			}
 		}
-		this.destroyTempFolder();
 	}
 
 	@Override
