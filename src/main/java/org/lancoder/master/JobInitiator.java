@@ -103,7 +103,7 @@ public class JobInitiator extends RunnableService {
 			}
 			audioChannels = req.getAudioChannels();
 			audioSampleRate = req.getAudioSampleRate();
-			audioRate = req.getRate();
+			audioRate = req.getAudioRate();
 		default:
 			AudioCodec audioCodec = (AudioCodec) CodecLoader.fromCodec(audioCodecEnum);
 			strategy = new AudioEncodeStrategy(audioCodec, audioRCT, audioRate, audioChannels, audioSampleRate);
