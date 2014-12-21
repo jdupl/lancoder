@@ -7,6 +7,11 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 	Object monitor = new Object();
 
 	/**
+	 * Current state of the worker
+	 */
+	protected boolean active = false;
+
+	/**
 	 * Currently processed element
 	 */
 	protected T task;
@@ -98,7 +103,7 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 	 * @return True is worker is busy
 	 */
 	public synchronized boolean isActive() {
-		return this.task != null;
+		return active;
 	}
 
 	/**
@@ -152,8 +157,10 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 			while (!close) {
 				synchronized (monitor) {
 					monitor.wait();
+					this.active = true;
 					start(); // Pool worker thread is now busy and blocks here
 					this.lastActivity = System.currentTimeMillis();
+					this.active = false;
 					this.task = null;
 					pool.completed();
 				}

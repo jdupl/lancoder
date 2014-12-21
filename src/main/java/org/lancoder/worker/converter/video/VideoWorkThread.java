@@ -170,6 +170,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 			e.printStackTrace();
 			listener.taskFailed(task);
 		} finally {
+			this.active = false;
 			if (success) {
 				listener.taskCompleted(task);
 			} else {

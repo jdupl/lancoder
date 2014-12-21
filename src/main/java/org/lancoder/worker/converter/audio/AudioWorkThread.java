@@ -29,7 +29,8 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 
 	private ArrayList<String> getArgs(ClientAudioTask task) {
 		ArrayList<String> args = new ArrayList<>();
-		AudioEncodeStrategy audioEncodeStrategy = (AudioEncodeStrategy) task.getStreamConfig().getOutStream().getStrategy();
+		AudioEncodeStrategy audioEncodeStrategy = (AudioEncodeStrategy) task.getStreamConfig().getOutStream()
+				.getStrategy();
 		OriginalAudioStream inStream = task.getStreamConfig().getOrignalStream();
 
 		String absoluteInput = filePathManager.getSharedSourceFile(task).getPath();
@@ -83,12 +84,13 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		} catch (MissingThirdPartyException e) {
 			e.printStackTrace();
 		} finally {
+			destroyTempFolder();
+			active = false;
 			if (success) {
 				listener.taskCompleted(task);
 			} else {
 				listener.taskFailed(task);
 			}
-			destroyTempFolder();
 		}
 	};
 
