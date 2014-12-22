@@ -15,6 +15,7 @@ import org.lancoder.common.RunnableService;
  */
 public abstract class Pool<T> extends RunnableService implements Cleanable, PoolWorkerListener {
 
+	private Object refreshMonitor = new Object();
 	private Object poolMonitor = new Object();
 
 	/**
@@ -118,7 +119,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * 
 	 * @return hasFree()
 	 */
-	public synchronized boolean hasFreeConverters() {
+	public boolean hasFreeConverters() {
 		return hasFree();
 	}
 
@@ -127,7 +128,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * 
 	 * @return True if some pool workers are busy
 	 */
-	public synchronized boolean hasWorking() {
+	public boolean hasWorking() {
 		return getActiveCount() > 0;
 	}
 
@@ -201,7 +202,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * 
 	 * @return The free resource or null if none is available.
 	 */
-	private synchronized PoolWorker<T> getFreeWorker() {
+	private PoolWorker<T> getFreeWorker() {
 		PoolWorker<T> poolWorker = null;
 		for (PoolWorker<T> p : workers) {
 			if (p.isFree()) {
@@ -219,16 +220,24 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 *            The element to handle
 	 * @return If element could be added to queue
 	 */
-	public synchronized boolean handle(T element) {
+	public boolean handle(T element) {
 		boolean handled = false;
 		if (!canQueue && todo.size() > 0) {
 			System.err.printf("Warning pool %s seems to be overflowing. Current todo list has %s elements.", this
 					.getClass().getSimpleName(), todo.size());
 
 		} else {
-			this.todo.add(element);
+			handled = this.todo.add(element);
+			// Notify pool's thread to refresh
 			synchronized (poolMonitor) {
 				poolMonitor.notifyAll();
+			}
+			// Wait for pool refresh to complete as new resources may take time to load
+			synchronized (refreshMonitor) {
+				try {
+					refreshMonitor.wait();
+				} catch (InterruptedException e) {
+				}
 			}
 		}
 		return handled;
@@ -251,19 +260,23 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 		return dispatched;
 	}
 
-	private synchronized void refresh() {
+	private void refresh() {
 		if (!todo.isEmpty()) {
 			T item = this.todo.poll();
 			if (!dispatch(item)) {
 				this.todo.addFirst(item);
 			}
 		}
+		// Notify threads waiting on the refresh monitor
+		synchronized (refreshMonitor) {
+			refreshMonitor.notifyAll();
+		}
 	}
 
 	/**
 	 * Called when a resource completed it's task and is now free. Notifies pool's thread to refresh it's state.
 	 */
-	public void completed() {
+	public synchronized void completed() {
 		synchronized (poolMonitor) {
 			poolMonitor.notify();
 		}

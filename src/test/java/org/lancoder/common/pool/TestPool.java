@@ -2,6 +2,8 @@ package org.lancoder.common.pool;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,30 +16,44 @@ public class TestPool {
 		pool = new DummyPool(1);
 		Thread t = new Thread(pool);
 		t.start();
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Test
 	public void testDispatchingSingleWorker() {
+		DummyTask task1 = new DummyTask();
+		DummyTask task2 = new DummyTask();
+		DummyTask task3 = new DummyTask();
 		pool.setThreadLimit(1);
 		assertTrue(pool.hasFreeConverters());
-		assertTrue(pool.handle(new Object()));
-		assertTrue(pool.hasWorking());
+		assertTrue(pool.handle(task1));
 		assertFalse(pool.hasFreeConverters());
-		assertTrue(pool.handle(new Object()));
-		assertTrue(pool.handle(new Object()));
+		assertTrue(pool.handle(task2));
+		assertTrue(pool.handle(task3));
 		try {
 			Thread.sleep(350);
 		} catch (Exception e) {
 		}
 		assertFalse(pool.hasWorking());
 		assertTrue(pool.hasFreeConverters());
+		assertTrue(task1.completed);
+		assertTrue(task2.completed);
+		assertTrue(task3.completed);
 	}
 
 	@Test
 	public void testDispatchingMultipleWorkers() {
+		ArrayList<DummyTask> tasks = new ArrayList<>();
 		pool.setThreadLimit(10);
 		for (int i = 0; i < 20; i++) {
-			pool.handle(new Object());
+			tasks.add(new DummyTask());
+		}
+		for (DummyTask dummyTask : tasks) {
+			pool.handle(dummyTask);
 		}
 		assertTrue(pool.hasWorking());
 		assertFalse(pool.hasFreeConverters());
@@ -46,16 +62,19 @@ public class TestPool {
 		} catch (Exception e) {
 		}
 		assertFalse(pool.hasWorking());
+		for (DummyTask dummyTask : tasks) {
+			assertTrue(dummyTask.completed);
+		}
 	}
 
-	class DummyPool extends Pool<Object> {
+	class DummyPool extends Pool<DummyTask> {
 
 		public DummyPool(int threadLimit) {
 			super(threadLimit, true);
 		}
 
 		@Override
-		protected PoolWorker<Object> getPoolWorkerInstance() {
+		protected PoolWorker<DummyTask> getPoolWorkerInstance() {
 			return new DummyPoolWorker();
 		}
 
@@ -65,19 +84,24 @@ public class TestPool {
 
 	}
 
-	class DummyPoolWorker extends PoolWorker<Object> {
+	class DummyPoolWorker extends PoolWorker<DummyTask> {
 
 		@Override
 		protected void start() {
 			try {
 				Thread.sleep(100);
+				task.completed = true;
 			} catch (Exception e) {
 			}
+			this.active = false;
 		}
 
 		@Override
 		public void serviceFailure(Exception e) {
 		}
+	}
 
+	class DummyTask {
+		public boolean completed = false;
 	}
 }
