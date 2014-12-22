@@ -1,8 +1,7 @@
 package org.lancoder.common.pool;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import org.lancoder.common.RunnableService;
 
@@ -33,7 +32,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	/**
 	 * Contains the tasks to send to pool workers
 	 */
-	protected final Deque<T> todo = new ArrayDeque<>();
+	protected final ConcurrentLinkedDeque<T> todo = new ConcurrentLinkedDeque<>();
 	/**
 	 * Thread group of the pool workers
 	 */
@@ -225,10 +224,12 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 		if (!canQueue && todo.size() > 0) {
 			System.err.printf("Warning pool %s seems to be overflowing. Current todo list has %s elements.", this
 					.getClass().getSimpleName(), todo.size());
-		}
-		handled = dispatch(element);
-		if (!handled) {
-			handled = todo.add(element);
+
+		} else {
+			this.todo.add(element);
+			synchronized (poolMonitor) {
+				poolMonitor.notifyAll();
+			}
 		}
 		return handled;
 	}

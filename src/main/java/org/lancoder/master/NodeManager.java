@@ -164,6 +164,7 @@ public class NodeManager implements EventListener {
 	 */
 	public synchronized void removeNode(Node n) {
 		if (n != null) {
+			System.err.println("Disconnecting node " + n.getName());
 			n.setStatus(NodeState.NOT_CONNECTED);
 			listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 		} else {
