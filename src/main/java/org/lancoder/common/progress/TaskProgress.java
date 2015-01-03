@@ -24,6 +24,11 @@ public class TaskProgress implements Serializable {
 		this.taskState = TaskState.TASK_CANCELED;
 	}
 
+	public void fail() {
+		this.reset();
+		this.taskState = TaskState.TASK_FAILED;
+	}
+
 	public Progress getCurrentStep() {
 		return this.steps.get(currentPassIndex);
 	}
@@ -70,4 +75,5 @@ public class TaskProgress implements Serializable {
 	public TaskState getTaskState() {
 		return this.taskState;
 	}
+
 }

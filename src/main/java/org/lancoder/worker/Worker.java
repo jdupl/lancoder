@@ -292,17 +292,27 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	@Override
 	public synchronized void taskCompleted(ClientTask task) {
 		task.getProgress().complete();
-		notifyMasterStatusChange();
-		this.getCurrentTasks().remove(task);
-		if (this.getCurrentTasks().isEmpty()) {
-			updateStatus(NodeState.FREE);
-		}
+		notifyAndRemove(task);
+	}
+
+	@Override
+	public synchronized void taskCancelled(ClientTask task) {
+		task.getProgress().reset();
+		System.out.println("Task cancelled");
+		notifyAndRemove(task);
+		System.out.println("completed");
 	}
 
 	@Override
 	public synchronized void taskFailed(ClientTask task) {
-		task.getProgress().reset();
-		notifyMasterStatusChange();
+		task.fail();
+		System.out.println("Task failed");
+		notifyAndRemove(task);
+		System.out.println("completed");
+	}
+
+	private void notifyAndRemove(ClientTask task) {
+		notifyMasterStatusChange(); // Master will update the task's status
 		this.getCurrentTasks().remove(task);
 		if (this.getCurrentTasks().isEmpty()) {
 			updateStatus(NodeState.FREE);

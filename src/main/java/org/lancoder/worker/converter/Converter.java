@@ -16,6 +16,8 @@ public abstract class Converter<T extends ClientTask> extends PoolWorker<T> impl
 	protected FilePathManager filePathManager;
 	protected FFmpeg ffMpeg;
 
+	protected boolean cancelling;
+
 	/**
 	 * Constructor of base converter. Initialize file names and directories from task configuration.
 	 * 

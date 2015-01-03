@@ -37,6 +37,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 	@Override
 	public void stop() {
 		super.stop();
+		this.cancelling = true;
 		ffMpegWrapper.stop();
 		transcoder.stop();
 	}
@@ -133,6 +134,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 
 	@Override
 	protected void start() {
+		this.cancelling = false;
 		boolean success = true;
 		try {
 			listener.taskStarted(task);
@@ -176,6 +178,8 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 			this.destroyTempFolder();
 			if (success) {
 				listener.taskCompleted(task);
+			} else if (cancelling) {
+				listener.taskCancelled(task);
 			} else {
 				listener.taskFailed(task);
 			}
@@ -184,6 +188,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 
 	@Override
 	public void cancelTask(Object task) {
+		this.cancelling = true;
 		if (this.task != null && this.task.equals(task)) {
 			this.ffMpegWrapper.stop();
 			if (transcoder != null) {

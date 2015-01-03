@@ -26,5 +26,9 @@ public enum TaskState {
 	/**
 	 * Task is assigned, but not started (should only be temporary)
 	 */
-	TASK_ASSIGNED
+	TASK_ASSIGNED,
+	/**
+	 * Task failed to be completed by a node.
+	 */
+	TASK_FAILED;
 }

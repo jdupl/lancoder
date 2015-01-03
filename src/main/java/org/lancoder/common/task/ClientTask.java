@@ -20,6 +20,10 @@ public abstract class ClientTask implements Serializable {
 		this.task.getProgress().cancel();
 	}
 
+	public void fail() {
+		this.task.getProgress().fail();
+	}
+
 	public abstract Task getTask();
 
 	public StreamConfig getStreamConfig() {

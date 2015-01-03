@@ -35,7 +35,6 @@ public class DispatcherPool extends Pool<DispatchItem> implements DispatcherList
 			node.getCurrentTasks().remove(t);
 		}
 		node.unlock();
-		node.failure();
 		listener.handle(new Event(EventEnum.DISPATCH_ITEM_REFUSED, item));
 	}
 

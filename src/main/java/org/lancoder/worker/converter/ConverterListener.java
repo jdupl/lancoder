@@ -9,4 +9,6 @@ public interface ConverterListener {
 	public void taskStarted(ClientTask task);
 
 	public void taskFailed(ClientTask task);
+
+	public void taskCancelled(ClientTask task);
 }

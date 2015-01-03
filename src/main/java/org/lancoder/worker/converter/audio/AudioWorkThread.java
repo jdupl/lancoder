@@ -76,6 +76,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 
 	@Override
 	protected void start() {
+		this.cancelling = false;
 		listener.taskStarted(task);
 		boolean success = false;
 		createDirs();
@@ -88,6 +89,8 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 			destroyTempFolder();
 			if (success) {
 				listener.taskCompleted(task);
+			} else if (cancelling) {
+				listener.taskCancelled(task);
 			} else {
 				listener.taskFailed(task);
 			}
@@ -105,6 +108,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 
 	@Override
 	public void cancelTask(Object task) {
+		this.cancelling = true;
 		if (this.task != null && this.task.equals(task)) {
 			this.ffMpegWrapper.stop();
 		}

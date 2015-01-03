@@ -239,6 +239,12 @@ public class JobManager implements EventListener {
 			if (dispatched.getJobStatus() == JobState.JOB_TODO) {
 				dispatched.setJobStatus(JobState.JOB_COMPUTING);
 			}
+			break;
+		case TASK_FAILED:
+			unassign(task);
+			task.getProgress().reset();
+			n.failure(); // Add a failure count to the node
+			break;
 		}
 		updateNodesWork();
 		return false;
