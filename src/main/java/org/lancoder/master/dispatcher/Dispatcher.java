@@ -8,9 +8,9 @@ import java.net.Socket;
 import org.lancoder.common.Node;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 
-public class Dispatcher extends Pooler<DispatchItem> {
+public class Dispatcher extends PoolWorker<DispatchItem> {
 
 	private DispatcherListener listener;
 

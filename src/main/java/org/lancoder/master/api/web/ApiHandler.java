@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.lancoder.common.annotations.NoWebUI;
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.codecs.CodecTypeAdapter;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
@@ -32,7 +32,7 @@ public class ApiHandler extends AbstractHandler {
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-		Gson gson = new GsonBuilder().registerTypeAdapter(Codec.class, new CodecTypeAdapter<>())
+		Gson gson = new GsonBuilder().registerTypeAdapter(CodecEnum.class, new CodecTypeAdapter<>())
 				.setExclusionStrategies(new ExclusionStrategy() {
 					@Override
 					public boolean shouldSkipField(FieldAttributes f) {
@@ -83,10 +83,10 @@ public class ApiHandler extends AbstractHandler {
 			master.cleanJobs();
 			break;
 		case "/codecs/audio":
-			response.getWriter().println(gson.toJson(Codec.getAudioCodecs()));
+			response.getWriter().println(gson.toJson(CodecEnum.getAudioCodecs()));
 			break;
 		case "/codecs/video":
-			response.getWriter().println(gson.toJson(Codec.getVideoCodecs()));
+			response.getWriter().println(gson.toJson(CodecEnum.getVideoCodecs()));
 			break;
 		default:
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);

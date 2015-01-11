@@ -10,7 +10,7 @@ public class MasterConfig extends Config implements Serializable {
 
 	private static final long serialVersionUID = 8016312645409446998L;
 	private static final String DEFAULT_PATH = new File(System.getProperty("user.home"),
-			".config/lancoder/master_config.json").getPath();
+			".config/lancoder/master_config.conf").getPath();
 	/**
 	 * Defaults values of the config
 	 */
@@ -66,6 +66,22 @@ public class MasterConfig extends Config implements Serializable {
 
 	public int getApiServerPort() {
 		return apiServerPort;
+	}
+
+	public void setNodeServerPort(int nodeServerPort) {
+		this.nodeServerPort = nodeServerPort;
+	}
+
+	public void setApiServerPort(int apiServerPort) {
+		this.apiServerPort = apiServerPort;
+	}
+
+	public void setFinalEncodingFolder(String finalEncodingFolder) {
+		this.finalEncodingFolder = finalEncodingFolder;
+	}
+
+	public void setFfprobePath(String ffprobePath) {
+		this.ffprobePath = ffprobePath;
 	}
 
 	@Override

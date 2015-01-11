@@ -12,10 +12,10 @@ import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.master.NodeManager;
 
-public class MasterHandler extends Pooler<Socket> {
+public class MasterHandler extends PoolWorker<Socket> {
 
 	private EventListener listener;
 	private NodeManager nodeManager;

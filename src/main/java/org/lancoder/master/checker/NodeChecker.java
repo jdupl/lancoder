@@ -14,14 +14,14 @@ import org.lancoder.common.events.EventListener;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 
-public class NodeChecker extends Pooler<Node> {
+public class NodeChecker extends PoolWorker<Node> {
 
-	private EventListener listener;
+	private EventListener eventListener;
 
-	public NodeChecker(EventListener listener) {
-		this.listener = listener;
+	public NodeChecker(EventListener eventListener) {
+		this.eventListener = eventListener;
 	}
 
 	public void checkNode(Node n) {
@@ -36,10 +36,10 @@ public class NodeChecker extends Pooler<Node> {
 			out.flush();
 			Object o = in.readObject();
 			if (o instanceof StatusReport) {
-				listener.handle(new Event((StatusReport) o));
+				eventListener.handle(new Event((StatusReport) o));
 			}
 		} catch (IOException e) {
-			listener.handle(new Event(EventEnum.NODE_DISCONNECTED, n));
+			eventListener.handle(new Event(EventEnum.NODE_DISCONNECTED, n));
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}

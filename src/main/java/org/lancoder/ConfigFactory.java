@@ -1,6 +1,7 @@
 package org.lancoder;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
@@ -14,8 +15,7 @@ import org.lancoder.common.annotations.Prompt;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.worker.WorkerConfig;
-
-import com.google.gson.Gson;
+import org.yaml.snakeyaml.Yaml;
 
 public class ConfigFactory<T extends Config> {
 
@@ -84,8 +84,9 @@ public class ConfigFactory<T extends Config> {
 			throw new InvalidConfigurationException(String.format(CONF_NOT_FOUND, instance.getConfigPath()));
 		}
 		try {
-			byte[] b = Files.readAllBytes(Paths.get(instance.getConfigPath()));
-			T config = fromJson(new String(b, "UTF-8"));
+			FileInputStream fis = new FileInputStream(instance.getConfigPath());
+			Yaml yaml = new Yaml();
+			T config = yaml.loadAs(fis, clazz);
 			config.setConfigPath(instance.getConfigPath());
 			System.out.println("Loaded config from disk");
 			return config;
@@ -139,11 +140,6 @@ public class ConfigFactory<T extends Config> {
 			}
 		}
 		return fields;
-	}
-
-	private T fromJson(String jsonString) {
-		Gson gson = new Gson();
-		return gson.fromJson(jsonString, this.clazz);
 	}
 
 }

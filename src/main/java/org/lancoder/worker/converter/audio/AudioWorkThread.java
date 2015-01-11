@@ -9,8 +9,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
-import org.lancoder.common.file_components.streams.AudioStream;
-import org.lancoder.common.job.RateControlType;
+import org.lancoder.common.file_components.streams.original.OriginalAudioStream;
+import org.lancoder.common.strategies.stream.AudioEncodeStrategy;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.utils.TimeUtils;
@@ -29,31 +29,22 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 
 	private ArrayList<String> getArgs(ClientAudioTask task) {
 		ArrayList<String> args = new ArrayList<>();
-		AudioStream outStream = task.getStreamConfig().getOutStream();
-		AudioStream inStream = task.getStreamConfig().getOrignalStream();
+		AudioEncodeStrategy audioEncodeStrategy = (AudioEncodeStrategy) task.getStreamConfig().getOutStream()
+				.getStrategy();
+		OriginalAudioStream inStream = task.getStreamConfig().getOrignalStream();
 
 		String absoluteInput = filePathManager.getSharedSourceFile(task).getPath();
 
 		String streamMapping = String.format("0:%d", inStream.getIndex());
-		String channelDisposition = String.valueOf(outStream.getChannels().getCount());
-		String sampleRate = String.valueOf(outStream.getSampleRate());
+		String channelDisposition = String.valueOf(audioEncodeStrategy.getChannels().getCount());
+		String sampleRate = String.valueOf(audioEncodeStrategy.getSampleRate());
 
 		String[] baseArgs = new String[] { ffMpeg.getPath(), "-i", absoluteInput, "-vn", "-sn", "-map", streamMapping,
-				"-ac", channelDisposition, "-ar", sampleRate, "-c:a", outStream.getCodec().getEncoder() };
+				"-strict", "-2", "-ac", channelDisposition, "-ar", audioEncodeStrategy.getCodec().formatHz(sampleRate),
+				"-c:a", audioEncodeStrategy.getCodec().getEncoder() };
 		Collections.addAll(args, baseArgs);
-		switch (outStream.getCodec()) {
-		case VORBIS:
-			String rateControlString = outStream.getRateControlType() == RateControlType.CRF ? "-q:a" : "-b:a";
-			String rate = outStream.getRateControlType() == RateControlType.CRF ? String.valueOf(outStream.getRate())
-					: String.format("%dk", outStream.getRate());
-			args.add(rateControlString);
-			args.add(rate);
-			break;
-		// TODO support other codecs
-		default:
-			// TODO unknown codec exception
-			break;
-		}
+
+		args.addAll(audioEncodeStrategy.getRateControlArgs());
 		// Meta-data mapping
 		args.add("-map_metadata");
 		args.add(String.format("0:s:%d", inStream.getIndex()));
@@ -85,6 +76,7 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 
 	@Override
 	protected void start() {
+		this.cancelling = false;
 		listener.taskStarted(task);
 		boolean success = false;
 		createDirs();
@@ -94,13 +86,14 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		} catch (MissingThirdPartyException e) {
 			e.printStackTrace();
 		} finally {
-			this.active = false;
+			destroyTempFolder();
 			if (success) {
 				listener.taskCompleted(task);
+			} else if (cancelling) {
+				listener.taskCancelled(task);
 			} else {
 				listener.taskFailed(task);
 			}
-			destroyTempFolder();
 		}
 	};
 
@@ -110,6 +103,14 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		m = timePattern.matcher(line);
 		if (m.find()) {
 			task.getProgress().update(TimeUtils.getMsFromString(m.group(1)) / 1000);
+		}
+	}
+
+	@Override
+	public void cancelTask(Object task) {
+		this.cancelling = true;
+		if (this.task != null && this.task.equals(task)) {
+			this.ffMpegWrapper.stop();
 		}
 	}
 }

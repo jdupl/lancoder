@@ -2,20 +2,11 @@ package org.lancoder.common.codecs;
 
 import java.io.Serializable;
 
-public enum Codec implements Serializable {
-	// Special codecs
+public enum CodecEnum implements Serializable {
 	/**
 	 * Unknown (unsupported) codec
 	 */
 	UNKNOWN("Unknown", "none", "unknown", "unknown", false),
-	/**
-	 * Ignore the stream. Don't copy or encode the stream to the final file.
-	 */
-	IGNORE("Ingore stream", "none", "ignore", "", false),
-	/**
-	 * Copy the original stream
-	 */
-	COPY("Copy audio stream", "none", "copy", "mkv", false),
 
 	// Audio codecs
 	/**
@@ -64,12 +55,14 @@ public enum Codec implements Serializable {
 	 * H.265 (This encoding is not yet supported by most systems.)
 	 */
 	H265("HEVC/H.265", "h265", "libx265", "mkv", false),
+
+	THEORA("Theora", "theora", "libtheora", "ogg", false),
 	/**
-	 * Experimental codec by ffmpeg. Not supported for muxing (in test)
+	 * Experimental codec by ffmpeg.
 	 */
 	VP8("WebM Vp8", "vp8", "libvpx", "webm", false),
 	/**
-	 * Experimental codec by ffmpeg. Not supported for muxing (in test)
+	 * Experimental codec by ffmpeg.
 	 */
 	VP9("WebM Vp9", "vp9", "libvpx-vp9", "webm", false);
 
@@ -79,7 +72,7 @@ public enum Codec implements Serializable {
 	private String container;
 	private boolean lossless;
 
-	private Codec(String name, String ffMpegName, String encoder, String container, boolean lossless) {
+	private CodecEnum(String name, String ffMpegName, String encoder, String container, boolean lossless) {
 		this.prettyName = name;
 		this.ffMpegName = ffMpegName;
 		this.encoder = encoder;
@@ -107,21 +100,21 @@ public enum Codec implements Serializable {
 		return ffMpegName;
 	}
 
-	public static Codec findByLib(String libname) {
-		for (Codec codec : Codec.values()) {
-			if (codec.getEncoder().equals(libname)) {
+	public static CodecEnum findByLib(String libname) {
+		for (CodecEnum codec : CodecEnum.values()) {
+			if (codec.getEncoder().equals(libname) || codec.getFFMpegName().equalsIgnoreCase(libname)) {
 				return codec;
 			}
 		}
 		return UNKNOWN;
 	}
 
-	public static Codec[] getAudioCodecs() {
-		return new Codec[] { AAC, APE, DTS, FLAC, MP3, OPUS, SPEEX, VORBIS, WAVPACK };
+	public static CodecEnum[] getAudioCodecs() {
+		return new CodecEnum[] { AAC, APE, DTS, FLAC, MP3, OPUS, SPEEX, VORBIS, WAVPACK };
 	}
 
-	public static Codec[] getVideoCodecs() {
-		return new Codec[] { H264, H265, VP9, VP8 };
+	public static CodecEnum[] getVideoCodecs() {
+		return new CodecEnum[] { H264, H265, THEORA, VP9, VP8 };
 	}
 
 }

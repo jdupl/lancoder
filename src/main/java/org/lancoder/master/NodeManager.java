@@ -17,7 +17,7 @@ import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.video.ClientVideoTask;
 
-public class NodeManager {
+public class NodeManager implements EventListener {
 
 	private final static int FAILURE_THRESHOLD = 10;
 
@@ -30,6 +30,10 @@ public class NodeManager {
 		this.masterConfig = masterConfig;
 		if (instance != null) {
 			nodes.putAll(instance.getNodes());
+			for (Node node : getNodes()) { // Reset statuses
+				node.unlock();
+				node.setStatus(NodeState.NOT_CONNECTED);
+			}
 		}
 	}
 
@@ -149,6 +153,7 @@ public class NodeManager {
 		} else {
 			success = false;
 		}
+		n.unlock(); // remove lock on the node
 		if (success) {
 			listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 		}
@@ -164,12 +169,8 @@ public class NodeManager {
 	 */
 	public synchronized void removeNode(Node n) {
 		if (n != null) {
+			System.err.println("Disconnecting node " + n.getName());
 			n.setStatus(NodeState.NOT_CONNECTED);
-			// Cancel node's tasks status if any
-			for (ClientTask t : n.getCurrentTasks()) {
-				t.getProgress().reset();
-			}
-			n.getCurrentTasks().clear();
 			listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 		} else {
 			System.err.println("Could not mark node as disconnected as it was not found");
@@ -214,6 +215,18 @@ public class NodeManager {
 	public void disconnectRequest(ConnectRequest cm) {
 		Node n = this.identifySender(cm.getUnid());
 		this.removeNode(n);
+	}
+
+	@Override
+	public void handle(Event event) {
+		switch (event.getCode()) {
+		case NODE_DISCONNECTED:
+			Node disconnectedNode = (Node) event.getObject();
+			removeNode(disconnectedNode);
+			break;
+		default:
+			break;
+		}
 	}
 
 }

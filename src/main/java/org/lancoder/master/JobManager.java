@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.lancoder.common.Node;
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
@@ -16,13 +16,14 @@ import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.TaskState;
+import org.lancoder.common.strategies.stream.EncodeStrategy;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.audio.ClientAudioTask;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.master.dispatcher.DispatchItem;
 import org.lancoder.master.dispatcher.DispatcherPool;
 
-public class JobManager {
+public class JobManager implements EventListener {
 
 	private EventListener listener;
 	private NodeManager nodeManager;
@@ -63,6 +64,7 @@ public class JobManager {
 		if (j == null) {
 			return false;
 		}
+		j.setJobStatus(JobState.JOB_CANCELED);
 		for (Node node : nodeManager.getNodes()) {
 			ArrayList<ClientTask> nodeTasks = new ArrayList<>(node.getCurrentTasks());
 			for (ClientTask task : nodeTasks) {
@@ -79,9 +81,17 @@ public class JobManager {
 		return true;
 	}
 
+	/**
+	 * Notify a node that a task was unassigned.
+	 * 
+	 * @param task
+	 *            The task to unassign
+	 * @param assigne
+	 *            The node currently processing the task
+	 */
 	private void unassignTask(ClientTask task, Node assigne) {
 		dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task, ClusterProtocol.UNASSIGN_TASK), assigne));
-		task.getProgress().reset();
+		task.getProgress().cancel();
 		taskUpdated(task, assigne);
 	}
 
@@ -93,16 +103,28 @@ public class JobManager {
 		return jobs;
 	}
 
-	private ClientAudioTask getNextAudioTask(ArrayList<Codec> codecs) {
+	public ArrayList<Job> getAvailableJobs() {
+		ArrayList<Job> jobs = new ArrayList<>();
+		for (Entry<String, Job> e : this.jobs.entrySet()) {
+			Job job = e.getValue();
+			if (job.getJobStatus() == JobState.JOB_COMPUTING || job.getJobStatus() == JobState.JOB_TODO) {
+				jobs.add(e.getValue());
+			}
+		}
+		return jobs;
+	}
+
+	private ClientAudioTask getNextAudioTask(ArrayList<AbstractCodec> codecs) {
 		ClientAudioTask task = null;
-		ArrayList<Job> jobList = new ArrayList<>(jobs.values());
+		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
 		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
 			Job job = itJob.next();
 			ArrayList<ClientAudioTask> tasks = job.getTodoAudioTask();
 			for (Iterator<ClientAudioTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
 				ClientAudioTask clientTask = itTask.next();
-				if (codecs.contains(clientTask.getStreamConfig().getOutStream().getCodec())) {
+				EncodeStrategy strategy = (EncodeStrategy) clientTask.getStreamConfig().getOutStream().getStrategy();
+				if (codecs.contains(strategy.getCodec())) {
 					task = clientTask;
 				}
 			}
@@ -110,16 +132,18 @@ public class JobManager {
 		return task;
 	}
 
-	private ClientVideoTask getNextVideoTask(ArrayList<Codec> codecs) {
+	private ClientVideoTask getNextVideoTask(ArrayList<AbstractCodec> codecs) {
 		ClientVideoTask task = null;
-		ArrayList<Job> jobList = new ArrayList<>(jobs.values());
+		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
 		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
 			Job job = itJob.next();
 			ArrayList<ClientVideoTask> tasks = job.getTodoVideoTask();
 			for (Iterator<ClientVideoTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
 				ClientVideoTask clientTask = itTask.next();
-				if (codecs.contains(clientTask.getStreamConfig().getOutStream().getCodec())) {
+				EncodeStrategy encodeStrategy = (EncodeStrategy) clientTask.getStreamConfig().getOutStream()
+						.getStrategy();
+				if (codecs.contains(encodeStrategy.getCodec())) {
 					task = clientTask;
 				}
 			}
@@ -176,6 +200,13 @@ public class JobManager {
 		return assigned;
 	}
 
+	/**
+	 * Unassign a node from a task.
+	 * 
+	 * @param task
+	 *            The task to be unassigned.
+	 * @return True if task could be unassigned
+	 */
 	private synchronized boolean unassign(ClientTask task) {
 		boolean unassigned = false;
 		Node previousAssignee = this.assignments.remove(task);
@@ -208,6 +239,12 @@ public class JobManager {
 			if (dispatched.getJobStatus() == JobState.JOB_TODO) {
 				dispatched.setJobStatus(JobState.JOB_COMPUTING);
 			}
+			break;
+		case TASK_FAILED:
+			unassign(task);
+			task.getProgress().reset();
+			n.failure(); // Add a failure count to the node
+			break;
 		}
 		updateNodesWork();
 		return false;
@@ -230,5 +267,37 @@ public class JobManager {
 		for (Job job : toClean) {
 			deleteJob(job);
 		}
+	}
+
+	@Override
+	public void handle(Event event) {
+		switch (event.getCode()) {
+		case DISPATCH_ITEM_REFUSED:
+			DispatchItem item = (DispatchItem) event.getObject();
+			ClientTask task = ((TaskRequestMessage) item.getMessage()).getTask();
+			unassign(task);
+			break;
+		case NODE_DISCONNECTED:
+			Node disconnectedNode = (Node) event.getObject();
+			unassingAll(disconnectedNode);
+			break;
+		default:
+			break;
+		}
+	}
+
+	/**
+	 * Unassign all tasks of the node.
+	 * 
+	 * @param n
+	 *            The node to remove all tasks
+	 */
+	public void unassingAll(Node n) {
+		ArrayList<ClientTask> tasks = n.getCurrentTasks();
+		for (ClientTask clientTask : tasks) {
+			assignments.remove(clientTask);
+			clientTask.getProgress().reset();
+		}
+		n.getCurrentTasks().clear();
 	}
 }

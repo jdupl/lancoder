@@ -6,7 +6,7 @@ import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.pool.Pool;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.ClientTask;
 
 public class DispatcherPool extends Pool<DispatchItem> implements DispatcherListener {
@@ -21,7 +21,7 @@ public class DispatcherPool extends Pool<DispatchItem> implements DispatcherList
 	}
 
 	@Override
-	protected Pooler<DispatchItem> getPoolerInstance() {
+	protected PoolWorker<DispatchItem> getPoolWorkerInstance() {
 		return new Dispatcher(this);
 	}
 
@@ -29,14 +29,13 @@ public class DispatcherPool extends Pool<DispatchItem> implements DispatcherList
 	public synchronized void taskRefused(DispatchItem item) {
 		ClientTask t = ((TaskRequestMessage) item.getMessage()).getTask();
 		Node node = item.getNode();
-		System.err.printf("Node %s refused task.%n", node.getName());
+		System.err.printf("Node %s refused task %d from job %s.%n", node.getName(), t.getTaskId(), t.getJobId());
 		t.getProgress().reset();
 		if (node.hasTask(t)) {
 			node.getCurrentTasks().remove(t);
 		}
 		node.unlock();
-		node.failure();
-		listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
+		listener.handle(new Event(EventEnum.DISPATCH_ITEM_REFUSED, item));
 	}
 
 	@Override

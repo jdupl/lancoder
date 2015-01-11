@@ -32,6 +32,10 @@ public enum JobState {
 	/**
 	 * Fatal failure occurred. Most likely a muxing error.
 	 */
-	JOB_FAILED
+	JOB_FAILED,
+	/**
+	 * Job canceled by user.
+	 */
+	JOB_CANCELED
 
 }

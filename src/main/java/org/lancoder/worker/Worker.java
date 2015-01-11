@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import org.lancoder.common.Container;
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.Node;
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
 import org.lancoder.common.network.cluster.messages.ConnectResponse;
@@ -40,7 +40,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	private WorkerConfig config;
 	private AudioConverterPool audioPool;
 	private VideoConverterPool videoPool;
-
 	private InetAddress masterInetAddress = null;
 	private int threadCount;
 
@@ -63,7 +62,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		}
 		super.bootstrap();
 		// Get codecs
-		ArrayList<Codec> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
+		ArrayList<CodecEnum> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
 		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
 		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount, config.getUniqueID());
 	}
@@ -98,9 +97,12 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	public synchronized void stopWork(ClientTask t) {
 		// TODO check which task to stop (if many tasks are implemented)
 		this.getCurrentTasks().remove(t);
-		if (t instanceof ClientVideoTask) {
+		audioPool.cancel(t);
+		videoPool.cancel(t);
+		if (getCurrentTasks().size() == 0) {
 			this.updateStatus(NodeState.FREE);
 		}
+		this.notifyMasterStatusChange();
 	}
 
 	private ArrayList<ClientTask> getCurrentTasks() {
@@ -290,17 +292,27 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	@Override
 	public synchronized void taskCompleted(ClientTask task) {
 		task.getProgress().complete();
-		notifyMasterStatusChange();
-		this.getCurrentTasks().remove(task);
-		if (this.getCurrentTasks().isEmpty()) {
-			updateStatus(NodeState.FREE);
-		}
+		notifyAndRemove(task);
+	}
+
+	@Override
+	public synchronized void taskCancelled(ClientTask task) {
+		task.getProgress().reset();
+		System.out.println("Task cancelled");
+		notifyAndRemove(task);
+		System.out.println("completed");
 	}
 
 	@Override
 	public synchronized void taskFailed(ClientTask task) {
-		task.getProgress().reset();
-		notifyMasterStatusChange();
+		task.fail();
+		System.out.println("Task failed");
+		notifyAndRemove(task);
+		System.out.println("completed");
+	}
+
+	private void notifyAndRemove(ClientTask task) {
+		notifyMasterStatusChange(); // Master will update the task's status
 		this.getCurrentTasks().remove(task);
 		if (this.getCurrentTasks().isEmpty()) {
 			updateStatus(NodeState.FREE);

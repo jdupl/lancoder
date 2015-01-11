@@ -44,6 +44,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	private NodeManager nodeManager;
 	private JobManager jobManager;
 
+	private ArrayList<EventListener> eventListeners = new ArrayList<>();
+
 	private MasterSavedInstance savedInstance;
 
 	public Master(MasterConfig config) {
@@ -66,6 +68,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		super.registerServices();
 		filePathManager = new FilePathManager(config);
 		nodeManager = new NodeManager(this, config, savedInstance);
+		eventListeners.add(nodeManager);
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
 		nodeServer = new MasterServer(config.getNodeServerPort(), this, nodeManager);
@@ -79,6 +82,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		muxerPool = new MuxerPool(this, filePathManager, getFFmpeg());
 		services.add(muxerPool);
 		jobManager = new JobManager(this, nodeManager, dispatcherPool, savedInstance);
+		eventListeners.add(jobManager);
 	}
 
 	@Override
@@ -132,6 +136,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 */
 	public void disconnectNode(Node n) {
 		// remove node from list
+		jobManager.unassingAll(n);
 		nodeManager.removeNode(n);
 		dispatcherPool.handle(new DispatchItem(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()), n));
 		System.out.printf("Disconnected node %s.%n", n.getName());
@@ -207,8 +212,9 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 * @return true if update could be sent, false otherwise
 	 */
 	public boolean readStatusReport(StatusReport report) {
-		NodeState s = report.status;
+		NodeState newNodeState = report.status;
 		String unid = report.getUnid();
+		// identify node to get it's instance
 		Node sender = nodeManager.identifySender(unid);
 		if (sender == null || sender.getStatus() == NodeState.NOT_CONNECTED) {
 			return false;
@@ -218,10 +224,10 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			readTaskReports(report.getTaskReports());
 		}
 		// only update if status is changed
-		if (sender.getStatus() != report.status) {
-			sender.setStatus(s);
-			jobManager.updateNodesWork();
+		if (sender.getStatus() != newNodeState) {
+			sender.setStatus(newNodeState);
 		}
+		jobManager.updateNodesWork();
 		return true;
 	}
 
@@ -286,14 +292,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	@Override
 	public void handle(Event event) {
 		switch (event.getCode()) {
-		case NODE_DISCONNECTED:
-			nodeManager.removeNode((Node) event.getObject());
-			break;
 		case STATUS_REPORT:
 			this.readStatusReport((StatusReport) event.getObject());
-			break;
-		case WORK_NEEDS_UPDATE:
-			this.jobManager.updateNodesWork();
 			break;
 		case JOB_ENCODING_COMPLETED:
 			jobEncodingCompleted((Job) event.getObject());
@@ -302,6 +302,9 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			this.config.dump();
 			break;
 		default:
+			for (EventListener eventListener : eventListeners) {
+				eventListener.handle(event);
+			}
 			break;
 		}
 	}

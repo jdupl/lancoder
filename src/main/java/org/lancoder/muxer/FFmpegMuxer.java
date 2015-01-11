@@ -7,12 +7,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.lancoder.common.FilePathManager;
-import org.lancoder.common.codecs.Codec;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.Job;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.utils.FileUtils;
@@ -24,7 +23,7 @@ import org.lancoder.worker.converter.video.Transcoder;
  * @author justin
  *
  */
-public class FFmpegMuxer extends Pooler<Job> {
+public class FFmpegMuxer extends PoolWorker<Job> {
 
 	private MuxerListener listener;
 	private FilePathManager filePathManager;
@@ -59,8 +58,7 @@ public class FFmpegMuxer extends Pooler<Job> {
 		int streamIndex = 0;
 		String input = null;
 
-		// TODO move input file to strategy
-		if (stream.getCodec() == Codec.COPY) {
+		if (stream.getStrategy().isCopy()) { // TODO move input file to strategy
 			// Use original source file and stream id
 			// ffmpeg -i source.mkv -map 0:streamId -c copy final.mkv
 			input = filePathManager.getSharedSourceFile(task).getAbsolutePath();

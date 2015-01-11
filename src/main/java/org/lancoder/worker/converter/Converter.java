@@ -4,17 +4,19 @@ import java.io.File;
 import java.io.IOException;
 
 import org.lancoder.common.FilePathManager;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.ffmpeg.FFmpegReaderListener;
 
-public abstract class Converter<T extends ClientTask> extends Pooler<T> implements FFmpegReaderListener {
+public abstract class Converter<T extends ClientTask> extends PoolWorker<T> implements FFmpegReaderListener {
 
 	protected ConverterListener listener;
 	protected FilePathManager filePathManager;
 	protected FFmpeg ffMpeg;
+
+	protected boolean cancelling;
 
 	/**
 	 * Constructor of base converter. Initialize file names and directories from task configuration.
@@ -28,6 +30,9 @@ public abstract class Converter<T extends ClientTask> extends Pooler<T> implemen
 		this.filePathManager = filePathManager;
 		this.ffMpeg = fFmpeg;
 	}
+
+	@Override
+	public abstract void cancelTask(Object task);
 
 	/**
 	 * Create or clean task's and job's folders.

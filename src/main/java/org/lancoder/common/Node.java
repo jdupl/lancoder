@@ -4,7 +4,9 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
-import org.lancoder.common.codecs.Codec;
+import org.lancoder.common.codecs.CodecEnum;
+import org.lancoder.common.codecs.CodecLoader;
+import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 
@@ -18,16 +20,18 @@ public class Node implements Serializable {
 	private String unid;
 	private int threadCount;
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
-	private ArrayList<Codec> codecs = new ArrayList<>();
+	private ArrayList<AbstractCodec> codecs = new ArrayList<>();
 	private boolean locked = false;
 	private int failureCount;
 
-	public Node(InetAddress nodeAddress, int nodePort, String name, ArrayList<Codec> codecs, int threadCount,
+	public Node(InetAddress nodeAddress, int nodePort, String name, ArrayList<CodecEnum> codecs, int threadCount,
 			String unid) {
 		this.nodeAddress = nodeAddress;
 		this.nodePort = nodePort;
 		this.name = name;
-		this.codecs = codecs;
+		for (CodecEnum codecEnum : codecs) {
+			this.codecs.add(CodecLoader.fromCodec(codecEnum));
+		}
 		this.unid = unid;
 		this.threadCount = threadCount;
 	}
@@ -56,7 +60,7 @@ public class Node implements Serializable {
 		return threadCount;
 	}
 
-	public ArrayList<Codec> getCodecs() {
+	public ArrayList<AbstractCodec> getCodecs() {
 		return codecs;
 	}
 
@@ -70,14 +74,14 @@ public class Node implements Serializable {
 	}
 
 	/**
-	 * Methd to check if the current supports the codec of the output stream of a task.
+	 * Method to check if the current supports the codec of the output stream of a task.
 	 * 
 	 * @param task
 	 *            The task to check
 	 * @return True if node can handle the task
 	 */
 	public boolean canHandle(ClientTask task) {
-		Codec taskCodec = task.getStreamConfig().getOutStream().getCodec();
+		AbstractCodec taskCodec = task.getStreamConfig().getOutStream().getCodec();
 		return this.codecs.contains(taskCodec);
 	}
 

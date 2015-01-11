@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.lancoder.common.file_components.streams.Stream;
+import org.lancoder.common.file_components.streams.original.OriginalStream;
 
 public abstract class StreamConfig implements Serializable {
 
@@ -11,10 +12,10 @@ public abstract class StreamConfig implements Serializable {
 	protected String jobId;
 	protected ArrayList<String> extraEncoderArgs;
 	protected int passes;
-	protected Stream orignalStream;
+	protected OriginalStream orignalStream;
 	protected Stream destinationStream;
 
-	public StreamConfig(String jobId, ArrayList<String> extraEncoderArgs, int passes, Stream orignalStream,
+	public StreamConfig(String jobId, ArrayList<String> extraEncoderArgs, int passes, OriginalStream orignalStream,
 			Stream destinationStream) {
 		this.jobId = jobId;
 		this.extraEncoderArgs = extraEncoderArgs;
@@ -35,7 +36,7 @@ public abstract class StreamConfig implements Serializable {
 		return passes;
 	}
 
-	public abstract Stream getOrignalStream();
+	public abstract OriginalStream getOrignalStream();
 
 	public abstract Stream getOutStream();
 }

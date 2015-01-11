@@ -3,7 +3,7 @@ package org.lancoder.worker.server;
 import java.net.Socket;
 
 import org.lancoder.common.pool.Pool;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 
 public class WorkerHandlePool extends Pool<Socket> {
 
@@ -15,7 +15,7 @@ public class WorkerHandlePool extends Pool<Socket> {
 	}
 
 	@Override
-	protected Pooler<Socket> getPoolerInstance() {
+	protected PoolWorker<Socket> getPoolWorkerInstance() {
 		return new WorkerHandler(listener);
 	}
 }

@@ -3,7 +3,7 @@ package org.lancoder.muxer;
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.pool.Pool;
-import org.lancoder.common.pool.Pooler;
+import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.third_parties.FFmpeg;
 
 public class MuxerPool extends Pool<Job> {
@@ -20,7 +20,7 @@ public class MuxerPool extends Pool<Job> {
 	}
 
 	@Override
-	protected Pooler<Job> getPoolerInstance() {
+	protected PoolWorker<Job> getPoolWorkerInstance() {
 		return new FFmpegMuxer(this.listener, filePathManager, ffMpeg);
 	}
 
