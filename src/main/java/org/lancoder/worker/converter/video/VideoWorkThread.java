@@ -93,8 +93,8 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		File source = filePathManager.getLocalTempFile(task);
 
 		if (filePathManager.getSharedFinalFile(task).exists()) {
-			System.err.printf("Cannot transcode to mkv as file %s already exists\n", destination.getPath());
-			return false;
+			System.err.printf("Deleting shared file '%s'.\n", destination.getPath());
+			filePathManager.getSharedFinalFile(task).delete();
 		}
 		String[] baseArgs = new String[] { ffMpeg.getPath(), "-i", source.getAbsolutePath(), "-f", "mpegts", "-c",
 				"copy", "-bsf:v", "h264_mp4toannexb", destination.getPath() };
