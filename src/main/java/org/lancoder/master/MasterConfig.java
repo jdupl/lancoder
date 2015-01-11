@@ -84,10 +84,6 @@ public class MasterConfig extends Config implements Serializable {
 		this.ffprobePath = ffprobePath;
 	}
 
-	public void setSavedInstancePath(String savedInstancePath) {
-		this.savedInstancePath = savedInstancePath;
-	}
-
 	@Override
 	public String getDefaultPath() {
 		return DEFAULT_PATH;
