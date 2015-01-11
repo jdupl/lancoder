@@ -12,7 +12,7 @@ public class WorkerConfig extends Config implements Serializable {
 
 	private static final long serialVersionUID = 4279318303054715575L;
 	private static final String DEFAULT_PATH = new File(System.getProperty("user.home"),
-			".config/lancoder/worker_config.json").getPath();
+			".config/lancoder/worker_config.conf").getPath();
 
 	/**
 	 * Defaults values of the config

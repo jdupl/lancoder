@@ -10,7 +10,7 @@ public class MasterConfig extends Config implements Serializable {
 
 	private static final long serialVersionUID = 8016312645409446998L;
 	private static final String DEFAULT_PATH = new File(System.getProperty("user.home"),
-			".config/lancoder/master_config.json").getPath();
+			".config/lancoder/master_config.conf").getPath();
 	/**
 	 * Defaults values of the config
 	 */
