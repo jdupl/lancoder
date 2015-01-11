@@ -30,6 +30,10 @@ public class NodeManager implements EventListener {
 		this.masterConfig = masterConfig;
 		if (instance != null) {
 			nodes.putAll(instance.getNodes());
+			for (Node node : getNodes()) { // Reset statuses
+				node.unlock();
+				node.setStatus(NodeState.NOT_CONNECTED);
+			}
 		}
 	}
 
@@ -149,6 +153,7 @@ public class NodeManager implements EventListener {
 		} else {
 			success = false;
 		}
+		n.unlock(); // remove lock on the node
 		if (success) {
 			listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 		}
