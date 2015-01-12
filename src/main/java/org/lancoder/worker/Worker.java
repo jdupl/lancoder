@@ -110,6 +110,8 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	public synchronized boolean startWork(ClientTask t) {
+		System.out.println("Got task " + t.getTaskId());
+		getCurrentTasks().add(t);
 		if (t instanceof ClientVideoTask && videoPool.hasFreeConverters()) {
 			ClientVideoTask vTask = (ClientVideoTask) t;
 			videoPool.handle(vTask);
@@ -283,7 +285,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	@Override
 	public synchronized void taskStarted(ClientTask task) {
 		task.getProgress().start();
-		this.getCurrentTasks().add(task);
 		if (this.getStatus() != NodeState.WORKING) {
 			updateStatus(NodeState.WORKING);
 		}
@@ -291,6 +292,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public synchronized void taskCompleted(ClientTask task) {
+		System.out.println("Completed task " + task.getTaskId());
 		task.getProgress().complete();
 		notifyAndRemove(task);
 	}
@@ -298,17 +300,15 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	@Override
 	public synchronized void taskCancelled(ClientTask task) {
 		task.getProgress().reset();
-		System.out.println("Task cancelled");
+		System.out.println("Cancelled task " + task.getTaskId());
 		notifyAndRemove(task);
-		System.out.println("completed");
 	}
 
 	@Override
 	public synchronized void taskFailed(ClientTask task) {
 		task.fail();
-		System.out.println("Task failed");
+		System.out.println("Failed task " + task.getTaskId());
 		notifyAndRemove(task);
-		System.out.println("completed");
 	}
 
 	private void notifyAndRemove(ClientTask task) {

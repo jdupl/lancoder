@@ -221,7 +221,6 @@ public class JobManager implements EventListener {
 		TaskState updateStatus = task.getProgress().getTaskState();
 		switch (updateStatus) {
 		case TASK_COMPLETED:
-			unassign(task);
 			System.out.printf("Worker %s completed task %s%n", n.getName(), task.getTaskId());
 			Job job = this.jobs.get(task.getJobId());
 			if (job.getTaskDoneCount() == job.getTaskCount()) {
@@ -299,5 +298,25 @@ public class JobManager implements EventListener {
 			clientTask.getProgress().reset();
 		}
 		n.getCurrentTasks().clear();
+	}
+
+	/**
+	 * Unassign tasks that are not in the node's report tasks
+	 * 
+	 * @param sender
+	 *            The node
+	 * @param reportTasks
+	 *            The tasks from the report
+	 */
+	public void update(Node sender, ArrayList<ClientTask> reportTasks) {
+		ArrayList<ClientTask> toUnassign = new ArrayList<>();
+		for (ClientTask clientTask : sender.getCurrentTasks()) {
+			if (!reportTasks.contains(clientTask)) {
+				toUnassign.add(clientTask);
+			}
+		}
+		for (ClientTask clientTask : toUnassign) {
+			unassign(clientTask);
+		}
 	}
 }
