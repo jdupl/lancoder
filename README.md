@@ -1,23 +1,27 @@
 lancoder
 ============
 
-A cross-platform render cluster for x264-x265 encodings using FFmpeg designed for portability and ease of set-up.
+Lancoder is a cross-platform render cluster for various video encodings.
 
-Lancoder allows video and audio encoding on multiple machines and is controlled by a simple web interface.
+It uses FFmpeg as the encoder and is designed for portability and ease of set-up.
 
-Currently under development but releases are mostly stable (still in alpha).
+Lancoder allows video and audio encoding over multiple machines in a local network, controlled by a simple web interface.
+
+Currently under development but releases are mostly stable (still in alpha/beta stage).
 
 ### Features
-* x264 and x265 encoding
-* 2 pass and 1 pass VBR encoding, CRF encoding
+* x264, x265, VP8, VP9, Theora video encoding
+* Opus, Vorbis, Speex, AAC, MP3, DTS, FLAC (and more) audio processing
+* 2 pass and 1 pass VBR encoding or CRF encoding
 * Batch processing of directories
 * Audio processing with many tracks
 * Stream copy
 
 
-### Features (in developpement)
+### Development
+* Allow output in an other container than MKV
+* Choose audio tracks from input
 * Subtitles automuxing from source
-* WebM compiliance with VP8 and VP9
 * DVD and bluray folder structure ripping (no encryption)
 
 ---
@@ -25,11 +29,11 @@ Currently under development but releases are mostly stable (still in alpha).
 ## How to use
 Please use the [wiki](https://github.com/jdupl/lancoder/wiki/How-to-setup-lancoder).
 
-It is important to have FFmpeg and NOT libav.
+It is important to install FFmpeg and NOT libav.
 
-Technically, libav would work, but it's filled with bugs !
+Technically, libav would work, but it's filled with bugs ! Libav will not be supported. Please make sure to run [FFmpeg](http://ffmpeg.org).
 
-Bugs related to libav will remain unawnsered.
+Ubuntu and Debian users will need to add a [ppa](https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media) or a [debian source](http://deb-multimedia.org/).
 
 #### Test environment
 Currently tested on 6 workers nodes and 1 master including 
@@ -38,7 +42,7 @@ Currently tested on 6 workers nodes and 1 master including
 * Linux custom compiled versions of FFmpeg 2.2.x and 2.3
 * Windows 8 with FFmpeg 2.3
 
-All muxing done with [mkvtoolnix 7.x](http://www.bunkus.org/videotools/mkvtoolnix/downloads.html#debian).
-
 #### Bugs
 Please report bugs in the issues section of the GitHub repository.
+
+Keep in mind, current builds are not production ready
