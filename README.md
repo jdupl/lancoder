@@ -3,7 +3,7 @@ lancoder
 
 Lancoder is a cross-platform render cluster for various video encodings.
 
-It uses FFmpeg as the encoder and is designed for portability and ease of set-up.
+It uses [FFmpeg](http://ffmpeg.org) as the encoder and is designed for portability and ease of set-up.
 
 Lancoder allows video and audio encoding over multiple machines in a local network, controlled by a simple web interface.
 
@@ -14,20 +14,20 @@ Currently under development but releases are mostly stable (still in alpha/beta 
 * Opus, Vorbis, Speex, AAC, MP3, DTS, FLAC (and more) audio processing
 * 2 pass and 1 pass VBR encoding or CRF encoding
 * Batch processing of directories
-* Audio processing with many tracks
+* Multiple track audio processing
 * Stream copy
 
 
 ### Development
-* Allow output in an other container than MKV
+* Allow output in other containers than MKV
 * Choose audio tracks from input
 * Subtitles automuxing from source
-* DVD and bluray folder structure ripping (no encryption)
+* Use DVD and bluray file structure as source (no decryption)
 
 ---
 
 ## How to use
-Please use the [wiki](https://github.com/jdupl/lancoder/wiki/How-to-setup-lancoder).
+Please use the [wiki](https://github.com/jdupl/lancoder/wiki/How-to-setup-lancoder) (needs to be updated).
 
 It is important to install FFmpeg and NOT libav.
 
@@ -43,6 +43,6 @@ Currently tested on 6 workers nodes and 1 master including
 * Windows 8 with FFmpeg 2.3
 
 #### Bugs
-Please report bugs in the issues section of the GitHub repository.
+Please report bugs in the [issues](https://github.com/jdupl/lancoder/issues) section of the GitHub repository.
 
-Keep in mind, current builds are not production ready
+Keep in mind, current builds are not production ready.
