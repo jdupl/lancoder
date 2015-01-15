@@ -193,6 +193,7 @@ public class JobManager implements EventListener {
 	private synchronized boolean assign(ClientTask task, Node node) {
 		boolean assigned = false;
 		if (!assignments.containsKey(task)) {
+			System.out.println("Task " + task.getTaskId() + " is assigned to " + node.getName());
 			this.assignments.put(task, node);
 			node.addTask(task);
 			assigned = true;
@@ -211,6 +212,7 @@ public class JobManager implements EventListener {
 		boolean unassigned = false;
 		Node previousAssignee = this.assignments.remove(task);
 		if (previousAssignee != null) {
+			System.out.println("Node " + previousAssignee.getName() + " was unassigned from task " + task.getTaskId());
 			unassigned = true;
 			previousAssignee.getCurrentTasks().remove(task);
 		}
@@ -227,7 +229,6 @@ public class JobManager implements EventListener {
 				listener.handle(new Event(EventEnum.JOB_ENCODING_COMPLETED, job));
 			}
 			break;
-		case TASK_TODO:
 		case TASK_CANCELED:
 			unassign(task);
 			task.getProgress().reset();
@@ -244,8 +245,9 @@ public class JobManager implements EventListener {
 			task.getProgress().reset();
 			n.failure(); // Add a failure count to the node
 			break;
+		case TASK_TODO:
+			break;
 		}
-		updateNodesWork();
 		return false;
 	}
 
@@ -294,8 +296,7 @@ public class JobManager implements EventListener {
 	public void unassingAll(Node n) {
 		ArrayList<ClientTask> tasks = n.getCurrentTasks();
 		for (ClientTask clientTask : tasks) {
-			assignments.remove(clientTask);
-			clientTask.getProgress().reset();
+			unassign(clientTask);
 		}
 		n.getCurrentTasks().clear();
 	}

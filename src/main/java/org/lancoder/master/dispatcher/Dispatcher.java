@@ -23,6 +23,7 @@ public class Dispatcher extends PoolWorker<DispatchItem> {
 		ClusterProtocol handled = null;
 		try (Socket socket = new Socket()) {
 			InetSocketAddress addr = new InetSocketAddress(node.getNodeAddress(), node.getNodePort());
+			socket.setSoTimeout(2000);
 			socket.connect(addr, 2000);
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			out.flush();

@@ -8,7 +8,6 @@ import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.pool.Pool;
 import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.ClientTask;
-import org.lancoder.master.NodeManager;
 
 public class DispatcherPool extends Pool<DispatchItem> implements DispatcherListener {
 

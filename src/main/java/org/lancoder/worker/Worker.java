@@ -109,21 +109,28 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		return this.node.getCurrentTasks();
 	}
 
-	public synchronized boolean startWork(ClientTask t) {
-		System.out.println("Got task " + t.getTaskId());
-		getCurrentTasks().add(t);
-		if (t instanceof ClientVideoTask && videoPool.hasFreeConverters()) {
-			ClientVideoTask vTask = (ClientVideoTask) t;
+	public boolean startWork(ClientTask task) {
+		System.out.println("Received task " + task.getTaskId() + " from master...");
+		boolean accepted = true;
+		getCurrentTasks().add(task);
+		if (task instanceof ClientVideoTask && videoPool.hasFreeConverters()) {
+			ClientVideoTask vTask = (ClientVideoTask) task;
 			videoPool.handle(vTask);
-		} else if (t instanceof ClientAudioTask && this.audioPool.hasFreeConverters() && videoPool.hasFreeConverters()) {
+		} else if (task instanceof ClientAudioTask && this.audioPool.hasFreeConverters()
+				&& videoPool.hasFreeConverters()) {
 			// video pool must also be free
-			ClientAudioTask aTask = (ClientAudioTask) t;
+			ClientAudioTask aTask = (ClientAudioTask) task;
 			audioPool.handle(aTask);
 		} else {
-			return false;
+			getCurrentTasks().remove(task);
+			accepted = false;
+			System.out.println("Refused task " + task.getTaskId());
 		}
-		t.getProgress().start();
-		updateStatus(NodeState.WORKING);
+		if (accepted) {
+			System.out.println("Accepted task " + task.getTaskId());
+			task.getProgress().start();
+			updateStatus(NodeState.WORKING);
+		}
 		return true;
 	}
 
