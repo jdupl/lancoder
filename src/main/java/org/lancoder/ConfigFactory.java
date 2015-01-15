@@ -22,7 +22,7 @@ public class ConfigFactory<T extends Config> {
 	private static final String CONF_NOT_FOUND = "Cannot load configuration file %s.%n"
 			+ "Initialize a configuration file with --init options.";
 	private static final String CONF_CORRUPTED = "Cannot load configuration file %s.%n"
-			+ "Could not cast cast. Looks like the file is corrupted.%n "
+			+ "Looks like the file is corrupted.%n "
 			+ "Please initialize a new config and overwrite current config.";
 	private static final String CONF_EXISTS = "Configuration file %s exists. Cannot overwrite the file !%n"
 			+ "Perhaps you should use the flag --overwrite.";
@@ -90,7 +90,7 @@ public class ConfigFactory<T extends Config> {
 			config.setConfigPath(instance.getConfigPath());
 			System.out.println("Loaded config from disk");
 			return config;
-		} catch (IOException e) {
+		} catch (IOException | NullPointerException e) {
 			throw new InvalidConfigurationException(String.format(CONF_CORRUPTED, instance.getConfigPath()));
 		}
 	}
