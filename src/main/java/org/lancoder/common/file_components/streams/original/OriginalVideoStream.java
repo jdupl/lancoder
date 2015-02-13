@@ -1,6 +1,6 @@
 package org.lancoder.common.file_components.streams.original;
 
-import org.lancoder.common.progress.Unit;
+import org.lancoder.common.task.Unit;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

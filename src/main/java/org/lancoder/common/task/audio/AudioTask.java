@@ -1,7 +1,7 @@
 package org.lancoder.common.task.audio;
 
-import org.lancoder.common.progress.Unit;
 import org.lancoder.common.task.Task;
+import org.lancoder.common.task.Unit;
 
 public class AudioTask extends Task {
 

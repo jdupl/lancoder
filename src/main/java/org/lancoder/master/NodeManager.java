@@ -115,7 +115,7 @@ public class NodeManager implements EventListener {
 	private boolean isAvailable(Node node) {
 		// TODO allow dynamic failure threshold
 		boolean nodeAvailable = node.getFailureCount() < FAILURE_THRESHOLD
-				&& node.getCurrentTasks().size() < node.getThreadCount();
+				&& node.getAllTasks().size() < node.getThreadCount();
 		if (nodeAvailable) {
 			for (ClientTask task : node.getCurrentTasks()) {
 				if (task instanceof ClientVideoTask) {

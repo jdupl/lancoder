@@ -276,7 +276,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	/**
 	 * Called when a resource completed it's task and is now free. Notifies pool's thread to refresh it's state.
 	 */
-	public synchronized void completed() {
+	public void completed() {
 		synchronized (poolMonitor) {
 			poolMonitor.notify();
 		}

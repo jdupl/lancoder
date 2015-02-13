@@ -35,11 +35,8 @@ public class WorkerHandler extends PoolWorker<Socket> {
 				case TASK_REQUEST:
 					if (requestMessage instanceof TaskRequestMessage) {
 						TaskRequestMessage trm = (TaskRequestMessage) requestMessage;
-						if (listener.taskRequest(trm.getTask())) {
-							obj = new Message(ClusterProtocol.TASK_ACCEPTED);
-						} else {
-							obj = new Message(ClusterProtocol.TASK_REFUSED);
-						}
+						listener.taskRequest(trm.getTask());
+						obj = new Message(ClusterProtocol.OK);
 					}
 					break;
 				case UNASSIGN_TASK:

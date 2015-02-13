@@ -60,7 +60,11 @@ public class FileInfo implements Serializable {
 			JsonObject jsonObject = jsonStream.getAsJsonObject();
 			switch (jsonObject.get("codec_type").getAsString()) {
 			case "video":
-				this.getStreams().add(new OriginalVideoStream(jsonObject, relativeSource, duration));
+				JsonObject disposition = jsonObject.getAsJsonObject("disposition");
+				boolean isAttachment = disposition.get("attached_pic").getAsInt() == 0 ? false : true;
+				if (!isAttachment) {
+					this.getStreams().add(new OriginalVideoStream(jsonObject, relativeSource, duration));
+				}
 				break;
 			case "audio":
 				this.getStreams().add(new OriginalAudioStream(jsonObject, relativeSource, duration));

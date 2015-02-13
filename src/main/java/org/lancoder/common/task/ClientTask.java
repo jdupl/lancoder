@@ -2,9 +2,6 @@ package org.lancoder.common.task;
 
 import java.io.Serializable;
 
-import org.lancoder.common.progress.TaskProgress;
-import org.lancoder.common.progress.Unit;
-
 public abstract class ClientTask implements Serializable {
 
 	private static final long serialVersionUID = 7072947025021592662L;
@@ -16,12 +13,24 @@ public abstract class ClientTask implements Serializable {
 		this.streamConfig = streamConfig;
 	}
 
+	public void assign() {
+		this.task.getProgress().assign();
+	}
+
 	public void cancel() {
 		this.task.getProgress().cancel();
 	}
 
 	public void fail() {
 		this.task.getProgress().fail();
+	}
+
+	public void start() {
+		this.task.getProgress().start();
+	}
+
+	public void completed() {
+		this.task.getProgress().complete();
 	}
 
 	public abstract Task getTask();
@@ -71,11 +80,21 @@ public abstract class ClientTask implements Serializable {
 	}
 
 	@Override
+	public String toString() {
+		return String.format("task %s from job %s", getTaskId(), getJobId());
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if (obj != null && obj instanceof ClientTask) {
 			ClientTask other = (ClientTask) obj;
 			return other.getJobId().equals(this.getJobId()) && other.getTaskId() == this.getTaskId();
 		}
 		return super.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+		return task.getTaskId() + task.jobId.hashCode();
 	}
 }

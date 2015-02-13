@@ -67,6 +67,7 @@ public class JobManager implements EventListener {
 		j.setJobStatus(JobState.JOB_CANCELED);
 		for (Node node : nodeManager.getNodes()) {
 			ArrayList<ClientTask> nodeTasks = new ArrayList<>(node.getCurrentTasks());
+			nodeTasks.addAll(node.getPendingTasks());
 			for (ClientTask task : nodeTasks) {
 				if (task.getJobId().equals(j.getJobId())) {
 					unassignTask(task, node);
@@ -91,7 +92,7 @@ public class JobManager implements EventListener {
 	 */
 	private void unassignTask(ClientTask task, Node assigne) {
 		dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task, ClusterProtocol.UNASSIGN_TASK), assigne));
-		task.getProgress().cancel();
+		task.cancel();
 		taskUpdated(task, assigne);
 	}
 
@@ -175,7 +176,8 @@ public class JobManager implements EventListener {
 
 	public void dispatch(ClientTask task, Node node) {
 		if (assign(task, node)) {
-			task.getProgress().start();
+			task.assign();
+			node.addPendingTask(task);
 			node.lock();
 			dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task), node));
 		}
@@ -193,12 +195,19 @@ public class JobManager implements EventListener {
 	private synchronized boolean assign(ClientTask task, Node node) {
 		boolean assigned = false;
 		if (!assignments.containsKey(task)) {
-			System.out.println("Task " + task.getTaskId() + " is assigned to " + node.getName());
+			System.out.printf("Assigned %s to node %s.%n", task, node.getName());
 			this.assignments.put(task, node);
-			node.addTask(task);
 			assigned = true;
+		} else {
+			System.err.printf("Could not assign %s to node %s.%n", task, node.getName());
 		}
 		return assigned;
+	}
+
+	private void confirm(ClientTask task) {
+		task.start();
+		Node assignee = assignments.get(task);
+		assignee.confirm(task);
 	}
 
 	/**
@@ -212,9 +221,9 @@ public class JobManager implements EventListener {
 		boolean unassigned = false;
 		Node previousAssignee = this.assignments.remove(task);
 		if (previousAssignee != null) {
-			System.out.println("Node " + previousAssignee.getName() + " was unassigned from task " + task.getTaskId());
+			System.out.println("Node " + previousAssignee.getName() + " was unassigned from " + task);
 			unassigned = true;
-			previousAssignee.getCurrentTasks().remove(task);
+			previousAssignee.removeTask(task);
 		}
 		return unassigned;
 	}
@@ -223,10 +232,20 @@ public class JobManager implements EventListener {
 		TaskState updateStatus = task.getProgress().getTaskState();
 		switch (updateStatus) {
 		case TASK_COMPLETED:
-			System.out.printf("Worker %s completed task %s%n", n.getName(), task.getTaskId());
+			System.out.printf("Worker %s completed %s.%n", n.getName(), task);
 			Job job = this.jobs.get(task.getJobId());
+			task.completed();
 			if (job.getTaskDoneCount() == job.getTaskCount()) {
+				System.out.println("job " + job.getJobId() + " completed");
 				listener.handle(new Event(EventEnum.JOB_ENCODING_COMPLETED, job));
+			}
+			unassign(task);
+			Job j = jobs.get(task.getJobId());
+			for (ClientTask masterInstance : j.getClientTasks()) {
+				if (masterInstance.getTaskId() == task.getTaskId()) {
+					System.out.println("FOUND " + masterInstance.getProgress().getTaskState() + " "
+							+ task.getProgress().getTaskState());
+				}
 			}
 			break;
 		case TASK_CANCELED:
@@ -282,6 +301,10 @@ public class JobManager implements EventListener {
 			Node disconnectedNode = (Node) event.getObject();
 			unassingAll(disconnectedNode);
 			break;
+		case TASK_CONFIRMED:
+			ClientTask confirmedTask = (ClientTask) event.getObject();
+			confirm(confirmedTask);
+			break;
 		default:
 			break;
 		}
@@ -294,30 +317,46 @@ public class JobManager implements EventListener {
 	 *            The node to remove all tasks
 	 */
 	public void unassingAll(Node n) {
-		ArrayList<ClientTask> tasks = n.getCurrentTasks();
+		ArrayList<ClientTask> tasks = n.getAllTasks();
 		for (ClientTask clientTask : tasks) {
 			unassign(clientTask);
 		}
-		n.getCurrentTasks().clear();
+		n.removeAllTasks();
 	}
 
-	/**
-	 * Unassign tasks that are not in the node's report tasks
-	 * 
-	 * @param sender
-	 *            The node
-	 * @param reportTasks
-	 *            The tasks from the report
-	 */
-	public void update(Node sender, ArrayList<ClientTask> reportTasks) {
-		ArrayList<ClientTask> toUnassign = new ArrayList<>();
-		for (ClientTask clientTask : sender.getCurrentTasks()) {
-			if (!reportTasks.contains(clientTask)) {
-				toUnassign.add(clientTask);
+	public ClientTask getTask(Job job, int taskId) {
+		ClientTask instance = null;
+		for (ClientTask task : job.getClientTasks()) {
+			if (task.getTaskId() == taskId) {
+				instance = task;
+				break;
 			}
 		}
-		for (ClientTask clientTask : toUnassign) {
-			unassign(clientTask);
-		}
+		return instance;
 	}
+
+	public ClientTask getTask(String jobId, int taskId) {
+		return getTask(getJob(jobId), taskId);
+	}
+
+	// /**
+	// * Unassign tasks that are not in the node's report tasks
+	// *
+	// * @param sender
+	// * The node
+	// * @param reportTasks
+	// * The tasks from the report
+	// */
+	// public void update(Node sender, ArrayList<ClientTask> reportTasks) {
+	// ArrayList<ClientTask> toUnassign = new ArrayList<>();
+	// for (ClientTask clientTask : sender.getCurrentTasks()) {
+	// if (!reportTasks.contains(clientTask)) {
+	// System.out.println(clientTask.getProgress().getTaskState());
+	// toUnassign.add(clientTask);
+	// }
+	// }
+	// for (ClientTask clientTask : toUnassign) {
+	// unassign(clientTask);
+	// }
+	// }
 }

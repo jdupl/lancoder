@@ -18,6 +18,7 @@ import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
+import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
@@ -40,8 +41,10 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	private WorkerConfig config;
 	private AudioConverterPool audioPool;
 	private VideoConverterPool videoPool;
+	private MasterContacter masterContacter;
 	private InetAddress masterInetAddress = null;
 	private int threadCount;
+	private TaskHandlerPool taskHandler;
 
 	public Worker(WorkerConfig config) {
 		this.config = config;
@@ -82,8 +85,11 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		// TODO change to current instance
 		videoPool = new VideoConverterPool(1, this, filePathManager, getFFmpeg());
 		services.add(videoPool);
+		taskHandler = new TaskHandlerPool(this);
+		services.add(taskHandler);
 		services.add(new WorkerServer(this, config.getListenPort()));
-		services.add(new MasterContacter(getMasterInetAddress(), getMasterPort(), this));
+		masterContacter = new MasterContacter(getMasterInetAddress(), getMasterPort(), this);
+		services.add(masterContacter);
 	}
 
 	public void shutdown() {
@@ -106,13 +112,16 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	private ArrayList<ClientTask> getCurrentTasks() {
-		return this.node.getCurrentTasks();
+		return node.getCurrentTasks();
+	}
+
+	private ArrayList<ClientTask> getPendingTasks() {
+		return node.getPendingTasks();
 	}
 
 	public boolean startWork(ClientTask task) {
 		System.out.println("Received task " + task.getTaskId() + " from master...");
 		boolean accepted = true;
-		getCurrentTasks().add(task);
 		if (task instanceof ClientVideoTask && videoPool.hasFreeConverters()) {
 			ClientVideoTask vTask = (ClientVideoTask) task;
 			videoPool.handle(vTask);
@@ -122,16 +131,44 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 			ClientAudioTask aTask = (ClientAudioTask) task;
 			audioPool.handle(aTask);
 		} else {
-			getCurrentTasks().remove(task);
+			node.removeTask(task);
 			accepted = false;
 			System.out.println("Refused task " + task.getTaskId());
+			notifyMasterStatusChange();
 		}
 		if (accepted) {
 			System.out.println("Accepted task " + task.getTaskId());
-			task.getProgress().start();
-			updateStatus(NodeState.WORKING);
+			task.start();
+			node.confirm(task);
+			send(new TaskRequestMessage(task, ClusterProtocol.TASK_ACCEPTED));
 		}
 		return true;
+	}
+
+	private Message send(Message toSend) {
+		// TODO move
+		Message received = null;
+
+		try (Socket s = new Socket(getMasterInetAddress(), getMasterPort())) {
+
+			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+			out.flush();
+
+			out.writeObject(toSend);
+			out.flush();
+
+			Object o = in.readObject();
+			if (o instanceof Message) {
+				received = (Message) o;
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return received;
 	}
 
 	/**
@@ -165,6 +202,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	public void updateStatus(NodeState statusCode) {
 		this.setStatus(statusCode);
+
 		switch (statusCode) {
 		case FREE:
 			notifyMasterStatusChange();
@@ -189,6 +227,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	public boolean notifyMasterStatusChange() {
+		// TODO use send
 		boolean success = false;
 		StatusReport report = this.getStatusReport();
 
@@ -247,7 +286,9 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public boolean taskRequest(ClientTask tqm) {
-		return startWork(tqm);
+		node.addPendingTask(tqm);
+		taskHandler.handle(tqm);
+		return true;
 	}
 
 	@Override
@@ -291,7 +332,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public synchronized void taskStarted(ClientTask task) {
-		task.getProgress().start();
+		task.start();
 		if (this.getStatus() != NodeState.WORKING) {
 			updateStatus(NodeState.WORKING);
 		}

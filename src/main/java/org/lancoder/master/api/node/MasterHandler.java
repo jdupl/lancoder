@@ -6,11 +6,13 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import org.lancoder.common.events.Event;
+import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
+import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.master.NodeManager;
@@ -57,6 +59,12 @@ public class MasterHandler extends PoolWorker<Socket> {
 						out.writeObject(new Message(ClusterProtocol.BYE));
 					} else {
 						out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));
+					}
+					break;
+				case TASK_ACCEPTED:
+					if (requestMessage instanceof TaskRequestMessage){
+						listener.handle(new Event(EventEnum.TASK_CONFIRMED, ((TaskRequestMessage) requestMessage).getTask()));
+						out.writeObject(new Message(ClusterProtocol.BYE));
 					}
 					break;
 				case PING:

@@ -20,7 +20,8 @@ public class Dispatcher extends PoolWorker<DispatchItem> {
 
 	private void dispatch(DispatchItem item) {
 		Node node = item.getNode();
-		ClusterProtocol handled = null;
+		ClusterProtocol returnCode = ClusterProtocol.OK;
+		boolean success = false;
 		try (Socket socket = new Socket()) {
 			InetSocketAddress addr = new InetSocketAddress(node.getNodeAddress(), node.getNodePort());
 			socket.setSoTimeout(2000);
@@ -33,20 +34,18 @@ public class Dispatcher extends PoolWorker<DispatchItem> {
 			Object o = in.readObject();
 			if (o instanceof Message) {
 				Message m = (Message) o;
-				handled = m.getCode();
+				returnCode = m.getCode();
+				success = true;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			switch (handled) {
-			case TASK_ACCEPTED:
+			if (success && returnCode == ClusterProtocol.OK) {
+				// dispatching was successful
 				listener.taskAccepted(item);
-				break;
-			case TASK_REFUSED:
+			} else {
+				// timeout or internal error
 				listener.taskRefused(item);
-				break;
-			default:
-				break;
 			}
 		}
 	}

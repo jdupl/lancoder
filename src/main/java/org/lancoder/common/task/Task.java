@@ -2,9 +2,6 @@ package org.lancoder.common.task;
 
 import java.io.Serializable;
 
-import org.lancoder.common.progress.TaskProgress;
-import org.lancoder.common.progress.Unit;
-
 public class Task implements Serializable {
 
 	private static final long serialVersionUID = 6687973244041343482L;

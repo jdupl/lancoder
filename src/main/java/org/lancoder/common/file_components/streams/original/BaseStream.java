@@ -3,7 +3,7 @@ package org.lancoder.common.file_components.streams.original;
 import java.io.Serializable;
 
 import org.lancoder.common.codecs.base.AbstractCodec;
-import org.lancoder.common.progress.Unit;
+import org.lancoder.common.task.Unit;
 
 public abstract class BaseStream implements Serializable {
 

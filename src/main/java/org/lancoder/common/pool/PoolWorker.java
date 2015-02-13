@@ -111,7 +111,7 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 	 * 
 	 * @return True if empty
 	 */
-	public synchronized boolean isFree() {
+	public boolean isFree() {
 		return !isActive();
 	}
 
@@ -121,7 +121,7 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 	 * @param request
 	 *            The task to complete
 	 */
-	public synchronized boolean handle(T request) {
+	public boolean handle(T request) {
 		boolean handled = false;
 		synchronized (monitor) {
 			if (!isActive()) {

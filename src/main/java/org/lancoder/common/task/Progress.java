@@ -1,4 +1,4 @@
-package org.lancoder.common.progress;
+package org.lancoder.common.task;
 
 import java.io.Serializable;
 

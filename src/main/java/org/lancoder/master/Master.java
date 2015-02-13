@@ -66,21 +66,30 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	@Override
 	protected void registerServices() {
 		super.registerServices();
+
 		filePathManager = new FilePathManager(config);
+
 		nodeManager = new NodeManager(this, config, savedInstance);
 		eventListeners.add(nodeManager);
+
 		jobInitiator = new JobInitiator(this, config);
 		services.add(jobInitiator);
+
 		nodeServer = new MasterServer(config.getNodeServerPort(), this, nodeManager);
 		services.add(nodeServer);
+
 		nodeChecker = new NodeCheckerService(this, nodeManager);
 		services.add(nodeChecker);
+
 		apiServer = new ApiServer(this);
 		services.add(apiServer);
+
 		dispatcherPool = new DispatcherPool(this);
 		services.add(dispatcherPool);
+
 		muxerPool = new MuxerPool(this, filePathManager, getFFmpeg());
 		services.add(muxerPool);
+
 		jobManager = new JobManager(this, nodeManager, dispatcherPool, savedInstance);
 		eventListeners.add(jobManager);
 	}
@@ -94,13 +103,15 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	public void shutdown() {
 		System.out.printf("Executing master shutdown routine.%n"
 				+ "Ctrl+C again for immediate shutdown (not recommended).%n");
+
 		// save config and make sure to reset current tasks
 		for (Node n : nodeManager.getNodes()) {
-			for (ClientTask task : n.getCurrentTasks()) {
+			for (ClientTask task : n.getAllTasks()) {
 				task.getProgress().reset();
 			}
 		}
 		config.dump();
+
 		// say goodbye to nodes
 		for (Node n : nodeManager.getOnlineNodes()) {
 			disconnectNode(n);
@@ -138,6 +149,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		// remove node from list
 		jobManager.unassingAll(n);
 		nodeManager.removeNode(n);
+
 		dispatcherPool.handle(new DispatchItem(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()), n));
 		System.out.printf("Disconnected node %s.%n", n.getName());
 	}
@@ -158,6 +170,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	public ApiResponse apiDeleteJob(String jobId) {
 		ApiResponse response = new ApiResponse(true);
 		Job j = jobManager.getJob(jobId);
+
 		if (j == null) {
 			response = new ApiResponse(false, String.format("Could not retrieve job %s.", jobId));
 		} else if (!jobManager.deleteJob(j)) {
@@ -191,6 +204,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 */
 	private boolean checkJobIntegrity(Job job) {
 		boolean integrity = true;
+
 		for (ClientVideoTask task : job.getClientVideoTasks()) {
 			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getTempFile());
 			if (!absoluteTaskFile.exists()) {
@@ -214,6 +228,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	public boolean readStatusReport(StatusReport report) {
 		NodeState newNodeState = report.status;
 		String unid = report.getUnid();
+
 		// identify node to get it's instance
 		Node sender = nodeManager.identifySender(unid);
 		if (sender == null || sender.getStatus() == NodeState.NOT_CONNECTED) {
@@ -228,11 +243,12 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			sender.setStatus(newNodeState);
 		}
 		// remove unassigned tasks
-		ArrayList<ClientTask> reportTasks = new ArrayList<>();
-		for (TaskReport taskReport : report.getTaskReports()) {
-			reportTasks.add(taskReport.getTask());
-		}
-		jobManager.update(sender, reportTasks);
+		// ArrayList<ClientTask> reportTasks = new ArrayList<>();
+		// for (TaskReport taskReport : report.getTaskReports()) {
+		// reportTasks.add(taskReport.getTask());
+		// }
+		// jobManager.update(sender, reportTasks);
+
 		jobManager.updateNodesWork();
 		return true;
 	}
@@ -246,26 +262,26 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	public void readTaskReports(ArrayList<TaskReport> reports) {
 		for (TaskReport report : reports) {
 			ClientTask reportTask = report.getTask();
-			ClientTask actualTask = null;
+
 			String nodeId = report.getUnid();
 			Node sender = nodeManager.identifySender(nodeId);
 
+			String jobId = reportTask.getJobId();
+			Job job = jobManager.getJob(jobId);
+			int taskId = reportTask.getTaskId();
+			ClientTask masterTaskInstance = jobManager.getTask(job, taskId);
+
 			if (sender == null || !sender.hasTask(reportTask)) {
-				System.err.printf("MASTER: Bad task (%d) update from node %s.%n", reportTask.getTaskId(),
-						sender.getName());
+				System.err.printf("MASTER: Bad update from node %s. Unexpected %s.%n", sender.getName(), reportTask);
 			} else {
-				for (ClientTask t : sender.getCurrentTasks()) {
-					if (t.equals(reportTask)) {
-						actualTask = t;
-					}
+
+				if (masterTaskInstance != null) {
+					masterTaskInstance.setProgress(reportTask.getProgress());
+				} else {
+					System.err.printf("Warning: %s instance not found for node %s.%n", reportTask, sender.getName());
 				}
-				// TaskState oldState = actualTask.getProgress().getTaskState();
-				actualTask.setProgress(reportTask.getProgress());
-				// if (!oldState.equals(actualTask.getProgress().getTaskState())) {
-				// System.out.printf("Updating task id %d from %s to %s\n", reportTask.getTaskId(), oldState,
-				// actualTask.getProgress().getTaskState());
-				// }
-				jobManager.taskUpdated(actualTask, sender);
+
+				jobManager.taskUpdated(masterTaskInstance, sender);
 			}
 		}
 	}

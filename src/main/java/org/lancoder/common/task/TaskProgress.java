@@ -1,4 +1,4 @@
-package org.lancoder.common.progress;
+package org.lancoder.common.task;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
@@ -19,23 +19,27 @@ public class TaskProgress implements Serializable {
 		}
 	}
 
-	public void cancel() {
+	protected void assign() {
+		this.taskState = TaskState.TASK_ASSIGNED;
+	}
+
+	protected void cancel() {
 		this.reset();
 		this.taskState = TaskState.TASK_CANCELED;
 	}
 
-	public void fail() {
+	protected void fail() {
 		this.reset();
 		this.taskState = TaskState.TASK_FAILED;
 	}
 
-	public Progress getCurrentStep() {
-		return this.steps.get(currentPassIndex);
-	}
-
-	public void start() {
+	protected void start() {
 		this.taskState = TaskState.TASK_COMPUTING;
 		this.getCurrentStep().start();
+	}
+
+	public Progress getCurrentStep() {
+		return this.steps.get(currentPassIndex);
 	}
 
 	/**

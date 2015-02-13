@@ -20,6 +20,7 @@ public class Node implements Serializable {
 	private String unid;
 	private int threadCount;
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
+	private ArrayList<ClientTask> pendingTasks = new ArrayList<>();
 	private ArrayList<AbstractCodec> codecs = new ArrayList<>();
 	private boolean locked = false;
 	private int failureCount;
@@ -65,12 +66,36 @@ public class Node implements Serializable {
 	}
 
 	public boolean hasTask(ClientTask task) {
-		for (ClientTask nodeTask : this.getCurrentTasks()) {
+		for (ClientTask nodeTask : this.getAllTasks()) {
+			if (nodeTask.equals(task)) {
+				return true;
+			}
+		}
+		for (ClientTask nodeTask : this.getPendingTasks()) {
 			if (nodeTask.equals(task)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	public void addPendingTask(ClientTask task) {
+		pendingTasks.add(task);
+	}
+
+	public ArrayList<ClientTask> getAllTasks() {
+		ArrayList<ClientTask> tasks = new ArrayList<>();
+		tasks.addAll(currentTasks);
+		tasks.addAll(pendingTasks);
+		return tasks;
+	}
+
+	public ArrayList<ClientTask> getPendingTasks() {
+		return pendingTasks;
+	}
+
+	public void addTask(ClientTask currentTask) {
+		this.currentTasks.add(currentTask);
 	}
 
 	/**
@@ -138,15 +163,26 @@ public class Node implements Serializable {
 		return currentTasks;
 	}
 
-	public void addTask(ClientTask currentTask) {
-		this.currentTasks.add(currentTask);
-	}
-
 	public String getUnid() {
 		return unid;
 	}
 
 	public void setUnid(String nodeIdentifier) {
 		this.unid = nodeIdentifier;
+	}
+
+	public void removeAllTasks() {
+		currentTasks.clear();
+		pendingTasks.clear();
+	}
+
+	public void confirm(ClientTask task) {
+		pendingTasks.remove(task);
+		currentTasks.add(task);
+	}
+
+	public void removeTask(ClientTask task) {
+		currentTasks.remove(task);
+		pendingTasks.remove(task);
 	}
 }

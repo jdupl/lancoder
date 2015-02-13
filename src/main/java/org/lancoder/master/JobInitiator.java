@@ -36,7 +36,7 @@ import org.lancoder.ffmpeg.FFmpegWrapper;
 
 public class JobInitiator extends RunnableService {
 
-	private final static String[] EXTENSIONS = new String[] { "mkv", "mp4", "avi", "mov" };
+	private final static String[] EXTENSIONS = new String[] { "mkv", "mp4", "avi", "mov", "flac", "mp3" };
 
 	private final LinkedBlockingDeque<ApiJobRequest> requests = new LinkedBlockingDeque<>();
 	private JobInitiatorListener listener;
@@ -81,8 +81,8 @@ public class JobInitiator extends RunnableService {
 		int audioSampleRate = 0;
 		CodecEnum audioCodecEnum = null;
 		ChannelDisposition audioChannels = null;
-
 		StreamHandlingStrategy strategy = null;
+
 		switch (req.getAudioPreset()) {
 		case COPY:
 			strategy = new CopyStrategy();
@@ -108,7 +108,14 @@ public class JobInitiator extends RunnableService {
 			AudioCodec audioCodec = (AudioCodec) CodecLoader.fromCodec(audioCodecEnum);
 			strategy = new AudioEncodeStrategy(audioCodec, audioRCT, audioRate, audioChannels, audioSampleRate);
 		}
-		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder, baseOutputFolder);
+
+		String fileExtension = "mkv";
+		if (fileInfo.getVideoStreams().size() == 0 && fileInfo.getAudioStreams().size() == 1) {
+			fileExtension = audioCodecEnum.getContainer();
+		}
+		String outputFileName = String.format("%s.%s", FilenameUtils.getBaseName(sourceFile.getPath()), fileExtension);
+		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder, baseOutputFolder,
+				outputFileName);
 
 		for (OriginalVideoStream originalStream : fileInfo.getVideoStreams()) {
 			double frameRate = requestFrameRate < 1 ? originalStream.getFrameRate() : requestFrameRate;
