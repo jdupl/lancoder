@@ -62,8 +62,9 @@ public class MasterHandler extends PoolWorker<Socket> {
 					}
 					break;
 				case TASK_ACCEPTED:
-					if (requestMessage instanceof TaskRequestMessage){
-						listener.handle(new Event(EventEnum.TASK_CONFIRMED, ((TaskRequestMessage) requestMessage).getTask()));
+					if (requestMessage instanceof TaskRequestMessage) {
+						listener.handle(new Event(EventEnum.TASK_CONFIRMED, ((TaskRequestMessage) requestMessage)
+								.getTask()));
 						out.writeObject(new Message(ClusterProtocol.BYE));
 					}
 					break;

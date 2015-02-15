@@ -228,25 +228,19 @@ public class JobManager implements EventListener {
 		return unassigned;
 	}
 
-	public boolean taskUpdated(ClientTask task, Node n) {
+	public boolean taskUpdated(ClientTask task, Node node) {
 		TaskState updateStatus = task.getProgress().getTaskState();
 		switch (updateStatus) {
 		case TASK_COMPLETED:
-			System.out.printf("Worker %s completed %s.%n", n.getName(), task);
+			System.out.printf("Worker %s completed %s.%n", node.getName(), task);
 			Job job = this.jobs.get(task.getJobId());
 			task.completed();
+
 			if (job.getTaskDoneCount() == job.getTaskCount()) {
 				System.out.println("job " + job.getJobId() + " completed");
 				listener.handle(new Event(EventEnum.JOB_ENCODING_COMPLETED, job));
 			}
 			unassign(task);
-			Job j = jobs.get(task.getJobId());
-			for (ClientTask masterInstance : j.getClientTasks()) {
-				if (masterInstance.getTaskId() == task.getTaskId()) {
-					System.out.println("FOUND " + masterInstance.getProgress().getTaskState() + " "
-							+ task.getProgress().getTaskState());
-				}
-			}
 			break;
 		case TASK_CANCELED:
 			unassign(task);
@@ -262,7 +256,7 @@ public class JobManager implements EventListener {
 		case TASK_FAILED:
 			unassign(task);
 			task.getProgress().reset();
-			n.failure(); // Add a failure count to the node
+			node.failure(); // Add a failure count to the node
 			break;
 		case TASK_TODO:
 			break;
@@ -303,7 +297,8 @@ public class JobManager implements EventListener {
 			break;
 		case TASK_CONFIRMED:
 			ClientTask confirmedTask = (ClientTask) event.getObject();
-			confirm(confirmedTask);
+			ClientTask masterInstance = getTask(confirmedTask.getJobId(), confirmedTask.getTaskId());
+			confirm(masterInstance);
 			break;
 		default:
 			break;

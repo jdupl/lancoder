@@ -261,24 +261,24 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 */
 	public void readTaskReports(ArrayList<TaskReport> reports) {
 		for (TaskReport report : reports) {
-			ClientTask reportTask = report.getTask();
+			ClientTask reportTaskInstance = report.getTask();
 
 			String nodeId = report.getUnid();
+			String jobId = reportTaskInstance.getJobId();
+			int taskId = reportTaskInstance.getTaskId();
+
 			Node sender = nodeManager.identifySender(nodeId);
+			ClientTask masterTaskInstance = jobManager.getTask(jobId, taskId);
 
-			String jobId = reportTask.getJobId();
-			Job job = jobManager.getJob(jobId);
-			int taskId = reportTask.getTaskId();
-			ClientTask masterTaskInstance = jobManager.getTask(job, taskId);
-
-			if (sender == null || !sender.hasTask(reportTask)) {
-				System.err.printf("MASTER: Bad update from node %s. Unexpected %s.%n", sender.getName(), reportTask);
+			if (sender == null || !sender.hasTask(reportTaskInstance)) {
+				System.err.printf("MASTER: Bad update from node %s. Unexpected %s.%n", sender.getName(),
+						reportTaskInstance);
 			} else {
-
 				if (masterTaskInstance != null) {
-					masterTaskInstance.setProgress(reportTask.getProgress());
+					masterTaskInstance.setProgress(reportTaskInstance.getProgress());
 				} else {
-					System.err.printf("Warning: %s instance not found for node %s.%n", reportTask, sender.getName());
+					System.err.printf("Warning: %s instance not found for node %s.%n", reportTaskInstance,
+							sender.getName());
 				}
 
 				jobManager.taskUpdated(masterTaskInstance, sender);
