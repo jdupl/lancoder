@@ -25,4 +25,9 @@ public class AudioConverterPool extends ConverterPool<ClientAudioTask> {
 		return new AudioWorkThread(listener, filePathManager, ffMpeg);
 	}
 
+	@Override
+	public int getActiveThreadCount() {
+		return getActiveCount();
+	}
+
 }

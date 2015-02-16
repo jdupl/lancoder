@@ -25,4 +25,10 @@ public class VideoConverterPool extends ConverterPool<ClientVideoTask> {
 		return new VideoWorkThread(listener, filePathManager, ffMpeg);
 	}
 
+	@Override
+	public int getActiveThreadCount() {
+		// TODO get each task's thread count
+		return getActiveCount() * 9000;
+	}
+
 }

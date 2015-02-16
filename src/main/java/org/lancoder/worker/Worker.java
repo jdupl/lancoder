@@ -40,7 +40,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	private VideoConverterPool videoPool;
 	private MasterContacter masterContacter;
 	private InetAddress masterInetAddress = null;
-	private int threadCount;
+	private int threadLimit;
 	private TaskHandlerPool taskHandler;
 
 	public Worker(WorkerConfig config) {
@@ -51,8 +51,8 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	@Override
 	protected void bootstrap() {
 		// Get number of available threads
-		threadCount = Runtime.getRuntime().availableProcessors();
-		System.out.printf("Detected %d threads available.%n", threadCount);
+		threadLimit = Runtime.getRuntime().availableProcessors();
+		System.out.printf("Detected %d threads available.%n", threadLimit);
 		// Parse master ip address or host name
 		try {
 			this.masterInetAddress = InetAddress.getByName(config.getMasterIpAddress());
@@ -64,7 +64,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		// Get codecs
 		ArrayList<CodecEnum> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
 		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
-		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadCount, config.getUniqueID());
+		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadLimit, config.getUniqueID());
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		super.registerServices();
 		filePathManager = new FilePathManager(config);
 		// TODO change to current instance
-		audioPool = new AudioConverterPool(threadCount, this, filePathManager, getFFmpeg());
+		audioPool = new AudioConverterPool(threadLimit, this, filePathManager, getFFmpeg());
 		services.add(audioPool);
 		// TODO change to current instance
 		videoPool = new VideoConverterPool(1, this, filePathManager, getFFmpeg());
@@ -115,22 +115,20 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		return node.getPendingTasks();
 	}
 
-	public boolean startWork(ClientTask task) {
+	public synchronized boolean startWork(ClientTask task) {
 		System.out.println("Received task " + task.getTaskId() + " from master...");
-		boolean accepted = true;
-		if (task instanceof ClientVideoTask && videoPool.hasFreeConverters()) {
+		boolean accepted = false;
+		int totalUsedThreads = videoPool.getActiveThreadCount() + audioPool.getActiveThreadCount();
+
+		if (task instanceof ClientVideoTask && videoPool.hasFreeConverters() && totalUsedThreads < threadLimit) {
 			ClientVideoTask vTask = (ClientVideoTask) task;
 			videoPool.handle(vTask);
+			accepted = true;
 		} else if (task instanceof ClientAudioTask && this.audioPool.hasFreeConverters()
-				&& videoPool.hasFreeConverters()) {
-			// video pool must also be free
+				&& totalUsedThreads < threadLimit) {
 			ClientAudioTask aTask = (ClientAudioTask) task;
 			audioPool.handle(aTask);
-		} else {
-			node.removeTask(task);
-			accepted = false;
-			System.out.println("Refused task " + task.getTaskId());
-			notifyMasterStatusChange();
+			accepted = true;
 		}
 		if (accepted) {
 			System.out.println("Accepted task " + task.getTaskId());
@@ -138,6 +136,10 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 			node.confirm(task);
 			MessageSender.send(new TaskRequestMessage(task, ClusterProtocol.TASK_ACCEPTED), getMasterInetAddress(),
 					getMasterPort());
+		} else {
+			node.removeTask(task);
+			System.out.println("Refused task " + task.getTaskId());
+			notifyMasterStatusChange();
 		}
 		return true;
 	}

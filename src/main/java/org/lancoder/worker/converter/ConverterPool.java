@@ -10,6 +10,8 @@ public abstract class ConverterPool<T extends ClientTask> extends Pool<T> {
 		super(threadLimit, canQueue);
 	}
 
+	public abstract int getActiveThreadCount();
+
 	public synchronized void cancel(Object task) {
 		for (PoolWorker<? extends ClientTask> poolWorker : this.workers) {
 			if (poolWorker.isActive() && poolWorker.getPoolable().equals(task)) {
