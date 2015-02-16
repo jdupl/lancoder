@@ -9,7 +9,7 @@ import org.lancoder.common.pool.Pool;
 
 public abstract class Server extends RunnableService {
 
-	protected final static int MAX_HANDLERS = 100;
+	protected final static int MAX_HANDLERS = 10;
 
 	protected int port;
 	protected ServerSocket server;

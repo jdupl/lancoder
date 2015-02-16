@@ -1,13 +1,10 @@
 package org.lancoder.worker.contacter;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 
 import org.lancoder.common.RunnableService;
+import org.lancoder.common.network.MessageSender;
 import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.PingMessage;
@@ -40,28 +37,19 @@ public class MasterContacter extends RunnableService {
 
 	private void contactMaster() {
 		Message m = getMessage();
-		InetSocketAddress addr = new InetSocketAddress(masterAddress, masterPort);
-		try (Socket s = new Socket()) {
-			s.setSoTimeout(2000);
-			s.connect(addr);
-			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-			out.writeObject(m);
-			out.flush();
-			Object res = in.readObject();
-			if (res instanceof Message) {
-				Message responseMessage = (Message) res;
-				switch (responseMessage.getCode()) {
-				case CONNECT_RESPONSE:
-					listener.onConnectResponse((ConnectResponse) responseMessage);
-					break;
-				case PONG:
-					// Successful ping to master
-					break;
-				default:
-					System.err.printf("Master sent invalid message %s%n", responseMessage.getClass().getSimpleName());
-					break;
-				}
+
+		try {
+			Message response = MessageSender.sendWithExceptions(m, masterAddress, masterPort);
+			switch (response.getCode()) {
+			case CONNECT_RESPONSE:
+				listener.onConnectResponse((ConnectResponse) response);
+				break;
+			case PONG:
+				// Successful ping to master
+				break;
+			default:
+				System.err.printf("Master sent invalid message %s%n", response.getClass().getSimpleName());
+				break;
 			}
 		} catch (IOException e) {
 			if (m.getCode() == ClusterProtocol.CONNECT_REQUEST) {

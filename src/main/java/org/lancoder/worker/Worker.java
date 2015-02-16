@@ -1,10 +1,6 @@
 package org.lancoder.worker;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
@@ -13,6 +9,7 @@ import org.lancoder.common.FilePathManager;
 import org.lancoder.common.Node;
 import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
+import org.lancoder.common.network.MessageSender;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
 import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.network.cluster.messages.CrashReport;
@@ -101,7 +98,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	public synchronized void stopWork(ClientTask t) {
-		// TODO check which task to stop (if many tasks are implemented)
 		this.getCurrentTasks().remove(t);
 		audioPool.cancel(t);
 		videoPool.cancel(t);
@@ -140,35 +136,10 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 			System.out.println("Accepted task " + task.getTaskId());
 			task.start();
 			node.confirm(task);
-			send(new TaskRequestMessage(task, ClusterProtocol.TASK_ACCEPTED));
+			MessageSender.send(new TaskRequestMessage(task, ClusterProtocol.TASK_ACCEPTED), getMasterInetAddress(),
+					getMasterPort());
 		}
 		return true;
-	}
-
-	private Message send(Message toSend) {
-		// TODO move
-		Message received = null;
-
-		try (Socket s = new Socket(getMasterInetAddress(), getMasterPort())) {
-
-			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-			out.flush();
-
-			out.writeObject(toSend);
-			out.flush();
-
-			Object o = in.readObject();
-			if (o instanceof Message) {
-				received = (Message) o;
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		return received;
 	}
 
 	/**
@@ -227,27 +198,9 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	public boolean notifyMasterStatusChange() {
-		// TODO use send
-		boolean success = false;
 		StatusReport report = this.getStatusReport();
-
-		try (Socket s = new Socket(getMasterInetAddress(), getMasterPort())) {
-			ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-			ObjectInputStream in = new ObjectInputStream(s.getInputStream());
-			out.flush();
-			out.writeObject(report);
-			out.flush();
-			Object o = in.readObject();
-			if (o instanceof Message) {
-				Message m = (Message) o;
-				success = m.getCode() == ClusterProtocol.BYE;
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		return success;
+		Message response = MessageSender.send(report, getMasterInetAddress(), getMasterPort());
+		return (response != null && response.getCode() == ClusterProtocol.BYE);
 	}
 
 	public int getListenPort() {
