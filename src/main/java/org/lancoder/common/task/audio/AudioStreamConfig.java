@@ -5,8 +5,7 @@ import java.util.ArrayList;
 import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.file_components.streams.original.OriginalAudioStream;
 import org.lancoder.common.task.StreamConfig;
-
-public class AudioStreamConfig extends StreamConfig {
+    public class AudioStreamConfig extends StreamConfig {
 
 	private static final long serialVersionUID = 7191622871794153963L;
 

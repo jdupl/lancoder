@@ -24,25 +24,23 @@ public class AudioEncodeStrategy extends EncodeStrategy {
 
 	public AudioEncodeStrategy(AudioCodec codec, RateControlType rateControlType, int rate,
 			ChannelDisposition channels, int sampleRate) {
-		super(codec, rateControlType, rate);
+          super(codec, rateControlType, rate);
 		this.channels = channels;
 		this.sampleRate = sampleRate;
 	}
 
 	public ChannelDisposition getChannels() {
 		return channels;
-	}
+}
 
-	public int getSampleRate() {
 		return sampleRate;
 	}
-
-	@Override
+         	@Override
 	public ArrayList<ClientTask> createTasks(Job job, StreamConfig config) {
 		AudioStream outStream = (AudioStream) config.getOutStream();
 		ArrayList<ClientTask> tasks = new ArrayList<>();
 		int taskId = job.getTaskCount();
-		File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
+			File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
 		File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
 				String.format("part-%d.%s", taskId, getCodec().getContainer()));
 		System.out.println(outStream.getUnitCount());
@@ -52,4 +50,4 @@ public class AudioEncodeStrategy extends EncodeStrategy {
 		return tasks;
 	}
 
-}
+           }

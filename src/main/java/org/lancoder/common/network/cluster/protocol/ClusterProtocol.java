@@ -7,7 +7,7 @@ public enum ClusterProtocol {
 	OK,
 	/**
 	 * Close the socket.
-	 */
+             */
 	BYE,
 	/**
 	 * A full status update is requested by the sender. (can be master or node)
@@ -16,14 +16,14 @@ public enum ClusterProtocol {
 	/**
 	 * A task request from master to a node.
 	 */
-	TASK_REQUEST,
+              TASK_REQUEST,
 	/**
 	 * This response is a full status report.
 	 */
 	STATUS_REPORT,
-	/**
-	 * Crash Report (see issue #4)
-	 */
+    /**
+// 	 * Crash Report (see issue #4)
+        */
 	CRASH_REPORT,
 	/**
 	 * Connection request of node.
@@ -45,13 +45,13 @@ public enum ClusterProtocol {
 	 * Worker could not start task. In case of double assignment.
 	 */
 	TASK_REFUSED,
-	/**
+          /**
 	 * Worker was free and could start the task.
 	 */
 	TASK_ACCEPTED,
 	/**
-	 * Node refused to speak to master (probably key verification)
-	 **/
+			* Node refused to speak to master (probably key verification)
+**/
 	BAD_REQUEST,
 	/**
 	 * Master refused to speak to node (key verification)
@@ -59,7 +59,7 @@ public enum ClusterProtocol {
 	BAD_NODE,
 	/**
 	 * Represents a simple ping.
-	 */
+                 */
 	PING,
 	/**
 	 * Response of the ping.
@@ -69,4 +69,4 @@ public enum ClusterProtocol {
 	 * Message to notify node a task has been cancelled
 	 */
 	UNASSIGN_TASK
-}
+}}

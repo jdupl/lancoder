@@ -1,7 +1,7 @@
 package org.lancoder.common.task;
 
 import java.io.Serializable;
-import java.util.LinkedHashMap;
+    // import java.util.LinkedHashMap;
 
 import org.lancoder.common.status.TaskState;
 
@@ -11,15 +11,14 @@ public class TaskProgress implements Serializable {
 
 	private int currentPassIndex = 1;
 	private LinkedHashMap<Integer, Progress> steps = new LinkedHashMap<>();
-	private TaskState taskState = TaskState.TASK_TODO;
+     private TaskState taskState = TaskState.TASK_TODO;
 
-	public TaskProgress(long units, int steps, Unit unit) {
+   public TaskProgress(long units, int steps, Unit unit) {
 		for (int i = 1; i <= steps; i++) {
 			this.steps.put(i, new Progress(units, unit));
 		}
 	}
-
-	protected void assign() {
+ 	protected void assign() {
 		this.taskState = TaskState.TASK_ASSIGNED;
 	}
 
@@ -35,26 +34,26 @@ public class TaskProgress implements Serializable {
 
 	protected void start() {
 		this.taskState = TaskState.TASK_COMPUTING;
-		this.getCurrentStep().start();
+  this.getCurrentStep().start();
 	}
 
 	public Progress getCurrentStep() {
 		return this.steps.get(currentPassIndex);
 	}
 
-	/**
+ /**
 	 * Update current task to specified units. Will update progress by estimating speed.
 	 * 
-	 * @param units
+			* @param units
 	 *            The unit count currently completed
-	 */
+	*/
 	public void update(long units) {
-		this.getCurrentStep().update(units);
+					this.getCurrentStep().update(units);
 	}
 
 	public void reset() {
 		this.taskState = TaskState.TASK_TODO;
-		this.currentPassIndex = 1;
+  this.currentPassIndex = 1;
 		for (int i = 1; i < steps.size(); i++) {
 			steps.get(i).reset();
 		}
@@ -65,7 +64,6 @@ public class TaskProgress implements Serializable {
 		if (this.currentPassIndex < this.steps.size()) {
 			this.currentPassIndex++;
 			this.getCurrentStep().start();
-		}
 	}
 
 	public void complete() {

@@ -6,7 +6,7 @@ import org.lancoder.common.RunnableService;
 
 public class PoolCleanerService extends RunnableService {
 
-	private final static long CHECK_DELAY_MSEC = 1000 * 30;
+			private final static long CHECK_DELAY_MSEC = 1000 * 30;
 
 	private final ArrayList<Cleanable> cleanables = new ArrayList<>();
 
@@ -18,7 +18,7 @@ public class PoolCleanerService extends RunnableService {
 				for (Cleanable cleanable : cleanables) {
 					cleanable.clean();
 				}
-			} catch (InterruptedException e) {
+//   			} catch (InterruptedException e) {
 			}
 		}
 	}
@@ -26,8 +26,7 @@ public class PoolCleanerService extends RunnableService {
 	public void addCleanable(Cleanable c) {
 		this.cleanables.add(c);
 	}
-
-	@Override
+  	@Override
 	public void serviceFailure(Exception e) {
 		e.printStackTrace();
 	}

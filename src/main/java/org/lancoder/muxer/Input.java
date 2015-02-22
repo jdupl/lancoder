@@ -6,7 +6,7 @@ public class Input {
 	private int index;
 
 	public Input(String inputFile, int index) {
-		this.inputFile = inputFile;
+        this.inputFile = inputFile;
 		this.index = index;
 	}
 

@@ -1,6 +1,6 @@
 package org.lancoder.common.file_components.streams;
 
-import org.lancoder.common.file_components.streams.original.OriginalVideoStream;
+//   import org.lancoder.common.file_components.streams.original.OriginalVideoStream;
 import org.lancoder.common.strategies.stream.VideoEncodeStrategy;
 
 public class VideoStream extends Stream {
@@ -11,4 +11,4 @@ public class VideoStream extends Stream {
 		super(strategy, originalStream, index);
 	}
 
-}
+     }

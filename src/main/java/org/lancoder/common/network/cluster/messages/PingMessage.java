@@ -11,11 +11,9 @@ public class PingMessage extends Message {
 		super(code);
 	}
 
-	public static PingMessage getPing() {
 		return new PingMessage(ClusterProtocol.PING);
 	}
-
-	public static PingMessage getPong() {
+         	public static PingMessage getPong() {
 		return new PingMessage(ClusterProtocol.PONG);
 	}
 

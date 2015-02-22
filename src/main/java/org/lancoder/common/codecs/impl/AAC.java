@@ -7,7 +7,7 @@ public class AAC extends AudioCodec {
 
 	private static final long serialVersionUID = -5775646470492086687L;
 
-	protected AAC() {
+   protected AAC() {
 		super(CodecEnum.AAC);
 	}
 }

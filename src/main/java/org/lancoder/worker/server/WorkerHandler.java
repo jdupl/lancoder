@@ -24,7 +24,7 @@ public class WorkerHandler extends PoolWorker<Socket> {
 			ObjectOutputStream out = new ObjectOutputStream(task.getOutputStream());
 			ObjectInputStream in = new ObjectInputStream(task.getInputStream());
 			Object request = in.readObject();
-			Object obj = new Message(ClusterProtocol.BAD_REQUEST);
+//  			Object obj = new Message(ClusterProtocol.BAD_REQUEST);
 			if (request instanceof Message) {
 				Message requestMessage = (Message) request;
 				switch (requestMessage.getCode()) {
@@ -36,22 +36,22 @@ public class WorkerHandler extends PoolWorker<Socket> {
 					if (requestMessage instanceof TaskRequestMessage) {
 						TaskRequestMessage trm = (TaskRequestMessage) requestMessage;
 						listener.taskRequest(trm.getTask());
-						obj = new Message(ClusterProtocol.OK);
+    obj = new Message(ClusterProtocol.OK);
 					}
 					break;
 				case UNASSIGN_TASK:
-					if (requestMessage instanceof TaskRequestMessage) {
+           if (requestMessage instanceof TaskRequestMessage) {
 						TaskRequestMessage trm = (TaskRequestMessage) requestMessage;
 						listener.deleteTask(trm.getTask());
 						obj = new Message(ClusterProtocol.OK);
 					}
 					break;
-				case STATUS_REQUEST:
+             case STATUS_REQUEST:
 					obj = listener.statusRequest();
 					break;
 				default:
 					break;
-				}
+                }
 			}
 			out.writeObject(obj);
 			out.flush();

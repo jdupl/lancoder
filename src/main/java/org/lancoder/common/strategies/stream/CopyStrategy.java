@@ -10,18 +10,18 @@ import org.lancoder.common.task.StreamConfig;
 public class CopyStrategy extends StreamHandlingStrategy {
 
 	private static final long serialVersionUID = -3804413668867598267L;
-
-	@Override
+              	@Override
 	public ArrayList<String> getRateControlArgs() {
 		return new ArrayList<>();
 	}
 
 	@Override
 	public boolean isCopy() {
-		return true;
+           return true;
 	}
 
-	@Override
+//	@Override
+	public ArrayList<ClientTask> createTasks(Job job, StreamConfig config) {
 	public ArrayList<ClientTask> createTasks(Job job, StreamConfig config) {
 		return new ArrayList<>();
 	}
