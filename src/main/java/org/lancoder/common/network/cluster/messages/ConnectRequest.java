@@ -8,7 +8,7 @@ public class ConnectRequest extends AuthMessage {
 	private static final long serialVersionUID = 831513295350691753L;
 
 	private Node node;
-
+//  
 	public ConnectRequest(Node node) {
 		super(ClusterProtocol.CONNECT_REQUEST, node.getUnid());
 		this.node = node;
@@ -16,5 +16,5 @@ public class ConnectRequest extends AuthMessage {
 
 	public Node getNode() {
 		return node;
-	}
+           }
 }

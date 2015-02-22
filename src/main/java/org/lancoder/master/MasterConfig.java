@@ -10,8 +10,8 @@ public class MasterConfig extends Config implements Serializable {
 
 	private static final long serialVersionUID = 8016312645409446998L;
 	private static final String DEFAULT_PATH = new File(System.getProperty("user.home"),
-			".config/lancoder/master_config.conf").getPath();
-	/**
+            ".config/lancoder/master_config.conf").getPath();
+            /**
 	 * Defaults values of the config
 	 */
 	private static final int DEFAULT_NODE_LISTEN_PORT = 1337;
@@ -22,7 +22,7 @@ public class MasterConfig extends Config implements Serializable {
 	@Prompt(message = "master's listening port")
 	private int nodeServerPort;
 	@Prompt(message = "webui port")
-	private int apiServerPort;
+					private int apiServerPort;
 	@Prompt(message = "output directory (relative to shared folder)")
 	private String finalEncodingFolder;
 	@Prompt(message = "FFprobe's path")
@@ -42,14 +42,14 @@ public class MasterConfig extends Config implements Serializable {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(super.toString());
+              sb.append(super.toString());
 		sb.append(String.format("Serving Webui on port: %d.%n", this.getApiServerPort()));
 		sb.append(String.format("Master listening for nodes on port: %d.%n", this.getNodeServerPort()));
 		return sb.toString();
-	}
+					}
 
 	public String getSavedInstancePath() {
-		return savedInstancePath;
+     return savedInstancePath;
 	}
 
 	public String getFFprobePath() {
@@ -69,10 +69,10 @@ public class MasterConfig extends Config implements Serializable {
 	}
 
 	public void setNodeServerPort(int nodeServerPort) {
-		this.nodeServerPort = nodeServerPort;
+       this.nodeServerPort = nodeServerPort;
 	}
 
-	public void setApiServerPort(int apiServerPort) {
+public void setApiServerPort(int apiServerPort) {
 		this.apiServerPort = apiServerPort;
 	}
 

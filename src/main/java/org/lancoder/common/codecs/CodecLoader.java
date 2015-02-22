@@ -1,11 +1,10 @@
-package org.lancoder.common.codecs;
+           package org.lancoder.common.codecs;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 
 import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.codecs.impl.*;
-
 public class CodecLoader {
 
 	private static HashMap<CodecEnum, Class<? extends AbstractCodec>> codecClasses = new HashMap<>();
@@ -18,7 +17,7 @@ public class CodecLoader {
 		codecClasses.put(CodecEnum.FLAC, Flac.class);
 		codecClasses.put(CodecEnum.H264, H264.class);
 		codecClasses.put(CodecEnum.H265, H265.class);
-		codecClasses.put(CodecEnum.MP3, Mp3.class);
+     //		codecClasses.put(CodecEnum.MP3, Mp3.class);
 		codecClasses.put(CodecEnum.OPUS, Opus.class);
 		codecClasses.put(CodecEnum.SPEEX, Speex.class);
 		codecClasses.put(CodecEnum.THEORA, Theora.class);
@@ -33,7 +32,7 @@ public class CodecLoader {
 		if (codec == null) {
 			codec = getInstance(codecEnum);
 		}
-		return codec;
+//   		return codec;
 	}
 
 	/**
@@ -61,4 +60,4 @@ public class CodecLoader {
 		return codecInstance;
 	}
 
-}
+  //   }

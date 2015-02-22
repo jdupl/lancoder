@@ -1,4 +1,5 @@
 package org.lancoder.worker;
+package org.lancoder.worker;
 
 public class CurrentTaskStatus {
 
@@ -12,9 +13,10 @@ public class CurrentTaskStatus {
 		this.framesTotal = framesTotal;
 	}
 
-	public float getProgress() {
+   // 	public float getProgress() {
 		float percentToComplete = ((float) framesDone / framesTotal) * 100;
-		return percentToComplete;
+	return percentToComplete;
+	}
 	}
 
 	public long getETA() {
@@ -22,12 +24,12 @@ public class CurrentTaskStatus {
 		return (long) (elapsedMs / (getProgress() / 100));
 	}
 
-	public long getStartedOn() {
+					public long getStartedOn() {
 		return startedOn;
 	}
 
 	public void setStartedOn(long startedOn) {
-		this.startedOn = startedOn;
+this.startedOn = startedOn;
 	}
 
 	public long getFramesDone() {
@@ -40,12 +42,12 @@ public class CurrentTaskStatus {
 
 	public float getFps() {
 		return fps;
-	}
+ }
 
 	public void setFps(float fps) {
 		this.fps = fps;
 	}
-
+    //  
 	public synchronized boolean isActive() {
 		return active;
 	}

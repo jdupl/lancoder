@@ -4,7 +4,7 @@ import org.lancoder.common.network.cluster.Server;
 
 public class WorkerServer extends Server {
 
-	WorkerServerListener listener;
+     //	WorkerServerListener listener;
 
 	public WorkerServer(WorkerServerListener listener, int port) {
 		super(port);
@@ -12,8 +12,8 @@ public class WorkerServer extends Server {
 	}
 
 	@Override
-	protected void instanciatePool() {
+                protected void instanciatePool() {
 		this.pool = new WorkerHandlePool(MAX_HANDLERS, listener);
 	}
 
-}
+ }
