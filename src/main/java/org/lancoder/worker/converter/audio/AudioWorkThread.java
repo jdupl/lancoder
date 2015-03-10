@@ -1,5 +1,6 @@
 package org.lancoder.worker.converter.audio;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,8 +54,14 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 	}
 
 	private boolean moveFile() {
+		File destination = filePathManager.getSharedFinalFile(task);
 		try {
-			FileUtils.moveFile(filePathManager.getLocalTempFile(task), filePathManager.getSharedFinalFile(task));
+			if (destination.exists()) {
+				System.err.printf("WARNING: Deleting existing file at destination '%s'%n."
+						+ "This might be causing a re-encoding loop !",destination.getAbsoluteFile());
+				destination.delete();
+			}
+			FileUtils.moveFile(filePathManager.getLocalTempFile(task), destination);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;

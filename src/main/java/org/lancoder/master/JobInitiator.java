@@ -110,9 +110,10 @@ public class JobInitiator extends RunnableService {
 		}
 
 		String fileExtension = "mkv";
-		if (fileInfo.getVideoStreams().size() == 0 && fileInfo.getAudioStreams().size() == 1) {
+		if (audioCodecEnum != null && fileInfo.getVideoStreams().size() == 0 && fileInfo.getAudioStreams().size() == 1) {
 			fileExtension = audioCodecEnum.getContainer();
 		}
+
 		String outputFileName = String.format("%s.%s", FilenameUtils.getBaseName(sourceFile.getPath()), fileExtension);
 		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder, baseOutputFolder,
 				outputFileName);
