@@ -64,7 +64,7 @@ public class JobManager implements EventListener {
 		if (j == null) {
 			return false;
 		}
-		j.setJobStatus(JobState.JOB_CANCELED);
+		j.cancel();
 		for (Node node : nodeManager.getNodes()) {
 			ArrayList<ClientTask> nodeTasks = new ArrayList<>(node.getCurrentTasks());
 			nodeTasks.addAll(node.getPendingTasks());
@@ -249,8 +249,8 @@ public class JobManager implements EventListener {
 		case TASK_COMPUTING:
 		case TASK_ASSIGNED:
 			Job dispatched = this.getJob(task.getJobId());
-			if (dispatched.getJobStatus() == JobState.JOB_TODO) {
-				dispatched.setJobStatus(JobState.JOB_COMPUTING);
+			if (!dispatched.isStarted()) {
+				dispatched.start();
 			}
 			break;
 		case TASK_FAILED:

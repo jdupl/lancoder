@@ -186,6 +186,15 @@
                 <div class="row">
                     <div class="col-md-12">
                         <p>{{job.completedTasks}} of out {{job.taskCount}} tasks completed</p>
+                        <div ng-if="job.timeStarted - job.timeAdded > 60000 ">
+                          <p>Job added  <time am-time-ago="job.timeAdded"></time></p>
+                        </div>
+                        <div ng-if="job.timeStarted !== 0 && job.timeCompleted === 0">
+                            <p>Job started <time am-time-ago="job.timeStarted"></time></p>
+                        </div>
+                        <div ng-if="job.timeCompleted !== 0">
+                            <p>Job completed <time am-time-ago="job.timeCompleted"></time> {{timeFrom(job.timeCompleted, job.timeStarted, false)}}</p>
+                        </div>
                         <div class="progress">
                             <div class="progress-bar progress-bar-success" role="progressbar"
                                 aria-valuenow="{{job.completedTasks}}" aria-valuemin="0" aria-valuemax="{{job.taskCount}}"

@@ -6,11 +6,12 @@ controllers.controller('nodes', function($scope, $http, $interval, apiService) {
     return $scope.jobs.filter(function(job) { return job.jobId == jobId })[0].jobName;
   }
 
-  $scope.timeFromNow = function(diff) {
-      var now = (new Date).getTime();
-      var momentNow = moment(now);
-      var momentDiff = moment(now + diff);
-    return momentDiff.from(momentNow);
+  $scope.timeFromNow = function(diff, noPrefix) {
+    var now = (new Date).getTime();
+    var momentNow = moment(now);
+    var momentDiff = moment(now + diff);
+
+    return momentDiff.from(momentNow, noPrefix);
   }
 
   $scope.refresh = function() {
@@ -128,6 +129,13 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
     .success(function(data) {
         $scope.refresh();
     });
+  }
+
+  $scope.timeFrom = function(start, end, noPrefix) {
+    var momentStart = moment(start);
+    var momentEnd = moment(end);
+
+    return momentStart.from(momentEnd, noPrefix);
   }
 
   $scope.newJob = {};

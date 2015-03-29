@@ -14,7 +14,6 @@ import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
-import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.TaskReport;
@@ -185,9 +184,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 * @param job
 	 */
 	private void jobEncodingCompleted(Job job) {
-		job.setJobStatus(JobState.JOB_ENCODED);
 		if (!checkJobIntegrity(job)) {
-			job.setJobStatus(JobState.JOB_COMPUTING);
+			job.start(false);
 		} else {
 			// start muxing (or let pool add to the todo list)
 			muxerPool.handle(job);
@@ -297,19 +295,19 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	@Override
 	public void jobMuxingStarted(Job job) {
-		job.setJobStatus(JobState.JOB_MUXING);
+		job.muxing();
 	}
 
 	@Override
 	public void jobMuxingCompleted(Job job) {
 		System.out.printf("Job %s finished muxing !\n", job.getJobName());
-		job.setJobStatus(JobState.JOB_COMPLETED);
+		job.complete();
 	}
 
 	@Override
 	public void jobMuxingFailed(Job job) {
 		System.err.printf("Muxing failed for job %s\n", job.getJobName());
-		job.setJobStatus(JobState.JOB_FAILED);
+		job.fail();
 	}
 
 	@Override

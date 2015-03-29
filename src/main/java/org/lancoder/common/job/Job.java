@@ -33,10 +33,12 @@ public class Job implements Comparable<Job>, Serializable {
 	private String jobId;
 	private String jobName;
 	private JobState jobStatus = JobState.JOB_TODO;
+
 	private int lengthOfTasks;
 	private long lengthOfJob;
 	private int frameCount;
 	private double frameRate;
+
 	private int priority;
 	/**
 	 * Output path of this job, relative to absolute shared directory
@@ -51,6 +53,10 @@ public class Job implements Comparable<Job>, Serializable {
 	 */
 	private String partsFolderName;
 	private String sourceFile;
+
+	private long timeAdded;
+	private long timeStarted;
+	private long timeCompleted;
 
 	private ArrayList<Task> tasks = new ArrayList<>();
 	/**
@@ -70,6 +76,7 @@ public class Job implements Comparable<Job>, Serializable {
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
+		this.timeAdded = System.currentTimeMillis();
 
 		OriginalVideoStream mainVideoStream = fileInfo.getMainVideoStream();
 		if (mainVideoStream != null) {
@@ -111,6 +118,38 @@ public class Job implements Comparable<Job>, Serializable {
 			result = String.valueOf(System.currentTimeMillis());
 		}
 		return result;
+	}
+
+	public void complete() {
+		this.jobStatus = JobState.JOB_COMPLETED;
+		this.timeCompleted = System.currentTimeMillis();
+	}
+
+	public void cancel() {
+		this.jobStatus = JobState.JOB_CANCELED;
+	}
+
+	public void muxing() {
+		this.jobStatus = JobState.JOB_MUXING;
+	}
+
+	public void start(boolean initJob) {
+		this.jobStatus = JobState.JOB_COMPUTING;
+		if (initJob) {
+			this.timeStarted = System.currentTimeMillis();
+		}
+	}
+
+	public void start() {
+		start(true);
+	}
+
+	public void fail() {
+		this.jobStatus = JobState.JOB_FAILED;
+	}
+
+	public boolean isStarted() {
+		return getJobStatus() != JobState.JOB_TODO;
 	}
 
 	public String getSourceFile() {
@@ -291,10 +330,6 @@ public class Job implements Comparable<Job>, Serializable {
 		return jobStatus;
 	}
 
-	public void setJobStatus(JobState jobStatus) {
-		this.jobStatus = jobStatus;
-	}
-
 	public long getFrameCount() {
 		return frameCount;
 	}
@@ -363,6 +398,18 @@ public class Job implements Comparable<Job>, Serializable {
 		ArrayList<Stream> streams = new ArrayList<>();
 		streams.addAll(this.streamTaskMapping.keySet());
 		return streams;
+	}
+
+	public long getTimeAdded() {
+		return timeAdded;
+	}
+
+	public long getTimeStarted() {
+		return timeStarted;
+	}
+
+	public long getTimeCompleted() {
+		return timeCompleted;
 	}
 
 	public boolean isCompleted() {

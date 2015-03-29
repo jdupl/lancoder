@@ -120,7 +120,9 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		boolean accepted = false;
 		int totalUsedThreads = videoPool.getActiveThreadCount() + audioPool.getActiveThreadCount();
 
-		if (task instanceof ClientVideoTask && videoPool.hasFreeConverters() && totalUsedThreads < threadLimit) {
+		if (getPendingTasks().size() != 1) {
+			System.out.println("Refusing task because worker has " + (getPendingTasks().size() - 1) + " other pending tasks.");
+		} else if (task instanceof ClientVideoTask && videoPool.hasFreeConverters() && totalUsedThreads < threadLimit) {
 			ClientVideoTask vTask = (ClientVideoTask) task;
 			videoPool.handle(vTask);
 			accepted = true;
