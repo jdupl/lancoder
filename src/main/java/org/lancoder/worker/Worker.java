@@ -141,7 +141,9 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		} else {
 			node.removeTask(task);
 			System.out.println("Refused task " + task.getTaskId());
-			notifyMasterStatusChange();
+			MessageSender.send(new TaskRequestMessage(task, ClusterProtocol.TASK_REFUSED), getMasterInetAddress(),
+					getMasterPort());
+			//notifyMasterStatusChange();
 		}
 		return true;
 	}

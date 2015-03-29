@@ -32,6 +32,10 @@ public abstract class ClientTask implements Serializable {
 	public void completed() {
 		this.task.getProgress().complete();
 	}
+	
+	public void reset() {
+		this.task.getProgress().reset();
+	}
 
 	public abstract Task getTask();
 
@@ -97,4 +101,5 @@ public abstract class ClientTask implements Serializable {
 	public int hashCode() {
 		return task.getTaskId() + task.jobId.hashCode();
 	}
+
 }

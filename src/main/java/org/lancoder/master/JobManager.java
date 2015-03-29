@@ -300,9 +300,19 @@ public class JobManager implements EventListener {
 			ClientTask masterInstance = getTask(confirmedTask.getJobId(), confirmedTask.getTaskId());
 			confirm(masterInstance);
 			break;
+		case TASK_REFUSED:
+			ClientTask refusedTask = (ClientTask) event.getObject();
+			System.err.println("Worker refused task !");
+			taskRefused(getTask(refusedTask.getJobId(), refusedTask.getTaskId()));
+			break;
 		default:
 			break;
 		}
+	}
+
+	private void taskRefused(ClientTask task) {
+		task.reset();
+		unassign(task);
 	}
 
 	/**
@@ -334,24 +344,4 @@ public class JobManager implements EventListener {
 		return getTask(getJob(jobId), taskId);
 	}
 
-	// /**
-	// * Unassign tasks that are not in the node's report tasks
-	// *
-	// * @param sender
-	// * The node
-	// * @param reportTasks
-	// * The tasks from the report
-	// */
-	// public void update(Node sender, ArrayList<ClientTask> reportTasks) {
-	// ArrayList<ClientTask> toUnassign = new ArrayList<>();
-	// for (ClientTask clientTask : sender.getCurrentTasks()) {
-	// if (!reportTasks.contains(clientTask)) {
-	// System.out.println(clientTask.getProgress().getTaskState());
-	// toUnassign.add(clientTask);
-	// }
-	// }
-	// for (ClientTask clientTask : toUnassign) {
-	// unassign(clientTask);
-	// }
-	// }
 }

@@ -68,6 +68,13 @@ public class MasterHandler extends PoolWorker<Socket> {
 						out.writeObject(new Message(ClusterProtocol.BYE));
 					}
 					break;
+				case TASK_REFUSED:
+					if (requestMessage instanceof TaskRequestMessage) {
+						listener.handle(new Event(EventEnum.TASK_REFUSED, ((TaskRequestMessage) requestMessage)
+								.getTask()));
+						out.writeObject(new Message(ClusterProtocol.BYE));
+					}
+					break;
 				case PING:
 					out.writeObject(PingMessage.getPong());
 					break;
