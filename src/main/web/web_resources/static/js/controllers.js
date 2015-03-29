@@ -6,6 +6,13 @@ controllers.controller('nodes', function($scope, $http, $interval, apiService) {
     return $scope.jobs.filter(function(job) { return job.jobId == jobId })[0].jobName;
   }
 
+  $scope.timeFromNow = function(diff) {
+      var now = (new Date).getTime();
+      var momentNow = moment(now);
+      var momentDiff = moment(now + diff);
+    return momentDiff.from(momentNow);
+  }
+
   $scope.refresh = function() {
     apiService.jobs().then(function(jobs) {
       $scope.jobs = jobs;

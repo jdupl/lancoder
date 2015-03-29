@@ -1,8 +1,9 @@
 angular.module('lancoder', [
   'ngRoute',
-  'lancoder.services',
+  'ui.bootstrap',
+  'angularMoment',
   'lancoder.controllers',
-  'ui.bootstrap'
+  'lancoder.services',
 ]).config(['$routeProvider', function($routeProvider) {
     $routeProvider.when('/nodes', {templateUrl: 'partials/nodes.html', controller: 'nodes'});
     $routeProvider.when('/jobs', {templateUrl: 'partials/jobs.html', controller: 'jobs'});

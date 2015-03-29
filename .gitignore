@@ -5,8 +5,6 @@
 bin
 doc
 
-# Config Files #
-*.json
 
 # Package Files #
 *.jar
@@ -19,4 +17,3 @@ nbproject/
 
 # logs
 *.log
-

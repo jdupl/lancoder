@@ -38,29 +38,35 @@
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p>Encoding part {{currentTask.taskId}} of job {{getJobNameFromID(currentTask.jobId)}}</p>
-                                <div ng-if="currentTask.taskProgress.stepCount > 1">
-                                    <p>Pass {{currentTask.taskProgress.currentPassIndex}} of {{currentTask.taskProgress.stepCount}}</p>
-                                </div>
+                                <p class="lead">Encoding part {{currentTask.taskId + 1}} of job {{getJobNameFromID(currentTask.jobId)}}</p>
                             </div>
-                            <div class="col-md-6">
-                                <div class="progress">
-                                    <div class="progress-bar progress-bar-success" role="progressbar"
-                                         aria-valuenow="{{currentTask.taskProgress.currentStep.progress}}"
-                                         aria-valuemin="0" aria-valuemax="100" style="width: {{currentTask.taskProgress.currentStep.progress}}%">
+                        </div>
+                        <div ng-repeat="step in currentTask.taskProgress.steps">
+                            <div class="row col-md-12"><strong>Pass {{$index + 1}}</strong></div>
+                            <div class="row" ng-if="$index + 1 === currentTask.taskProgress.currentPassIndex">
+                                <div class="col-md-6">
+                                    <p>Encoding at {{step.speed | number:1}} {{step.prettyUnit}}. Estimated completion {{timeFromNow(step.timeEstimated)}}.</p>
+                                    <p>Started <time am-time-ago="step.timeStarted"></time>.</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-success" role="progressbar"
+                                             aria-valuenow="{{step.progress}}"
+                                             aria-valuemin="0" aria-valuemax="100" style="width: {{step.progress}}%">
+                                             {{step.progress | number:2}} %
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p>Encoding at {{currentTask.taskProgress.currentStep.speed | number:1}} {{currentTask.taskProgress.currentStep.prettyUnit}}.
-                                    Estimated time to finish this pass:
-                                    {{currentTask.taskProgress.currentStep.timeEstimated / 1000 | number:0}}
-                                    s</p>
+                            <div class="row" ng-if="$index + 1 !== currentTask.taskProgress.currentPassIndex && step.unitsCompleted === 0">
+                                <div class="col-md-12">
+                                    <small>Not yet started.</small>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <p style="text-align: right">{{currentTask.taskProgress.currentStep.progress | number:2}}% complete</p>
+                            <div class="row" ng-if="$index + 1 !== currentTask.taskProgress.currentPassIndex && step.progress === 100">
+                                <div class="col-md-12">
+                                    <small>Completed <time am-time-ago="step.lastUpdate"></time> {{timeFromNow(step.timeElapsed)}}.</small>
+                                </div>
                             </div>
                         </div>
                     </div>
