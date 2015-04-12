@@ -212,7 +212,7 @@ public class Job implements Comparable<Job>, Serializable {
 	 */
 	public synchronized ArrayList<ClientVideoTask> getTodoVideoTask() {
 		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
-		if (getTaskRemainingCount() != 0) {
+		if (getTodoTaskCount() != 0) {
 			for (ClientVideoTask task : this.getClientVideoTasks()) {
 				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 					tasks.add(task);
@@ -224,7 +224,7 @@ public class Job implements Comparable<Job>, Serializable {
 
 	public ArrayList<ClientAudioTask> getTodoAudioTask() {
 		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
-		if (getTaskRemainingCount() != 0) {
+		if (getTodoTaskCount() != 0) {
 			for (ClientAudioTask task : this.getClientAudioTasks()) {
 				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
 					tasks.add(task);
@@ -239,21 +239,22 @@ public class Job implements Comparable<Job>, Serializable {
 	 * 
 	 * @return The count of tasks left to dispatch
 	 */
-	public synchronized int getTaskRemainingCount() {
+	public synchronized int getTodoTaskCount() {
 		switch (this.getJobStatus()) {
 		case JOB_COMPLETED:
 			return 0;
 		case JOB_TODO:
 			return this.tasks.size();
 		default:
-			int count = 0;
-			for (Task task : this.tasks) {
-				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
-					++count;
-				}
-			}
-			return count;
+			return getTodoTasks().size();
 		}
+	}
+
+	public synchronized ArrayList<ClientTask> getTodoTasks() {
+		ArrayList<ClientTask> todoTasks = new ArrayList<>();
+		todoTasks.addAll(getTodoAudioTask());
+		todoTasks.addAll(getTodoVideoTask());
+		return todoTasks;
 	}
 
 	/**
@@ -310,8 +311,8 @@ public class Job implements Comparable<Job>, Serializable {
 	public int compareTo(Job other) {
 		if (this.priority != other.priority) {
 			return Integer.compare(this.priority, other.priority);
-		} else if (this.getTaskRemainingCount() != other.getTaskRemainingCount()) {
-			return Integer.compare(this.getTaskRemainingCount(), other.getTaskRemainingCount());
+		} else if (this.getTodoTaskCount() != other.getTodoTaskCount()) {
+			return Integer.compare(this.getTodoTaskCount(), other.getTodoTaskCount());
 		} else {
 			return Long.compare(this.getLengthOfJob(), other.getLengthOfJob());
 		}

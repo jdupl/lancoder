@@ -73,8 +73,6 @@ public class ConfigFactory<T extends Config> {
 	/**
 	 * Load configuration from disk from the provided path.
 	 * 
-	 * @param clazz
-	 *            The type of configuration
 	 * @return The loaded configuration
 	 * @throws InvalidConfigurationException
 	 *             If file is corrupted or missing

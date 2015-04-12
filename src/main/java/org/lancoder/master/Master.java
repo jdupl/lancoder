@@ -25,7 +25,6 @@ import org.lancoder.common.utils.FileUtils;
 import org.lancoder.master.api.node.MasterServer;
 import org.lancoder.master.api.web.ApiServer;
 import org.lancoder.master.checker.NodeCheckerService;
-import org.lancoder.master.dispatcher.DispatchItem;
 import org.lancoder.master.dispatcher.DispatcherPool;
 import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
@@ -186,6 +185,13 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 */
 	private void jobEncodingCompleted(Job job) {
 		if (!checkJobIntegrity(job)) {
+			System.err.printf("Cannot start muxing job %s as some task files are missing !%n", job.getJobName());
+
+			for (ClientTask missingTask : job.getTodoTasks()) {
+				System.err.printf("Missing file '%s' for task %d'.%n",
+						missingTask.getTempFile(), missingTask.getTaskId());
+			}
+
 			job.start(false);
 		} else {
 			// start muxing (or let pool add to the todo list)
@@ -198,7 +204,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 * 
 	 * @param job
 	 *            The job to check
-	 * 
+	 *
 	 * @return true if all files are accessible
 	 */
 	private boolean checkJobIntegrity(Job job) {
@@ -206,11 +212,10 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 		for (ClientVideoTask task : job.getClientVideoTasks()) {
 			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getTempFile());
+
 			if (!absoluteTaskFile.exists()) {
-				System.err.printf("Cannot start muxing ! Task %d of job %s is not found!\n", task.getTaskId(),
-						job.getJobName());
-				System.err.printf("BTW I was looking for file '%s'\n", absoluteTaskFile);
 				integrity = false;
+
 				task.getProgress().reset();
 			}
 		}
@@ -226,17 +231,16 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 */
 	public boolean readStatusReport(StatusReport report) {
 		NodeState newNodeState = report.status;
-		String unid = report.getUnid();
+		String nodeUnid = report.getUnid();
 
 		// identify node to get it's instance
-		Node sender = nodeManager.identifySender(unid);
-		if (sender == null || sender.getStatus() == NodeState.NOT_CONNECTED) {
+		Node sender = nodeManager.identifySender(nodeUnid);
+		if (sender == null || sender.getStatus() == NodeState.NOT_CONNECTED || report.getTaskReports() == null) {
 			return false;
 		}
 
-		if (report.getTaskReports() != null) {
-			readTaskReports(report.getTaskReports());
-		}
+		readTaskReports(report.getTaskReports());
+
 		// only update if status is changed
 		if (sender.getStatus() != newNodeState) {
 			sender.setStatus(newNodeState);
@@ -262,27 +266,25 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		for (TaskReport report : reports) {
 			ClientTask reportTaskInstance = report.getTask();
 
-			String nodeId = report.getUnid();
-			String jobId = reportTaskInstance.getJobId();
-			int taskId = reportTaskInstance.getTaskId();
+			Node sender = nodeManager.identifySender(report.getUnid());
+			ClientTask masterTaskInstance = jobManager.getTask(reportTaskInstance.getJobId(),
+					reportTaskInstance.getTaskId());
 
-			Node sender = nodeManager.identifySender(nodeId);
-			ClientTask masterTaskInstance = jobManager.getTask(jobId, taskId);
-
-			if (sender == null || !sender.hasTask(reportTaskInstance)) {
-				System.err.printf("MASTER: Bad update from node %s. Unexpected %s.%n", sender.getName(),
-						reportTaskInstance);
-			} else {
-				if (masterTaskInstance != null) {
-					masterTaskInstance.setProgress(reportTaskInstance.getProgress());
-				} else {
-					System.err.printf("Warning: %s instance not found for node %s.%n", reportTaskInstance,
-							sender.getName());
-				}
-
+			if (verifyTaskAssignment(masterTaskInstance, sender)) {
+				masterTaskInstance.setProgress(reportTaskInstance.getProgress());
 				jobManager.taskUpdated(masterTaskInstance, sender);
 			}
 		}
+	}
+
+	private boolean verifyTaskAssignment(ClientTask task, Node node) {
+		if (node == null) {
+			return false;
+		}
+		if (!node.hasTask(task)) {
+			System.err.printf("Warning: %s instance not found for node %s.%n", task, node.getName());
+		}
+		return true;
 	}
 
 	public void run() {

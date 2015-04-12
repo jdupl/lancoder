@@ -32,6 +32,7 @@ public class ApiHandler extends AbstractHandler {
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
+
 		Gson gson = new GsonBuilder().registerTypeAdapter(CodecEnum.class, new CodecTypeAdapter<>())
 				.setExclusionStrategies(new ExclusionStrategy() {
 					@Override
@@ -44,8 +45,10 @@ public class ApiHandler extends AbstractHandler {
 						return false;
 					}
 				}).serializeSpecialFloatingPointValues().create();
+
 		ApiResponse res = new ApiResponse(false, "Unknown error");
-		BufferedReader br = null;
+		BufferedReader br;
+
 		response.setContentType("application/json");
 		response.setStatus(HttpServletResponse.SC_OK);
 		baseRequest.setHandled(true);
