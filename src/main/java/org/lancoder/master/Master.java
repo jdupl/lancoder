@@ -9,6 +9,7 @@ import org.lancoder.common.Node;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
+import org.lancoder.common.network.MessageSender;
 import org.lancoder.common.network.cluster.messages.AuthMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
@@ -149,7 +150,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		jobManager.unassingAll(n);
 		nodeManager.removeNode(n);
 
-		dispatcherPool.handle(new DispatchItem(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()), n));
+		MessageSender.send(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()),n.getNodeAddress(), n.getNodePort());
 		System.out.printf("Disconnected node %s.%n", n.getName());
 	}
 

@@ -199,10 +199,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		}
 	}
 
-	public synchronized void sendCrashReport(CrashReport report) {
-		throw new UnsupportedOperationException();
-	}
-
 	public boolean notifyMasterStatusChange() {
 		StatusReport report = this.getStatusReport();
 		Message response = MessageSender.send(report, getMasterInetAddress(), getMasterPort());
