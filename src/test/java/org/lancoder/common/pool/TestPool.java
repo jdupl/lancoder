@@ -24,22 +24,73 @@ public class TestPool {
 	}
 
 	@Test
+	public void testWorkerSynchronity() {
+		ArrayList<DummyTask> tasks = new ArrayList<>();
+		for (int i = 0; i < 50; i++) {
+			tasks.add(new DummyTask(10));
+		}
+
+		PoolWorker<DummyTask> worker = new DummyPoolWorker();
+		try {
+			for (DummyTask task : tasks) {
+				Thread.sleep(11);
+				worker.handle(task);
+			}
+		} catch (InterruptedException e) {
+		}
+	}
+	
+
+	@Test
+	public void testWorkerDeniesTaskIfBusy() {
+		DummyTask task1 = new DummyTask(200);
+		DummyTask task2 = new DummyTask(200);
+		PoolWorker<DummyTask> worker = new DummyPoolWorker();
+		
+		assertTrue(worker.handle(task1));
+		worker.start();
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+		}
+		assertFalse(worker.handle(task2));
+		
+		try {
+			Thread.sleep(300);
+		} catch (InterruptedException e) {
+		}
+		
+		assertTrue(worker.handle(task2));
+		worker.start();
+		
+		assertTrue(task1.completed);
+		assertTrue(task2.completed);
+		
+	}
+
+	@Test
 	public void testDispatchingSingleWorker() {
 		DummyTask task1 = new DummyTask();
 		DummyTask task2 = new DummyTask();
 		DummyTask task3 = new DummyTask();
+
 		pool.setThreadLimit(1);
+
 		assertTrue(pool.hasFreeConverters());
+
 		assertTrue(pool.handle(task1));
 		assertFalse(pool.hasFreeConverters());
+
 		assertTrue(pool.handle(task2));
 		assertTrue(pool.handle(task3));
+
 		try {
 			Thread.sleep(350);
 		} catch (Exception e) {
 		}
 		assertFalse(pool.hasWorking());
 		assertTrue(pool.hasFreeConverters());
+
 		assertTrue(task1.completed);
 		assertTrue(task2.completed);
 		assertTrue(task3.completed);
@@ -48,20 +99,27 @@ public class TestPool {
 	@Test
 	public void testDispatchingMultipleWorkers() {
 		ArrayList<DummyTask> tasks = new ArrayList<>();
-		pool.setThreadLimit(10);
+
 		for (int i = 0; i < 20; i++) {
 			tasks.add(new DummyTask());
 		}
+
+		pool.setThreadLimit(10);
+
 		for (DummyTask dummyTask : tasks) {
 			pool.handle(dummyTask);
 		}
+
 		assertTrue(pool.hasWorking());
 		assertFalse(pool.hasFreeConverters());
+
 		try {
-			Thread.sleep(250);
+			Thread.sleep(300);
 		} catch (Exception e) {
 		}
+
 		assertFalse(pool.hasWorking());
+
 		for (DummyTask dummyTask : tasks) {
 			assertTrue(dummyTask.completed);
 		}
@@ -89,11 +147,10 @@ public class TestPool {
 		@Override
 		protected void start() {
 			try {
-				Thread.sleep(100);
+				Thread.sleep(task.ms);
 				task.completed = true;
 			} catch (Exception e) {
 			}
-			this.active = false;
 		}
 
 		@Override
@@ -102,6 +159,15 @@ public class TestPool {
 	}
 
 	class DummyTask {
+
 		public boolean completed = false;
+		public int ms = 100;
+
+		public DummyTask() {
+		}
+
+		public DummyTask(int ms) {
+			this.ms = ms;
+		}
 	}
 }

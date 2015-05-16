@@ -28,7 +28,7 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 	/**
 	 * The pool to notify on task completion
 	 */
-	private PoolWorkerListener pool;
+	private PoolWorkerListener<T> pool;
 
 	/**
 	 * Constructor of a base worker resource. Sets last activity time to current time.
@@ -44,7 +44,7 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 	 * @param pool
 	 *            The parent pool waiting for this resource to perform an action
 	 */
-	public void setPoolWorkerListener(PoolWorkerListener pool) {
+	public void setPoolWorkerListener(PoolWorkerListener<T> pool) {
 		this.pool = pool;
 	}
 
@@ -121,7 +121,7 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 	 * @param request
 	 *            The task to complete
 	 */
-	public boolean handle(T request) {
+	public synchronized boolean handle(T request) {
 		boolean handled = false;
 		synchronized (monitor) {
 			if (!isActive()) {
@@ -162,7 +162,7 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 					this.lastActivity = System.currentTimeMillis();
 					this.active = false;
 					this.task = null;
-					pool.completed();
+					pool.completed(this);
 				}
 			}
 		} catch (InterruptedException e) {

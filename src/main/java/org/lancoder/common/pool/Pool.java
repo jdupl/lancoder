@@ -13,7 +13,7 @@ import org.lancoder.common.RunnableService;
  * @param <T>
  *            The type of tasks to be handled by the pool
  */
-public abstract class Pool<T> extends RunnableService implements Cleanable, PoolWorkerListener {
+public abstract class Pool<T> extends RunnableService implements Cleanable, PoolWorkerListener<T> {
 
 	private Object refreshMonitor = new Object();
 	private Object poolMonitor = new Object();
@@ -30,6 +30,9 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * List of the initialized pool workers in the pool
 	 */
 	protected final ArrayList<PoolWorker<T>> workers = new ArrayList<>();
+	
+	protected final ConcurrentLinkedDeque<PoolWorker<T>> freeWorkers = new ConcurrentLinkedDeque<>();
+	
 	/**
 	 * Contains the tasks to send to pool workers
 	 */
@@ -99,19 +102,23 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 		}
 		for (PoolWorker<T> poolWorker : toClean) {
 			poolWorker.clean();
-			this.workers.remove(poolWorker);
+			removeWorker(poolWorker);
 		}
 		return toClean.size() != 0;
 	}
+	
+	private void addWorker(PoolWorker<T> worker) {
+		this.workers.add(worker);
+		this.freeWorkers.add(worker);
+	}
+	
+	private void removeWorker(PoolWorker<T> worker) {
+		this.workers.remove(worker);
+		this.freeWorkers.remove(worker);
+	}
 
 	public synchronized final int getActiveCount() {
-		int count = 0;
-		for (PoolWorker<T> poolWorker : this.workers) {
-			if (poolWorker.isActive()) {
-				count++;
-			}
-		}
-		return count;
+		return workers.size() - freeWorkers.size();
 	}
 
 	/**
@@ -119,7 +126,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * 
 	 * @return hasFree()
 	 */
-	public boolean hasFreeConverters() {
+	public synchronized boolean hasFreeConverters() {
 		return hasFree();
 	}
 
@@ -139,17 +146,22 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 */
 	private PoolWorker<T> spawn() {
 		PoolWorker<T> poolWorker = null;
+
 		if (canSpawn()) {
 			poolWorker = getPoolWorkerInstance(this);
+
 			Thread thread = new Thread(threads, poolWorker);
 			poolWorker.setThread(thread);
 			thread.start();
-			workers.add(poolWorker);
+
 			try {
 				Thread.sleep(1); // wait for thread to start
 			} catch (InterruptedException e) {
 			}
+
+			this.workers.add(poolWorker);
 		}
+
 		return poolWorker;
 	}
 
@@ -160,7 +172,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 */
 	protected abstract PoolWorker<T> getPoolWorkerInstance();
 
-	private final PoolWorker<T> getPoolWorkerInstance(PoolWorkerListener workerListener) {
+	private final PoolWorker<T> getPoolWorkerInstance(PoolWorkerListener<T> workerListener) {
 		PoolWorker<T> ressource = getPoolWorkerInstance();
 		ressource.setPoolWorkerListener(workerListener);
 		return ressource;
@@ -191,6 +203,7 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 */
 	private PoolWorker<T> getAvailableWorker() {
 		PoolWorker<T> poolWorker = getFreeWorker();
+		
 		if (poolWorker == null) {
 			poolWorker = spawn();
 		}
@@ -203,13 +216,8 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * @return The free resource or null if none is available.
 	 */
 	private PoolWorker<T> getFreeWorker() {
-		PoolWorker<T> poolWorker = null;
-		for (PoolWorker<T> p : workers) {
-			if (p.isFree()) {
-				poolWorker = p;
-			}
-		}
-		return poolWorker;
+		System.out.println("Removing worker from free workers");
+		return freeWorkers.poll();
 	}
 
 	/**
@@ -252,17 +260,25 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * @return True if a pool worker accepted
 	 */
 	private synchronized boolean dispatch(T task) {
-		boolean dispatched = true;
+		boolean dispatched = false;
 		PoolWorker<T> poolWorker = this.getAvailableWorker();
-		if (poolWorker == null || !poolWorker.handle(task)) {
-			dispatched = false;
+		
+		if (poolWorker == null) { 
+			System.err.println("No worker could be freed !");
+		} else if (!poolWorker.handle(task)) {
+			freeWorkers.add(poolWorker);
+			System.out.println("Adding worker back to free workers");
+		} else {
+			dispatched = true;
 		}
+		
 		return dispatched;
 	}
 
-	private void refresh() {
-		if (!todo.isEmpty()) {
+	private synchronized void refresh() {
+		if (!todo.isEmpty()) {	
 			T item = this.todo.poll();
+			
 			if (!dispatch(item)) {
 				this.todo.addFirst(item);
 			}
@@ -276,10 +292,11 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	/**
 	 * Called when a resource completed it's task and is now free. Notifies pool's thread to refresh it's state.
 	 */
-	public void completed() {
+	public final void completed(PoolWorker<T> worker) {
 		synchronized (poolMonitor) {
 			poolMonitor.notify();
 		}
+		freeWorkers.add((PoolWorker<T>) worker);
 	}
 
 	/**
