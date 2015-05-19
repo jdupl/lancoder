@@ -42,7 +42,7 @@ public abstract class Server extends RunnableService {
 			server = new ServerSocket(port);
 			while (!close) {
 				Socket incoming = server.accept();
-				this.pool.handle(incoming);
+				this.pool.add(incoming);
 			}
 		} catch (IOException e) {
 			if (!close) {

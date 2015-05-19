@@ -1,15 +1,19 @@
 package org.lancoder.common.pool;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.lancoder.common.RunnableService;
 
 public abstract class PoolWorker<T> extends RunnableService implements Cleanable {
 
-	Object monitor = new Object();
+	private Object monitor = new Object();
+
+	private Object parentLock;
 
 	/**
 	 * Current state of the worker
 	 */
-	protected boolean active = false;
+	private AtomicBoolean active = new AtomicBoolean(false);
 
 	/**
 	 * Currently processed element
@@ -102,8 +106,8 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 	 * 
 	 * @return True is worker is busy
 	 */
-	public synchronized boolean isActive() {
-		return active;
+	public boolean isActive() {
+		return active.get();
 	}
 
 	/**
@@ -121,14 +125,14 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 	 * @param request
 	 *            The task to complete
 	 */
-	public synchronized boolean handle(T request) {
+	public boolean handle(T request) {
 		boolean handled = false;
-		synchronized (monitor) {
-			if (!isActive()) {
-				this.task = request;
-				monitor.notifyAll();
-				handled = true;
+		if (!active.get()) {
+			this.task = request;
+			synchronized (monitor) {
+				monitor.notify();
 			}
+			handled = true;
 		}
 		return handled;
 	}
@@ -156,17 +160,31 @@ public abstract class PoolWorker<T> extends RunnableService implements Cleanable
 		try {
 			while (!close) {
 				synchronized (monitor) {
+					unlockParent(); // put this before the while and it creates concurrency errors
 					monitor.wait();
-					this.active = true;
+					active.set(true);
 					start(); // Pool worker thread is now busy and blocks here
-					this.lastActivity = System.currentTimeMillis();
-					this.active = false;
-					this.task = null;
+
+					lastActivity = System.currentTimeMillis();
+					active.set(false);
+					task = null;
 					pool.completed(this);
 				}
 			}
 		} catch (InterruptedException e) {
 		}
+	}
 
+	private void unlockParent() {
+		if (parentLock != null) {
+			synchronized (parentLock) {
+				parentLock.notifyAll();
+			}
+			parentLock = null;
+		}
+	}
+
+	public void setParentLock(Object lock) {
+		this.parentLock = lock;
 	}
 }

@@ -91,7 +91,7 @@ public class JobManager implements EventListener {
 	 *            The node currently processing the task
 	 */
 	private void unassignTask(ClientTask task, Node assigne) {
-		dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task, ClusterProtocol.UNASSIGN_TASK), assigne));
+		dispatcherPool.add(new DispatchItem(new TaskRequestMessage(task, ClusterProtocol.UNASSIGN_TASK), assigne));
 		task.cancel();
 		taskUpdated(task, assigne);
 	}
@@ -179,7 +179,7 @@ public class JobManager implements EventListener {
 			task.assign();
 			node.addPendingTask(task);
 			node.lock();
-			dispatcherPool.handle(new DispatchItem(new TaskRequestMessage(task), node));
+			dispatcherPool.add(new DispatchItem(new TaskRequestMessage(task), node));
 		}
 	}
 

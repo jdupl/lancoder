@@ -22,7 +22,7 @@ public class NodeCheckerService extends RunnableService {
 	private void checkNodes() {
 		if (!nodeManager.getNodes().isEmpty()) {
 			for (Node n : nodeManager.getOnlineNodes()) {
-				pool.handle(n);
+				pool.add(n);
 			}
 		}
 	}

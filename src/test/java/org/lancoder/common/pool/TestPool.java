@@ -39,33 +39,40 @@ public class TestPool {
 		} catch (InterruptedException e) {
 		}
 	}
-	
 
 	@Test
 	public void testWorkerDeniesTaskIfBusy() {
 		DummyTask task1 = new DummyTask(200);
 		DummyTask task2 = new DummyTask(200);
 		PoolWorker<DummyTask> worker = new DummyPoolWorker();
-		
-		assertTrue(worker.handle(task1));
-		worker.start();
+		Thread workerThread = new Thread(worker);
+		workerThread.start();
+
 		try {
 			Thread.sleep(10);
 		} catch (InterruptedException e) {
 		}
+
+		assertTrue(worker.handle(task1));
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+		}
+
+		assertTrue(worker.isActive());
 		assertFalse(worker.handle(task2));
-		
+
 		try {
 			Thread.sleep(300);
 		} catch (InterruptedException e) {
 		}
-		
+
 		assertTrue(worker.handle(task2));
 		worker.start();
-		
+
 		assertTrue(task1.completed);
 		assertTrue(task2.completed);
-		
+
 	}
 
 	@Test
@@ -78,11 +85,11 @@ public class TestPool {
 
 		assertTrue(pool.hasFreeConverters());
 
-		assertTrue(pool.handle(task1));
+		assertTrue(pool.add(task1));
 		assertFalse(pool.hasFreeConverters());
 
-		assertTrue(pool.handle(task2));
-		assertTrue(pool.handle(task3));
+		assertTrue(pool.add(task2));
+		assertTrue(pool.add(task3));
 
 		try {
 			Thread.sleep(350);
@@ -107,14 +114,14 @@ public class TestPool {
 		pool.setThreadLimit(10);
 
 		for (DummyTask dummyTask : tasks) {
-			pool.handle(dummyTask);
+			pool.add(dummyTask);
 		}
 
 		assertTrue(pool.hasWorking());
 		assertFalse(pool.hasFreeConverters());
 
 		try {
-			Thread.sleep(300);
+			Thread.sleep(350);
 		} catch (Exception e) {
 		}
 

@@ -195,7 +195,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			job.start(false);
 		} else {
 			// start muxing (or let pool add to the todo list)
-			muxerPool.handle(job);
+			muxerPool.add(job);
 		}
 	}
 

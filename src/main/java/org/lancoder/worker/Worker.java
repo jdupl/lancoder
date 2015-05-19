@@ -124,12 +124,12 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 			System.out.println("Refusing task because worker has " + (getPendingTasks().size() - 1) + " other pending tasks.");
 		} else if (task instanceof ClientVideoTask && videoPool.hasFreeConverters() && totalUsedThreads < threadLimit) {
 			ClientVideoTask vTask = (ClientVideoTask) task;
-			videoPool.handle(vTask);
+			videoPool.add(vTask);
 			accepted = true;
 		} else if (task instanceof ClientAudioTask && this.audioPool.hasFreeConverters()
 				&& totalUsedThreads < threadLimit) {
 			ClientAudioTask aTask = (ClientAudioTask) task;
-			audioPool.handle(aTask);
+			audioPool.add(aTask);
 			accepted = true;
 		}
 		if (accepted) {
@@ -242,7 +242,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	@Override
 	public boolean taskRequest(ClientTask tqm) {
 		node.addPendingTask(tqm);
-		taskHandler.handle(tqm);
+		taskHandler.add(tqm);
 		return true;
 	}
 
