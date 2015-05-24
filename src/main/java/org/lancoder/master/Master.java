@@ -245,12 +245,13 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		if (sender.getStatus() != newNodeState) {
 			sender.setStatus(newNodeState);
 		}
+
 		// remove unassigned tasks
-		// ArrayList<ClientTask> reportTasks = new ArrayList<>();
-		// for (TaskReport taskReport : report.getTaskReports()) {
-		// reportTasks.add(taskReport.getTask());
-		// }
-		// jobManager.update(sender, reportTasks);
+		ArrayList<ClientTask> reportTasks = new ArrayList<>();
+		for (TaskReport taskReport : report.getTaskReports()) {
+			reportTasks.add(taskReport.getTask());
+		}
+		jobManager.removeInvalidAssigments(sender, reportTasks);
 
 		jobManager.updateNodesWork();
 		return true;

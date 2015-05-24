@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.lancoder.common.Node;
 import org.lancoder.common.codecs.base.AbstractCodec;
@@ -25,6 +26,7 @@ import org.lancoder.master.dispatcher.DispatcherPool;
 
 public class JobManager implements EventListener {
 
+	private static final long DISPATCH_DELAY_MSEC = 5000;
 	private EventListener listener;
 	private NodeManager nodeManager;
 	private DispatcherPool dispatcherPool;
@@ -33,9 +35,9 @@ public class JobManager implements EventListener {
 	 */
 	private final HashMap<String, Job> jobs = new HashMap<>();
 	/**
-	 * Mapping of the current tasks of the cluster. The key is the node processing the task.
+	 * Mapping of the current tasks of the cluster.
 	 */
-	private final HashMap<ClientTask, Node> assignments = new HashMap<>();
+	private ConcurrentHashMap<ClientTask, Assignment> assignments = new ConcurrentHashMap<>();
 
 	public JobManager(EventListener listener, NodeManager nodeManager, DispatcherPool dispatcherPool,
 			MasterSavedInstance savedInstance) {
@@ -194,9 +196,11 @@ public class JobManager implements EventListener {
 	 */
 	private synchronized boolean assign(ClientTask task, Node node) {
 		boolean assigned = false;
+
 		if (!assignments.containsKey(task)) {
+			Assignment assignment = new Assignment(task, node);
 			System.out.printf("Assigned %s to node %s.%n", task, node.getName());
-			this.assignments.put(task, node);
+			assignments.put(task, assignment);
 			assigned = true;
 		} else {
 			System.err.printf("Could not assign %s to node %s.%n", task, node.getName());
@@ -206,8 +210,8 @@ public class JobManager implements EventListener {
 
 	private void confirm(ClientTask task) {
 		task.start();
-		Node assignee = assignments.get(task);
-		assignee.confirm(task);
+		Assignment assignment = assignments.get(task);
+		assignment.getAssignee().confirm(task);
 	}
 
 	/**
@@ -219,8 +223,10 @@ public class JobManager implements EventListener {
 	 */
 	private synchronized boolean unassign(ClientTask task) {
 		boolean unassigned = false;
-		Node previousAssignee = this.assignments.remove(task);
-		if (previousAssignee != null) {
+		Assignment assignment = this.assignments.remove(task);
+
+		if (assignment != null && assignment.getAssignee() != null) {
+			Node previousAssignee = assignment.getAssignee();
 			System.out.println("Node " + previousAssignee.getName() + " was unassigned from " + task);
 			unassigned = true;
 			previousAssignee.removeTask(task);
@@ -342,6 +348,37 @@ public class JobManager implements EventListener {
 
 	public ClientTask getTask(String jobId, int taskId) {
 		return getTask(getJob(jobId), taskId);
+	}
+
+	public ArrayList<Assignment> getAssignments(Node assignee) {
+		ArrayList<Assignment> nodeAssigments = new ArrayList<>();
+
+		for (Assignment assignment : this.assignments.values()) {
+			if (assignment.getAssignee().equals(assignee)) {
+				nodeAssigments.add(assignment);
+			}
+		}
+
+		return nodeAssigments;
+	}
+
+	private boolean isInDelay(Assignment assignment) {
+		long delay = System.currentTimeMillis() - assignment.getTime();
+
+		return delay >= DISPATCH_DELAY_MSEC;
+	}
+
+	public synchronized void removeInvalidAssigments(Node sender, ArrayList<ClientTask> reportTasks) {
+		for (Assignment assignment : getAssignments(sender)) {
+			if (!reportTasks.contains(assignment.getTask()) && isInDelay(assignment)) {
+				System.err.printf("Removed task %d of job %s from worker %s has it was in an invalid state.%n",
+						assignment.getTask().getTaskId(), assignment.getTask().getJobId(), assignment.getAssignee()
+								.getName());
+
+				sender.removeTask(assignment.getTask());
+				assignments.remove(assignment.getTask(), assignment);
+			}
+		}
 	}
 
 }
