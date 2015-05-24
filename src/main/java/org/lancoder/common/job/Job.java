@@ -212,11 +212,9 @@ public class Job implements Comparable<Job>, Serializable {
 	 */
 	public synchronized ArrayList<ClientVideoTask> getTodoVideoTask() {
 		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
-		if (getTodoTaskCount() != 0) {
-			for (ClientVideoTask task : this.getClientVideoTasks()) {
-				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
-					tasks.add(task);
-				}
+		for (ClientVideoTask task : this.getClientVideoTasks()) {
+			if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
+				tasks.add(task);
 			}
 		}
 		return tasks;
@@ -224,11 +222,9 @@ public class Job implements Comparable<Job>, Serializable {
 
 	public ArrayList<ClientAudioTask> getTodoAudioTask() {
 		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
-		if (getTodoTaskCount() != 0) {
-			for (ClientAudioTask task : this.getClientAudioTasks()) {
-				if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
-					tasks.add(task);
-				}
+		for (ClientAudioTask task : this.getClientAudioTasks()) {
+			if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
+				tasks.add(task);
 			}
 		}
 		return tasks;
