@@ -3,10 +3,6 @@ package org.lancoder.common.scheduler;
 public abstract class Schedulable implements Comparable<Schedulable> {
 
 	/**
-	 * At what interval to run
-	 */
-	protected long intervalMSec = 1000;
-	/**
 	 * How many times to run. 0 is not limit
 	 */
 	protected int maxCount;
@@ -15,17 +11,25 @@ public abstract class Schedulable implements Comparable<Schedulable> {
 	protected long lastRun;
 	protected int count;
 
-	public final void runSchedule() {
-		lastRun = System.currentTimeMillis();
-		runTask();
-		count++;
+	public abstract long getMsRunDelay();
 
+	public abstract void runTask();
+
+	public void scheduleNextRun() {
 		if (maxCount == 0 || count < maxCount) {
-			nextRun = lastRun + intervalMSec;
+			nextRun = System.currentTimeMillis() + getMsRunDelay();
+		} else {
+			nextRun = Long.MAX_VALUE;
 		}
 	}
 
-	public abstract void runTask();
+	public final void runSchedule() {
+		runTask();
+		lastRun = System.currentTimeMillis();
+		count++;
+
+		scheduleNextRun();
+	}
 
 	@Override
 	public int compareTo(Schedulable other) {

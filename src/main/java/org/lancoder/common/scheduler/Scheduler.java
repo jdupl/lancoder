@@ -1,19 +1,20 @@
 package org.lancoder.common.scheduler;
 
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.lancoder.common.RunnableService;
 
 public class Scheduler extends RunnableService {
 
-	private PriorityBlockingQueue<Schedulable> schedulables = new PriorityBlockingQueue<>();
+	private ConcurrentSkipListSet<Schedulable> schedulables = new ConcurrentSkipListSet<>();
 	private Thread schedulerThread;
-
 	private long sleepUntil;
-	private boolean sleeping = false;
+	private AtomicBoolean sleeping = new AtomicBoolean(false);
 
 	public synchronized void addSchedulable(Schedulable schedulable) {
-		this.schedulables.add(schedulable);
+		schedulable.scheduleNextRun();
+		schedulables.add(schedulable);
 		refresh();
 	}
 
@@ -23,28 +24,32 @@ public class Scheduler extends RunnableService {
 
 	private void refresh() {
 		if (!schedulables.isEmpty()) {
-			Schedulable next = schedulables.peek();
+			Schedulable next = schedulables.first();
 			sleepUntil = next.nextRun;
-			if (sleeping) {
+
+			if (sleeping.get()) {
 				this.schedulerThread.interrupt();
 			}
+		} else {
+			sleepUntil = System.currentTimeMillis() + 10000;
 		}
 	}
 
 	@Override
 	public void run() {
-		sleepUntil = Long.MAX_VALUE;
+		sleepUntil = System.currentTimeMillis() + 100;
 
 		while (!close) {
 			try {
 				sleepUntil(sleepUntil);
 
 				if (schedulables.size() > 0) {
-					Schedulable next = schedulables.poll();
+					Schedulable next = schedulables.pollFirst();
 					next.runSchedule();
+					schedulables.add(next);
 				}
 			} catch (InterruptedException e) {
-				sleeping = false;
+				sleeping.set(false);
 			} finally {
 				refresh();
 			}
@@ -52,13 +57,13 @@ public class Scheduler extends RunnableService {
 	}
 
 	private void sleepUntil(long sleepUntil) throws InterruptedException {
-		sleeping = true;
 		long currentMs = System.currentTimeMillis();
 
 		if (currentMs < sleepUntil) {
+			sleeping.set(true);
 			Thread.sleep(sleepUntil - currentMs);
+			sleeping.set(false);
 		}
-		sleeping = false;
 	}
 
 	@Override
