@@ -3,19 +3,21 @@ package org.lancoder.worker.contacter;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import org.lancoder.common.RunnableServiceAdapter;
+import org.lancoder.common.Service;
 import org.lancoder.common.network.MessageSender;
 import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.common.scheduler.Schedulable;
 import org.lancoder.common.status.NodeState;
 
-public class MasterContacter extends RunnableServiceAdapter {
+public class MasterContacter extends Schedulable implements Service {
 
 	private final static int DELAY_FAST_MSEC = 5000;
 	private final static int DELAY_LONG_MSEC = 30000;
 
+	protected volatile boolean close = false;
 	private MasterContacterListener listener;
 	private InetAddress masterAddress;
 	private int masterPort;
@@ -24,6 +26,11 @@ public class MasterContacter extends RunnableServiceAdapter {
 		this.listener = listener;
 		this.masterAddress = masterAddress;
 		this.masterPort = masterPort;
+	}
+
+	@Override
+	public void stop() {
+		this.close = true;
 	}
 
 	/**
@@ -56,7 +63,6 @@ public class MasterContacter extends RunnableServiceAdapter {
 				System.err.println("Failed to contact master.");
 			} else {
 				listener.masterTimeout();
-				e.printStackTrace();
 			}
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
@@ -68,15 +74,13 @@ public class MasterContacter extends RunnableServiceAdapter {
 	}
 
 	@Override
-	public void run() {
-		while (!close) {
-			try {
-				contactMaster();
-				int delay = getNextDelay();
-				Thread.sleep(delay);
-			} catch (InterruptedException e) {
-			}
-		}
-		System.out.println("closed " + this.getClass().getSimpleName());
+	protected long getMsRunDelay() {
+		return getNextDelay();
 	}
+
+	@Override
+	protected void runTask() {
+		contactMaster();
+	}
+
 }

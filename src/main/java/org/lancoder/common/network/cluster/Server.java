@@ -36,7 +36,7 @@ public abstract class Server extends RunnableServiceAdapter {
 	@Override
 	public void run() {
 		instanciatePool();
-		this.poolThread = new Thread(pool);
+		this.poolThread = new Thread(pool, pool.getClass().getSimpleName());
 		this.poolThread.start();
 		try {
 			server = new ServerSocket(port);
