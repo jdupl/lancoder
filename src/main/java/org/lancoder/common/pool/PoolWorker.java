@@ -2,9 +2,9 @@ package org.lancoder.common.pool;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.lancoder.common.RunnableService;
+import org.lancoder.common.RunnableServiceAdapter;
 
-public abstract class PoolWorker<T> extends RunnableService implements Cleanable {
+public abstract class PoolWorker<T> extends RunnableServiceAdapter implements Cleanable {
 
 	private Object monitor = new Object();
 

@@ -3,7 +3,7 @@ package org.lancoder.common.pool;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-import org.lancoder.common.RunnableService;
+import org.lancoder.common.scheduler.SchedulableService;
 
 /**
  * Generic pool used to handle threaded tasks. Allows threads to be reused.
@@ -13,10 +13,10 @@ import org.lancoder.common.RunnableService;
  * @param <T>
  *            The type of tasks to be handled by the pool
  */
-public abstract class Pool<T> extends RunnableService implements Cleanable, PoolWorkerListener<T> {
+public abstract class Pool<T> extends SchedulableService implements PoolWorkerListener<T> {
 
 	private Object refreshWaitLock = new Object();
-	private Object poolRefresh = new Object();
+	private Object refreshRequest = new Object();
 
 	/**
 	 * How many pool workers can be initialized in the pool
@@ -73,11 +73,11 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	protected abstract PoolWorker<T> getPoolWorkerInstance();
 
 	@Override
-	public void run() {
+	public final void run() {
 		while (!close) {
-			synchronized (poolRefresh) {
+			synchronized (refreshRequest) {
 				try {
-					poolRefresh.wait();
+					refreshRequest.wait();
 					refresh();
 				} catch (InterruptedException e) {
 				}
@@ -85,13 +85,14 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 		}
 	}
 
-	/**
-	 * Returns true if the pool should be cleaned.
-	 */
 	@Override
-	public boolean shouldClean() {
-		// As cleaning the pool involves logic from the pool workers, always assume we should clean the pool.
-		return true;
+	public long getMsRunDelay() {
+		return 60 * 1000;
+	}
+
+	@Override
+	public void runTask() {
+		this.clean();
 	}
 
 	/**
@@ -99,19 +100,30 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	 * 
 	 * @return True if any resource was cleaned
 	 */
-	@Override
 	public boolean clean() {
 		ArrayList<PoolWorker<T>> toClean = new ArrayList<>();
+
 		for (PoolWorker<T> poolWorker : workers) {
 			if (poolWorker.shouldClean()) {
 				toClean.add(poolWorker);
 			}
 		}
+
 		for (PoolWorker<T> poolWorker : toClean) {
 			poolWorker.clean();
 			removeWorker(poolWorker);
 		}
+
 		return toClean.size() != 0;
+	}
+
+	/**
+	 * Checks if pool has free worker or worker slot
+	 * 
+	 * @return
+	 */
+	protected boolean hasFree() {
+		return getActiveCount() < threadLimit;
 	}
 
 	private void removeWorker(PoolWorker<T> worker) {
@@ -156,8 +168,8 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 
 			Thread thread = new Thread(threads, poolWorker);
 			poolWorker.setThread(thread);
-
 			thread.start();
+
 			try {
 				synchronized (threadLock) {
 					threadLock.wait();
@@ -176,15 +188,6 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 		ressource.setPoolWorkerListener(workerListener);
 		ressource.setParentLock(lock);
 		return ressource;
-	}
-
-	/**
-	 * Checks if pool has free worker or worker slot
-	 * 
-	 * @return
-	 */
-	protected boolean hasFree() {
-		return getActiveCount() < threadLimit;
 	}
 
 	/**
@@ -238,8 +241,8 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 			added = this.todo.add(element);
 
 			// Notify pool's thread to refresh
-			synchronized (poolRefresh) {
-				poolRefresh.notifyAll();
+			synchronized (refreshRequest) {
+				refreshRequest.notifyAll();
 			}
 
 			// Wait for pool refresh to complete as new resources may take time to load
@@ -298,8 +301,8 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	public final void completed(PoolWorker<T> worker) {
 		// Ran from PoolWorker thread
 		freeWorkers.add((PoolWorker<T>) worker);
-		synchronized (poolRefresh) {
-			poolRefresh.notify();
+		synchronized (refreshRequest) {
+			refreshRequest.notify();
 		}
 	}
 
@@ -309,15 +312,11 @@ public abstract class Pool<T> extends RunnableService implements Cleanable, Pool
 	@Override
 	public void stop() {
 		super.stop();
+
 		for (PoolWorker<T> worker : workers) {
 			worker.stop();
 		}
 		threads.interrupt();
-	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-		e.printStackTrace();
 	}
 
 	public void setThreadLimit(int threadLimit) {

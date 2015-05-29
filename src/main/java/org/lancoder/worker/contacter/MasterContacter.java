@@ -3,7 +3,7 @@ package org.lancoder.worker.contacter;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import org.lancoder.common.RunnableService;
+import org.lancoder.common.RunnableServiceAdapter;
 import org.lancoder.common.network.MessageSender;
 import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.network.cluster.messages.Message;
@@ -11,7 +11,7 @@ import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.status.NodeState;
 
-public class MasterContacter extends RunnableService {
+public class MasterContacter extends RunnableServiceAdapter {
 
 	private final static int DELAY_FAST_MSEC = 5000;
 	private final static int DELAY_LONG_MSEC = 30000;
@@ -79,11 +79,4 @@ public class MasterContacter extends RunnableService {
 		}
 		System.out.println("closed " + this.getClass().getSimpleName());
 	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-		// TODO Auto-generated method stub
-
-	}
-
 }

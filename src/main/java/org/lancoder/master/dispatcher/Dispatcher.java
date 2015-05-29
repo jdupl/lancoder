@@ -31,10 +31,4 @@ public class Dispatcher extends PoolWorker<DispatchItem> {
 	protected void start() {
 		dispatch(task);
 	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-		e.printStackTrace();
-	}
-
 }

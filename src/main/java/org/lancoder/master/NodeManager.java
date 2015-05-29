@@ -28,6 +28,7 @@ public class NodeManager implements EventListener {
 	public NodeManager(EventListener listener, MasterConfig masterConfig, MasterSavedInstance instance) {
 		this.listener = listener;
 		this.masterConfig = masterConfig;
+
 		if (instance != null) {
 			nodes.putAll(instance.getNodes());
 			for (Node node : getNodes()) { // Reset statuses

@@ -166,6 +166,7 @@ public class JobManager implements EventListener {
 				break;
 			}
 		}
+
 		for (Node node : nodeManager.getFreeVideoNodes()) {
 			ClientVideoTask task = getNextVideoTask(node.getCodecs());
 			if (task != null) {

@@ -4,20 +4,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lancoder.common.exceptions.MissingThirdPartyException;
-import org.lancoder.common.pool.Cleanable;
-import org.lancoder.common.pool.PoolCleanerService;
+import org.lancoder.common.scheduler.Schedulable;
+import org.lancoder.common.scheduler.Scheduler;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
 import org.lancoder.common.third_parties.ThirdParty;
 
-public abstract class Container extends RunnableService implements ServiceManager {
+public abstract class Container extends RunnableServiceAdapter implements ServiceManager {
 
 	private final HashMap<Class<? extends ThirdParty>, ThirdParty> thirdParties = new HashMap<>();
 
 	protected final ArrayList<Service> services = new ArrayList<>();
 	protected final ThreadGroup serviceThreads = new ThreadGroup("services");
-	protected PoolCleanerService poolCleaner;
 	protected FilePathManager filePathManager;
+
+	protected Scheduler scheduler;
 
 	protected void bootstrap() {
 		registerThirdParties();
@@ -52,19 +53,22 @@ public abstract class Container extends RunnableService implements ServiceManage
 	}
 
 	protected void registerServices() {
-		poolCleaner = new PoolCleanerService();
-		services.add(poolCleaner);
+		this.scheduler = new Scheduler();
+		services.add(scheduler);
 	}
 
 	@Override
 	public void startServices() {
 		for (Service s : services) {
-			if (s instanceof RunnableService) {
-				Thread t = new Thread(this.serviceThreads, (RunnableService) s);
+			if (s instanceof Runnable) {
+				Thread t = new Thread(this.serviceThreads, (Runnable) s, s.getClass().getSimpleName());
+				if (s instanceof Scheduler) {
+					scheduler.setThread(t);
+				}
 				t.start();
 			}
-			if (s instanceof Cleanable) {
-				poolCleaner.addCleanable((Cleanable) s);
+			if (s instanceof Schedulable) {
+				scheduler.addSchedulable((Schedulable) s);
 			}
 		}
 	}
@@ -85,10 +89,5 @@ public abstract class Container extends RunnableService implements ServiceManage
 	}
 
 	public abstract void shutdown();
-
-	@Override
-	public void serviceFailure(Exception e) {
-		e.printStackTrace();
-	}
 
 }

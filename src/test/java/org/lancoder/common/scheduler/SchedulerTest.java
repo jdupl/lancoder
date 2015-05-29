@@ -3,6 +3,8 @@ package org.lancoder.common.scheduler;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.lancoder.common.scheduler.Scheduler;
+import org.lancoder.common.scheduler.Schedulable;
 
 public class SchedulerTest {
 
@@ -108,4 +110,5 @@ class DummySchedulable extends Schedulable {
 	public long getMsRunDelay() {
 		return msDelay;
 	}
+
 }

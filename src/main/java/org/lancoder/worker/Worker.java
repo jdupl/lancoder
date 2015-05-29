@@ -12,7 +12,6 @@ import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.common.network.MessageSender;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
 import org.lancoder.common.network.cluster.messages.ConnectResponse;
-import org.lancoder.common.network.cluster.messages.CrashReport;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
@@ -79,12 +78,16 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		// TODO change to current instance
 		audioPool = new AudioConverterPool(threadLimit, this, filePathManager, getFFmpeg());
 		services.add(audioPool);
+
 		// TODO change to current instance
 		videoPool = new VideoConverterPool(1, this, filePathManager, getFFmpeg());
 		services.add(videoPool);
+
 		taskHandler = new TaskHandlerPool(this);
 		services.add(taskHandler);
+
 		services.add(new WorkerServer(this, config.getListenPort()));
+
 		masterContacter = new MasterContacter(getMasterInetAddress(), getMasterPort(), this);
 		services.add(masterContacter);
 	}

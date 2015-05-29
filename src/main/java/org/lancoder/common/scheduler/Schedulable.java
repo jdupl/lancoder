@@ -1,5 +1,6 @@
 package org.lancoder.common.scheduler;
 
+
 public abstract class Schedulable implements Comparable<Schedulable> {
 
 	/**
@@ -11,11 +12,11 @@ public abstract class Schedulable implements Comparable<Schedulable> {
 	protected long lastRun;
 	protected int count;
 
-	public abstract long getMsRunDelay();
+	protected abstract long getMsRunDelay();
 
-	public abstract void runTask();
+	protected abstract void runTask();
 
-	public void scheduleNextRun() {
+	protected void scheduleNextRun() {
 		if (maxCount == 0 || count < maxCount) {
 			nextRun = System.currentTimeMillis() + getMsRunDelay();
 		} else {
@@ -23,7 +24,7 @@ public abstract class Schedulable implements Comparable<Schedulable> {
 		}
 	}
 
-	public final void runSchedule() {
+	protected final void runSchedule() {
 		runTask();
 		lastRun = System.currentTimeMillis();
 		count++;

@@ -76,12 +76,6 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 	}
 
 	@Override
-	public void serviceFailure(Exception e) {
-		e.printStackTrace();
-		// TODO
-	}
-
-	@Override
 	protected void start() {
 		this.cancelling = false;
 		listener.taskStarted(task);

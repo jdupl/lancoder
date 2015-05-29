@@ -36,11 +36,6 @@ public class NodeChecker extends PoolWorker<Node> {
 	}
 
 	@Override
-	public void serviceFailure(Exception e) {
-		e.printStackTrace();
-	}
-
-	@Override
 	protected void start() {
 		checkNode(task);
 	}

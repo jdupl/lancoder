@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import org.lancoder.common.Service;
+import org.lancoder.common.ServiceAdapter;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 
 /**
@@ -14,7 +14,7 @@ import org.lancoder.common.exceptions.MissingThirdPartyException;
  * 
  *
  */
-public class FFmpegReader extends Service {
+public class FFmpegReader extends ServiceAdapter {
 
 	Process p;
 	FFmpegReaderListener listener;

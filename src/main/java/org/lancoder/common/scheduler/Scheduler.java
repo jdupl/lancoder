@@ -3,9 +3,9 @@ package org.lancoder.common.scheduler;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.lancoder.common.RunnableService;
+import org.lancoder.common.RunnableServiceAdapter;
 
-public class Scheduler extends RunnableService {
+public class Scheduler extends RunnableServiceAdapter {
 
 	private ConcurrentSkipListSet<Schedulable> schedulables = new ConcurrentSkipListSet<>();
 	private Thread schedulerThread;
@@ -64,10 +64,5 @@ public class Scheduler extends RunnableService {
 			Thread.sleep(sleepUntil - currentMs);
 			sleeping.set(false);
 		}
-	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-
 	}
 }

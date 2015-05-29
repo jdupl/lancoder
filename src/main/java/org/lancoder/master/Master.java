@@ -149,7 +149,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		jobManager.unassingAll(n);
 		nodeManager.removeNode(n);
 
-		MessageSender.send(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()),n.getNodeAddress(), n.getNodePort());
+		MessageSender.send(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()), n.getNodeAddress(),
+				n.getNodePort());
 		System.out.printf("Disconnected node %s.%n", n.getName());
 	}
 
@@ -188,8 +189,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			System.err.printf("Cannot start muxing job %s as some task files are missing !%n", job.getJobName());
 
 			for (ClientTask missingTask : job.getTodoTasks()) {
-				System.err.printf("Missing file '%s' for task %d'.%n",
-						missingTask.getTempFile(), missingTask.getTaskId());
+				System.err.printf("Missing file '%s' for task %d'.%n", missingTask.getTempFile(),
+						missingTask.getTaskId());
 			}
 
 			job.start(false);
@@ -240,7 +241,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		}
 
 		readTaskReports(report.getTaskReports());
-
 		// only update if status is changed
 		if (sender.getStatus() != newNodeState) {
 			sender.setStatus(newNodeState);
@@ -252,8 +252,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			reportTasks.add(taskReport.getTask());
 		}
 		jobManager.removeInvalidAssigments(sender, reportTasks);
-
 		jobManager.updateNodesWork();
+
 		return true;
 	}
 

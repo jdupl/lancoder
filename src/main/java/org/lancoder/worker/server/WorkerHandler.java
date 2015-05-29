@@ -67,9 +67,4 @@ public class WorkerHandler extends PoolWorker<Socket> {
 			}
 		}
 	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-
-	}
 }

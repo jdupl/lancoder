@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import org.lancoder.common.RunnableService;
+import org.lancoder.common.RunnableServiceAdapter;
 import org.lancoder.common.pool.Pool;
 
-public abstract class Server extends RunnableService {
+public abstract class Server extends RunnableServiceAdapter {
 
 	protected final static int MAX_HANDLERS = 10;
 
@@ -46,14 +46,8 @@ public abstract class Server extends RunnableService {
 			}
 		} catch (IOException e) {
 			if (!close) {
-				serviceFailure(e);
+				e.printStackTrace();
 			}
 		}
 	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-		e.printStackTrace();
-	}
-
 }

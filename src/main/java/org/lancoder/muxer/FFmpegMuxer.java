@@ -145,7 +145,7 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 		try {
 			success = transcoder.read(args);
 		} catch (MissingDecoderException | MissingThirdPartyException e) {
-			serviceFailure(e);
+			e.printStackTrace();
 		} finally {
 			inputs.clear();
 			if (success) {
@@ -169,9 +169,4 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 		}
 	}
 
-	@Override
-	public void serviceFailure(Exception e) {
-		// TODO Auto-generated method stub
-
-	}
 }

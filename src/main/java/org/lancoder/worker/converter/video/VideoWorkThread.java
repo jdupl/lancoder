@@ -113,11 +113,6 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 	}
 
 	@Override
-	public void serviceFailure(Exception e) {
-		e.printStackTrace();
-	}
-
-	@Override
 	public void onMessage(String line) {
 		Matcher m = currentFramePattern.matcher(line);
 		if (m.find()) {

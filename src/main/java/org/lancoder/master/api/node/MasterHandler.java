@@ -98,10 +98,4 @@ public class MasterHandler extends PoolWorker<Socket> {
 			}
 		}
 	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-		// TODO Auto-generated method stub
-
-	}
 }

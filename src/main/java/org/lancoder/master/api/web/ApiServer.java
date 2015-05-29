@@ -5,10 +5,10 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.lancoder.common.RunnableService;
+import org.lancoder.common.RunnableServiceAdapter;
 import org.lancoder.master.Master;
 
-public class ApiServer extends RunnableService {
+public class ApiServer extends RunnableServiceAdapter {
 
 	private static final String WEB_DIR = "web_resources/";
 
@@ -64,10 +64,4 @@ public class ApiServer extends RunnableService {
 			e.printStackTrace();
 		}
 	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-		 e.printStackTrace();
-	}
-
 }

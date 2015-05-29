@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.io.FilenameUtils;
-import org.lancoder.common.RunnableService;
+import org.lancoder.common.RunnableServiceAdapter;
 import org.lancoder.common.codecs.ChannelDisposition;
 import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.codecs.CodecLoader;
@@ -34,7 +34,7 @@ import org.lancoder.common.third_parties.FFprobe;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.ffmpeg.FFmpegWrapper;
 
-public class JobInitiator extends RunnableService {
+public class JobInitiator extends RunnableServiceAdapter {
 
 	private final static String[] EXTENSIONS = new String[] { "mkv", "mp4", "avi", "mov", "flac", "mp3" };
 
@@ -219,10 +219,5 @@ public class JobInitiator extends RunnableService {
 			}
 		} catch (InterruptedException e) {
 		}
-	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-		// TODO Auto-generated method stub
 	}
 }

@@ -32,9 +32,4 @@ class TaskHandler extends PoolWorker<ClientTask> {
 	protected void start() {
 		worker.startWork(task);
 	}
-
-	@Override
-	public void serviceFailure(Exception e) {
-	}
-
 }

@@ -143,10 +143,6 @@ public class PoolTest {
 			return new DummyPoolWorker();
 		}
 
-		@Override
-		public void serviceFailure(Exception e) {
-		}
-
 	}
 
 	class DummyPoolWorker extends PoolWorker<DummyTask> {
@@ -158,10 +154,6 @@ public class PoolTest {
 				task.completed = true;
 			} catch (Exception e) {
 			}
-		}
-
-		@Override
-		public void serviceFailure(Exception e) {
 		}
 	}
 

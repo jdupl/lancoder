@@ -1,10 +1,6 @@
 package org.lancoder.common;
 
-public abstract class Service {
+public interface Service {
 
-	protected volatile boolean close;
-
-	public void stop() {
-		this.close = true;
-	}
+	public void stop();
 }
