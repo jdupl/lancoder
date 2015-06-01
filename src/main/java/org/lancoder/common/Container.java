@@ -62,6 +62,7 @@ public abstract class Container extends RunnableServiceAdapter implements Servic
 		for (Service s : services) {
 			if (s instanceof Runnable) {
 				Thread t = new Thread(this.serviceThreads, (Runnable) s, s.getClass().getSimpleName());
+
 				if (s instanceof Scheduler) {
 					scheduler.setThread(t);
 				}

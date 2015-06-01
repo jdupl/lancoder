@@ -13,7 +13,12 @@ public class Scheduler extends RunnableServiceAdapter {
 	private AtomicBoolean sleeping = new AtomicBoolean(false);
 
 	public synchronized void addSchedulable(Schedulable schedulable) {
-		schedulable.scheduleNextRun();
+		if (schedulable.runAsapOnScheduler()) {
+			schedulable.scheduleNow();
+		} else {
+			schedulable.scheduleNextRun();
+		}
+
 		schedulables.add(schedulable);
 		refresh();
 	}

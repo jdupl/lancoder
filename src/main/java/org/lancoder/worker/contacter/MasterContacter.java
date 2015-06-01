@@ -74,6 +74,11 @@ public class MasterContacter extends Schedulable implements Service {
 	}
 
 	@Override
+	protected boolean runAsapOnScheduler() {
+		return true;
+	}
+
+	@Override
 	protected long getMsRunDelay() {
 		return getNextDelay();
 	}

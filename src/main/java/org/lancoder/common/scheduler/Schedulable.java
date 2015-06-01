@@ -1,6 +1,5 @@
 package org.lancoder.common.scheduler;
 
-
 public abstract class Schedulable implements Comparable<Schedulable> {
 
 	/**
@@ -12,9 +11,22 @@ public abstract class Schedulable implements Comparable<Schedulable> {
 	protected long lastRun;
 	protected int count;
 
+	/**
+	 * Decides if scheduler should call this schedule before first timer.
+	 * 
+	 * @return True if schedule should be called ASAP
+	 */
+	protected boolean runAsapOnScheduler() {
+		return false;
+	}
+
 	protected abstract long getMsRunDelay();
 
 	protected abstract void runTask();
+
+	protected void scheduleNow() {
+		nextRun = System.currentTimeMillis() - 1;
+	}
 
 	protected void scheduleNextRun() {
 		if (maxCount == 0 || count < maxCount) {
