@@ -1,6 +1,7 @@
 package org.lancoder.master;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -47,6 +48,9 @@ public class JobManager implements EventListener {
 		if (savedInstance != null) {
 			this.jobs.putAll(savedInstance.getJobs());
 		}
+
+		this.removeLastInstanceInProgressTasks();
+
 	}
 
 	public HashMap<String, Job> getJobHashMap() {
@@ -378,6 +382,18 @@ public class JobManager implements EventListener {
 
 				sender.removeTask(assignment.getTask());
 				assignments.remove(assignment.getTask(), assignment);
+			}
+		}
+	}
+
+	private void removeLastInstanceInProgressTasks() {
+		ArrayList<TaskState> inProgressStates = new ArrayList<>();
+		inProgressStates.addAll(Arrays.asList(new TaskState[] { TaskState.TASK_ASSIGNED, TaskState.TASK_COMPUTING }));
+		for (Job j : this.jobs.values()) {
+			for (ClientTask task : j.getClientTasks()) {
+				if (inProgressStates.contains(task.getProgress().getTaskState())) {
+					task.reset();
+				}
 			}
 		}
 	}
