@@ -320,6 +320,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	private void notifyAndRemove(ClientTask task) {
 		notifyMasterStatusChange(); // Master will update the task's status
 		this.getCurrentTasks().remove(task);
+
 		if (this.getCurrentTasks().isEmpty()) {
 			updateStatus(NodeState.FREE);
 		}
@@ -333,6 +334,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	@Override
 	public void masterTimeout() {
 		System.err.println("Lost connection to master !");
+
 		for (ClientTask task : this.getCurrentTasks()) {
 			stopWork(task);
 		}

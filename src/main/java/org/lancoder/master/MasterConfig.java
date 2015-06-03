@@ -19,14 +19,17 @@ public class MasterConfig extends Config implements Serializable {
 	private static final String DEFAULT_ENCODE_DESTINATION = "encodes";
 	private static final String DEFAULT_FFPROBE_PATH = "ffprobe";
 
-	@Prompt(message = "master's listening port")
-	private int nodeServerPort;
-	@Prompt(message = "webui port")
-	private int apiServerPort;
-	@Prompt(message = "output directory (relative to shared folder)")
+	@Prompt(message = "output directory (relative to shared folder)", priority = 11)
 	private String finalEncodingFolder;
-	@Prompt(message = "FFprobe's path")
+
+	@Prompt(message = "FFprobe's path", priority = 20)
 	private String ffprobePath;
+
+	@Prompt(message = "master's listening port", priority = 40, advanced = true)
+	private int nodeServerPort;
+
+	@Prompt(message = "webui port", priority = 50, advanced = true)
+	private int apiServerPort;
 
 	private String savedInstancePath = new File(System.getProperty("user.home"),
 			".local/share/lancoder/master_instance.bin").getPath();

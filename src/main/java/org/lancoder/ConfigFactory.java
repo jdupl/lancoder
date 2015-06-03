@@ -6,9 +6,14 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
 import org.lancoder.common.annotations.Prompt;
@@ -22,8 +27,7 @@ public class ConfigFactory<T extends Config> {
 	private static final String CONF_NOT_FOUND = "Cannot load configuration file %s.%n"
 			+ "Initialize a configuration file with --init options.";
 	private static final String CONF_CORRUPTED = "Cannot load configuration file %s.%n"
-			+ "Looks like the file is corrupted.%n "
-			+ "Please initialize a new config and overwrite current config.";
+			+ "Looks like the file is corrupted.%n " + "Please initialize a new config and overwrite current config.";
 	private static final String CONF_EXISTS = "Configuration file %s exists. Cannot overwrite the file !%n"
 			+ "Perhaps you should use the flag --overwrite.";
 
@@ -93,20 +97,53 @@ public class ConfigFactory<T extends Config> {
 		}
 	}
 
+	/**
+	 * Prompt user to decide if advanced settings should be changed.
+	 * 
+	 * @return True if the user chooses to do so.
+	 */
+	private boolean promptUserForAdvancedSettings(Scanner s) {
+		Matcher answerMatcher = null;
+		Pattern answerPattern = Pattern.compile("^[yn]+|\\s*");
+
+		boolean validAnswer = false;
+		String rawAnswer = "";
+
+		while (!validAnswer) {
+			System.out.print("Change advanced settings ? [Y]/n: ");
+			rawAnswer = s.nextLine().toLowerCase();
+
+			answerMatcher = answerPattern.matcher(rawAnswer);
+			validAnswer = answerMatcher.matches();
+		}
+
+		return !rawAnswer.equals("n");
+	}
+
 	private T promptUser() {
 		System.out.println("Please enter the following fields. Default values are in [].");
 		System.out.println("To use the default value, hit return.");
 		T config = null;
+
 		try (Scanner s = new Scanner(new CloseShieldInputStream(System.in))) {
+			// Finish setting up the scanner
 			s.useDelimiter(System.lineSeparator());
+
+			// Determine if the user wants to change advanced configuration
+			boolean useAdvancedSettings = promptUserForAdvancedSettings(s);
+
+			// Load fields dynamically from the provided configuration class
 			config = clazz.newInstance();
-			HashMap<Field, String> fields = getFields();
-			for (Entry<Field, String> entry : fields.entrySet()) {
+			ArrayList<Entry<Field, Prompt>> fields = getFields(useAdvancedSettings);
+
+			for (Entry<Field, Prompt> entry : fields) {
 				Field field = entry.getKey();
-				String message = entry.getValue();
+				String message = entry.getValue().message();
 				field.setAccessible(true);
+
 				System.out.printf("%s [%s]: ", message, field.get(config));
 				String input = s.nextLine();
+
 				if (!input.isEmpty()) {
 					if (field.getType() == java.lang.Integer.TYPE) {
 						field.set(config, Integer.valueOf(input));
@@ -122,19 +159,27 @@ public class ConfigFactory<T extends Config> {
 		return config;
 	}
 
-	private HashMap<Field, String> getFields() {
-		HashMap<Field, String> fields = new HashMap<>();
-		fields.putAll(getFieldsFromClass(clazz));
-		fields.putAll(getFieldsFromClass(clazz.getSuperclass()));
+	private ArrayList<Entry<Field, Prompt>> getFields(boolean useAdvancedSettings) {
+		ArrayList<Entry<Field, Prompt>> fields = new ArrayList<>();
+		fields.addAll(getFieldsFromClass(clazz, useAdvancedSettings));
+		fields.addAll(getFieldsFromClass(clazz.getSuperclass(), useAdvancedSettings));
+
+		Collections.sort(fields, new Comparator<Entry<Field, Prompt>>() {
+			@Override
+			public int compare(Entry<Field, Prompt> o1, Entry<Field, Prompt> o2) {
+				return o1.getValue().priority() - o2.getValue().priority();
+			}
+		});
 		return fields;
 	}
 
-	private HashMap<Field, String> getFieldsFromClass(Class<?> clazz) {
-		HashMap<Field, String> fields = new HashMap<>();
+	private ArrayList<Entry<Field, Prompt>> getFieldsFromClass(Class<?> clazz, boolean useAdvancedSettings) {
+		ArrayList<Entry<Field, Prompt>> fields = new ArrayList<>();
+
 		for (Field field : clazz.getDeclaredFields()) {
 			Prompt p = field.getAnnotation(Prompt.class);
-			if (p != null) {
-				fields.put(field, p.message());
+			if (p != null && (!p.advanced() || (p.advanced() && useAdvancedSettings))) {
+				fields.add(new SimpleEntry<>(field, p));
 			}
 		}
 		return fields;

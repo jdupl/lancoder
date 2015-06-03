@@ -14,4 +14,19 @@ public @interface Prompt {
 	 * @return
 	 */
 	String message();
+
+	/**
+	 * The priority of the prompt to show to the user. Lower has more priority.
+	 * 
+	 * @return
+	 */
+
+	int priority() default 1000;
+
+	/**
+	 * Is this option part of the advanced option.
+	 * 
+	 * @return
+	 */
+	boolean advanced() default false;
 }

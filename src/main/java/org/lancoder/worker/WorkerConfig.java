@@ -23,14 +23,17 @@ public class WorkerConfig extends Config implements Serializable {
 	private static final String DEFAULT_UNID = "";
 	private static final String DEFAULT_NAME = InetAddress.getLoopbackAddress().getCanonicalHostName();
 
-	@Prompt(message = "master ip address")
+	@Prompt(message = "master's ip or hostname", priority = 1)
 	private String masterIpAddress;
-	@Prompt(message = "master port")
+
+	@Prompt(message = "master's listening port", priority = 2, advanced = true)
 	private int masterPort;
-	@Prompt(message = "worker port")
-	private int listenPort;
-	@Prompt(message = "worker's name")
+
+	@Prompt(message = "worker's name", priority = 11)
 	private String name;
+
+	@Prompt(message = "worker's listening port", priority = 12, advanced = true)
+	private int listenPort;
 
 	private String uniqueID;
 

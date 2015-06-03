@@ -15,11 +15,14 @@ public abstract class Config {
 	private static final String DEFAULT_TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
 
 	protected transient String configPath;
-	@Prompt(message = "shared folder root")
+
+	@Prompt(message = "shared folder root", priority = 10)
 	protected String absoluteSharedFolder;
-	@Prompt(message = "FFmpeg's path")
+
+	@Prompt(message = "FFmpeg's path", priority = 20)
 	protected String ffmpegPath;
-	@Prompt(message = "temporary files location")
+
+	@Prompt(message = "temporary files location", priority = 20, advanced = true)
 	protected String tempEncodingFolder;
 
 	protected Config() {
