@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import org.lancoder.common.Container;
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.Node;
+import org.lancoder.common.config.Config;
+import org.lancoder.common.config.ConfigManager;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
@@ -33,7 +35,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	public static final String ALGORITHM = "SHA-256";
 
-	private MasterConfig config;
 	private JobInitiator jobInitiator;
 	private MasterServer nodeServer;
 	private NodeCheckerService nodeChecker;
@@ -42,14 +43,22 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	private MuxerPool muxerPool;
 	private NodeManager nodeManager;
 	private JobManager jobManager;
+	private ConfigManager<MasterConfig> configManager;
 
 	private ArrayList<EventListener> eventListeners = new ArrayList<>();
 
 	private MasterSavedInstance savedInstance;
 
-	public Master(MasterConfig config) {
-		this.config = config;
-		bootstrap();
+	@Override
+	public void setConfigManager(ConfigManager<? extends Config> config) {
+		@SuppressWarnings("unchecked")
+		ConfigManager<MasterConfig> manager = (ConfigManager<MasterConfig>) config;
+		this.configManager = manager;
+	}
+
+	@Override
+	public Class<? extends Config> getConfigClass() {
+		return MasterConfig.class;
 	}
 
 	@Override
@@ -59,22 +68,22 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	}
 
 	private void loadLastInstance() {
-		this.savedInstance = MasterSavedInstance.load(new File(config.getSavedInstancePath()));
+		this.savedInstance = MasterSavedInstance.load(new File(getConfig().getSavedInstancePath()));
 	}
 
 	@Override
 	protected void registerServices() {
 		super.registerServices();
 
-		filePathManager = new FilePathManager(config);
+		filePathManager = new FilePathManager(getConfig());
 
-		nodeManager = new NodeManager(this, config, savedInstance);
+		nodeManager = new NodeManager(this, getConfig(), savedInstance);
 		eventListeners.add(nodeManager);
 
-		jobInitiator = new JobInitiator(this, config);
+		jobInitiator = new JobInitiator(this, getConfig());
 		services.add(jobInitiator);
 
-		nodeServer = new MasterServer(config.getNodeServerPort(), this, nodeManager);
+		nodeServer = new MasterServer(getConfig().getNodeServerPort(), this, nodeManager);
 		services.add(nodeServer);
 
 		nodeChecker = new NodeCheckerService(this, nodeManager);
@@ -95,8 +104,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	@Override
 	protected void registerThirdParties() {
-		registerThirdParty(new FFmpeg(config));
-		registerThirdParty(new FFprobe(config));
+		registerThirdParty(new FFmpeg(getConfig()));
+		registerThirdParty(new FFprobe(getConfig()));
 	}
 
 	public void shutdown() {
@@ -109,7 +118,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 				task.getProgress().reset();
 			}
 		}
-		config.dump();
+		configManager.dump();
 
 		// say goodbye to nodes
 		for (Node n : nodeManager.getOnlineNodes()) {
@@ -120,13 +129,13 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	}
 
 	private void saveInternalState() {
-		File file = new File(config.getSavedInstancePath());
+		File file = new File(getConfig().getSavedInstancePath());
 		MasterSavedInstance current = new MasterSavedInstance(nodeManager.getNodeHashMap(), jobManager.getJobHashMap());
 		MasterSavedInstance.save(file, current);
 	}
 
 	public MasterConfig getConfig() {
-		return config;
+		return configManager.getConfig();
 	}
 
 	public NodeManager getNodeManager() {
@@ -212,7 +221,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		boolean integrity = true;
 
 		for (ClientVideoTask task : job.getClientVideoTasks()) {
-			File absoluteTaskFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getTempFile());
+			File absoluteTaskFile = FileUtils.getFile(getConfig().getAbsoluteSharedFolder(), task.getTempFile());
 
 			if (!absoluteTaskFile.exists()) {
 				integrity = false;
@@ -324,7 +333,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			jobEncodingCompleted((Job) event.getObject());
 			break;
 		case CONFIG_UPDATED:
-			this.config.dump();
+			configManager.dump();
 			break;
 		default:
 			for (EventListener eventListener : eventListeners) {

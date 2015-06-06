@@ -8,6 +8,8 @@ import org.lancoder.common.Container;
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.Node;
 import org.lancoder.common.codecs.CodecEnum;
+import org.lancoder.common.config.Config;
+import org.lancoder.common.config.ConfigManager;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.common.network.MessageSender;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
@@ -34,17 +36,29 @@ import org.lancoder.worker.server.WorkerServerListener;
 public class Worker extends Container implements WorkerServerListener, MasterContacterListener, ConverterListener {
 
 	private Node node;
-	private WorkerConfig config;
 	private AudioConverterPool audioPool;
 	private VideoConverterPool videoPool;
 	private MasterContacter masterContacter;
 	private InetAddress masterInetAddress = null;
 	private int threadLimit;
 	private TaskHandlerPool taskHandler;
+	private ConfigManager<WorkerConfig> configManager;
 
-	public Worker(WorkerConfig config) {
-		this.config = config;
+	@Override
+	public void setConfigManager(ConfigManager<? extends Config> config) {
+		@SuppressWarnings("unchecked")
+		ConfigManager<WorkerConfig> manager = (ConfigManager<WorkerConfig>) config;
+		this.configManager = manager;
 		bootstrap();
+	}
+
+	@Override
+	public Class<? extends Config> getConfigClass() {
+		return WorkerConfig.class;
+	}
+
+	public WorkerConfig getConfig() {
+		return this.configManager.getConfig();
 	}
 
 	@Override
@@ -54,27 +68,27 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		System.out.printf("Detected %d threads available.%n", threadLimit);
 		// Parse master ip address or host name
 		try {
-			this.masterInetAddress = InetAddress.getByName(config.getMasterIpAddress());
+			this.masterInetAddress = InetAddress.getByName(getConfig().getMasterIpAddress());
 		} catch (UnknownHostException e) {
 			throw new InvalidConfigurationException(String.format("Master's host name '%s' could not be resolved !"
-					+ "\nOriginal exception: '%s'", config.getMasterIpAddress(), e.getMessage()));
+					+ "\nOriginal exception: '%s'", getConfig().getMasterIpAddress(), e.getMessage()));
 		}
 		super.bootstrap();
 		// Get codecs
 		ArrayList<CodecEnum> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
 		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
-		node = new Node(null, this.config.getListenPort(), config.getName(), codecs, threadLimit, config.getUniqueID());
+		node = new Node(null, getConfig().getListenPort(), getConfig().getName(), codecs, threadLimit, getConfig().getUniqueID());
 	}
 
 	@Override
 	protected void registerThirdParties() {
-		registerThirdParty(new FFmpeg(config));
+		registerThirdParty(new FFmpeg(getConfig()));
 	}
 
 	@Override
 	protected void registerServices() {
 		super.registerServices();
-		filePathManager = new FilePathManager(config);
+		filePathManager = new FilePathManager(getConfig());
 		// TODO change to current instance
 		audioPool = new AudioConverterPool(threadLimit, this, filePathManager, getFFmpeg());
 		services.add(audioPool);
@@ -86,7 +100,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		taskHandler = new TaskHandlerPool(this);
 		services.add(taskHandler);
 
-		services.add(new WorkerServer(this, config.getListenPort()));
+		services.add(new WorkerServer(this, getConfig().getListenPort()));
 
 		masterContacter = new MasterContacter(getMasterInetAddress(), getMasterPort(), this);
 		services.add(masterContacter);
@@ -157,7 +171,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	 * @return the StatusReport object
 	 */
 	public synchronized StatusReport getStatusReport() {
-		return new StatusReport(getStatus(), config.getUniqueID(), getTaskReports());
+		return new StatusReport(getStatus(), getConfig().getUniqueID(), getTaskReports());
 	}
 
 	/**
@@ -168,7 +182,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	public ArrayList<TaskReport> getTaskReports() {
 		ArrayList<TaskReport> reports = new ArrayList<TaskReport>();
 		for (ClientTask task : this.getCurrentTasks()) {
-			TaskReport report = new TaskReport(config.getUniqueID(), task);
+			TaskReport report = new TaskReport(getConfig().getUniqueID(), task);
 			if (report != null) {
 				reports.add(report);
 			}
@@ -209,7 +223,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	public int getListenPort() {
-		return config.getListenPort();
+		return getConfig().getListenPort();
 	}
 
 	public InetAddress getMasterInetAddress() {
@@ -217,7 +231,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	public int getMasterPort() {
-		return config.getMasterPort();
+		return getConfig().getMasterPort();
 	}
 
 	public NodeState getStatus() {
@@ -229,7 +243,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	public String getWorkerName() {
-		return config.getName();
+		return getConfig().getName();
 	}
 
 	public void run() {
@@ -238,8 +252,8 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	public void setUnid(String unid) {
-		this.config.setUniqueID(unid);
-		this.config.dump();
+		this.getConfig().setUniqueID(unid);
+		configManager.dump();
 	}
 
 	@Override

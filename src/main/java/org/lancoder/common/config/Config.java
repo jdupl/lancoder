@@ -36,6 +36,7 @@ public abstract class Config {
 	 * 
 	 * @return True if could write config to disk. Otherwise, return false.
 	 */
+	@Deprecated
 	public synchronized boolean dump() {
 		File config = new File(configPath);
 		Yaml yaml = new Yaml();
@@ -86,13 +87,4 @@ public abstract class Config {
 	public String getFFmpegPath() {
 		return ffmpegPath;
 	}
-
-	public String getConfigPath() {
-		return configPath;
-	}
-
-	public void setConfigPath(String configPath) {
-		this.configPath = configPath;
-	}
-
 }

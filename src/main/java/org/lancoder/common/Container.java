@@ -3,6 +3,8 @@ package org.lancoder.common;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.lancoder.common.config.Config;
+import org.lancoder.common.config.ConfigManager;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.scheduler.Schedulable;
 import org.lancoder.common.scheduler.Scheduler;
@@ -17,14 +19,17 @@ public abstract class Container extends RunnableServiceAdapter implements Servic
 	protected final ArrayList<Service> services = new ArrayList<>();
 	protected final ThreadGroup serviceThreads = new ThreadGroup("services");
 	protected FilePathManager filePathManager;
-
 	protected Scheduler scheduler;
+
+	public abstract Class<? extends Config> getConfigClass();
 
 	protected void bootstrap() {
 		registerThirdParties();
 		checkThirdParties();
 		registerServices();
 	}
+
+	public abstract void setConfigManager(ConfigManager<? extends Config> configManager);
 
 	protected FFmpeg getFFmpeg() {
 		return (FFmpeg) getThirdParty(FFmpeg.class);
