@@ -1,5 +1,9 @@
 package org.lancoder;
 
+import java.lang.reflect.InvocationTargetException;
+
+import javax.servlet.UnavailableException;
+
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -42,6 +46,7 @@ public class Main {
 	 *            The parsed user's args
 	 * @throws InvalidConfigurationException
 	 *             Any fatal exception with the configuration. User needs to fix arguments.
+	 * @throws UnavailableException
 	 */
 	private static void run(Namespace parsed) throws InvalidConfigurationException {
 		boolean isWorker = parsed.getBoolean("worker");
@@ -54,36 +59,50 @@ public class Main {
 		boolean newConfig = promptInit || defaultInit;
 		Class<? extends Container> clazz = isWorker ? Worker.class : Master.class;
 
-		try {
-			final Container container = clazz.getConstructor().newInstance();
+		final Container container = getContainerInstance(clazz);
 
-			// Initialize config factory from container's config type
-			ConfigFactory<? extends Config> configFactory = new ConfigFactory<>(container.getConfigClass(), configPath);
+		// Initialize config factory from container's config type
+		ConfigFactory<? extends Config> configFactory = new ConfigFactory<>(container.getConfigClass(), configPath);
 
-			// Initialize config manager from factory
-			ConfigManager<? extends Config> manager = newConfig ? configFactory.init(promptInit, overwrite)
-					: configFactory.getManager();
+		// Initialize config manager from factory
+		ConfigManager<? extends Config> manager = newConfig ? configFactory.init(promptInit, overwrite) : configFactory
+				.getManager();
 
-			manager.load();
-			container.setConfigManager(manager);
+		manager.load();
+		container.setConfigManager(manager);
 
-			System.out.print(manager.getConfig().toString());
+		System.out.print(manager.getConfig().toString());
 
-			// Add shutdown hook
-			Runtime.getRuntime().addShutdownHook(new Thread() {
-				@Override
-				public void run() {
-					container.shutdown();
-					System.out.println("Lancoder exited cleanly !");
-				}
-			});
-
-			// Start lancoder
-			if (!defaultInit) {
-				new Thread(container).start();
+		// Add shutdown hook
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				container.shutdown();
+				System.out.println("Lancoder exited cleanly !");
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		});
+
+		// Start lancoder
+		if (!defaultInit) {
+			new Thread(container).start();
+		}
+	}
+
+	/**
+	 * Function to avoid bloated try-catch
+	 * 
+	 * @param clazz
+	 *            The class of the container to instantiate
+	 * @return The container
+	 * @throws UnavailableException
+	 */
+	private static Container getContainerInstance(Class<? extends Container> clazz) {
+		try {
+			return clazz.getConstructor().newInstance();
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			// java pls
+			throw new UnsupportedClassVersionError(e.getMessage());
 		}
 	}
 
