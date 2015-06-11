@@ -49,7 +49,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		@SuppressWarnings("unchecked")
 		ConfigManager<WorkerConfig> manager = (ConfigManager<WorkerConfig>) config;
 		this.configManager = manager;
-		bootstrap();
 	}
 
 	@Override
@@ -62,7 +61,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	@Override
-	protected void bootstrap() {
+	public void bootstrap() {
 		// Get number of available threads
 		threadLimit = Runtime.getRuntime().availableProcessors();
 		System.out.printf("Detected %d threads available.%n", threadLimit);

@@ -62,7 +62,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	}
 
 	@Override
-	protected void bootstrap() {
+	public void bootstrap() {
 		loadLastInstance();
 		super.bootstrap();
 	}

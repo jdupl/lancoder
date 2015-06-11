@@ -1,6 +1,8 @@
 package org.lancoder;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Logger;
 
 import javax.servlet.UnavailableException;
 
@@ -30,7 +32,10 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		try {
-			System.out.printf("Runnning lancoder %s%n", LANCODER_VERSION);
+			Logger logger = Logger.getGlobal();
+			logger.addHandler(new ConsoleHandler());
+			logger.warning(String.format("Runnning lancoder %s%n", LANCODER_VERSION));
+
 			run(parse(args));
 		} catch (InvalidConfigurationException e) {
 			// Display exception message to explain cause of fatal crash to user
@@ -42,36 +47,18 @@ public class Main {
 	/**
 	 * Instantiates configuration and core from args.
 	 * 
-	 * @param parsed
+	 * @param argsNamespace
 	 *            The parsed user's args
 	 * @throws InvalidConfigurationException
 	 *             Any fatal exception with the configuration. User needs to fix arguments.
 	 * @throws UnavailableException
 	 */
-	private static void run(Namespace parsed) throws InvalidConfigurationException {
-		boolean isWorker = parsed.getBoolean("worker");
-		boolean promptInit = parsed.getBoolean("init_prompt");
-		boolean defaultInit = parsed.getBoolean("init_default");
-		boolean overwrite = parsed.getBoolean("overwrite");
-		String configPath = parsed.getString("config");
-		boolean debug = parsed.getBoolean("debug");
+	private static void run(Namespace argsNamespace) throws InvalidConfigurationException {
+		boolean initAndExit = argsNamespace.getBoolean("init_default");
 
-		boolean newConfig = promptInit || defaultInit;
-		Class<? extends Container> clazz = isWorker ? Worker.class : Master.class;
+		Class<? extends Container> clazz = argsNamespace.getBoolean("worker") ? Worker.class : Master.class;
 
-		final Container container = getContainerInstance(clazz);
-
-		// Initialize config factory from container's config type
-		ConfigFactory<? extends Config> configFactory = new ConfigFactory<>(container.getConfigClass(), configPath);
-
-		// Initialize config manager from factory
-		ConfigManager<? extends Config> manager = newConfig ? configFactory.init(promptInit, overwrite) : configFactory
-				.getManager();
-
-		manager.load();
-		container.setConfigManager(manager);
-
-		System.out.print(manager.getConfig().toString());
+		final Container container = getContainerInstance(clazz, argsNamespace);
 
 		// Add shutdown hook
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -83,7 +70,8 @@ public class Main {
 		});
 
 		// Start lancoder
-		if (!defaultInit) {
+		if (!initAndExit) {
+			container.bootstrap();
 			new Thread(container).start();
 		}
 	}
@@ -93,17 +81,43 @@ public class Main {
 	 * 
 	 * @param clazz
 	 *            The class of the container to instantiate
+	 * @param parsed
 	 * @return The container
 	 * @throws UnavailableException
 	 */
-	private static Container getContainerInstance(Class<? extends Container> clazz) {
+	private static Container getContainerInstance(Class<? extends Container> clazz, Namespace argsNamespace) {
 		try {
-			return clazz.getConstructor().newInstance();
+			Container container = clazz.getConstructor().newInstance();
+			ConfigManager<? extends Config> manager = getConfigManager(container, argsNamespace);
+
+			container.setConfigManager(manager);
+			manager.load();
+
+			return container;
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| NoSuchMethodException | SecurityException e) {
 			// java pls
+			e.printStackTrace();
 			throw new UnsupportedClassVersionError(e.getMessage());
 		}
+	}
+
+	private static ConfigManager<? extends Config> getConfigManager(Container container, Namespace argsNamespace) {
+		boolean promptInit = argsNamespace.getBoolean("init_prompt");
+		boolean defaultInit = argsNamespace.getBoolean("init_default");
+		boolean overwrite = argsNamespace.getBoolean("overwrite");
+		String configPath = argsNamespace.getString("config");
+		boolean debug = argsNamespace.getBoolean("debug");
+
+		boolean isNewConfig = promptInit || defaultInit;
+
+		// Initialize config factory from container's config type
+		ConfigFactory<? extends Config> configFactory = new ConfigFactory<>(container.getConfigClass(), configPath);
+
+		// Initialize config manager from factory
+		ConfigManager<? extends Config> manager = isNewConfig ? configFactory.init(promptInit, overwrite)
+				: configFactory.getManager();
+		return manager;
 	}
 
 	private static Namespace parse(String[] args) {

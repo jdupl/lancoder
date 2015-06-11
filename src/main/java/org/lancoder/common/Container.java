@@ -23,7 +23,8 @@ public abstract class Container extends RunnableServiceAdapter implements Servic
 
 	public abstract Class<? extends Config> getConfigClass();
 
-	protected void bootstrap() {
+	public void bootstrap() {
+		System.out.println("googog");
 		registerThirdParties();
 		checkThirdParties();
 		registerServices();
