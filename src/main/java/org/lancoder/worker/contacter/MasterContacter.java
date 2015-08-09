@@ -2,6 +2,7 @@ package org.lancoder.worker.contacter;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.logging.Logger;
 
 import org.lancoder.common.Service;
 import org.lancoder.common.network.MessageSender;
@@ -43,6 +44,7 @@ public class MasterContacter extends Schedulable implements Service {
 	}
 
 	private void contactMaster() {
+		Logger logger = Logger.getLogger("lancoder");
 		Message m = getMessage();
 
 		try {
@@ -55,12 +57,12 @@ public class MasterContacter extends Schedulable implements Service {
 				// Successful ping to master
 				break;
 			default:
-				System.err.printf("Master sent invalid message %s%n", response.getClass().getSimpleName());
+				logger.warning(String.format("Master sent invalid message %s%n", response.getClass().getSimpleName()));
 				break;
 			}
 		} catch (IOException e) {
 			if (m.getCode() == ClusterProtocol.CONNECT_REQUEST) {
-				System.err.println("Failed to contact master.");
+				logger.info("Failed to contact master.");
 			} else {
 				listener.masterTimeout();
 			}

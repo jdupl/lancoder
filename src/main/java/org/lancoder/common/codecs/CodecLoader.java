@@ -2,6 +2,7 @@ package org.lancoder.common.codecs;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import org.lancoder.common.codecs.base.AbstractCodec;
 import org.lancoder.common.codecs.impl.*;
@@ -48,7 +49,8 @@ public class CodecLoader {
 		try {
 			Class<? extends AbstractCodec> clazz = codecClasses.get(codecEnum);
 			if (clazz == null) {
-				System.err.println("Unsupported codec: " + codecEnum.getPrettyName());
+				Logger logger = Logger.getLogger("lancoder");
+				logger.warning("Unsupported codec: " + codecEnum.getPrettyName());
 			} else {
 				Constructor<? extends AbstractCodec> cons = clazz.getDeclaredConstructor();
 				cons.setAccessible(true); // Constructor is protected

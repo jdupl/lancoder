@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 import org.lancoder.common.Node;
 import org.lancoder.common.codecs.base.AbstractCodec;
@@ -61,7 +62,9 @@ public class JobManager implements EventListener {
 		if (this.jobs.put(j.getJobId(), j) != null) {
 			return false;
 		}
-		System.out.printf("Job %s added.%n", j.getJobName());
+		Logger logger = Logger.getLogger("lancoder");
+
+		logger.fine(String.format("Job %s added.%n", j.getJobName()));
 		updateNodesWork();
 		return true;
 	}
@@ -70,7 +73,9 @@ public class JobManager implements EventListener {
 		if (j == null) {
 			return false;
 		}
+
 		j.cancel();
+
 		for (Node node : nodeManager.getNodes()) {
 			ArrayList<ClientTask> nodeTasks = new ArrayList<>(node.getCurrentTasks());
 			nodeTasks.addAll(node.getPendingTasks());
@@ -80,17 +85,20 @@ public class JobManager implements EventListener {
 				}
 			}
 		}
+
 		if (this.jobs.remove(j.getJobId()) == null) {
 			return false;
 		}
+
 		this.listener.handle(new Event(EventEnum.CONFIG_UPDATED));
 		updateNodesWork();
+
 		return true;
 	}
 
 	/**
 	 * Notify a node that a task was unassigned.
-	 * 
+	 *
 	 * @param task
 	 *            The task to unassign
 	 * @param assigne
@@ -104,6 +112,7 @@ public class JobManager implements EventListener {
 
 	public ArrayList<Job> getJobs() {
 		ArrayList<Job> jobs = new ArrayList<>();
+
 		for (Entry<String, Job> e : this.jobs.entrySet()) {
 			jobs.add(e.getValue());
 		}
@@ -125,12 +134,15 @@ public class JobManager implements EventListener {
 		ClientAudioTask task = null;
 		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
+
 		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
 			Job job = itJob.next();
 			ArrayList<ClientAudioTask> tasks = job.getTodoAudioTask();
+
 			for (Iterator<ClientAudioTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
 				ClientAudioTask clientTask = itTask.next();
 				EncodeStrategy strategy = (EncodeStrategy) clientTask.getStreamConfig().getOutStream().getStrategy();
+
 				if (codecs.contains(strategy.getCodec())) {
 					task = clientTask;
 				}
@@ -143,13 +155,16 @@ public class JobManager implements EventListener {
 		ClientVideoTask task = null;
 		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
+
 		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
 			Job job = itJob.next();
 			ArrayList<ClientVideoTask> tasks = job.getTodoVideoTask();
+
 			for (Iterator<ClientVideoTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
 				ClientVideoTask clientTask = itTask.next();
 				EncodeStrategy encodeStrategy = (EncodeStrategy) clientTask.getStreamConfig().getOutStream()
 						.getStrategy();
+
 				if (codecs.contains(encodeStrategy.getCodec())) {
 					task = clientTask;
 				}
@@ -186,13 +201,14 @@ public class JobManager implements EventListener {
 			task.assign();
 			node.addPendingTask(task);
 			node.lock();
+
 			dispatcherPool.add(new DispatchItem(new TaskRequestMessage(task), node));
 		}
 	}
 
 	/**
 	 * Internally assign node to task in cluster task-node mapping.
-	 * 
+	 *
 	 * @param task
 	 *            The task (used as key)
 	 * @param node
@@ -200,15 +216,17 @@ public class JobManager implements EventListener {
 	 * @return True if task was assigned. False if task is already mapped.
 	 */
 	private synchronized boolean assign(ClientTask task, Node node) {
+		Logger logger = Logger.getLogger("lancoder");
 		boolean assigned = false;
 
 		if (!assignments.containsKey(task)) {
 			Assignment assignment = new Assignment(task, node);
-			System.out.printf("Assigned %s to node %s.%n", task, node.getName());
 			assignments.put(task, assignment);
 			assigned = true;
+
+			logger.fine(String.format("Assigned %s to node %s.%n", task, node.getName()));
 		} else {
-			System.err.printf("Could not assign %s to node %s.%n", task, node.getName());
+			logger.warning(String.format("Could not assign %s to node %s.%n", task, node.getName()));
 		}
 		return assigned;
 	}
@@ -221,36 +239,43 @@ public class JobManager implements EventListener {
 
 	/**
 	 * Unassign a node from a task.
-	 * 
+	 *
 	 * @param task
 	 *            The task to be unassigned.
 	 * @return True if task could be unassigned
 	 */
 	private synchronized boolean unassign(ClientTask task) {
 		boolean unassigned = false;
+		Logger logger = Logger.getLogger("lancoder");
+
 		Assignment assignment = this.assignments.remove(task);
 
 		if (assignment != null && assignment.getAssignee() != null) {
 			Node previousAssignee = assignment.getAssignee();
-			System.out.println("Node " + previousAssignee.getName() + " was unassigned from " + task);
 			unassigned = true;
 			previousAssignee.removeTask(task);
+
+			logger.fine(String.format("Node %s  was unassigned from %s.%n", previousAssignee.getName(), task.toString()));
 		}
 		return unassigned;
 	}
 
 	public boolean taskUpdated(ClientTask task, Node node) {
+		Logger logger = Logger.getLogger("lancoder");
 		TaskState updateStatus = task.getProgress().getTaskState();
+
 		switch (updateStatus) {
 		case TASK_COMPLETED:
-			System.out.printf("Worker %s completed %s.%n", node.getName(), task);
+			logger.fine(String.format("Worker %s completed %s.%n", node.getName(), task));
+
 			Job job = this.jobs.get(task.getJobId());
 			task.completed();
 
 			if (job.getTaskDoneCount() == job.getTaskCount()) {
-				System.out.println("job " + job.getJobId() + " completed");
+				logger.fine(String.format("job " + job.getJobId() + " completed"));
 				listener.handle(new Event(EventEnum.JOB_ENCODING_COMPLETED, job));
 			}
+
 			unassign(task);
 			break;
 		case TASK_CANCELED:
@@ -284,11 +309,13 @@ public class JobManager implements EventListener {
 	 */
 	public void cleanJobs() {
 		ArrayList<Job> toClean = new ArrayList<>();
+
 		for (Job job : getJobs()) {
 			if (job.isCompleted()) {
 				toClean.add(job);
 			}
 		}
+
 		for (Job job : toClean) {
 			deleteJob(job);
 		}
@@ -300,20 +327,23 @@ public class JobManager implements EventListener {
 		case DISPATCH_ITEM_REFUSED:
 			DispatchItem item = (DispatchItem) event.getObject();
 			ClientTask task = ((TaskRequestMessage) item.getMessage()).getTask();
+
 			unassign(task);
 			break;
 		case NODE_DISCONNECTED:
 			Node disconnectedNode = (Node) event.getObject();
+
 			unassingAll(disconnectedNode);
 			break;
 		case TASK_CONFIRMED:
 			ClientTask confirmedTask = (ClientTask) event.getObject();
 			ClientTask masterInstance = getTask(confirmedTask.getJobId(), confirmedTask.getTaskId());
+
 			confirm(masterInstance);
 			break;
 		case TASK_REFUSED:
 			ClientTask refusedTask = (ClientTask) event.getObject();
-			System.err.println("Worker refused task !");
+
 			taskRefused(getTask(refusedTask.getJobId(), refusedTask.getTaskId()));
 			break;
 		default:
@@ -322,13 +352,17 @@ public class JobManager implements EventListener {
 	}
 
 	private void taskRefused(ClientTask task) {
+		Logger logger = Logger.getLogger("lancoder");
+
+		logger.fine(String.format("A worker refused %s !", task));
+
 		task.reset();
 		unassign(task);
 	}
 
 	/**
 	 * Unassign all tasks of the node.
-	 * 
+	 *
 	 * @param n
 	 *            The node to remove all tasks
 	 */
@@ -374,11 +408,14 @@ public class JobManager implements EventListener {
 	}
 
 	public synchronized void removeInvalidAssigments(Node sender, ArrayList<ClientTask> reportTasks) {
+		Logger logger = Logger.getLogger("lancoder");
+
 		for (Assignment assignment : getAssignments(sender)) {
 			if (!reportTasks.contains(assignment.getTask()) && isInDelay(assignment)) {
-				System.err.printf("Removed task %d of job %s from worker %s has it was in an invalid state.%n",
+
+				logger.finer(String.format("Removed task %d of job %s from worker %s has it was in an invalid state.%n",
 						assignment.getTask().getTaskId(), assignment.getTask().getJobId(), assignment.getAssignee()
-								.getName());
+								.getName()));
 
 				sender.removeTask(assignment.getTask());
 				assignments.remove(assignment.getTask(), assignment);
@@ -389,6 +426,7 @@ public class JobManager implements EventListener {
 	private void removeLastInstanceInProgressTasks() {
 		ArrayList<TaskState> inProgressStates = new ArrayList<>();
 		inProgressStates.addAll(Arrays.asList(new TaskState[] { TaskState.TASK_ASSIGNED, TaskState.TASK_COMPUTING }));
+
 		for (Job j : this.jobs.values()) {
 			for (ClientTask task : j.getClientTasks()) {
 				if (inProgressStates.contains(task.getProgress().getTaskState())) {

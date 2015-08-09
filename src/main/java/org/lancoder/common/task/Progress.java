@@ -81,13 +81,14 @@ public class Progress implements Serializable {
 	private boolean updateSpeed(double units, long ms) {
 		boolean updated = true;
 		double estimatedSpeed = units / ms * 1000;
+
 		if (!Double.isInfinite(estimatedSpeed) && !Double.isNaN(estimatedSpeed)) {
 			this.average.add(estimatedSpeed, System.currentTimeMillis());
 			this.speed = average.getAverage();
 		} else {
-			System.err.printf("Ignoring invalid speed estimate ! MS elapsed: %d Units completed: %f%n", ms, units);
 			updated = false;
 		}
+
 		return updated;
 	}
 

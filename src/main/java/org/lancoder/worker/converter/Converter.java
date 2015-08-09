@@ -2,6 +2,7 @@ package org.lancoder.worker.converter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.pool.PoolWorker;
@@ -15,12 +16,11 @@ public abstract class Converter<T extends ClientTask> extends PoolWorker<T> impl
 	protected ConverterListener listener;
 	protected FilePathManager filePathManager;
 	protected FFmpeg ffMpeg;
-
 	protected boolean cancelling;
 
 	/**
 	 * Constructor of base converter. Initialize file names and directories from task configuration.
-	 * 
+	 *
 	 * @param task
 	 *            The ClientTask containing global task config.
 	 */
@@ -59,8 +59,11 @@ public abstract class Converter<T extends ClientTask> extends PoolWorker<T> impl
 	 * Clean task's temporary folder.
 	 */
 	private void cleanTempFolder() {
-		System.out.println("WORKER: Cleaning temp task folder content.");
+		Logger logger = Logger.getLogger("lancoder");
+
 		File localFolder = filePathManager.getLocalTempFolder(task);
+		logger.finer(String.format("Cleaning temp task folder '%s'.%n", localFolder));
+
 		if (localFolder.isDirectory()) {
 			try {
 				FileUtils.cleanDirectory(localFolder);

@@ -2,6 +2,7 @@ package org.lancoder.master;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import org.lancoder.common.Container;
 import org.lancoder.common.FilePathManager;
@@ -108,9 +109,12 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		registerThirdParty(new FFprobe(getConfig()));
 	}
 
+	@Override
 	public void shutdown() {
-		System.out.printf("Executing master shutdown routine.%n"
-				+ "Ctrl+C again for immediate shutdown (not recommended).%n");
+		Logger logger = Logger.getLogger("lancoder");
+
+		logger.info("Executing master shutdown routine.\n"
+				+ "Ctrl+C again for immediate shutdown (not recommended).\n");
 
 		// save config and make sure to reset current tasks
 		for (Node n : nodeManager.getNodes()) {
@@ -149,18 +153,20 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	/**
 	 * Sends a disconnect request to a node, removes the node from the node list and updates the task of the node if it
 	 * had any.
-	 * 
+	 *
 	 * @param n
 	 *            The node to remove
 	 */
 	public void disconnectNode(Node n) {
+		Logger logger = Logger.getLogger("lancoder");
+
 		// remove node from list
 		jobManager.unassingAll(n);
 		nodeManager.removeNode(n);
 
 		MessageSender.send(new AuthMessage(ClusterProtocol.DISCONNECT_ME, n.getUnid()), n.getNodeAddress(),
 				n.getNodePort());
-		System.out.printf("Disconnected node %s.%n", n.getName());
+		logger.fine(String.format("Disconnected node %s.%n", n.getName()));
 	}
 
 	public void disconnectNode(String unid) {
@@ -169,6 +175,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	public boolean addJob(ApiJobRequest j) {
 		boolean success = false;
+
 		if (new File(this.getConfig().getAbsoluteSharedFolder(), j.getInputFile()).exists()) {
 			success = true;
 			this.jobInitiator.process(j);
@@ -190,16 +197,18 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	/**
 	 * Check job parts and start muxing process
-	 * 
+	 *
 	 * @param job
 	 */
 	private void jobEncodingCompleted(Job job) {
+		Logger logger = Logger.getLogger("lancoder");
+
 		if (!checkJobIntegrity(job)) {
-			System.err.printf("Cannot start muxing job %s as some task files are missing !%n", job.getJobName());
+			logger.fine(String.format("Cannot start muxing job %s as some task files are missing !%n", job.getJobName()));
 
 			for (ClientTask missingTask : job.getTodoTasks()) {
-				System.err.printf("Missing file '%s' for task %d'.%n", missingTask.getTempFile(),
-						missingTask.getTaskId());
+				logger.fine(String.format("Missing file '%s' for task %d'.%n", missingTask.getTempFile(),
+						missingTask.getTaskId()));
 			}
 
 			job.start(false);
@@ -211,7 +220,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	/**
 	 * Check if all tasks are on the disk after encoding is done. Resets status of missing tasks.
-	 * 
+	 *
 	 * @param job
 	 *            The job to check
 	 *
@@ -234,7 +243,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	/**
 	 * Reads a status report of a node and updates the status of the node.
-	 * 
+	 *
 	 * @param report
 	 *            The report to be read
 	 * @return true if update could be sent, false otherwise
@@ -268,7 +277,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	/**
 	 * Reads all task reports and launches an update of the task status and progress
-	 * 
+	 *
 	 * @param reports
 	 *            The reports to read
 	 */
@@ -292,11 +301,13 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			return false;
 		}
 		if (!node.hasTask(task)) {
-			System.err.printf("Warning: %s instance not found for node %s.%n", task, node.getName());
+			Logger logger = Logger.getLogger("lancoder");
+			logger.warning(String.format("%s instance not found for node %s.%n", task, node.getName()));
 		}
 		return true;
 	}
 
+	@Override
 	public void run() {
 		startServices();
 	}
@@ -313,14 +324,16 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	@Override
 	public void jobMuxingCompleted(Job job) {
-		System.out.printf("Job %s finished muxing !\n", job.getJobName());
+		Logger logger = Logger.getLogger("lancoder");
+		logger.fine(String.format("Job %s finished muxing !\n", job.getJobName()));
 		job.complete();
 	}
 
 	@Override
 	public void jobMuxingFailed(Job job) {
-		System.err.printf("Muxing failed for job %s\n", job.getJobName());
 		job.fail();
+		Logger logger = Logger.getLogger("lancoder");
+		logger.fine(String.format("Muxing failed for job %s\n", job.getJobName()));
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.logging.Logger;
 
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.third_parties.FFprobe;
@@ -26,8 +27,9 @@ public class FileProber {
 			stdout.close();
 			fileInfo = new FileInfo(json, relativePath);
 		} catch (IOException e) {
-			System.err.printf("Error while probing file %s\n", absoluteFile.getAbsoluteFile());
-			e.printStackTrace();
+			Logger logger = Logger.getLogger("lancoder");
+			logger.warning(String.format("Error while probing file %s\n", absoluteFile.getAbsoluteFile()));
+			logger.warning(e.getMessage());
 		} finally {
 			if (process != null) {
 				process.destroy();

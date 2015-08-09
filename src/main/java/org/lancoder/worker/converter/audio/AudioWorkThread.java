@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,8 +58,10 @@ public class AudioWorkThread extends Converter<ClientAudioTask> {
 		File destination = filePathManager.getSharedFinalFile(task);
 		try {
 			if (destination.exists()) {
-				System.err.printf("WARNING: Deleting existing file at destination '%s'%n."
-						+ "This might be causing a re-encoding loop !",destination.getAbsoluteFile());
+				Logger logger = Logger.getLogger("lancoder");
+				logger.warning(String.format("WARNING: Deleting existing file at destination '%s'%n."
+						+ "This might be causing a re-encoding loop !",destination.getAbsoluteFile()));
+
 				destination.delete();
 			}
 			FileUtils.moveFile(filePathManager.getLocalTempFile(task), destination);

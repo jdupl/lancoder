@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.logging.Logger;
 
 import org.lancoder.common.annotations.Prompt;
 import org.lancoder.common.config.Config;
@@ -51,11 +52,12 @@ public class WorkerConfig extends Config implements Serializable {
 	 * would otherwise always be called in the constructor otherwise.
 	 */
 	public void setNameFromHostName() {
+		Logger logger = Logger.getLogger("lancoder");
 		try {
-			System.out.println("Trying to resolve local hostname.");
+			logger.info("Trying to resolve local hostname.%n");
 			this.name = InetAddress.getLocalHost().getHostName();
 		} catch (UnknownHostException e) {
-			System.err.println("Could not find local hostname.");
+			logger.warning("Could not resolve local hostname.%n");
 		}
 	}
 

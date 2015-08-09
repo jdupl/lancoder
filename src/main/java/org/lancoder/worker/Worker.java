@@ -3,6 +3,7 @@ package org.lancoder.worker;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import org.lancoder.common.Container;
 import org.lancoder.common.FilePathManager;
@@ -62,9 +63,12 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public void bootstrap() {
+		Logger logger = Logger.getLogger("lancoder");
+
 		// Get number of available threads
 		threadLimit = Runtime.getRuntime().availableProcessors();
-		System.out.printf("Detected %d threads available.%n", threadLimit);
+		logger.fine(String.format("Detected %d threads available.%n", threadLimit));
+
 		// Parse master ip address or host name
 		try {
 			this.masterInetAddress = InetAddress.getByName(getConfig().getMasterIpAddress());
@@ -73,10 +77,13 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 					+ "\nOriginal exception: '%s'", getConfig().getMasterIpAddress(), e.getMessage()));
 		}
 		super.bootstrap();
+
 		// Get codecs
 		ArrayList<CodecEnum> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
-		System.out.printf("Detected %d available encoders: %s%n", codecs.size(), codecs);
-		node = new Node(null, getConfig().getListenPort(), getConfig().getName(), codecs, threadLimit, getConfig().getUniqueID());
+		node = new Node(null, getConfig().getListenPort(), getConfig().getName(), codecs, threadLimit, getConfig()
+				.getUniqueID());
+
+		logger.fine(String.format("Detected %d available encoders: %s%n", codecs.size(), codecs));
 	}
 
 	@Override
@@ -105,6 +112,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		services.add(masterContacter);
 	}
 
+	@Override
 	public void shutdown() {
 		// if (this.getStatus() != NodeState.NOT_CONNECTED) {
 		// System.out.println("Sending disconnect notification to master");
@@ -132,12 +140,14 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	}
 
 	public synchronized boolean startWork(ClientTask task) {
-		System.out.println("Received task " + task.getTaskId() + " from master...");
+		Logger logger = Logger.getLogger("lancoder");
+		logger.fine(String.format("Received %s from master.%n", task.toString()));
+
 		boolean accepted = false;
 		int totalUsedThreads = videoPool.getActiveThreadCount() + audioPool.getActiveThreadCount();
 
 		if (getPendingTasks().size() != 1) {
-			System.out.println("Refusing task because worker has " + (getPendingTasks().size() - 1) + " other pending tasks.");
+			logger.fine("Refusing task because worker has " + (getPendingTasks().size() - 1) + " other pending tasks.\n");
 		} else if (task instanceof ClientVideoTask && videoPool.hasFreeConverters() && totalUsedThreads < threadLimit) {
 			ClientVideoTask vTask = (ClientVideoTask) task;
 			videoPool.add(vTask);
@@ -149,24 +159,25 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 			accepted = true;
 		}
 		if (accepted) {
-			System.out.println("Accepted task " + task.getTaskId());
+			logger.fine(String.format("Accepted %s.%n", task));
+
 			task.start();
 			node.confirm(task);
 			MessageSender.send(new TaskRequestMessage(task, ClusterProtocol.TASK_ACCEPTED), getMasterInetAddress(),
 					getMasterPort());
 		} else {
+			logger.fine(String.format("Refused %s.%n", task));
+
 			node.removeTask(task);
-			System.out.println("Refused task " + task.getTaskId());
 			MessageSender.send(new TaskRequestMessage(task, ClusterProtocol.TASK_REFUSED), getMasterInetAddress(),
 					getMasterPort());
-			//notifyMasterStatusChange();
 		}
 		return true;
 	}
 
 	/**
 	 * Get a status report of the worker.
-	 * 
+	 *
 	 * @return the StatusReport object
 	 */
 	public synchronized StatusReport getStatusReport() {
@@ -175,13 +186,15 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	/**
 	 * Get a task report of the current task.
-	 * 
+	 *
 	 * @return null if no current task
 	 */
 	public ArrayList<TaskReport> getTaskReports() {
 		ArrayList<TaskReport> reports = new ArrayList<TaskReport>();
+
 		for (ClientTask task : this.getCurrentTasks()) {
 			TaskReport report = new TaskReport(getConfig().getUniqueID(), task);
+
 			if (report != null) {
 				reports.add(report);
 			}
@@ -210,7 +223,8 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 			notifyMasterStatusChange();
 			break;
 		default:
-			System.err.println("Unhandlded status code while updating status");
+			Logger logger = Logger.getLogger("lancoder");
+			logger.warning(String.format("Caught unknown status code '%s' while updating status", statusCode));
 			break;
 		}
 	}
@@ -233,6 +247,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		return getConfig().getMasterPort();
 	}
 
+	@Override
 	public NodeState getStatus() {
 		return this.node.getStatus();
 	}
@@ -245,6 +260,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 		return getConfig().getName();
 	}
 
+	@Override
 	public void run() {
 		updateStatus(NodeState.NOT_CONNECTED);
 		startServices();
@@ -269,10 +285,13 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public boolean deleteTask(ClientTask t) {
+		Logger logger = Logger.getLogger("lancoder");
+
 		for (ClientTask task : this.node.getCurrentTasks()) {
 			if (task.equals(t)) {
-				System.out.printf("Stopping task %d of job %s as Master requested !%n", task.getTaskId(),
-						task.getJobId());
+				logger.fine(String.format("Stopping task %d of job %s as master requested !%n", task.getTaskId(),
+						task.getJobId()));
+
 				stopWork(task);
 				return true;
 			}
@@ -282,22 +301,27 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public void shutdownWorker() {
-		System.err.println("Received shutdown request from api !");
+		Logger logger = Logger.getLogger("lancoder");
+
+		logger.info("Received shutdown request from api !\n");
 		this.shutdown();
 	}
 
 	@Override
 	public void onConnectResponse(ConnectResponse responseMessage) {
+		Logger logger = Logger.getLogger("lancoder");
 		String unid = responseMessage.getNewUnid();
+
 		if (unid != null && !unid.isEmpty()) {
 			setUnid(unid);
 			String protocol = responseMessage.getWebuiProtocol();
 			int port = responseMessage.getWebuiPort();
-			System.out.printf("Worker is now connected to master. Please connect to the webui at '%s://%s:%d'.%n",
-					protocol, masterInetAddress.getHostAddress(), port);
+
+			logger.info(String.format("Worker is now connected to master. Please connect to the webui at '%s://%s:%d'.%n",
+					protocol, masterInetAddress.getHostAddress(), port));
 			updateStatus(NodeState.FREE);
 		} else {
-			System.err.println("Received empty or invalid UNID from master.");
+			logger.severe("Received empty or invalid UNID from master.");
 		}
 	}
 
@@ -311,22 +335,28 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public synchronized void taskCompleted(ClientTask task) {
-		System.out.println("Completed task " + task.getTaskId());
+		Logger logger = Logger.getLogger("lancoder");
+		logger.fine(String.format("Completed %s.%n", task));
+
 		task.getProgress().complete();
 		notifyAndRemove(task);
 	}
 
 	@Override
 	public synchronized void taskCancelled(ClientTask task) {
+		Logger logger = Logger.getLogger("lancoder");
+		logger.fine(String.format("Cancelled %s.%n", task));
+
 		task.getProgress().reset();
-		System.out.println("Cancelled task " + task.getTaskId());
 		notifyAndRemove(task);
 	}
 
 	@Override
 	public synchronized void taskFailed(ClientTask task) {
+		Logger logger = Logger.getLogger("lancoder");
+		logger.fine(String.format("Failed %s.%n", task));
+
 		task.fail();
-		System.out.println("Failed task " + task.getTaskId());
 		notifyAndRemove(task);
 	}
 
@@ -346,7 +376,8 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public void masterTimeout() {
-		System.err.println("Lost connection to master !");
+		Logger logger = Logger.getLogger("lancoder");
+		logger.info("Lost connection to master !");
 
 		for (ClientTask task : this.getCurrentTasks()) {
 			stopWork(task);

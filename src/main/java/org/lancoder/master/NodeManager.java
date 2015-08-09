@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 import org.lancoder.common.Node;
 import org.lancoder.common.events.Event;
@@ -44,16 +45,17 @@ public class NodeManager implements EventListener {
 
 	/**
 	 * Returns a node object from a node id
-	 * 
+	 *
 	 * @param nodeId
 	 *            The node ID to get
 	 * @return The node object or null if not found
 	 */
 	public Node identifySender(String nodeId) {
 		Node n = this.nodes.get(nodeId);
+
 		if (n == null) {
-			System.err.printf("WARNING could not FIND NODE %s\n" + "Size of nodesByUNID: %d\n"
-					+ "Size of nodes arraylist:%d\n", nodeId, nodes.size(), nodes.size());
+			Logger logger = Logger.getLogger("lancoder");
+			logger.warning(String.format("Could not find node %s%n", nodeId));
 		}
 		return n;
 	}
@@ -79,7 +81,7 @@ public class NodeManager implements EventListener {
 
 	/**
 	 * Get a list of nodes currently completely free. Video tasks will use all threads.
-	 * 
+	 *
 	 * @return A list of nodes that can accept a video task
 	 */
 	public synchronized ArrayList<Node> getFreeVideoNodes() {
@@ -94,11 +96,12 @@ public class NodeManager implements EventListener {
 
 	/**
 	 * Get a list of nodes that can encode audio. Audio tasks only need one thread.
-	 * 
+	 *
 	 * @return A list of nodes that can accept an audio task
 	 */
 	public synchronized ArrayList<Node> getFreeAudioNodes() {
 		ArrayList<Node> nodes = new ArrayList<>();
+
 		for (Node node : this.getOnlineNodes()) {
 			if (isAvailable(node)) {
 				nodes.add(node);
@@ -109,7 +112,7 @@ public class NodeManager implements EventListener {
 
 	/**
 	 * Check if a node is available for work.
-	 * 
+	 *
 	 * @param node
 	 * @return
 	 */
@@ -117,6 +120,7 @@ public class NodeManager implements EventListener {
 		// TODO allow dynamic failure threshold
 		boolean nodeAvailable = node.getFailureCount() < FAILURE_THRESHOLD
 				&& node.getAllTasks().size() < node.getThreadCount();
+
 		if (nodeAvailable) {
 			for (ClientTask task : node.getCurrentTasks()) {
 				if (task instanceof ClientVideoTask) {
@@ -131,7 +135,7 @@ public class NodeManager implements EventListener {
 	/**
 	 * Adds a node to the node list. Assigns a new ID to the node if it's non-existent. The node will be picked up by
 	 * the node checker automatically if work is available.
-	 * 
+	 *
 	 * @param n
 	 *            The node to be added
 	 * @return if the node could be added
@@ -143,17 +147,23 @@ public class NodeManager implements EventListener {
 			n.setUnid(getNewUNID(n));
 		}
 		Node masterInstance = nodes.get(n.getUnid());
+
 		if (masterInstance != null && masterInstance.getStatus() == NodeState.NOT_CONNECTED) {
 			// Node with same unid reconnecting
 			masterInstance.setStatus(NodeState.FREE);
-			System.out.printf("Node %s with id %s reconnected.%n", n.getName(), n.getUnid());
+
+			Logger logger = Logger.getLogger("lancoder");
+			logger.fine(String.format("Node %s with id %s reconnected.%n", n.getName(), n.getUnid()));
 		} else if (masterInstance == null) {
 			n.setStatus(NodeState.FREE);
 			nodes.put(n.getUnid(), n);
-			System.out.printf("Added new node %s with id %s.%n", n.getName(), n.getUnid());
+
+			Logger logger = Logger.getLogger("lancoder");
+			logger.fine(String.format("Added new node %s with id %s.%n", n.getName(), n.getUnid()));
 		} else {
 			success = false;
 		}
+
 		n.unlock(); // remove lock on the node
 		if (success) {
 			listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
@@ -163,35 +173,37 @@ public class NodeManager implements EventListener {
 
 	/**
 	 * Set disconnected status to node and cancel node's tasks. Use shutdownNode() to gracefully shutdown a node.
-	 * 
-	 * 
+	 *
+	 *
 	 * @param n
 	 *            The node to disconnect
 	 */
 	public synchronized void removeNode(Node n) {
+		Logger logger = Logger.getLogger("lancoder");
+
 		if (n != null) {
-			System.err.println("Disconnecting node " + n.getName());
+			logger.fine(String.format("Disconnecting node %s", n.getName()));
 			n.setStatus(NodeState.NOT_CONNECTED);
 			listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
-		} else {
-			System.err.println("Could not mark node as disconnected as it was not found");
 		}
 	}
 
 	private String getNewUNID(Node n) {
 		String algorithm = Master.ALGORITHM;
 		String result = "";
-		System.out.println("MASTER: generating a unid for node " + n.getName());
 		long ms = System.currentTimeMillis();
 		String input = ms + n.getName();
 		MessageDigest md = null;
+
 		try {
 			md = MessageDigest.getInstance(algorithm);
 		} catch (NoSuchAlgorithmException e) {
 			// print and handle exception
 			// if a null string is given back to the client, it won't connect
-			e.printStackTrace();
-			System.out.printf("Could not get an instance of %s to produce a UNID.%n");
+			Logger logger = Logger.getLogger("lancoder");
+			logger.severe(String.format("Could not get an instance of %s to produce a UNID.%n", algorithm));
+			logger.severe(e.getMessage());
+
 			return "";
 		}
 		byte[] byteArray = md.digest(input.getBytes());

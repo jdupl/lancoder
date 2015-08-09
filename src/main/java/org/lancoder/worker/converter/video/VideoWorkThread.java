@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -93,7 +94,9 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		File source = filePathManager.getLocalTempFile(task);
 
 		if (filePathManager.getSharedFinalFile(task).exists()) {
-			System.err.printf("Deleting shared file '%s'.\n", destination.getPath());
+			Logger logger = Logger.getLogger("lancoder");
+
+			logger.warning(String.format("Deleting shared file '%s'.\n", destination.getPath()));
 			filePathManager.getSharedFinalFile(task).delete();
 		}
 		String[] baseArgs = new String[] { ffMpeg.getPath(), "-i", source.getAbsolutePath(), "-f", "mpegts", "-c",
@@ -121,9 +124,9 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		}
 		m = missingDecoder.matcher(line);
 		if (m.find()) {
-			System.err.println("Missing decoder !");
+			Logger logger = Logger.getLogger("lancoder");
+			logger.warning(String.format("Missing decoder for %s!", task));
 			listener.taskFailed(task);
-			// listener.crash(new MissingDecoderException("Missing decoder or encoder"));
 		}
 	}
 
@@ -141,8 +144,10 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 
 			int currentStep = 1;
 			while (currentStep <= task.getStepCount() && success) {
-				System.err.printf("Encoding pass %d of %d\n", task.getProgress().getCurrentStepIndex(),
-						task.getStepCount());
+				Logger logger = Logger.getLogger("lancoder");
+
+				logger.fine(String.format("Encoding pass %d of %d\n", task.getProgress().getCurrentStepIndex(),
+						task.getStepCount()));
 				success = encodePass(startTimeStr, durationStr);
 				if (success) {
 					task.getProgress().completeStep();

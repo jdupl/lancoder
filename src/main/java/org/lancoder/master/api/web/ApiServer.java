@@ -1,6 +1,7 @@
 package org.lancoder.master.api.web;
 
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -66,8 +67,8 @@ public class ApiServer extends RunnableServiceAdapter {
 		try {
 			server.stop();
 		} catch (Exception e) {
-			System.err.println("MASTER: Could not close api server !");
-			e.printStackTrace();
+			Logger logger = Logger.getLogger("lancoder");
+			logger.severe(e.getMessage());
 		}
 	}
 }

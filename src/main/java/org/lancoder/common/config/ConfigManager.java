@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
 
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.yaml.snakeyaml.Yaml;
@@ -53,10 +54,13 @@ public class ConfigManager<T extends Config> {
 		}
 
 		try {
+			Logger logger = Logger.getLogger("lancoder");
+
 			FileInputStream fis = new FileInputStream(this.configPath);
 			Yaml yaml = new Yaml();
 			this.config = (T) yaml.loadAs(fis, this.clazz);
-			System.out.println("Loaded config from disk");
+
+			logger.fine("Loaded config from disk");
 			return true;
 		} catch (IOException | NullPointerException e) {
 			throw new InvalidConfigurationException(String.format(CONF_CORRUPTED, this.configPath));

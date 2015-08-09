@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
 import org.lancoder.common.ServiceAdapter;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
@@ -55,14 +56,20 @@ public class FFmpegReader extends ServiceAdapter {
 			throws MissingThirdPartyException {
 		this.listener = listener;
 		boolean success = false;
+
+		Logger logger = Logger.getLogger("lancoder");
 		ProcessBuilder pb = new ProcessBuilder(args);
+
 		pb.directory(processDirectory);
-		 System.out.println(pb.command().toString()); // DEBUG
+
+		logger.finer(pb.command().toString());
+
 		Scanner s = null;
 		try {
 			p = pb.start();
 			InputStream stream = useStdErr ? p.getErrorStream() : p.getInputStream();
 			s = new Scanner(stream);
+
 			while (s.hasNext() && !close) {
 				listener.onMessage(s.nextLine());
 			}

@@ -42,13 +42,15 @@ public class AudioEncodeStrategy extends EncodeStrategy {
 		AudioStream outStream = (AudioStream) config.getOutStream();
 		ArrayList<ClientTask> tasks = new ArrayList<>();
 		int taskId = job.getTaskCount();
+
 		File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
 		File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
 				String.format("part-%d.%s", taskId, getCodec().getContainer()));
-		System.out.println(outStream.getUnitCount());
+
 		AudioTask task = new AudioTask(taskId, job.getJobId(), 0, outStream.getUnitCount(), outStream.getUnitCount(),
 				Unit.SECONDS, relativeTaskOutputFile.getPath());
 		tasks.add(new ClientAudioTask(task, (AudioStreamConfig) config));
+
 		return tasks;
 	}
 

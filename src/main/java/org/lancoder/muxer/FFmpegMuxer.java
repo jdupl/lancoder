@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.exceptions.MissingDecoderException;
@@ -159,8 +160,8 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 						superPartsDirectory.delete();
 					}
 				} catch (IOException e) {
-					System.err.println("Error while deleting parts of job");
-					e.printStackTrace();
+					Logger logger = Logger.getLogger("lancoder");
+					logger.warning(e.getMessage());
 				}
 				this.listener.jobMuxingCompleted(task);
 			} else {
