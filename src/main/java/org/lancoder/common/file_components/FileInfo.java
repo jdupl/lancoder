@@ -41,7 +41,7 @@ public class FileInfo implements Serializable {
 
 	/**
 	 * Construct file info from streams in json object.
-	 * 
+	 *
 	 * @param json
 	 *            The json object from ffprobe
 	 * @param relativeSource
@@ -50,6 +50,7 @@ public class FileInfo implements Serializable {
 	public FileInfo(JsonObject json, String relativeSource) {
 		this.relativeSource = relativeSource;
 		JsonObject format = json.get("format").getAsJsonObject();
+
 		this.setBitrate(format.get("bit_rate").getAsInt());
 		this.setSize(format.get("size").getAsLong());
 		// convert from seconds to ms
@@ -58,6 +59,7 @@ public class FileInfo implements Serializable {
 
 		for (JsonElement jsonStream : json.get("streams").getAsJsonArray()) {
 			JsonObject jsonObject = jsonStream.getAsJsonObject();
+
 			switch (jsonObject.get("codec_type").getAsString()) {
 			case "video":
 				JsonObject disposition = jsonObject.getAsJsonObject("disposition");

@@ -9,7 +9,6 @@ import org.lancoder.common.task.TaskReport;
 public class StatusReport extends AuthMessage {
 
 	private static final long serialVersionUID = -844534455490561432L;
-	private long loadAverage;
 	private ArrayList<TaskReport> taskReports;
 	public NodeState status;
 
@@ -22,14 +21,6 @@ public class StatusReport extends AuthMessage {
 		super(ClusterProtocol.STATUS_REPORT, unid);
 		this.taskReports = taskReports;
 		this.status = status;
-	}
-
-	public long getLoadAverage() {
-		return loadAverage;
-	}
-
-	public void setLoadAverage(long loadAverage) {
-		this.loadAverage = loadAverage;
 	}
 
 	public ArrayList<TaskReport> getTaskReports() {

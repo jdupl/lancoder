@@ -16,16 +16,19 @@ public class OriginalVideoStream extends OriginalStream {
 		super(json, relativeSource, unitCount);
 		this.unit = Unit.SECONDS;
 		JsonElement element = null;
+
 		if ((element = json.get("r_frame_rate")) != null) {
 			// raw frame rate is noted as 24000/1001 or 24/1
 			String rawFrameRate = element.getAsString();
 			String[] values = rawFrameRate.split("/");
+
 			if (values.length == 2) {
 				int decimals = values[1].length() - 1;
 				this.frameRate = (Double.parseDouble(values[0]) / Double.parseDouble(values[1]));
 				this.frameRate = Math.floor(this.frameRate * Math.pow(10, decimals)) / Math.pow(10, decimals);
 			}
 		}
+
 		if ((element = json.get("width")) != null) {
 			this.width = element.getAsInt();
 		}

@@ -22,9 +22,9 @@ import org.lancoder.common.utils.FileUtils;
 /**
  * A job is the whole process of taking the source file, splitting it if necessary, encoding it and merge back all
  * tracks. Tasks will be dispatched to nodes by the master.
- * 
+ *
  * @author justin
- * 
+ *
  */
 public class Job implements Comparable<Job>, Serializable {
 
@@ -84,19 +84,19 @@ public class Job implements Comparable<Job>, Serializable {
 			// Estimate the frame count from the frame rate and length
 			this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 		}
+
 		this.sourceFile = sourceFile;
 		this.outputFileName = outputFileName;
 		this.partsFolderName = FileUtils.getFile(baseOutputFolder, "parts", jobId).getPath();
 
 		// Set output's filename
-		// this.outputFolder = FileUtils.getFile(encodingOutputFolder, jobName).getPath();
 		this.outputFolder = outputFolder.getPath();
 	}
 
 	/**
 	 * Create a unique id for a job. Uses the source file, the name of the job and the current millisecond time to avoid
 	 * time, name and file collisions.
-	 * 
+	 *
 	 * @param sourceFile
 	 *            The source file of the job
 	 * @param jobName
@@ -152,17 +152,9 @@ public class Job implements Comparable<Job>, Serializable {
 		return getJobStatus() != JobState.JOB_TODO;
 	}
 
-	public String getSourceFile() {
-		return sourceFile;
-	}
-
-	public int getTaskCount() {
-		return this.tasks.size();
-	}
-
 	/**
 	 * Add a stream and its tasks to the job.
-	 * 
+	 *
 	 * @param stream
 	 *            The destination stream
 	 * @param clientTasks
@@ -186,7 +178,7 @@ public class Job implements Comparable<Job>, Serializable {
 
 	/**
 	 * Get the tasks associated to this stream.
-	 * 
+	 *
 	 * @param stream
 	 *            The stream to look for
 	 * @return An ArrayList of related tasks
@@ -197,7 +189,7 @@ public class Job implements Comparable<Job>, Serializable {
 
 	/**
 	 * Returns next task to encode. Changes Job status if job is not started yet.
-	 * 
+	 *
 	 * @return The task or null if no task is available
 	 */
 	public synchronized ClientVideoTask getNextVideoTask() {
@@ -207,7 +199,7 @@ public class Job implements Comparable<Job>, Serializable {
 
 	/**
 	 * Returns all tasks to do for this job. Changes Job status if job is not started yet.
-	 * 
+	 *
 	 * @return The list of task
 	 */
 	public synchronized ArrayList<ClientVideoTask> getTodoVideoTask() {
@@ -232,7 +224,7 @@ public class Job implements Comparable<Job>, Serializable {
 
 	/**
 	 * Counts if necessary the tasks currently not processed. A task being processed by a node counts as processed.
-	 * 
+	 *
 	 * @return The count of tasks left to dispatch
 	 */
 	public synchronized int getTodoTaskCount() {
@@ -255,7 +247,7 @@ public class Job implements Comparable<Job>, Serializable {
 
 	/**
 	 * Counts if necessary the completed tasks.
-	 * 
+	 *
 	 * @return The count of tasks completed
 	 */
 	public synchronized int getTaskDoneCount() {
@@ -295,15 +287,12 @@ public class Job implements Comparable<Job>, Serializable {
 		return tasks;
 	}
 
-	public ArrayList<ClientTask> getClientTasks() {
-		return clientTasks;
-	}
-
 	/**
 	 * Compare job accordingly to priority, tasks remaining and job length.
-	 * 
+	 *
 	 * @return 1 if this is bigger, -1 otherwise
 	 */
+	@Override
 	public int compareTo(Job other) {
 		if (this.priority != other.priority) {
 			return Integer.compare(this.priority, other.priority);
@@ -321,6 +310,24 @@ public class Job implements Comparable<Job>, Serializable {
 		}
 		Job other = (Job) obj;
 		return other.getJobId().equals(this.getJobId());
+	}
+
+	public ArrayList<Stream> getStreams() {
+		ArrayList<Stream> streams = new ArrayList<>();
+		streams.addAll(this.streamTaskMapping.keySet());
+		return streams;
+	}
+
+	public ArrayList<ClientTask> getClientTasks() {
+		return clientTasks;
+	}
+
+	public String getSourceFile() {
+		return sourceFile;
+	}
+
+	public int getTaskCount() {
+		return this.tasks.size();
 	}
 
 	public JobState getJobStatus() {
@@ -389,12 +396,6 @@ public class Job implements Comparable<Job>, Serializable {
 
 	public void setPartsFolderName(String partsFolderName) {
 		this.partsFolderName = partsFolderName;
-	}
-
-	public ArrayList<Stream> getStreams() {
-		ArrayList<Stream> streams = new ArrayList<>();
-		streams.addAll(this.streamTaskMapping.keySet());
-		return streams;
 	}
 
 	public long getTimeAdded() {

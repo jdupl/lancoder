@@ -158,6 +158,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 			audioPool.add(aTask);
 			accepted = true;
 		}
+
 		if (accepted) {
 			logger.fine(String.format("Accepted %s.%n", task));
 

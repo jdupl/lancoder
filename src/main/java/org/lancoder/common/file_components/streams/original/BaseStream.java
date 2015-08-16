@@ -18,7 +18,7 @@ public abstract class BaseStream implements Serializable {
 	protected long unitCount;
 	protected Unit unit = Unit.SECONDS;
 
-	BaseStream() {
+	protected BaseStream() {
 	}
 
 	public BaseStream(String relativeFile, int index, AbstractCodec codec, long unitCount, Unit unit) {

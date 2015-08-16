@@ -12,21 +12,23 @@ public abstract class OriginalStream extends BaseStream {
 
 	/**
 	 * Parse a json object and instantiate a stream with it's properties.
-	 * 
+	 *
 	 * @param json
 	 *            the json stream object to parse
 	 * @param relativeFile
 	 *            The relative source file of this stream
 	 * @param unitCount
-	 * 
+	 *
 	 */
 	public OriginalStream(JsonObject json, String relativeFile, long unitCount) {
 		this.relativeFile = relativeFile;
 		this.index = json.get("index").getAsInt();
 		this.unitCount = unitCount;
+
 		String unknownCodec = json.get("codec_name").getAsString();
 		CodecEnum codecEnum = CodecEnum.findByLib(unknownCodec);
 		this.codec = CodecLoader.fromCodec(codecEnum);
+
 		JsonElement tagsElement = json.get("tags");
 		if (tagsElement != null) {
 			JsonObject tags = tagsElement.getAsJsonObject();
@@ -41,6 +43,7 @@ public abstract class OriginalStream extends BaseStream {
 		JsonElement dispositionElement = json.get("disposition");
 		if (dispositionElement != null) {
 			JsonObject disposition = dispositionElement.getAsJsonObject();
+
 			if (disposition.get("default") != null) {
 				this.isDefault = disposition.get("default").getAsInt() == 0 ? false : true;
 			}

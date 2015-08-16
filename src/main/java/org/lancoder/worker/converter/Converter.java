@@ -44,6 +44,7 @@ public abstract class Converter<T extends ClientTask> extends PoolWorker<T> impl
 			sharedFolder.mkdirs();
 			FileUtils.givePerms(sharedFolder, false);
 		}
+
 		// Create temporary task folder on local file system (also creates job's folder)
 		File localFolder = filePathManager.getLocalTempFolder(task);
 		if (!localFolder.exists()) {
@@ -54,6 +55,25 @@ public abstract class Converter<T extends ClientTask> extends PoolWorker<T> impl
 			cleanTempFolder();
 		}
 	}
+
+	protected boolean moveFile() {
+		File destination = filePathManager.getSharedFinalFile(task);
+		try {
+			if (destination.exists()) {
+				Logger logger = Logger.getLogger("lancoder");
+				logger.warning(String.format("Deleting existing file at destination '%s'%n."
+						+ "This might be causing a re-encoding loop !",destination.getAbsoluteFile()));
+
+				destination.delete();
+			}
+			FileUtils.moveFile(filePathManager.getLocalTempFile(task), destination);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
 
 	/**
 	 * Clean task's temporary folder.

@@ -30,19 +30,16 @@ public class Node implements Serializable {
 		this.nodeAddress = nodeAddress;
 		this.nodePort = nodePort;
 		this.name = name;
+		this.unid = unid;
+		this.threadCount = threadCount;
+
 		for (CodecEnum codecEnum : codecs) {
 			this.codecs.add(CodecLoader.fromCodec(codecEnum));
 		}
-		this.unid = unid;
-		this.threadCount = threadCount;
 	}
 
 	public void failure() {
 		this.failureCount++;
-	}
-
-	public int getFailureCount() {
-		return failureCount;
 	}
 
 	public boolean isLocked() {
@@ -55,14 +52,6 @@ public class Node implements Serializable {
 
 	public void unlock() {
 		this.locked = false;
-	}
-
-	public int getThreadCount() {
-		return threadCount;
-	}
-
-	public ArrayList<AbstractCodec> getCodecs() {
-		return codecs;
 	}
 
 	public boolean hasTask(ClientTask task) {
@@ -90,17 +79,13 @@ public class Node implements Serializable {
 		return tasks;
 	}
 
-	public ArrayList<ClientTask> getPendingTasks() {
-		return pendingTasks;
-	}
-
 	public void addTask(ClientTask currentTask) {
 		this.currentTasks.add(currentTask);
 	}
 
 	/**
 	 * Method to check if the current supports the codec of the output stream of a task.
-	 * 
+	 *
 	 * @param task
 	 *            The task to check
 	 * @return True if node can handle the task
@@ -111,11 +96,6 @@ public class Node implements Serializable {
 	}
 
 	@Override
-	public String toString() {
-		return "Node [nodeAddress=" + nodeAddress + ", nodePort=" + nodePort + ", status=" + status + ", name=" + name
-				+ ", unid=" + unid + ", currentTasks=" + currentTasks + ", codecs=" + codecs + "]";
-	}
-
 	public boolean equals(Object o) {
 		boolean equals = false;
 		if (o instanceof Node) {
@@ -125,6 +105,43 @@ public class Node implements Serializable {
 			}
 		}
 		return equals;
+	}
+
+	public void removeAllTasks() {
+		currentTasks.clear();
+		pendingTasks.clear();
+	}
+
+	public void confirm(ClientTask task) {
+		pendingTasks.remove(task);
+		currentTasks.add(task);
+	}
+
+	public void removeTask(ClientTask task) {
+		currentTasks.remove(task);
+		pendingTasks.remove(task);
+	}
+
+	@Override
+	public String toString() {
+		return "Node [nodeAddress=" + nodeAddress + ", nodePort=" + nodePort + ", status=" + status + ", name=" + name
+				+ ", unid=" + unid + ", currentTasks=" + currentTasks + ", codecs=" + codecs + "]";
+	}
+
+	public int getFailureCount() {
+		return failureCount;
+	}
+
+	public int getThreadCount() {
+		return threadCount;
+	}
+
+	public ArrayList<AbstractCodec> getCodecs() {
+		return codecs;
+	}
+
+	public ArrayList<ClientTask> getPendingTasks() {
+		return pendingTasks;
 	}
 
 	public InetAddress getNodeAddress() {
@@ -171,18 +188,4 @@ public class Node implements Serializable {
 		this.unid = nodeIdentifier;
 	}
 
-	public void removeAllTasks() {
-		currentTasks.clear();
-		pendingTasks.clear();
-	}
-
-	public void confirm(ClientTask task) {
-		pendingTasks.remove(task);
-		currentTasks.add(task);
-	}
-
-	public void removeTask(ClientTask task) {
-		currentTasks.remove(task);
-		pendingTasks.remove(task);
-	}
 }

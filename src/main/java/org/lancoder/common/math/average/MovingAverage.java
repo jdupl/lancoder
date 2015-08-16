@@ -4,6 +4,12 @@ import java.io.Serializable;
 
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 
+/**
+ * Provides a moving average of the last n elements inserted
+ *
+ * @author justin
+ *
+ */
 public class MovingAverage implements Serializable {
 
 	private static final long serialVersionUID = -7629002197323552955L;
@@ -12,7 +18,7 @@ public class MovingAverage implements Serializable {
 
 	/**
 	 * Create a moving average with a fixed sample size
-	 * 
+	 *
 	 * @param historySize
 	 *            The number of samples to keep
 	 */
@@ -22,7 +28,7 @@ public class MovingAverage implements Serializable {
 
 	/**
 	 * Add a sample to the moving average
-	 * 
+	 *
 	 * @param value
 	 *            The value of the sample
 	 */
@@ -32,7 +38,7 @@ public class MovingAverage implements Serializable {
 
 	/**
 	 * Calculate current average of the values of the last n samples.
-	 * 
+	 *
 	 * @return The average
 	 */
 	public double getAverage() {

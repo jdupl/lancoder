@@ -4,6 +4,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+
+/**
+ * Provides a moving average of maximum n elements which expire after m milliseconds
+ *
+ * @author justin
+ *
+ */
 public class TimedMovingAverage implements Serializable {
 
 	private static final long serialVersionUID = 7322472221784144707L;
@@ -15,7 +22,7 @@ public class TimedMovingAverage implements Serializable {
 
 	/**
 	 * Create a timed based average with a 1000 samples maximum.
-	 * 
+	 *
 	 * @param expireTime
 	 *            The maximum time in milliseconds a sample is kept
 	 */
@@ -25,7 +32,7 @@ public class TimedMovingAverage implements Serializable {
 
 	/**
 	 * Create a timed based average.
-	 * 
+	 *
 	 * @param expireTime
 	 *            The maximum time in milliseconds a sample is kept
 	 * @param maxSampleCount
@@ -50,6 +57,7 @@ public class TimedMovingAverage implements Serializable {
 	public double getAverage() {
 		double total = 0;
 		clean();
+
 		for (TimedSample<Double> sample : samples) {
 			total += sample.getSampleValue();
 		}
