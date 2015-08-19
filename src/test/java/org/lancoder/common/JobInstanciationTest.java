@@ -1,8 +1,11 @@
 package org.lancoder.common;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.lancoder.common.annotations.NoWebUI;
@@ -20,6 +23,7 @@ import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -37,10 +41,10 @@ public class JobInstanciationTest {
 		MasterConfig config = new MasterConfig();
 		Job job = new Job("testJob", "source.mkv", 500, fakeFileInfo(), new File("encode"), "output.mkv");
 
-		Assert.assertNotEquals("", job.getJobId());
-		Assert.assertEquals("output.mkv", job.getOutputFileName());
-		Assert.assertEquals("encode/testJob", job.getOutputFolder());
-		Assert.assertEquals("encode/testJob/parts/" + job.getJobId(), job.getPartsFolderName());
+		assertNotEquals("", job.getJobId());
+		assertEquals("output.mkv", job.getOutputFileName());
+		assertEquals("encode/testJob", job.getOutputFolder());
+		assertEquals("encode/testJob/parts/" + job.getJobId(), job.getPartsFolderName());
 	}
 
 	@Test
@@ -51,18 +55,23 @@ public class JobInstanciationTest {
 		PowerMockito.mockStatic(FFmpegWrapper.class);
 		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
 				.thenReturn(fakeFileInfo());
+		Job j = null;
 
-		Job j = factory.createJob(fakeRequest(), new File(""));
-		Assert.assertEquals(1, j.getClientAudioTasks().size());
-		Assert.assertEquals(2, j.getClientVideoTasks().size());
+		try {
+			j = Whitebox.<Job>invokeMethod(factory, fakeRequest(), new File(""));
+		} catch (Exception e) {
+			fail();
+		}
+		assertEquals(1, j.getClientAudioTasks().size());
+		assertEquals(2, j.getClientVideoTasks().size());
 
 		ClientVideoTask task1 = j.getClientVideoTasks().get(0);
-		Assert.assertEquals(0, task1.getEncodingStartTime());
-		Assert.assertEquals(300000, task1.getEncodingEndTime());
+		assertEquals(0, task1.getEncodingStartTime());
+		assertEquals(300000, task1.getEncodingEndTime());
 
 		ClientVideoTask task2 = j.getClientVideoTasks().get(1);
-		Assert.assertEquals(300000, task2.getEncodingStartTime());
-		Assert.assertEquals(596461, task2.getEncodingEndTime());
+		assertEquals(300000, task2.getEncodingStartTime());
+		assertEquals(596461, task2.getEncodingEndTime());
 	}
 
 	private ApiJobRequest fakeRequest() {

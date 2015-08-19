@@ -152,11 +152,10 @@ public class JobInitiator extends RunnableServiceAdapter {
 		return handlingStrategy.createTasks(job, config);
 	}
 
-	public Job createJob(ApiJobRequest req, File sourcefile) {
+	private Job createJob(ApiJobRequest req, File sourcefile) {
 		return createJob(req, req.getName(), sourcefile);
 	}
 
-	@Deprecated
 	private void processBatchRequest(ApiJobRequest req) {
 		File baseSourceFolder = FileUtils.getFile(config.getAbsoluteSharedFolder(), req.getInputFile());
 		String globalJobName = req.getName();
@@ -175,8 +174,9 @@ public class JobInitiator extends RunnableServiceAdapter {
 			URI jobOutputUri = baseSourceFolder.toURI().relativize(absoluteFile.getParentFile().toURI());
 			File jobOutput = new File(relGlobalOutput, jobOutputUri.getPath());
 			String jobName = String.format("%s - %s ", globalJobName, fileName);
-//			Job job = createJob(req, jobName, relativeJobFile, jobOutput, relGlobalOutput);
-//			registerJob(job);
+
+			Job job = createJob(req, jobName, relativeJobFile, jobOutput);
+			registerJob(job);
 		}
 	}
 
