@@ -50,4 +50,13 @@ public class FilePathManager {
 				.getRelativeFile());
 	}
 
+	public File getRelativeTaskOutput(ClientTask task) {
+		String extension = task.getStreamConfig().getOutStream().getStrategy().getCodec().needsTranscode()
+				? "mpeg.ts" : task.getStreamConfig().getOutStream().getStrategy().getCodec().getContainer();
+		File relativeTaskOutputFile = FileUtils.getFile(config.getTempEncodingFolder(),
+				String.format("part-%d.%s", task.getTaskId(), extension));
+
+		return relativeTaskOutputFile;
+	}
+
 }

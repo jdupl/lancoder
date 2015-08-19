@@ -59,21 +59,26 @@ public class VideoEncodeStrategy extends EncodeStrategy {
 	public ArrayList<ClientTask> createTasks(Job job, StreamConfig config) {
 		VideoStreamConfig streamConfig = (VideoStreamConfig) config;
 		OriginalVideoStream inStream = streamConfig.getOrignalStream();
+
 		ArrayList<ClientTask> tasks = new ArrayList<>();
 		int taskId = job.getTaskCount();
 		// exclude copy streams from task creation
 		long remaining = 0;
+
 		if (inStream.getUnit() == Unit.FRAMES) {
 			remaining = (long) (inStream.getUnitCount() / inStream.getFrameRate());
 		} else if (inStream.getUnit() == Unit.SECONDS) {
 			// convert from ms to seconds
 			remaining = inStream.getUnitCount() * 1000;
 		}
+
 		long currentMs = 0;
 		File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
+
 		while (remaining > 0) {
 			long start = currentMs;
 			long end = 0;
+
 			if ((((double) remaining - job.getLengthOfTasks()) / job.getLengthOfJob()) <= 0.15) {
 				end = job.getLengthOfJob();
 				remaining = 0;
@@ -82,13 +87,14 @@ public class VideoEncodeStrategy extends EncodeStrategy {
 				remaining -= job.getLengthOfTasks();
 				currentMs += job.getLengthOfTasks();
 			}
-			String extension = getCodec().needsTranscode() ? "mpeg.ts" : getCodec().getContainer();
-			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
-					String.format("part-%d.%s", taskId, extension));
+
 			long ms = end - start;
 			long unitCount = (long) Math.floor((ms / 1000 * getFrameRate()));
-			VideoTask task = new VideoTask(taskId, job.getJobId(), getStepCount(), start, end, unitCount, Unit.FRAMES,
-					relativeTaskOutputFile.getPath());
+
+			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
+					String.format("part-%d.%s", taskId, getCodec().getContainer()));
+
+			VideoTask task = new VideoTask(taskId, job.getJobId(), getStepCount(), start, end, unitCount, Unit.FRAMES, relativeTaskOutputFile.getPath());
 			tasks.add(new ClientVideoTask(task, streamConfig));
 			taskId++;
 		}

@@ -26,6 +26,7 @@ public abstract class Server extends RunnableServiceAdapter {
 	public void stop() {
 		super.stop();
 		this.pool.stop();
+
 		poolThread.interrupt();
 		try {
 			server.close();
@@ -38,6 +39,7 @@ public abstract class Server extends RunnableServiceAdapter {
 		instanciatePool();
 		this.poolThread = new Thread(pool, pool.getClass().getSimpleName());
 		this.poolThread.start();
+
 		try {
 			server = new ServerSocket(port);
 			while (!close) {

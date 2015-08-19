@@ -2,9 +2,7 @@ package org.lancoder.common.status;
 
 /**
  * Possible states for a task.
- * 
  */
-
 public enum TaskState {
 	/**
 	 * Task is completed and saved on the shared disk.

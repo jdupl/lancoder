@@ -23,23 +23,6 @@ public class Scheduler extends RunnableServiceAdapter {
 		refresh();
 	}
 
-	public void setThread(Thread t) {
-		this.schedulerThread = t;
-	}
-
-	private void refresh() {
-		if (!schedulables.isEmpty()) {
-			Schedulable next = schedulables.first();
-			sleepUntil = next.nextRun;
-
-			if (sleeping.get()) {
-				this.schedulerThread.interrupt();
-			}
-		} else {
-			sleepUntil = System.currentTimeMillis() + 10000;
-		}
-	}
-
 	@Override
 	public void run() {
 		sleepUntil = System.currentTimeMillis() + 100;
@@ -61,13 +44,30 @@ public class Scheduler extends RunnableServiceAdapter {
 		}
 	}
 
+	public void setThread(Thread t) {
+		this.schedulerThread = t;
+	}
+
 	private void sleepUntil(long sleepUntil) throws InterruptedException {
 		long currentMs = System.currentTimeMillis();
 
 		if (currentMs < sleepUntil) {
 			sleeping.set(true);
-			Thread.sleep(sleepUntil - currentMs);
 			sleeping.set(false);
+			Thread.sleep(sleepUntil - currentMs);
+		}
+	}
+
+	private void refresh() {
+		if (!schedulables.isEmpty()) {
+			Schedulable next = schedulables.first();
+			sleepUntil = next.nextRun;
+
+			if (sleeping.get()) {
+				this.schedulerThread.interrupt();
+			}
+		} else {
+			sleepUntil = System.currentTimeMillis() + 10000;
 		}
 	}
 }

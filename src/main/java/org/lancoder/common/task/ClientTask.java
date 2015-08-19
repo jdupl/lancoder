@@ -32,12 +32,16 @@ public abstract class ClientTask implements Serializable {
 	public void completed() {
 		this.task.getProgress().complete();
 	}
-	
+
 	public void reset() {
 		this.task.getProgress().reset();
 	}
 
 	public abstract Task getTask();
+
+	public String getTempFile() {
+		return this.task.getTempFile();
+	}
 
 	public StreamConfig getStreamConfig() {
 		return streamConfig;
@@ -77,10 +81,6 @@ public abstract class ClientTask implements Serializable {
 
 	public String getJobId() {
 		return task.getJobId();
-	}
-
-	public String getTempFile() {
-		return this.task.getTempFile();
 	}
 
 	@Override

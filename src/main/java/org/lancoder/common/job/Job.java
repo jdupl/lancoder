@@ -43,16 +43,16 @@ public class Job implements Comparable<Job>, Serializable {
 	/**
 	 * Output path of this job, relative to absolute shared directory
 	 */
-	private String outputFolder;
+	private String relativeOutputFolder;
 	/**
 	 * Filename for final output file relative to outputFolder
 	 */
-	private String outputFileName;
+	private String relativeFinalOutputFile;
 	/**
 	 * The folder in which to store the parts before muxing
 	 */
-	private String partsFolderName;
-	private String sourceFile;
+	private String relativePartsFolder;
+	private String relaiveSourceFile;
 
 	private long timeAdded;
 	private long timeStarted;
@@ -70,13 +70,17 @@ public class Job implements Comparable<Job>, Serializable {
 	@NoWebUI
 	private HashMap<Stream, ArrayList<ClientTask>> streamTaskMapping = new HashMap<>();
 
+	@NoWebUI
+	private FileInfo fileinfo;
+
 	public Job(String jobName, String sourceFile, int lengthOfTasks, FileInfo fileInfo, File outputFolder,
-			File baseOutputFolder, String outputFileName) {
+			String outputFileName) {
 		this.jobId = generateId(sourceFile, jobName);
 		this.jobName = jobName;
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
 		this.timeAdded = System.currentTimeMillis();
+		this.fileinfo = fileInfo;
 
 		OriginalVideoStream mainVideoStream = fileInfo.getMainVideoStream();
 		if (mainVideoStream != null) {
@@ -85,12 +89,13 @@ public class Job implements Comparable<Job>, Serializable {
 			this.frameCount = (int) Math.floor((lengthOfJob / 1000 * frameRate));
 		}
 
-		this.sourceFile = sourceFile;
-		this.outputFileName = outputFileName;
-		this.partsFolderName = FileUtils.getFile(baseOutputFolder, "parts", jobId).getPath();
+		this.relaiveSourceFile = sourceFile;
+		this.relativeFinalOutputFile = outputFileName;
+
 
 		// Set output's filename
-		this.outputFolder = outputFolder.getPath();
+		this.relativeOutputFolder = FileUtils.getFile(outputFolder.getPath(), jobName).getPath();
+		this.relativePartsFolder = FileUtils.getFile(this.relativeOutputFolder, "parts", jobId).getPath();
 	}
 
 	/**
@@ -323,7 +328,7 @@ public class Job implements Comparable<Job>, Serializable {
 	}
 
 	public String getSourceFile() {
-		return sourceFile;
+		return relaiveSourceFile;
 	}
 
 	public int getTaskCount() {
@@ -375,27 +380,27 @@ public class Job implements Comparable<Job>, Serializable {
 	}
 
 	public String getOutputFolder() {
-		return outputFolder;
+		return relativeOutputFolder;
 	}
 
 	public void setOutputFolder(String outputFolder) {
-		this.outputFolder = outputFolder;
+		this.relativeOutputFolder = outputFolder;
 	}
 
 	public String getOutputFileName() {
-		return outputFileName;
+		return relativeFinalOutputFile;
 	}
 
 	public void setOutputFileName(String outputFileName) {
-		this.outputFileName = outputFileName;
+		this.relativeFinalOutputFile = outputFileName;
 	}
 
 	public String getPartsFolderName() {
-		return partsFolderName;
+		return relativePartsFolder;
 	}
 
 	public void setPartsFolderName(String partsFolderName) {
-		this.partsFolderName = partsFolderName;
+		this.relativePartsFolder = partsFolderName;
 	}
 
 	public long getTimeAdded() {
@@ -412,5 +417,9 @@ public class Job implements Comparable<Job>, Serializable {
 
 	public boolean isCompleted() {
 		return getJobStatus() == JobState.JOB_COMPLETED;
+	}
+
+	public FileInfo getFileinfo() {
+		return fileinfo;
 	}
 }

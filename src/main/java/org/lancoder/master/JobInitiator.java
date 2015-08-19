@@ -51,7 +51,7 @@ public class JobInitiator extends RunnableServiceAdapter {
 		this.requests.add(request);
 	}
 
-	private void createJob(ApiJobRequest req, String jobName, File sourceFile, File outputFolder, File baseOutputFolder) {
+	private void createJob(ApiJobRequest req, String jobName, File sourceFile, File outputFolder) {
 		// Get meta-data from source file
 		File absoluteFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), sourceFile.getPath());
 		FileInfo fileInfo = FFmpegWrapper.getFileInfo(absoluteFile, sourceFile.getPath(), new FFprobe(config));
@@ -115,17 +115,19 @@ public class JobInitiator extends RunnableServiceAdapter {
 		}
 
 		String outputFileName = String.format("%s.%s", FilenameUtils.getBaseName(sourceFile.getPath()), fileExtension);
-		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder, baseOutputFolder,
-				outputFileName);
+		Job job = new Job(jobName, sourceFile.getPath(), lengthOfTasks, fileInfo, outputFolder, outputFileName);
 
 		for (OriginalVideoStream originalStream : fileInfo.getVideoStreams()) {
 			double frameRate = requestFrameRate < 1 ? originalStream.getFrameRate() : requestFrameRate;
 			VideoEncodeStrategy videoEncodeStrategy = new VideoEncodeStrategy(videoCodec, videoRateControlType,
 					videoRate, frameRate, preset, width, height, passes);
+
 			VideoStream streamToEncode = new VideoStream(videoEncodeStrategy, originalStream, originalStream.getIndex());
-			VideoStreamConfig config = new VideoStreamConfig(job.getJobId(), extraEncoderArgs, passes, originalStream,
+
+			VideoStreamConfig streamConfig = new VideoStreamConfig(job.getJobId(), extraEncoderArgs, passes, originalStream,
 					streamToEncode);
-			job.addStream(streamToEncode, createTasks(config, job));
+
+			job.addStream(streamToEncode, createTasks(streamConfig, job));
 		}
 
 		for (OriginalAudioStream originalStream : fileInfo.getAudioStreams()) {
@@ -136,13 +138,15 @@ public class JobInitiator extends RunnableServiceAdapter {
 			// TODO Sanitize channel disposition (upmix protection)
 			// if (stream.getChannels().getCount() < defaultAudio.getChannels().getCount())
 		}
+
+
 		prepareFileSystem(job);
 		listener.newJob(job);
 	}
 
 	private void createJob(ApiJobRequest req, String jobName, File sourceFile) {
 		File output = FileUtils.getFile(config.getFinalEncodingFolder(), jobName);
-		createJob(req, jobName, sourceFile, output, output);
+		createJob(req, jobName, sourceFile, output);
 	}
 
 	private ArrayList<ClientTask> createTasks(StreamConfig config, Job job) {
@@ -154,6 +158,7 @@ public class JobInitiator extends RunnableServiceAdapter {
 		createJob(req, req.getName(), sourcefile);
 	}
 
+	@Deprecated
 	private void processBatchRequest(ApiJobRequest req) {
 		File baseSourceFolder = FileUtils.getFile(config.getAbsoluteSharedFolder(), req.getInputFile());
 		String globalJobName = req.getName();
@@ -172,13 +177,13 @@ public class JobInitiator extends RunnableServiceAdapter {
 			URI jobOutputUri = baseSourceFolder.toURI().relativize(absoluteFile.getParentFile().toURI());
 			File jobOutput = new File(relGlobalOutput, jobOutputUri.getPath());
 			String jobName = String.format("%s - %s ", globalJobName, fileName);
-			createJob(req, jobName, relativeJobFile, jobOutput, relGlobalOutput);
+//			createJob(req, jobName, relativeJobFile, jobOutput, relGlobalOutput);
 		}
 	}
 
 	/**
 	 * Relativize file from shared directory
-	 * 
+	 *
 	 * @param file
 	 *            The absolute file
 	 * @return The relative representation of the file

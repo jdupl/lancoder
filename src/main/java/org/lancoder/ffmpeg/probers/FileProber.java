@@ -17,6 +17,7 @@ public class FileProber {
 	public FileInfo getFileInfo(File absoluteFile, String relativePath, FFprobe module) {
 		FileInfo fileInfo = null;
 		Process process = null;
+
 		try {
 			ProcessBuilder pb = new ProcessBuilder(module.getPath(), "-v", "quiet", "-print_format", "json",
 					"-show_format", "-show_streams", absoluteFile.getPath());
