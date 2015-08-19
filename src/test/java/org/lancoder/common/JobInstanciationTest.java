@@ -4,25 +4,38 @@ import java.io.File;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.lancoder.common.annotations.NoWebUI;
+import org.lancoder.common.codecs.CodecEnum;
+import org.lancoder.common.codecs.CodecTypeAdapter;
 import org.lancoder.common.file_components.FileInfo;
 import org.lancoder.common.job.Job;
+import org.lancoder.common.network.messages.web.ApiJobRequest;
+import org.lancoder.common.task.video.ClientVideoTask;
+import org.lancoder.common.third_parties.FFprobe;
+import org.lancoder.ffmpeg.FFmpegWrapper;
+import org.lancoder.master.JobInitiator;
 import org.lancoder.master.MasterConfig;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(FFmpegWrapper.class)
 public class JobInstanciationTest {
 
 	@Test
-	public void test() {
+	public void testOutputPaths() {
 		MasterConfig config = new MasterConfig();
-		String home = System.getProperty("user.home");
-		String tmp = System.getProperty("java.io.tmpdir");
-
-
-		FilePathManager manager = new FilePathManager(config);
-
-		Job job = new Job("testJob", "source.mkv", 500, getFileInfo(), new File("encode"), "output.mkv");
+		Job job = new Job("testJob", "source.mkv", 500, fakeFileInfo(), new File("encode"), "output.mkv");
 
 		Assert.assertNotEquals("", job.getJobId());
 		Assert.assertEquals("output.mkv", job.getOutputFileName());
@@ -30,8 +43,71 @@ public class JobInstanciationTest {
 		Assert.assertEquals("encode/testJob/parts/" + job.getJobId(), job.getPartsFolderName());
 	}
 
+	@Test
+	public void testTaskAreCreated() {
+		MasterConfig config = new MasterConfig();
+		JobInitiator factory = new JobInitiator(null, config);
 
-	private FileInfo getFileInfo() {
+		PowerMockito.mockStatic(FFmpegWrapper.class);
+		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
+				.thenReturn(fakeFileInfo());
+
+		Job j = factory.createJob(fakeRequest(), new File(""));
+		Assert.assertEquals(1, j.getClientAudioTasks().size());
+		Assert.assertEquals(2, j.getClientVideoTasks().size());
+
+		ClientVideoTask task1 = j.getClientVideoTasks().get(0);
+		Assert.assertEquals(0, task1.getEncodingStartTime());
+		Assert.assertEquals(300000, task1.getEncodingEndTime());
+
+		ClientVideoTask task2 = j.getClientVideoTasks().get(1);
+		Assert.assertEquals(300000, task2.getEncodingStartTime());
+		Assert.assertEquals(596461, task2.getEncodingEndTime());
+	}
+
+	private ApiJobRequest fakeRequest() {
+		String json = "{" +
+				"    \"rateControlType\":\"VBR\"," +
+				"    \"passes\":1," +
+				"    \"rate\":1500," +
+				"    \"preset\":\"MEDIUM\"," +
+				"    \"audioConfig\":\"AUTO\"," +
+				"    \"audioRateControlType\":\"CRF\"," +
+				"    \"audioRate\":5," +
+				"    \"audioChannels\":\"STEREO\"," +
+				"    \"audioSampleRate\":48000," +
+				"    \"audioCodec\":{" +
+				"        \"value\":\"VORBIS\"," +
+				"        \"name\":\"Vorbis\"," +
+				"        \"lossless\":false," +
+				"        \"library\":\"libvorbis\"" +
+				"    }," +
+				"    \"videoCodec\":{" +
+				"        \"value\":\"H264\"," +
+				"        \"name\":\"H.264/MPEG-4 AVC\"," +
+				"        \"lossless\":false," +
+				"        \"library\":\"libx264\"" +
+				"    }," +
+				"    \"name\":\"testJob\"," +
+				"    \"inputFile\":\"testInput.mkv\"" +
+				"}";
+		Gson gson = new GsonBuilder().registerTypeAdapter(CodecEnum.class, new CodecTypeAdapter<>())
+				.setExclusionStrategies(new ExclusionStrategy() {
+					@Override
+					public boolean shouldSkipField(FieldAttributes f) {
+						return f.getAnnotation(NoWebUI.class) != null;
+					}
+
+					@Override
+					public boolean shouldSkipClass(Class<?> clazz) {
+						return false;
+					}
+				}).serializeSpecialFloatingPointValues().create();
+
+		return gson.fromJson(json, ApiJobRequest.class);
+	}
+
+	private FileInfo fakeFileInfo() {
 		JsonParser p = new JsonParser();
 		JsonElement json = p.parse("{" +
 				"    \"streams\": [" +

@@ -272,7 +272,7 @@ public class Job implements Comparable<Job>, Serializable {
 		}
 	}
 
-	private ArrayList<ClientAudioTask> getClientAudioTasks() {
+	public ArrayList<ClientAudioTask> getClientAudioTasks() {
 		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
 		for (ClientTask task : this.clientTasks) {
 			if (task instanceof ClientAudioTask) {

@@ -51,7 +51,7 @@ public class JobInitiator extends RunnableServiceAdapter {
 		this.requests.add(request);
 	}
 
-	private void createJob(ApiJobRequest req, String jobName, File sourceFile, File outputFolder) {
+	private Job createJob(ApiJobRequest req, String jobName, File sourceFile, File outputFolder) {
 		// Get meta-data from source file
 		File absoluteFile = FileUtils.getFile(config.getAbsoluteSharedFolder(), sourceFile.getPath());
 		FileInfo fileInfo = FFmpegWrapper.getFileInfo(absoluteFile, sourceFile.getPath(), new FFprobe(config));
@@ -139,14 +139,12 @@ public class JobInitiator extends RunnableServiceAdapter {
 			// if (stream.getChannels().getCount() < defaultAudio.getChannels().getCount())
 		}
 
-
-		prepareFileSystem(job);
-		listener.newJob(job);
+		return job;
 	}
 
-	private void createJob(ApiJobRequest req, String jobName, File sourceFile) {
+	private Job createJob(ApiJobRequest req, String jobName, File sourceFile) {
 		File output = FileUtils.getFile(config.getFinalEncodingFolder(), jobName);
-		createJob(req, jobName, sourceFile, output);
+		return createJob(req, jobName, sourceFile, output);
 	}
 
 	private ArrayList<ClientTask> createTasks(StreamConfig config, Job job) {
@@ -154,8 +152,8 @@ public class JobInitiator extends RunnableServiceAdapter {
 		return handlingStrategy.createTasks(job, config);
 	}
 
-	private void createJob(ApiJobRequest req, File sourcefile) {
-		createJob(req, req.getName(), sourcefile);
+	public Job createJob(ApiJobRequest req, File sourcefile) {
+		return createJob(req, req.getName(), sourcefile);
 	}
 
 	@Deprecated
@@ -177,8 +175,14 @@ public class JobInitiator extends RunnableServiceAdapter {
 			URI jobOutputUri = baseSourceFolder.toURI().relativize(absoluteFile.getParentFile().toURI());
 			File jobOutput = new File(relGlobalOutput, jobOutputUri.getPath());
 			String jobName = String.format("%s - %s ", globalJobName, fileName);
-//			createJob(req, jobName, relativeJobFile, jobOutput, relGlobalOutput);
+//			Job job = createJob(req, jobName, relativeJobFile, jobOutput, relGlobalOutput);
+//			registerJob(job);
 		}
+	}
+
+	private void registerJob(Job job) {
+		prepareFileSystem(job);
+		listener.newJob(job);
 	}
 
 	/**
@@ -199,7 +203,8 @@ public class JobInitiator extends RunnableServiceAdapter {
 		if (absoluteSourceFile.isDirectory()) {
 			processBatchRequest(req);
 		} else {
-			createJob(req, new File(relativeSourceFile));
+			Job job = createJob(req, new File(relativeSourceFile));
+			registerJob(job);
 		}
 	}
 
