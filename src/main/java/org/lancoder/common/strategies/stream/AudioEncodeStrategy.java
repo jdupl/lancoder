@@ -1,6 +1,5 @@
 package org.lancoder.common.strategies.stream;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import org.lancoder.common.codecs.ChannelDisposition;
@@ -14,7 +13,6 @@ import org.lancoder.common.task.Unit;
 import org.lancoder.common.task.audio.AudioStreamConfig;
 import org.lancoder.common.task.audio.AudioTask;
 import org.lancoder.common.task.audio.ClientAudioTask;
-import org.lancoder.common.utils.FileUtils;
 
 public class AudioEncodeStrategy extends EncodeStrategy {
 
@@ -43,12 +41,9 @@ public class AudioEncodeStrategy extends EncodeStrategy {
 		ArrayList<ClientTask> tasks = new ArrayList<>();
 		int taskId = job.getTaskCount();
 
-		File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
-		File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
-				String.format("part-%d.%s", taskId, getCodec().getContainer()));
-
 		AudioTask task = new AudioTask(taskId, job.getJobId(), 0, outStream.getUnitCount(), outStream.getUnitCount(),
-				Unit.SECONDS, relativeTaskOutputFile.getPath());
+				Unit.SECONDS, getRelativeTaskOutputFile(job, taskId).getPath());
+
 		tasks.add(new ClientAudioTask(task, (AudioStreamConfig) config));
 
 		return tasks;

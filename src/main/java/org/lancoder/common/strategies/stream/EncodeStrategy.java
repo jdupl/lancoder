@@ -1,9 +1,12 @@
 package org.lancoder.common.strategies.stream;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import org.lancoder.common.codecs.base.AbstractCodec;
+import org.lancoder.common.job.Job;
 import org.lancoder.common.job.RateControlType;
+import org.lancoder.common.utils.FileUtils;
 
 public abstract class EncodeStrategy extends StreamHandlingStrategy {
 
@@ -18,6 +21,7 @@ public abstract class EncodeStrategy extends StreamHandlingStrategy {
 		this.rate = rate;
 	}
 
+	@Override
 	public ArrayList<String> getRateControlArgs() {
 		ArrayList<String> args = new ArrayList<String>();
 		if (codec.isLossless()) {
@@ -32,6 +36,12 @@ public abstract class EncodeStrategy extends StreamHandlingStrategy {
 		return args;
 	}
 
+	protected File getRelativeTaskOutputFile(Job job, int taskId) {
+		return FileUtils.getFile(job.getJobId(), "parts", String.valueOf(taskId),
+				String.format("part-%d.%s", taskId, getCodec().getContainer()));
+	}
+
+	@Override
 	public AbstractCodec getCodec() {
 		return codec;
 	}

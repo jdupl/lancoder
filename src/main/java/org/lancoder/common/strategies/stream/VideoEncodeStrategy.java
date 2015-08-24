@@ -14,7 +14,6 @@ import org.lancoder.common.task.Unit;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.task.video.VideoStreamConfig;
 import org.lancoder.common.task.video.VideoTask;
-import org.lancoder.common.utils.FileUtils;
 
 public class VideoEncodeStrategy extends EncodeStrategy {
 
@@ -73,7 +72,6 @@ public class VideoEncodeStrategy extends EncodeStrategy {
 		}
 
 		long currentMs = 0;
-		File relativeTasksOutput = FileUtils.getFile(job.getPartsFolderName());
 
 		while (remaining > 0) {
 			long start = currentMs;
@@ -91,8 +89,7 @@ public class VideoEncodeStrategy extends EncodeStrategy {
 			long ms = end - start;
 			long unitCount = (long) Math.floor((ms / 1000 * getFrameRate()));
 
-			File relativeTaskOutputFile = FileUtils.getFile(relativeTasksOutput,
-					String.format("part-%d.%s", taskId, getCodec().getContainer()));
+			File relativeTaskOutputFile = getRelativeTaskOutputFile(job, taskId);
 
 			VideoTask task = new VideoTask(taskId, job.getJobId(), getStepCount(), start, end, unitCount, Unit.FRAMES, relativeTaskOutputFile.getPath());
 			tasks.add(new ClientVideoTask(task, streamConfig));

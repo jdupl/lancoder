@@ -37,7 +37,7 @@ import com.google.gson.JsonParser;
 public class JobInstanciationTest {
 
 	@Test
-	public void testOutputPaths() {
+	public void testJobRelativePaths() {
 		MasterConfig config = new MasterConfig();
 		Job job = new Job("testJob", "source.mkv", 500, fakeFileInfo(), new File("encode"), "output.mkv");
 
@@ -48,6 +48,27 @@ public class JobInstanciationTest {
 	}
 
 	@Test
+	public void testTaskRelativePaths() {
+		MasterConfig config = new MasterConfig();
+		JobInitiator factory = new JobInitiator(null, config);
+
+		PowerMockito.mockStatic(FFmpegWrapper.class);
+		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
+				.thenReturn(fakeFileInfo());
+
+		Job j = null;
+		try {
+			j = Whitebox.<Job>invokeMethod(factory, fakeRequest(), new File(""));
+		} catch (Exception e) {
+			fail();
+		}
+
+		assertEquals(j.getJobId() + "/parts/0/part-0.mkv", j.getClientTasks().get(0).getTempFile());
+		assertEquals(j.getJobId() + "/parts/1/part-1.mkv", j.getClientTasks().get(1).getTempFile());
+		assertEquals(j.getJobId() + "/parts/2/part-2.ogg", j.getClientTasks().get(2).getTempFile());
+	}
+
+	@Test
 	public void testTaskAreCreated() {
 		MasterConfig config = new MasterConfig();
 		JobInitiator factory = new JobInitiator(null, config);
@@ -55,8 +76,8 @@ public class JobInstanciationTest {
 		PowerMockito.mockStatic(FFmpegWrapper.class);
 		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
 				.thenReturn(fakeFileInfo());
-		Job j = null;
 
+		Job j = null;
 		try {
 			j = Whitebox.<Job>invokeMethod(factory, fakeRequest(), new File(""));
 		} catch (Exception e) {
