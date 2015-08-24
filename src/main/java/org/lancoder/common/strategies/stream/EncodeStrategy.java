@@ -37,8 +37,12 @@ public abstract class EncodeStrategy extends StreamHandlingStrategy {
 	}
 
 	protected File getRelativeTaskFinalFile(Job job, int taskId) {
-		String s = job.getOutputFolder();
-		return FileUtils.getFile(s, "parts", String.valueOf(taskId),
+		return FileUtils.getFile(job.getOutputFolder(), "parts", String.valueOf(taskId),
+				String.format("part-%d.%s", taskId, getCodec().getContainer()));
+	}
+
+	protected File getRelativeTaskTempFile(Job job, int taskId) {
+		return FileUtils.getFile(job.getJobId(), String.valueOf(taskId),
 				String.format("part-%d.%s", taskId, getCodec().getContainer()));
 	}
 

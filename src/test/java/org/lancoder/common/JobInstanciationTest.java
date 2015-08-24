@@ -33,7 +33,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(FFmpegWrapper.class)
+@PrepareForTest({FFmpegWrapper.class, Job.class})
 public class JobInstanciationTest {
 
 	@Test
@@ -94,6 +94,13 @@ public class JobInstanciationTest {
 		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
 				.thenReturn(fakeFileInfo());
 
+		PowerMockito.spy(Job.class);
+		try {
+			PowerMockito.doReturn("testJobId").when(Job.class, "generateId", Mockito.any(), Mockito.any());
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+
 		Job j = null;
 		try {
 			j = Whitebox.<Job>invokeMethod(factory, fakeRequest(), new File(""));
@@ -104,6 +111,11 @@ public class JobInstanciationTest {
 		assertEquals("encodes/testJob/parts/0/part-0.mkv", j.getClientTasks().get(0).getFinalFile().getPath());
 		assertEquals("encodes/testJob/parts/1/part-1.mkv", j.getClientTasks().get(1).getFinalFile().getPath());
 		assertEquals("encodes/testJob/parts/2/part-2.ogg", j.getClientTasks().get(2).getFinalFile().getPath());
+
+
+		assertEquals("testJobId/0/part-0.mkv", j.getClientTasks().get(0).getTempFile().getPath());
+		assertEquals("testJobId/1/part-1.mkv", j.getClientTasks().get(1).getTempFile().getPath());
+		assertEquals("testJobId/2/part-2.ogg", j.getClientTasks().get(2).getTempFile().getPath());
 	}
 
 	@Test

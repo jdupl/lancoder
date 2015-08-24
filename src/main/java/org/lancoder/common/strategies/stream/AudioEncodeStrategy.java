@@ -1,6 +1,5 @@
 package org.lancoder.common.strategies.stream;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import org.lancoder.common.codecs.ChannelDisposition;
@@ -40,12 +39,11 @@ public class AudioEncodeStrategy extends EncodeStrategy {
 	public ArrayList<ClientTask> createTasks(Job job, StreamConfig config) {
 		AudioStream outStream = (AudioStream) config.getOutStream();
 		ArrayList<ClientTask> tasks = new ArrayList<>();
+
 		int taskId = job.getTaskCount();
 
-		File temp = null;
-
 		AudioTask task = new AudioTask(taskId, job.getJobId(), 0, outStream.getUnitCount(), outStream.getUnitCount(),
-				Unit.SECONDS, temp, getRelativeTaskFinalFile(job, taskId));
+				Unit.SECONDS, getRelativeTaskTempFile(job, taskId), getRelativeTaskFinalFile(job, taskId));
 
 		tasks.add(new ClientAudioTask(task, (AudioStreamConfig) config));
 

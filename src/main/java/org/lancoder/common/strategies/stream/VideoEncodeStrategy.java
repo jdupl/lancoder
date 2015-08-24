@@ -1,6 +1,5 @@
 package org.lancoder.common.strategies.stream;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import org.lancoder.common.codecs.base.AbstractCodec;
@@ -89,10 +88,8 @@ public class VideoEncodeStrategy extends EncodeStrategy {
 			long ms = end - start;
 			long unitCount = (long) Math.floor((ms / 1000 * getFrameRate()));
 
-			File temp = null;
-
 			VideoTask task = new VideoTask(taskId, job.getJobId(), getStepCount(), start, end, unitCount, Unit.FRAMES,
-					temp, getRelativeTaskFinalFile(job, taskId));
+					getRelativeTaskTempFile(job, taskId), getRelativeTaskFinalFile(job, taskId));
 			tasks.add(new ClientVideoTask(task, streamConfig));
 			taskId++;
 		}
