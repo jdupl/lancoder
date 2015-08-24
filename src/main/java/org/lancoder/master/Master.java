@@ -230,7 +230,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		boolean integrity = true;
 
 		for (ClientVideoTask task : job.getClientVideoTasks()) {
-			File absoluteTaskFile = FileUtils.getFile(getConfig().getAbsoluteSharedFolder(), task.getTempFile());
+			File absoluteTaskFile = FileUtils.getFile(getConfig().getAbsoluteSharedFolder(), task.getTempFile().getPath());
 
 			if (!absoluteTaskFile.exists()) {
 				integrity = false;

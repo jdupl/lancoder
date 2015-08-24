@@ -39,33 +39,23 @@ public class JobInstanciationTest {
 	@Test
 	public void testJobRelativePaths() {
 		MasterConfig config = new MasterConfig();
-		Job job = new Job("testJob", "source.mkv", 500, fakeFileInfo(), new File("encode"), "output.mkv");
-
-		assertNotEquals("", job.getJobId());
-		assertEquals("output.mkv", job.getOutputFileName());
-		assertEquals("encode/testJob", job.getOutputFolder());
-		assertEquals("encode/testJob/parts/" + job.getJobId(), job.getPartsFolderName());
-	}
-
-	@Test
-	public void testTaskRelativePaths() {
-		MasterConfig config = new MasterConfig();
 		JobInitiator factory = new JobInitiator(null, config);
 
 		PowerMockito.mockStatic(FFmpegWrapper.class);
 		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
 				.thenReturn(fakeFileInfo());
 
-		Job j = null;
+		Job job = null;
 		try {
-			j = Whitebox.<Job>invokeMethod(factory, fakeRequest(), new File(""));
+			job = Whitebox.<Job>invokeMethod(factory, "createJob", fakeRequest(), new File("output.mkv"));
 		} catch (Exception e) {
 			fail();
 		}
 
-		assertEquals(j.getJobId() + "/parts/0/part-0.mkv", j.getClientTasks().get(0).getTempFile());
-		assertEquals(j.getJobId() + "/parts/1/part-1.mkv", j.getClientTasks().get(1).getTempFile());
-		assertEquals(j.getJobId() + "/parts/2/part-2.ogg", j.getClientTasks().get(2).getTempFile());
+		assertNotEquals("", job.getJobId());
+		assertEquals("output.mkv", job.getOutputFileName());
+		assertEquals("encodes/testJob", job.getOutputFolder());
+		assertEquals("encodes/testJob/parts/" + job.getJobId(), job.getPartsFolderName());
 	}
 
 	@Test
@@ -93,6 +83,51 @@ public class JobInstanciationTest {
 		ClientVideoTask task2 = j.getClientVideoTasks().get(1);
 		assertEquals(300000, task2.getEncodingStartTime());
 		assertEquals(596461, task2.getEncodingEndTime());
+	}
+
+	@Test
+	public void testTaskRelativePaths() {
+		MasterConfig config = new MasterConfig();
+		JobInitiator factory = new JobInitiator(null, config);
+
+		PowerMockito.mockStatic(FFmpegWrapper.class);
+		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
+				.thenReturn(fakeFileInfo());
+
+		Job j = null;
+		try {
+			j = Whitebox.<Job>invokeMethod(factory, fakeRequest(), new File(""));
+		} catch (Exception e) {
+			fail();
+		}
+
+		assertEquals("encodes/testJob/parts/0/part-0.mkv", j.getClientTasks().get(0).getFinalFile().getPath());
+		assertEquals("encodes/testJob/parts/1/part-1.mkv", j.getClientTasks().get(1).getFinalFile().getPath());
+		assertEquals("encodes/testJob/parts/2/part-2.ogg", j.getClientTasks().get(2).getFinalFile().getPath());
+	}
+
+	@Test
+	public void testAbsolutePaths() {
+		MasterConfig config = new MasterConfig();
+		config.setAbsoluteSharedFolder("/shared");
+		config.setTempEncodingFolder("/tmp");
+
+		FilePathManager manager = new FilePathManager(config);
+
+		JobInitiator factory = new JobInitiator(null, config);
+
+		PowerMockito.mockStatic(FFmpegWrapper.class);
+		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
+				.thenReturn(fakeFileInfo());
+
+		Job j = null;
+		try {
+			j = Whitebox.<Job>invokeMethod(factory, fakeRequest(), new File(""));
+		} catch (Exception e) {
+			fail();
+		}
+
+//		assertEquals("/shared/encodes/" + j.getJobId() + "/parts/0/part-0.mkv", manager.getSharedFinalFile(j.getClientTasks().get(0)));
 	}
 
 	private ApiJobRequest fakeRequest() {

@@ -25,12 +25,12 @@ public class FilePathManager {
 	}
 
 	public File getSharedFinalFile(ClientTask task) {
-		return FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getTempFile());
+		return FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getTempFile().getPath());
 	}
 
 	public File getLocalTempFile(ClientTask task) {
 		return FileUtils.getFile(config.getTempEncodingFolder(), task.getJobId(), String.valueOf(task.getTaskId()),
-				FilenameUtils.getName(task.getTempFile()));
+				FilenameUtils.getName(task.getTempFile().getPath()));
 	}
 
 	public File getLocalTempFolder(ClientTask task) {

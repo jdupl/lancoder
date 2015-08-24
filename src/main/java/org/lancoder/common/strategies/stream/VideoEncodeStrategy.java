@@ -89,9 +89,10 @@ public class VideoEncodeStrategy extends EncodeStrategy {
 			long ms = end - start;
 			long unitCount = (long) Math.floor((ms / 1000 * getFrameRate()));
 
-			File relativeTaskOutputFile = getRelativeTaskOutputFile(job, taskId);
+			File temp = null;
 
-			VideoTask task = new VideoTask(taskId, job.getJobId(), getStepCount(), start, end, unitCount, Unit.FRAMES, relativeTaskOutputFile.getPath());
+			VideoTask task = new VideoTask(taskId, job.getJobId(), getStepCount(), start, end, unitCount, Unit.FRAMES,
+					temp, getRelativeTaskFinalFile(job, taskId));
 			tasks.add(new ClientVideoTask(task, streamConfig));
 			taskId++;
 		}

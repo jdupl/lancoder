@@ -1,5 +1,6 @@
 package org.lancoder.common.task;
 
+import java.io.File;
 import java.io.Serializable;
 
 public abstract class ClientTask implements Serializable {
@@ -39,8 +40,12 @@ public abstract class ClientTask implements Serializable {
 
 	public abstract Task getTask();
 
-	public String getTempFile() {
-		return this.task.getTempFile();
+	public File getTempFile() {
+		return task.getTempFile();
+	}
+
+	public File getFinalFile() {
+		return task.getFinalFile();
 	}
 
 	public StreamConfig getStreamConfig() {
