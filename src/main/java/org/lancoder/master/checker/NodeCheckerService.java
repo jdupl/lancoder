@@ -33,7 +33,7 @@ public class NodeCheckerService extends Schedulable implements Service {
 	}
 
 	private void startPool() {
-		poolThread = new Thread(pool);
+		poolThread = new Thread(pool, this.getClass().getSimpleName());
 		poolThread.start();
 	}
 

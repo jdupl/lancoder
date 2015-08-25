@@ -7,7 +7,7 @@ import org.lancoder.common.scheduler.SchedulableService;
 
 /**
  * Generic pool used to handle threaded tasks. Allows threads to be reused.
- * 
+ *
  * @author Justin Duplessis
  *
  * @param <T>
@@ -44,7 +44,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Create a default pool with a defined thread limit. Pool will queue items without limitations.
-	 * 
+	 *
 	 * @param threadLimit
 	 *            The maximum number of pool workers to handle
 	 */
@@ -54,7 +54,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Create a pool with a defined thread limit.
-	 * 
+	 *
 	 * @param threadLimit
 	 *            The maximum number of pool workers to handle
 	 * @param canQueue
@@ -67,7 +67,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Instantiate a pool worker without starting it.
-	 * 
+	 *
 	 * @return The pool worker
 	 */
 	protected abstract PoolWorker<T> getPoolWorkerInstance();
@@ -97,7 +97,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Clean the resources of the pool. Allows the pool to shrink after higher load.
-	 * 
+	 *
 	 * @return True if any resource was cleaned
 	 */
 	public boolean clean() {
@@ -119,7 +119,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Checks if pool has free worker or worker slot
-	 * 
+	 *
 	 * @return
 	 */
 	protected boolean hasFree() {
@@ -137,7 +137,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Public synchronized call to get hasFree
-	 * 
+	 *
 	 * @return hasFree()
 	 */
 	public synchronized boolean hasFreeConverters() {
@@ -146,7 +146,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Public synchronized call to known if pool is working.
-	 * 
+	 *
 	 * @return True if some pool workers are busy
 	 */
 	public boolean hasWorking() {
@@ -155,7 +155,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Try to spawn a new resource and run it in the main thread pool.
-	 * 
+	 *
 	 * @return
 	 */
 	private PoolWorker<T> spawn() {
@@ -166,7 +166,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 		if (canSpawn()) {
 			poolWorker = getPoolWorkerInstance(this, threadLock);
 
-			Thread thread = new Thread(threads, poolWorker);
+			Thread thread = new Thread(threads, poolWorker, this.getClass().getSimpleName());
 			poolWorker.setThread(thread);
 			thread.start();
 
@@ -192,7 +192,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Decides if pool has space to spawn a new pool worker.
-	 * 
+	 *
 	 * @return True if pool can spawn a pool worker
 	 */
 	private boolean canSpawn() {
@@ -201,7 +201,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Get a free pool worker resource or create a new one.
-	 * 
+	 *
 	 * @return A free pool worker or null if no pool worker are available and pool is full
 	 */
 	private PoolWorker<T> getAvailableWorker() {
@@ -215,7 +215,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Get a currently free pool worker.
-	 * 
+	 *
 	 * @return The free resource or null if none is available.
 	 */
 	private PoolWorker<T> getFreeWorker() {
@@ -225,7 +225,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 	/**
 	 * Try to add an item to the pool. If pool is not allowed to have a queue and all pool workers are busy, return
 	 * false.
-	 * 
+	 *
 	 * @param element
 	 *            The element to handle
 	 * @return If element could be added to queue
@@ -258,10 +258,10 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 
 	/**
 	 * Sends task to a pool worker or adds it back to the queue if no pool worker can be used.
-	 * 
+	 *
 	 * @param task
 	 *            The work to dispatch
-	 * 
+	 *
 	 * @return True if a pool worker accepted
 	 */
 	private boolean dispatch(T task) {
@@ -298,9 +298,10 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 	/**
 	 * Called when a resource completed it's task and is now free. Notifies pool's thread to refresh it's state.
 	 */
+	@Override
 	public final void completed(PoolWorker<T> worker) {
 		// Ran from PoolWorker thread
-		freeWorkers.add((PoolWorker<T>) worker);
+		freeWorkers.add(worker);
 		synchronized (refreshRequest) {
 			refreshRequest.notify();
 		}

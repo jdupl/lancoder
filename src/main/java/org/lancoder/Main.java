@@ -26,6 +26,7 @@ import net.sourceforge.argparse4j.inf.Namespace;
 public class Main {
 
 	private final static String LANCODER_VERSION = "0.2.0-beta-2";
+	private final static Logger logger = Logger.getLogger("lancoder");
 
 	/**
 	 * CLI entry point
@@ -56,7 +57,6 @@ public class Main {
 		LogManager manager = LogManager.getLogManager();
 		manager.reset();
 
-		Logger logger = Logger.getLogger("lancoder");
 		logger.setLevel(Level.FINEST);
 		ConsoleHandler handler = new ConsoleHandler();
 		handler.setLevel(Level.FINEST);

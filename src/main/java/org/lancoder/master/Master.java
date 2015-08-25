@@ -35,6 +35,7 @@ import org.lancoder.muxer.MuxerPool;
 public class Master extends Container implements MuxerListener, JobInitiatorListener, EventListener {
 
 	public static final String ALGORITHM = "SHA-256";
+	private static final Logger logger = Logger.getLogger("lancoder");
 
 	private JobInitiator jobInitiator;
 	private MasterServer nodeServer;
@@ -111,8 +112,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	@Override
 	public void shutdown() {
-		Logger logger = Logger.getLogger("lancoder");
-
 		logger.info("Executing master shutdown routine.\n"
 				+ "Ctrl+C again for immediate shutdown (not recommended).\n");
 
@@ -158,8 +157,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 *            The node to remove
 	 */
 	public void disconnectNode(Node n) {
-		Logger logger = Logger.getLogger("lancoder");
-
 		// remove node from list
 		jobManager.unassingAll(n);
 		nodeManager.removeNode(n);
@@ -201,8 +198,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 * @param job
 	 */
 	private void jobEncodingCompleted(Job job) {
-		Logger logger = Logger.getLogger("lancoder");
-
 		if (!checkJobIntegrity(job)) {
 			logger.fine(String.format("Cannot start muxing job %s as some task files are missing !%n", job.getJobName()));
 
@@ -249,7 +244,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 * @return true if update could be sent, false otherwise
 	 */
 	public boolean readStatusReport(StatusReport report) {
-		Logger logger = Logger.getLogger("lancoder");
 		NodeState newNodeState = report.status;
 		String nodeUnid = report.getUnid();
 
@@ -305,7 +299,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 			return false;
 		}
 		if (!node.hasTask(task)) {
-			Logger logger = Logger.getLogger("lancoder");
 			logger.warning(String.format("%s instance not found for node %s.%n", task, node.getName()));
 		}
 		return true;
@@ -328,7 +321,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	@Override
 	public void jobMuxingCompleted(Job job) {
-		Logger logger = Logger.getLogger("lancoder");
 		logger.fine(String.format("Job %s finished muxing !\n", job.getJobName()));
 		job.complete();
 	}
@@ -336,7 +328,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	@Override
 	public void jobMuxingFailed(Job job) {
 		job.fail();
-		Logger logger = Logger.getLogger("lancoder");
 		logger.fine(String.format("Muxing failed for job %s\n", job.getJobName()));
 	}
 
