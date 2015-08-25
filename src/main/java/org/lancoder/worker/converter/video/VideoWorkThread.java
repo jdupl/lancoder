@@ -138,6 +138,8 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 	protected void start() {
 		this.cancelling = false;
 		boolean success = true;
+		Logger logger = Logger.getLogger("lancoder");
+
 		try {
 			listener.taskStarted(task);
 			createDirs();
@@ -147,8 +149,9 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 			String startTimeStr = TimeUtils.getStringFromMs(task.getEncodingStartTime());
 			String durationStr = TimeUtils.getStringFromMs(durationMs);
 
-			while (task.getProgress().getCurrentStepIndex() <= task.getStepCount() && success) {
-				Logger logger = Logger.getLogger("lancoder");
+			boolean lastStep = false;
+
+			while (task.getProgress().getCurrentStepIndex() <= task.getStepCount() && success && !lastStep) {
 
 				logger.fine(String.format("Encoding pass %d of %d\n", task.getProgress().getCurrentStepIndex(),
 						task.getStepCount()));
@@ -156,6 +159,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 
 				if (success) {
 					task.getProgress().completeStep();
+					lastStep = task.getProgress().getCurrentStepIndex() == task.getStepCount();
 				}
 			}
 
