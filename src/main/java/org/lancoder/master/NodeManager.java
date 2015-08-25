@@ -182,7 +182,7 @@ public class NodeManager implements EventListener {
 		Logger logger = Logger.getLogger("lancoder");
 
 		if (n != null) {
-			logger.fine(String.format("Disconnecting node %s", n.getName()));
+			logger.fine(String.format("Disconnecting node %s%n", n.getName()));
 			n.setStatus(NodeState.NOT_CONNECTED);
 			listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 		}

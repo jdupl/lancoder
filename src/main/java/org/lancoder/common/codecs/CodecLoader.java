@@ -5,7 +5,20 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 import org.lancoder.common.codecs.base.AbstractCodec;
-import org.lancoder.common.codecs.impl.*;
+import org.lancoder.common.codecs.impl.AAC;
+import org.lancoder.common.codecs.impl.Ape;
+import org.lancoder.common.codecs.impl.DTS;
+import org.lancoder.common.codecs.impl.Flac;
+import org.lancoder.common.codecs.impl.H264;
+import org.lancoder.common.codecs.impl.H265;
+import org.lancoder.common.codecs.impl.Mp3;
+import org.lancoder.common.codecs.impl.Opus;
+import org.lancoder.common.codecs.impl.Speex;
+import org.lancoder.common.codecs.impl.Theora;
+import org.lancoder.common.codecs.impl.Vorbis;
+import org.lancoder.common.codecs.impl.Vp8;
+import org.lancoder.common.codecs.impl.Vp9;
+import org.lancoder.common.codecs.impl.Wavpack;
 
 public class CodecLoader {
 
@@ -39,7 +52,7 @@ public class CodecLoader {
 
 	/**
 	 * Lazy instantiation of the codecs
-	 * 
+	 *
 	 * @param codecEnum
 	 *            The codec to instantiate
 	 * @return The codec object or null if not found
@@ -50,7 +63,7 @@ public class CodecLoader {
 			Class<? extends AbstractCodec> clazz = codecClasses.get(codecEnum);
 			if (clazz == null) {
 				Logger logger = Logger.getLogger("lancoder");
-				logger.warning("Unsupported codec: " + codecEnum.getPrettyName());
+				logger.warning("Unsupported codec: " + codecEnum.getPrettyName() + "\n");
 			} else {
 				Constructor<? extends AbstractCodec> cons = clazz.getDeclaredConstructor();
 				cons.setAccessible(true); // Constructor is protected

@@ -44,7 +44,7 @@ public class TaskProgress implements Serializable {
 
 	/**
 	 * Update current task to specified units. Will update progress by estimating speed.
-	 * 
+	 *
 	 * @param units
 	 *            The unit count currently completed
 	 */

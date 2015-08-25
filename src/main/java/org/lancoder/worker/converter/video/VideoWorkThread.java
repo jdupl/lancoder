@@ -129,7 +129,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		m = missingDecoder.matcher(line);
 		if (m.find()) {
 			Logger logger = Logger.getLogger("lancoder");
-			logger.warning(String.format("Missing decoder for %s!", task));
+			logger.warning(String.format("Missing decoder for %s!%n", task));
 			listener.taskFailed(task);
 		}
 	}
@@ -152,14 +152,13 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 			boolean lastStep = false;
 
 			while (task.getProgress().getCurrentStepIndex() <= task.getStepCount() && success && !lastStep) {
-
 				logger.fine(String.format("Encoding pass %d of %d\n", task.getProgress().getCurrentStepIndex(),
 						task.getStepCount()));
 				success = encodePass(startTimeStr, durationStr);
 
 				if (success) {
-					task.getProgress().completeStep();
 					lastStep = task.getProgress().getCurrentStepIndex() == task.getStepCount();
+					task.getProgress().completeStep();
 				}
 			}
 

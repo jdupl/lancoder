@@ -36,7 +36,7 @@ public class MasterContacter extends Schedulable implements Service {
 
 	/**
 	 * Get current message to master.
-	 * 
+	 *
 	 * @return ConnectMessage if master is not connected. PingMessage otherwise.
 	 */
 	private Message getMessage() {
@@ -62,7 +62,7 @@ public class MasterContacter extends Schedulable implements Service {
 			}
 		} catch (IOException e) {
 			if (m.getCode() == ClusterProtocol.CONNECT_REQUEST) {
-				logger.info("Failed to contact master.");
+				logger.info("Failed to contact master.\n");
 			} else {
 				listener.masterTimeout();
 			}

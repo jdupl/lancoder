@@ -249,6 +249,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 * @return true if update could be sent, false otherwise
 	 */
 	public boolean readStatusReport(StatusReport report) {
+		Logger logger = Logger.getLogger("lancoder");
 		NodeState newNodeState = report.status;
 		String nodeUnid = report.getUnid();
 
@@ -257,11 +258,13 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		if (sender == null || sender.getStatus() == NodeState.NOT_CONNECTED || report.getTaskReports() == null) {
 			return false;
 		}
+		logger.finer(String.format("Reading status report from %s.%n", sender.getName()));
 
 		readTaskReports(report.getTaskReports());
 		// only update if status is changed
 		if (sender.getStatus() != newNodeState) {
 			sender.setStatus(newNodeState);
+			logger.finer(String.format("Node %s is now %s.%n", sender.getName(), newNodeState));
 		}
 
 		// remove unassigned tasks
@@ -269,6 +272,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		for (TaskReport taskReport : report.getTaskReports()) {
 			reportTasks.add(taskReport.getTask());
 		}
+
 		jobManager.removeInvalidAssigments(sender, reportTasks);
 		jobManager.updateNodesWork();
 

@@ -225,7 +225,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 			break;
 		default:
 			Logger logger = Logger.getLogger("lancoder");
-			logger.warning(String.format("Caught unknown status code '%s' while updating status", statusCode));
+			logger.warning(String.format("Caught unknown status code '%s' while updating status%n", statusCode));
 			break;
 		}
 	}
@@ -322,7 +322,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 					protocol, masterInetAddress.getHostAddress(), port));
 			updateStatus(NodeState.FREE);
 		} else {
-			logger.severe("Received empty or invalid UNID from master.");
+			logger.severe("Received empty or invalid UNID from master.%n");
 		}
 	}
 
@@ -378,7 +378,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	@Override
 	public void masterTimeout() {
 		Logger logger = Logger.getLogger("lancoder");
-		logger.info("Lost connection to master !");
+		logger.info("Lost connection to master !%n");
 
 		for (ClientTask task : this.getCurrentTasks()) {
 			stopWork(task);

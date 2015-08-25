@@ -42,7 +42,7 @@ public class ConfigManager<T extends Config> {
 
 	/**
 	 * Load configuration from disk from the provided path.
-	 * 
+	 *
 	 * @return The loaded configuration
 	 * @throws InvalidConfigurationException
 	 *             If file is corrupted or missing
@@ -60,7 +60,7 @@ public class ConfigManager<T extends Config> {
 			Yaml yaml = new Yaml();
 			this.config = (T) yaml.loadAs(fis, this.clazz);
 
-			logger.fine("Loaded config from disk");
+			logger.fine("Loaded config from disk.\n");
 			return true;
 		} catch (IOException | NullPointerException e) {
 			throw new InvalidConfigurationException(String.format(CONF_CORRUPTED, this.configPath));
@@ -69,7 +69,7 @@ public class ConfigManager<T extends Config> {
 
 	/**
 	 * Serializes current config to disk as YAML object.
-	 * 
+	 *
 	 * @return True if could write config to disk. Otherwise, return false.
 	 */
 	public synchronized boolean dump() {

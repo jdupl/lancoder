@@ -12,7 +12,7 @@ import org.lancoder.common.exceptions.MissingThirdPartyException;
 
 /**
  * Class to create a process, read its output and provide information about it's closing state.
- * 
+ *
  *
  */
 public class FFmpegReader extends ServiceAdapter {
@@ -22,7 +22,7 @@ public class FFmpegReader extends ServiceAdapter {
 
 	/**
 	 * Create a process and read the desired output. Interface's onMessage method is called on each line.
-	 * 
+	 *
 	 * @param args
 	 *            The arguments of the command line
 	 * @param listener
@@ -40,7 +40,7 @@ public class FFmpegReader extends ServiceAdapter {
 	/**
 	 * Create a process in the specified directory and read the desired output. Interface's onMessage method is called
 	 * on each line.
-	 * 
+	 *
 	 * @param args
 	 *            The arguments of the command line
 	 * @param listener
@@ -62,7 +62,7 @@ public class FFmpegReader extends ServiceAdapter {
 
 		pb.directory(processDirectory);
 
-		logger.finer(pb.command().toString());
+		logger.finer(pb.command().toString() + "\n");
 
 		Scanner s = null;
 		try {

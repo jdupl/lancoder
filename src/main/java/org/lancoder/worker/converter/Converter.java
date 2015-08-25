@@ -61,8 +61,8 @@ public abstract class Converter<T extends ClientTask> extends PoolWorker<T> impl
 		try {
 			if (destination.exists()) {
 				Logger logger = Logger.getLogger("lancoder");
-				logger.warning(String.format("Deleting existing file at destination '%s'%n."
-						+ "This might be causing a re-encoding loop !",destination.getAbsoluteFile()));
+				logger.warning(String.format("Deleting existing file at destination '%s'.%n"
+						+ "This might be causing a re-encoding loop !%n",destination.getAbsoluteFile()));
 
 				destination.delete();
 			}

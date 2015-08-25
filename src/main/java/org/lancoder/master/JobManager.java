@@ -272,7 +272,7 @@ public class JobManager implements EventListener {
 			task.completed();
 
 			if (job.getTaskDoneCount() == job.getTaskCount()) {
-				logger.fine(String.format("job " + job.getJobId() + " completed"));
+				logger.fine(String.format("job " + job.getJobId() + " completed%n"));
 				listener.handle(new Event(EventEnum.JOB_ENCODING_COMPLETED, job));
 			}
 
@@ -354,7 +354,7 @@ public class JobManager implements EventListener {
 	private void taskRefused(ClientTask task) {
 		Logger logger = Logger.getLogger("lancoder");
 
-		logger.fine(String.format("A worker refused %s !", task));
+		logger.fine(String.format("A worker refused %s !%n", task));
 
 		task.reset();
 		unassign(task);
