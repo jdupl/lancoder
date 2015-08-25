@@ -132,14 +132,22 @@ public class JobInstanciationTest {
 		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
 				.thenReturn(fakeFileInfo());
 
+		PowerMockito.spy(Job.class);
+		try {
+			PowerMockito.doReturn("testJobId").when(Job.class, "generateId", Mockito.any(), Mockito.any());
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+
 		Job j = null;
 		try {
-			j = Whitebox.<Job>invokeMethod(factory, fakeRequest(), new File(""));
+			j = Whitebox.<Job>invokeMethod(factory, fakeRequest(), new File("output.mkv"));
 		} catch (Exception e) {
 			fail();
 		}
 
-//		assertEquals("/shared/encodes/" + j.getJobId() + "/parts/0/part-0.mkv", manager.getSharedFinalFile(j.getClientTasks().get(0)));
+		assertEquals("/shared/encodes/testJob/parts/0/part-0.mkv", manager.getSharedFinalFile(j.getClientTasks().get(0)).getPath());
+		assertEquals("/tmp/testJobId/0/part-0.mkv", manager.getLocalTempFile(j.getClientTasks().get(0)).getPath());
 	}
 
 	private ApiJobRequest fakeRequest() {

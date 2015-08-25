@@ -2,7 +2,6 @@ package org.lancoder.common;
 
 import java.io.File;
 
-import org.apache.commons.io.FilenameUtils;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.task.ClientTask;
@@ -25,20 +24,15 @@ public class FilePathManager {
 	}
 
 	public File getSharedFinalFile(ClientTask task) {
-		return FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getTempFile().getPath());
+		return FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getFinalFile().getPath());
 	}
 
 	public File getLocalTempFile(ClientTask task) {
-		return FileUtils.getFile(config.getTempEncodingFolder(), task.getJobId(), String.valueOf(task.getTaskId()),
-				FilenameUtils.getName(task.getTempFile().getPath()));
+		return FileUtils.getFile(config.getTempEncodingFolder(), task.getTempFile().getPath());
 	}
 
 	public File getLocalTempFolder(ClientTask task) {
 		return FileUtils.getFile(config.getTempEncodingFolder(), task.getJobId(), String.valueOf(task.getTaskId()));
-	}
-
-	public File getLocalTempFolder(Job job) {
-		return FileUtils.getFile(config.getTempEncodingFolder(), job.getJobId());
 	}
 
 	public File getSharedSourceFile(Job job) {
@@ -48,15 +42,6 @@ public class FilePathManager {
 	public File getSharedSourceFile(ClientTask task) {
 		return FileUtils.getFile(config.getAbsoluteSharedFolder(), task.getStreamConfig().getOrignalStream()
 				.getRelativeFile());
-	}
-
-	public File getRelativeTaskOutput(ClientTask task) {
-		String extension = task.getStreamConfig().getOutStream().getStrategy().getCodec().needsTranscode()
-				? "mpeg.ts" : task.getStreamConfig().getOutStream().getStrategy().getCodec().getContainer();
-		File relativeTaskOutputFile = FileUtils.getFile(config.getTempEncodingFolder(),
-				String.format("part-%d.%s", task.getTaskId(), extension));
-
-		return relativeTaskOutputFile;
 	}
 
 }
