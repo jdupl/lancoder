@@ -2,6 +2,7 @@ package org.lancoder.master;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import org.lancoder.common.Container;
@@ -50,6 +51,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	private ArrayList<EventListener> eventListeners = new ArrayList<>();
 
 	private MasterSavedInstance savedInstance;
+
+	private LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
 
 	@Override
 	public void setConfigManager(ConfigManager<? extends Config> config) {
@@ -307,6 +310,32 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	@Override
 	public void run() {
 		startServices();
+
+		while (!close) {
+			try {
+				processEvent(eventQueue.take());
+			} catch (InterruptedException e) {
+			}
+		}
+	}
+
+	private void processEvent(Event event) {
+		switch (event.getCode()) {
+		case STATUS_REPORT:
+			this.readStatusReport((StatusReport) event.getObject());
+			break;
+		case JOB_ENCODING_COMPLETED:
+			jobEncodingCompleted((Job) event.getObject());
+			break;
+		case CONFIG_UPDATED:
+			configManager.dump();
+			break;
+		default:
+			for (EventListener eventListener : eventListeners) {
+				eventListener.handle(event);
+			}
+			break;
+		}
 	}
 
 	@Override
@@ -333,22 +362,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	@Override
 	public void handle(Event event) {
-		switch (event.getCode()) {
-		case STATUS_REPORT:
-			this.readStatusReport((StatusReport) event.getObject());
-			break;
-		case JOB_ENCODING_COMPLETED:
-			jobEncodingCompleted((Job) event.getObject());
-			break;
-		case CONFIG_UPDATED:
-			configManager.dump();
-			break;
-		default:
-			for (EventListener eventListener : eventListeners) {
-				eventListener.handle(event);
-			}
-			break;
-		}
+		this.eventQueue.add(event);
 	}
 
 	public void cleanJobs() {

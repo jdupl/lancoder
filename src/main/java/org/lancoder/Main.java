@@ -8,6 +8,12 @@ import java.util.logging.Logger;
 
 import javax.servlet.UnavailableException;
 
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
+import net.sourceforge.argparse4j.inf.Namespace;
+
 import org.lancoder.common.Container;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.config.ConfigFactory;
@@ -16,12 +22,6 @@ import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.common.logging.LogFormatter;
 import org.lancoder.master.Master;
 import org.lancoder.worker.Worker;
-
-import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.impl.Arguments;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
-import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
-import net.sourceforge.argparse4j.inf.Namespace;
 
 public class Main {
 
@@ -57,9 +57,9 @@ public class Main {
 		LogManager manager = LogManager.getLogManager();
 		manager.reset();
 
-		logger.setLevel(Level.FINE);
+		logger.setLevel(Level.FINEST);
 		ConsoleHandler handler = new ConsoleHandler();
-		handler.setLevel(Level.FINE);
+		handler.setLevel(Level.FINEST);
 
 		handler.setFormatter(new LogFormatter());
 		logger.addHandler(handler);

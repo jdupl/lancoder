@@ -140,7 +140,7 @@ public class NodeManager implements EventListener {
 	 *            The node to be added
 	 * @return if the node could be added
 	 */
-	public synchronized boolean addNode(Node n) {
+	private synchronized boolean addNode(Node n) {
 		boolean success = true;
 		// Is this a new node ?
 		if (n.getUnid() == null || n.getUnid().equals("")) {
