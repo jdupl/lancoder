@@ -57,9 +57,9 @@ public class Main {
 		LogManager manager = LogManager.getLogManager();
 		manager.reset();
 
-		logger.setLevel(Level.FINEST);
+		logger.setLevel(Level.FINE);
 		ConsoleHandler handler = new ConsoleHandler();
-		handler.setLevel(Level.FINEST);
+		handler.setLevel(Level.FINE);
 
 		handler.setFormatter(new LogFormatter());
 		logger.addHandler(handler);
@@ -122,7 +122,6 @@ public class Main {
 		boolean defaultInit = argsNamespace.getBoolean("init_default");
 		boolean overwrite = argsNamespace.getBoolean("overwrite");
 		String configPath = argsNamespace.getString("config");
-		boolean debug = argsNamespace.getBoolean("debug");
 
 		boolean isNewConfig = promptInit || defaultInit;
 

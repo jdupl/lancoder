@@ -95,7 +95,7 @@ public class Job implements Comparable<Job>, Serializable {
 
 		// Set output's filename
 		this.relativeOutputFolder = outputFolder.getPath();
-		this.relativePartsFolder = FileUtils.getFile(this.relativeOutputFolder, "parts", jobId).getPath();
+		this.relativePartsFolder = FileUtils.getFile(this.relativeOutputFolder, "parts").getPath();
 	}
 
 	/**

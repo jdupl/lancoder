@@ -20,7 +20,7 @@ import org.lancoder.worker.converter.video.Transcoder;
 
 /**
  * Implementation of the muxer module with native ffmpeg
- * 
+ *
  * @author justin
  *
  */
@@ -50,7 +50,7 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 
 	/**
 	 * Build mapping of a stream. Indexes the stream index to the input file of the stream.
-	 * 
+	 *
 	 * @param stream
 	 *            The stream to map
 	 * @return The map of the input file index and the local stream index
@@ -96,7 +96,7 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 
 	/**
 	 * Build maps for all streams of the current job. Also indexes input files.
-	 * 
+	 *
 	 * @return All stream mappings
 	 */
 	private ArrayList<Map> buildMapping() {

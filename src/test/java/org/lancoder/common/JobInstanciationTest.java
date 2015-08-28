@@ -55,7 +55,7 @@ public class JobInstanciationTest {
 		assertNotEquals("", job.getJobId());
 		assertEquals("output.mkv", job.getOutputFileName());
 		assertEquals("encodes/testJob", job.getOutputFolder());
-		assertEquals("encodes/testJob/parts/" + job.getJobId(), job.getPartsFolderName());
+		assertEquals("encodes/testJob/parts", job.getPartsFolderName());
 	}
 
 	@Test
