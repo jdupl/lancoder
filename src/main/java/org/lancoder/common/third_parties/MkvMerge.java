@@ -6,6 +6,7 @@ public class MkvMerge extends ThirdParty {
 	private MasterConfig config;
 
 	public MkvMerge(MasterConfig config) {
+		super(false);
 		this.config = config;
 	}
 

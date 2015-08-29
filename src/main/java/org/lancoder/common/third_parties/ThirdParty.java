@@ -4,11 +4,21 @@ import java.io.IOException;
 
 public abstract class ThirdParty {
 
+	protected boolean required = true;
+
+	public ThirdParty() {
+		this(true);
+	}
+
+	public ThirdParty(boolean required) {
+		this.required = required;
+	}
+
 	public abstract String getPath();
 
 	/**
 	 * Check if third party is installed.
-	 * 
+	 *
 	 * @return True if process could be created.
 	 */
 	public boolean isInstalled() {
@@ -21,4 +31,9 @@ public abstract class ThirdParty {
 		}
 		return installed;
 	}
+
+	public boolean isRequired() {
+		return required;
+	}
+
 }

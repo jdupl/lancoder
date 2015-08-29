@@ -3,7 +3,6 @@ package org.lancoder.master;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Logger;
 
 import org.lancoder.common.Container;
 import org.lancoder.common.FilePathManager;
@@ -37,7 +36,6 @@ import org.lancoder.muxer.MuxerPool;
 public class Master extends Container implements MuxerListener, JobInitiatorListener, EventListener {
 
 	public static final String ALGORITHM = "SHA-256";
-	private static final Logger logger = Logger.getLogger("lancoder");
 
 	private JobInitiator jobInitiator;
 	private MasterServer nodeServer;

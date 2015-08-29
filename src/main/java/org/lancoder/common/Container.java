@@ -2,6 +2,7 @@ package org.lancoder.common;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import org.lancoder.common.config.Config;
 import org.lancoder.common.config.ConfigManager;
@@ -20,6 +21,7 @@ public abstract class Container extends RunnableServiceAdapter implements Servic
 	protected final ThreadGroup serviceThreads = new ThreadGroup("services");
 	protected FilePathManager filePathManager;
 	protected Scheduler scheduler;
+	protected static final Logger logger = Logger.getLogger("lancoder");
 
 	public abstract Class<? extends Config> getConfigClass();
 
@@ -51,8 +53,14 @@ public abstract class Container extends RunnableServiceAdapter implements Servic
 
 	protected void checkThirdParties() {
 		for (ThirdParty thirdParty : thirdParties.values()) {
+
 			if (!thirdParty.isInstalled()) {
-				throw new MissingThirdPartyException(thirdParty);
+				if (thirdParty.isRequired()) {
+					throw new MissingThirdPartyException(thirdParty);
+				} else {
+					logger.warning(String.format("Missing optionnal third party '%s' with path '%s'.%n",
+							thirdParty.getClass().getSimpleName(), thirdParty.getPath()));
+				}
 			}
 		}
 	}
