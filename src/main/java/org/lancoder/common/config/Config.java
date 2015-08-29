@@ -11,6 +11,7 @@ import org.yaml.snakeyaml.Yaml;
 public abstract class Config {
 
 	private static final String DEFAULT_FFMPEG_PATH = "ffmpeg";
+
 	private static final String DEFAULT_ABSOLUTE_PATH = System.getProperty("user.home");
 	private static final String DEFAULT_TEMP_DIRECTORY = System.getProperty("java.io.tmpdir");
 
@@ -22,8 +23,9 @@ public abstract class Config {
 	@Prompt(message = "FFmpeg's path", priority = 20)
 	protected String ffmpegPath;
 
-	@Prompt(message = "temporary files location", priority = 20, advanced = true)
+	@Prompt(message = "temporary files location", priority = 30, advanced = true)
 	protected String tempEncodingFolder;
+
 
 	protected Config() {
 		this.ffmpegPath = DEFAULT_FFMPEG_PATH;
@@ -33,7 +35,7 @@ public abstract class Config {
 
 	/**
 	 * Serializes current config to disk as YAML object.
-	 * 
+	 *
 	 * @return True if could write config to disk. Otherwise, return false.
 	 */
 	@Deprecated
@@ -87,4 +89,5 @@ public abstract class Config {
 	public String getFFmpegPath() {
 		return ffmpegPath;
 	}
+
 }

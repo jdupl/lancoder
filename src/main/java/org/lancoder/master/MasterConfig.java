@@ -18,12 +18,16 @@ public class MasterConfig extends Config implements Serializable {
 	private static final int DEFAULT_API_LISTEN_PORT = 8080;
 	private static final String DEFAULT_ENCODE_DESTINATION = "encodes";
 	private static final String DEFAULT_FFPROBE_PATH = "ffprobe";
+	private static final String DEFAULT_MKVMERGE_PATH = "mkvmerge";
 
 	@Prompt(message = "output directory (relative to shared folder)", priority = 11)
 	private String finalEncodingFolder;
 
-	@Prompt(message = "FFprobe's path", priority = 20)
+	@Prompt(message = "FFprobe's path", priority = 21)
 	private String ffprobePath;
+
+	@Prompt(message = "mkvmerge's path (for x265 muxing)", priority = 22)
+	protected String mkvMergePath;
 
 	@Prompt(message = "master's listening port", priority = 40, advanced = true)
 	private int nodeServerPort;
@@ -40,6 +44,7 @@ public class MasterConfig extends Config implements Serializable {
 		finalEncodingFolder = DEFAULT_ENCODE_DESTINATION;
 		apiServerPort = DEFAULT_API_LISTEN_PORT;
 		ffprobePath = DEFAULT_FFPROBE_PATH;
+		mkvMergePath = DEFAULT_MKVMERGE_PATH;
 	}
 
 	@Override
@@ -90,6 +95,18 @@ public class MasterConfig extends Config implements Serializable {
 	@Override
 	public String getDefaultPath() {
 		return DEFAULT_PATH;
+	}
+
+	public String getMkvMergePath() {
+		return mkvMergePath;
+	}
+
+	public String getFfprobePath() {
+		return ffprobePath;
+	}
+
+	public void setMkvMergePath(String mkvMergePath) {
+		this.mkvMergePath = mkvMergePath;
 	}
 
 }
