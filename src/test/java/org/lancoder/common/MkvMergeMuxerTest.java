@@ -24,7 +24,7 @@ import org.powermock.reflect.Whitebox;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ FFmpegWrapper.class, Job.class })
-public class MevMergeMuxerTest {
+public class MkvMergeMuxerTest {
 
 	@Test
 	public void test() {

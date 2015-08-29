@@ -1,9 +1,11 @@
 package org.lancoder.muxer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.exceptions.MissingDecoderException;
@@ -12,6 +14,7 @@ import org.lancoder.common.job.Job;
 import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.video.ClientVideoTask;
 import org.lancoder.common.third_parties.MkvMerge;
+import org.lancoder.common.utils.FileUtils;
 import org.lancoder.worker.converter.video.Transcoder;
 
 public class MKvMergeMuxer extends PoolWorker<Job> {
@@ -47,8 +50,9 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 			if (iterator.hasNext()) {
 				args.add("+");
 			}
-
 		}
+
+
 		return args;
 	}
 
@@ -69,24 +73,23 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 		} finally {
 			inputs.clear();
 			if (success) {
-//				File partsDirectory = filePathManager.getSharedPartsFolder(task);
-//				try {
-//					// Clean job's parts
-//					FileUtils.deleteDirectory(partsDirectory);
-//					// Clean batch's parts folder if empty
-//					File superPartsDirectory = partsDirectory.getParentFile();
-//					if (superPartsDirectory.list().length == 0) {
-//						superPartsDirectory.delete();
-//					}
-//				} catch (IOException e) {
-//					Logger logger = Logger.getLogger("lancoder");
-//					logger.warning(e.getMessage());
-//				}
+				File partsDirectory = filePathManager.getSharedPartsFolder(task);
+				try {
+					// Clean job's parts
+					FileUtils.deleteDirectory(partsDirectory);
+					// Clean batch's parts folder if empty
+					File superPartsDirectory = partsDirectory.getParentFile();
+					if (superPartsDirectory.list().length == 0) {
+						superPartsDirectory.delete();
+					}
+				} catch (IOException e) {
+					Logger logger = Logger.getLogger("lancoder");
+					logger.warning(e.getMessage());
+				}
 				this.listener.jobMuxingCompleted(task);
 			} else {
 				this.listener.jobMuxingFailed(task);
 			}
 		}
 	}
-
 }

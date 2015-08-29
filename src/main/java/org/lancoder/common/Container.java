@@ -11,6 +11,7 @@ import org.lancoder.common.scheduler.Schedulable;
 import org.lancoder.common.scheduler.Scheduler;
 import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
+import org.lancoder.common.third_parties.MkvMerge;
 import org.lancoder.common.third_parties.ThirdParty;
 
 public abstract class Container extends RunnableServiceAdapter implements ServiceManager {
@@ -35,6 +36,10 @@ public abstract class Container extends RunnableServiceAdapter implements Servic
 
 	protected FFmpeg getFFmpeg() {
 		return (FFmpeg) getThirdParty(FFmpeg.class);
+	}
+
+	protected MkvMerge getMkvMerge() {
+		return  (MkvMerge) getThirdParty(MkvMerge.class);
 	}
 
 	protected FFprobe getFFprobe() {

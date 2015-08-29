@@ -150,7 +150,7 @@ public class JobInstanciationTest {
 		assertEquals("/tmp/testJobId/0/part-0.mkv", manager.getLocalTempFile(j.getClientTasks().get(0)).getPath());
 	}
 
-	private ApiJobRequest fakeRequest() {
+	public static ApiJobRequest fakeRequest() {
 		String json = "{" +
 				"    \"rateControlType\":\"VBR\"," +
 				"    \"passes\":1," +
@@ -192,7 +192,7 @@ public class JobInstanciationTest {
 		return gson.fromJson(json, ApiJobRequest.class);
 	}
 
-	private FileInfo fakeFileInfo() {
+	public static FileInfo fakeFileInfo() {
 		JsonParser p = new JsonParser();
 		JsonElement json = p.parse("{" +
 				"    \"streams\": [" +

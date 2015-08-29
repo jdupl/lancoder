@@ -99,7 +99,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		dispatcherPool = new DispatcherPool(this);
 		services.add(dispatcherPool);
 
-		muxerPool = new MuxerPool(this, filePathManager, getFFmpeg());
+		muxerPool = new MuxerPool(this, filePathManager, getFFmpeg(), getMkvMerge());
 		services.add(muxerPool);
 
 		jobManager = new JobManager(this, nodeManager, dispatcherPool, savedInstance);
