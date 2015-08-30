@@ -39,6 +39,8 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 
 	public ArrayList<String> getArgs() {
 		ArrayList<String> args = new ArrayList<>();
+		ArrayList<Stream> audioCopyStreams = new ArrayList<>();
+		ArrayList<Stream> videoCopyStreams = new ArrayList<>();
 		File muxOutputFile = filePathManager.getSharedFinalFile(task);
 
 		args.add(mkvMerge.getPath());
@@ -47,13 +49,38 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 		args.add("-o");
 		args.add(muxOutputFile.getPath());
 
+		for (int i = 0; i < task.getStreams().size(); i++) {
+			if (task.getStreams().get(i).getStrategy().isCopy()) {
 
-		Iterator<Stream> streamIterator = task.getStreams().iterator();
-		while (streamIterator.hasNext()) {
-			args.addAll(buildArgs(streamIterator.next()));
+				if (task.getStreams().get(i) instanceof AudioStream) {
+					audioCopyStreams.add(task.getStreams().get(i));
+				} else if (task.getStreams().get(i) instanceof VideoStream) {
+					videoCopyStreams.add(task.getStreams().get(i));
+				}
+			} else {
+				args.addAll(buildArgs(task.getStreams().get(i)));
+			}
 		}
+		addArgs(audioCopyStreams, args);
+		addArgs(videoCopyStreams, args);
 
 		return args;
+	}
+
+	private void addArgs(ArrayList<Stream> streams, ArrayList<String> args) {
+		if (streams.size() > 0) {
+			args.add("-" + getMkvMergeStreamTypeArg(streams.get(0)));
+			StringBuilder sb = new StringBuilder();
+			// Build copy streams args '-a 1,2,3 original.mkv'
+			for (Iterator<Stream> iterator = streams.iterator(); iterator.hasNext();) {
+				sb.append(iterator.next().getIndex());
+				if (iterator.hasNext()) {
+					sb.append(',');
+				}
+			}
+			args.add(sb.toString());
+			args.add(filePathManager.getSharedSourceFile(task).getAbsolutePath());
+		}
 	}
 
 
@@ -80,21 +107,13 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 			// Iterate through tasks of the stream and concatenate if necessary
 			ArrayList<ClientTask> tasks = task.getTasksForStream(stream);
 
-			if (tasks.size() > 1) {
-				Iterator<ClientTask> it = tasks.iterator();
+			Iterator<ClientTask> it = tasks.iterator();
+			while (it.hasNext()) {
+				args.add(filePathManager.getSharedFinalFile(it.next()).getAbsolutePath());
 
-				while (it.hasNext()) {
-					args.add(filePathManager.getSharedFinalFile(it.next()).getAbsolutePath());
-
-					if (it.hasNext()) {
-						args.add("+");
-					}
+				if (it.hasNext()) {
+					args.add("+");
 				}
-
-			} else if (tasks.size() == 1) {
-				// Use temp file of the task
-				// mkvmerge -o out.mkv video1.mkv
-				args.add(filePathManager.getSharedFinalFile(tasks.get(0)).getAbsolutePath());
 			}
 		}
 

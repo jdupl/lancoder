@@ -45,7 +45,8 @@ public class MkvMergeMuxerTest {
 
 		Job job = null;
 		try {
-			job = Whitebox.<Job> invokeMethod(jobInitiator, FakeInfo.fakeAudioEncodeRequest(), new File("testSource.mkv"));
+			job = Whitebox.<Job> invokeMethod(jobInitiator, FakeInfo.fakeAudioEncodeRequest(), new File(
+					"testSource.mkv"));
 		} catch (Exception e) {
 			fail();
 		}
@@ -78,7 +79,8 @@ public class MkvMergeMuxerTest {
 
 		Job job = null;
 		try {
-			job = Whitebox.<Job> invokeMethod(jobInitiator, FakeInfo.fakeAudioCopyRequest(), new File("testSource.mkv"));
+			job = Whitebox
+					.<Job> invokeMethod(jobInitiator, FakeInfo.fakeAudioCopyRequest(), new File("testSource.mkv"));
 		} catch (Exception e) {
 			fail();
 		}
@@ -87,7 +89,42 @@ public class MkvMergeMuxerTest {
 
 		ArrayList<String> expected = new ArrayList<>(Arrays.asList(new String[] { "mkvmerge", "-o",
 				"/shared/encodes/testJob/testSource.mkv", "/shared/encodes/testJob/parts/0/part-0.mkv", "+",
-				"/shared/encodes/testJob/parts/1/part-1.mkv", "-a", "1", "/shared/testSource.mkv"}));
+				"/shared/encodes/testJob/parts/1/part-1.mkv", "-a", "2", "/shared/testSource.mkv" }));
+
+		assertEquals(expected, muxer.getArgs());
+	}
+
+	@Test
+	public void testMuxConcatVideoTrackAndManyAudioCopyTrack() {
+		MasterConfig config = new MasterConfig();
+		config.setAbsoluteSharedFolder("/shared");
+		config.setTempEncodingFolder("/tmp");
+
+		FilePathManager filePathManager = new FilePathManager(config);
+		JobInitiator jobInitiator = new JobInitiator(null, config);
+
+		MkvMerge mkvMerge = new MkvMerge(config);
+
+		MKvMergeMuxer muxer = new MKvMergeMuxer(null, filePathManager, mkvMerge);
+
+		PowerMockito.mockStatic(FFmpegWrapper.class);
+		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
+				.thenReturn(FakeInfo.fakeFileInfoMultiAudio());
+
+		Job job = null;
+		try {
+			job = Whitebox
+					.<Job> invokeMethod(jobInitiator, FakeInfo.fakeAudioCopyRequest(), new File("testSource.mkv"));
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		}
+
+		muxer.handle(job);
+
+		ArrayList<String> expected = new ArrayList<>(Arrays.asList(new String[] { "mkvmerge", "-o",
+				"/shared/encodes/testJob/testSource.mkv", "/shared/encodes/testJob/parts/0/part-0.mkv", "+",
+				"/shared/encodes/testJob/parts/1/part-1.mkv", "-a", "3,2", "/shared/testSource.mkv" }));
 
 		assertEquals(expected, muxer.getArgs());
 	}
