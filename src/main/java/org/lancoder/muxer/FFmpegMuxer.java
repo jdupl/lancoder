@@ -59,16 +59,19 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 		if (stream.getStrategy().isCopy()) { // TODO move input file to strategy
 			// Use original source file and stream id
 			// ffmpeg -i source.mkv -map 0:streamId -c copy final.mkv
+
 			input = filePathManager.getSharedSourceFile(task).getAbsolutePath();
 			streamIndex = stream.getIndex();
 		} else {
 			// Iterate through tasks of the stream and concatenate if necessary
 			ArrayList<ClientTask> tasks = task.getTasksForStream(stream);
+
 			if (tasks.size() > 1) {
 				// Register concat stream as an input stream
 				// ffmpeg -i "concat:input1.mpg|input2.mpg|input3.mpg" -map 0:0 -c copy output.mpg
 				StringBuilder sb = new StringBuilder("concat:");
 				Iterator<ClientTask> taskIterator = tasks.iterator();
+
 				while (taskIterator.hasNext()) {
 					ClientTask t = taskIterator.next();
 					File taskPartFile = filePathManager.getSharedFinalFile(t);

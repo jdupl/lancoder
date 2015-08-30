@@ -27,7 +27,7 @@ import org.powermock.reflect.Whitebox;
 public class MkvMergeMuxerTest {
 
 	@Test
-	public void test() {
+	public void testMuxConcatVideoTrackAndOneAudioTrack() {
 		MasterConfig config = new MasterConfig();
 		config.setAbsoluteSharedFolder("/shared");
 		config.setTempEncodingFolder("/tmp");
@@ -41,11 +41,11 @@ public class MkvMergeMuxerTest {
 
 		PowerMockito.mockStatic(FFmpegWrapper.class);
 		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
-				.thenReturn(JobInstanciationTest.fakeFileInfo());
+				.thenReturn(FakeInfo.fakeFileInfo());
 
 		Job job = null;
 		try {
-			job = Whitebox.<Job> invokeMethod(jobInitiator, JobInstanciationTest.fakeRequest(), new File(""));
+			job = Whitebox.<Job> invokeMethod(jobInitiator, FakeInfo.fakeAudioEncodeRequest(), new File("testSource.mkv"));
 		} catch (Exception e) {
 			fail();
 		}
@@ -53,8 +53,41 @@ public class MkvMergeMuxerTest {
 		muxer.handle(job);
 
 		ArrayList<String> expected = new ArrayList<>(Arrays.asList(new String[] { "mkvmerge", "-o",
-				"/shared/encodes/testJob/.mkv", "/shared/encodes/testJob/parts/0/part-0.mkv", "+",
-				"/shared/encodes/testJob/parts/1/part-1.mkv" }));
+				"/shared/encodes/testJob/testSource.mkv", "/shared/encodes/testJob/parts/2/part-2.ogg",
+				"/shared/encodes/testJob/parts/0/part-0.mkv", "+", "/shared/encodes/testJob/parts/1/part-1.mkv" }));
+
+		assertEquals(expected, muxer.getArgs());
+	}
+
+	@Test
+	public void testMuxConcatVideoTrackAndOneAudioCopyTrack() {
+		MasterConfig config = new MasterConfig();
+		config.setAbsoluteSharedFolder("/shared");
+		config.setTempEncodingFolder("/tmp");
+
+		FilePathManager filePathManager = new FilePathManager(config);
+		JobInitiator jobInitiator = new JobInitiator(null, config);
+
+		MkvMerge mkvMerge = new MkvMerge(config);
+
+		MKvMergeMuxer muxer = new MKvMergeMuxer(null, filePathManager, mkvMerge);
+
+		PowerMockito.mockStatic(FFmpegWrapper.class);
+		Mockito.when(FFmpegWrapper.getFileInfo((File) Mockito.any(), (String) Mockito.any(), (FFprobe) Mockito.any()))
+				.thenReturn(FakeInfo.fakeFileInfo());
+
+		Job job = null;
+		try {
+			job = Whitebox.<Job> invokeMethod(jobInitiator, FakeInfo.fakeAudioCopyRequest(), new File("testSource.mkv"));
+		} catch (Exception e) {
+			fail();
+		}
+
+		muxer.handle(job);
+
+		ArrayList<String> expected = new ArrayList<>(Arrays.asList(new String[] { "mkvmerge", "-o",
+				"/shared/encodes/testJob/testSource.mkv", "/shared/encodes/testJob/parts/0/part-0.mkv", "+",
+				"/shared/encodes/testJob/parts/1/part-1.mkv", "-a", "1", "/shared/testSource.mkv"}));
 
 		assertEquals(expected, muxer.getArgs());
 	}
