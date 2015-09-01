@@ -4,6 +4,7 @@ import java.io.IOException;
 
 public abstract class ThirdParty {
 
+	private boolean installed = false;
 	protected boolean required = true;
 
 	public ThirdParty() {
@@ -22,13 +23,18 @@ public abstract class ThirdParty {
 	 * @return True if process could be created.
 	 */
 	public boolean isInstalled() {
-		boolean installed = true;
+		if (installed) {
+			return true;
+		}
+
 		ProcessBuilder pb = new ProcessBuilder(getPath());
 		try {
 			pb.start();
 		} catch (IOException e) {
-			installed = false;
+			return false;
 		}
+		installed = true;
+
 		return installed;
 	}
 

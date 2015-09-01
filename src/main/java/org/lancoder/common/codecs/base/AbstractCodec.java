@@ -12,10 +12,12 @@ public abstract class AbstractCodec implements Serializable {
 	private String encoder;
 	private String container;
 	private boolean lossless;
+	private CodecEnum codecEnum;
 
 	protected AbstractCodec(CodecEnum codecEnum) {
 		this(codecEnum.getPrettyName(), codecEnum.getFFMpegName(), codecEnum.getEncoder(), codecEnum.getContainer(),
 				codecEnum.isLossless());
+		this.codecEnum = codecEnum;
 	}
 
 	private AbstractCodec(String name, String ffMpegName, String encoder, String container, boolean lossless) {
@@ -30,7 +32,7 @@ public abstract class AbstractCodec implements Serializable {
 
 	/**
 	 * Format a given bitrate in Kb/s
-	 * 
+	 *
 	 * @param bitrate
 	 *            in Kb/s
 	 * @return The ffmpeg's notation for this codec.
@@ -92,13 +94,17 @@ public abstract class AbstractCodec implements Serializable {
 		return false;
 	}
 
+	public CodecEnum getCodecEnum() {
+		return codecEnum;
+	}
+
 	public String formatQuality(int rate) {
 		return String.valueOf(rate);
 	}
 
 	/**
 	 * Allows some codec to block or silently change some unsupported sampling rates.
-	 * 
+	 *
 	 * @param hz
 	 *            The sample frequency in hz.
 	 * @return The corresponding string representing the nearest frequency

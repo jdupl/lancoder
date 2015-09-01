@@ -1,18 +1,21 @@
 package org.lancoder.muxer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import org.lancoder.common.FilePathManager;
 import org.lancoder.common.exceptions.MissingDecoderException;
 import org.lancoder.common.exceptions.MissingThirdPartyException;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.job.Job;
-import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.third_parties.FFmpeg;
+import org.lancoder.common.third_parties.ThirdParty;
+import org.lancoder.common.utils.FileUtils;
 import org.lancoder.worker.converter.video.Transcoder;
 
 /**
@@ -21,8 +24,9 @@ import org.lancoder.worker.converter.video.Transcoder;
  * @author justin
  *
  */
-public class FFmpegMuxer extends PoolWorker<Job> {
+public class FFmpegMuxer extends Muxer {
 
+	private Job job;
 	private MuxerListener listener;
 	private FilePathManager filePathManager;
 	private FFmpeg ffMpeg;
@@ -32,10 +36,73 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 	private HashMap<String, Input> inputs = new HashMap<>();
 
 	public FFmpegMuxer(MuxerListener listener, FilePathManager filePathManager, FFmpeg ffMpeg) {
-		super();
 		this.listener = listener;
 		this.filePathManager = filePathManager;
 		this.ffMpeg = ffMpeg;
+	}
+
+	@Override
+	public void handle(Job job) {
+		boolean success = false;
+		ArrayList<String> args = new ArrayList<>();
+
+		this.job = job;
+
+		File muxOutputFile = filePathManager.getSharedFinalFile(job);
+		ArrayList<Map> mapping = buildMapping();
+
+		args.add(ffMpeg.getPath());
+		// Add input files and correct their index according to the position in the arguments
+		ArrayList<Input> inputArray = new ArrayList<>(inputs.values());
+		for (int i = 0; i < inputArray.size(); i++) {
+			Input input = inputArray.get(i);
+			args.add("-i");
+			args.add(input.getInputFile());
+			// Correct the order
+			input.setIndex(i);
+		}
+		// Add mapping
+		for (Map map : mapping) {
+			args.add("-map");
+			args.add(map.toString());
+		}
+		// Ensure that all streams are copied
+		args.add("-c");
+		args.add("copy");
+
+		// Set output file
+		args.add(muxOutputFile.getAbsolutePath());
+
+		// Start the transcoding
+		this.listener.jobMuxingStarted(job);
+
+		Transcoder transcoder = new Transcoder();
+		try {
+			success = transcoder.read(args);
+		} catch (MissingDecoderException | MissingThirdPartyException e) {
+			e.printStackTrace();
+		} finally {
+			inputs.clear();
+			if (success) {
+				File partsDirectory = filePathManager.getSharedPartsFolder(job);
+				try {
+					// Clean job's parts
+					FileUtils.deleteDirectory(partsDirectory);
+					// Clean batch's parts folder if empty
+					File superPartsDirectory = partsDirectory.getParentFile();
+					if (superPartsDirectory.list().length == 0) {
+						superPartsDirectory.delete();
+					}
+				} catch (IOException e) {
+					Logger logger = Logger.getLogger("lancoder");
+					logger.warning(e.getMessage());
+				}
+				this.listener.jobMuxingCompleted(job);
+			} else {
+				this.listener.jobMuxingFailed(job);
+			}
+			this.job = null;
+		}
 	}
 
 	private Input getInput(String input) {
@@ -60,11 +127,11 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 			// Use original source file and stream id
 			// ffmpeg -i source.mkv -map 0:streamId -c copy final.mkv
 
-			input = filePathManager.getSharedSourceFile(task).getAbsolutePath();
+			input = filePathManager.getSharedSourceFile(job).getAbsolutePath();
 			streamIndex = stream.getIndex();
 		} else {
 			// Iterate through tasks of the stream and concatenate if necessary
-			ArrayList<ClientTask> tasks = task.getTasksForStream(stream);
+			ArrayList<ClientTask> tasks = job.getTasksForStream(stream);
 
 			if (tasks.size() > 1) {
 				// Register concat stream as an input stream
@@ -102,7 +169,7 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 	private ArrayList<Map> buildMapping() {
 		// Iterate through original streams
 		ArrayList<Map> mapping = new ArrayList<>();
-		Iterator<Stream> streamIterator = task.getStreams().iterator();
+		Iterator<Stream> streamIterator = job.getStreams().iterator();
 		while (streamIterator.hasNext()) {
 			mapping.add(buildMap(streamIterator.next()));
 		}
@@ -110,64 +177,8 @@ public class FFmpegMuxer extends PoolWorker<Job> {
 	}
 
 	@Override
-	protected void start() {
-		boolean success = false;
-		ArrayList<String> args = new ArrayList<>();
-
-		File muxOutputFile = filePathManager.getSharedFinalFile(task);
-		ArrayList<Map> mapping = buildMapping();
-
-		args.add(ffMpeg.getPath());
-		// Add input files and correct their index according to the position in the arguments
-		ArrayList<Input> inputArray = new ArrayList<>(inputs.values());
-		for (int i = 0; i < inputArray.size(); i++) {
-			Input input = inputArray.get(i);
-			args.add("-i");
-			args.add(input.getInputFile());
-			// Correct the order
-			input.setIndex(i);
-		}
-		// Add mapping
-		for (Map map : mapping) {
-			args.add("-map");
-			args.add(map.toString());
-		}
-		// Ensure that all streams are copied
-		args.add("-c");
-		args.add("copy");
-
-		// Set output file
-		args.add(muxOutputFile.getAbsolutePath());
-
-		// Start the transcoding
-		this.listener.jobMuxingStarted(task);
-
-		Transcoder transcoder = new Transcoder();
-		try {
-			success = transcoder.read(args);
-		} catch (MissingDecoderException | MissingThirdPartyException e) {
-			e.printStackTrace();
-		} finally {
-			inputs.clear();
-			if (success) {
-//				File partsDirectory = filePathManager.getSharedPartsFolder(task);
-//				try {
-//					// Clean job's parts
-//					FileUtils.deleteDirectory(partsDirectory);
-//					// Clean batch's parts folder if empty
-//					File superPartsDirectory = partsDirectory.getParentFile();
-//					if (superPartsDirectory.list().length == 0) {
-//						superPartsDirectory.delete();
-//					}
-//				} catch (IOException e) {
-//					Logger logger = Logger.getLogger("lancoder");
-//					logger.warning(e.getMessage());
-//				}
-				this.listener.jobMuxingCompleted(task);
-			} else {
-				this.listener.jobMuxingFailed(task);
-			}
-		}
+	public ThirdParty getMuxingThirdParty() {
+		return this.ffMpeg;
 	}
 
 }

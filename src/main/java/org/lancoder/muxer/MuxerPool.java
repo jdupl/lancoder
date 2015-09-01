@@ -24,8 +24,7 @@ public class MuxerPool extends Pool<Job> {
 
 	@Override
 	protected PoolWorker<Job> getPoolWorkerInstance() {
-//		return new FFmpegMuxer(this.listener, filePathManager, ffMpeg);
-		return new MKvMergeMuxer(this.listener, filePathManager, mkvMerge);
+		return new MuxerWorkerWrapper(ffMpeg, mkvMerge, filePathManager, listener);
 	}
 
 }

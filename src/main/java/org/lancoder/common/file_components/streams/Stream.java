@@ -6,7 +6,7 @@ import org.lancoder.common.file_components.streams.original.BaseStream;
 import org.lancoder.common.file_components.streams.original.OriginalStream;
 import org.lancoder.common.strategies.stream.StreamHandlingStrategy;
 
-public abstract class Stream extends BaseStream {
+public abstract class Stream extends BaseStream implements Comparable<Stream> {
 
 	private static final long serialVersionUID = -1867430611531693710L;
 
@@ -20,6 +20,11 @@ public abstract class Stream extends BaseStream {
 
 	public StreamHandlingStrategy getStrategy() {
 		return strategy;
+	}
+
+	@Override
+	public int compareTo(Stream other) {
+		return this.getIndex() - other.getIndex();
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package org.lancoder.muxer;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -14,13 +15,13 @@ import org.lancoder.common.file_components.streams.AudioStream;
 import org.lancoder.common.file_components.streams.Stream;
 import org.lancoder.common.file_components.streams.VideoStream;
 import org.lancoder.common.job.Job;
-import org.lancoder.common.pool.PoolWorker;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.third_parties.MkvMerge;
+import org.lancoder.common.third_parties.ThirdParty;
 import org.lancoder.common.utils.FileUtils;
 import org.lancoder.worker.converter.video.Transcoder;
 
-public class MKvMergeMuxer extends PoolWorker<Job> {
+public class MkvMergeMuxer extends Muxer {
 
 	private MuxerListener listener;
 	private FilePathManager filePathManager;
@@ -29,8 +30,9 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 	 * Map of the input files without the duplicated. Value is the position in file mapping. (file:stream)
 	 */
 	private HashMap<String, Input> inputs = new HashMap<>();
+	private Job job;
 
-	public MKvMergeMuxer(MuxerListener listener, FilePathManager filePathManager, MkvMerge mkvMerge) {
+	public MkvMergeMuxer(MuxerListener listener, FilePathManager filePathManager, MkvMerge mkvMerge) {
 		super();
 		this.listener = listener;
 		this.filePathManager = filePathManager;
@@ -41,7 +43,7 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 		ArrayList<String> args = new ArrayList<>();
 		ArrayList<Stream> audioCopyStreams = new ArrayList<>();
 		ArrayList<Stream> videoCopyStreams = new ArrayList<>();
-		File muxOutputFile = filePathManager.getSharedFinalFile(task);
+		File muxOutputFile = filePathManager.getSharedFinalFile(job);
 
 		args.add(mkvMerge.getPath());
 
@@ -49,16 +51,16 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 		args.add("-o");
 		args.add(muxOutputFile.getPath());
 
-		for (int i = 0; i < task.getStreams().size(); i++) {
-			if (task.getStreams().get(i).getStrategy().isCopy()) {
+		for (int i = 0; i < job.getStreams().size(); i++) {
+			if (job.getStreams().get(i).getStrategy().isCopy()) {
 
-				if (task.getStreams().get(i) instanceof AudioStream) {
-					audioCopyStreams.add(task.getStreams().get(i));
-				} else if (task.getStreams().get(i) instanceof VideoStream) {
-					videoCopyStreams.add(task.getStreams().get(i));
+				if (job.getStreams().get(i) instanceof AudioStream) {
+					audioCopyStreams.add(job.getStreams().get(i));
+				} else if (job.getStreams().get(i) instanceof VideoStream) {
+					videoCopyStreams.add(job.getStreams().get(i));
 				}
 			} else {
-				args.addAll(buildArgs(task.getStreams().get(i)));
+				args.addAll(buildArgs(job.getStreams().get(i)));
 			}
 		}
 		addArgs(audioCopyStreams, args);
@@ -72,6 +74,7 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 			args.add("-" + getMkvMergeStreamTypeArg(streams.get(0)));
 			StringBuilder sb = new StringBuilder();
 			// Build copy streams args '-a 1,2,3 original.mkv'
+			Collections.sort(streams);
 			for (Iterator<Stream> iterator = streams.iterator(); iterator.hasNext();) {
 				sb.append(iterator.next().getIndex());
 				if (iterator.hasNext()) {
@@ -79,10 +82,9 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 				}
 			}
 			args.add(sb.toString());
-			args.add(filePathManager.getSharedSourceFile(task).getAbsolutePath());
+			args.add(filePathManager.getSharedSourceFile(job).getAbsolutePath());
 		}
 	}
-
 
 	private String getMkvMergeStreamTypeArg(Stream stream) {
 		if (stream instanceof AudioStream) {
@@ -102,10 +104,10 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 			// Use original source file and stream id
 			args.add("-" + getMkvMergeStreamTypeArg(stream));
 			args.add(String.valueOf(stream.getIndex() - 1));
-			args.add(filePathManager.getSharedSourceFile(task).getAbsolutePath());
+			args.add(filePathManager.getSharedSourceFile(job).getAbsolutePath());
 		} else {
 			// Iterate through tasks of the stream and concatenate if necessary
-			ArrayList<ClientTask> tasks = task.getTasksForStream(stream);
+			ArrayList<ClientTask> tasks = job.getTasksForStream(stream);
 
 			Iterator<ClientTask> it = tasks.iterator();
 			while (it.hasNext()) {
@@ -121,12 +123,13 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 	}
 
 	@Override
-	protected void start() {
+	public void handle(Job job) {
+		this.job = job;
 		boolean success = false;
 		ArrayList<String> args = getArgs();
 
 		// Start the transcoding
-		this.listener.jobMuxingStarted(task);
+		this.listener.jobMuxingStarted(job);
 
 		Transcoder transcoder = new Transcoder();
 		try {
@@ -136,7 +139,7 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 		} finally {
 			inputs.clear();
 			if (success) {
-				File partsDirectory = filePathManager.getSharedPartsFolder(task);
+				File partsDirectory = filePathManager.getSharedPartsFolder(job);
 				try {
 					// Clean job's parts
 					FileUtils.deleteDirectory(partsDirectory);
@@ -149,10 +152,16 @@ public class MKvMergeMuxer extends PoolWorker<Job> {
 					Logger logger = Logger.getLogger("lancoder");
 					logger.warning(e.getMessage());
 				}
-				this.listener.jobMuxingCompleted(task);
+				this.listener.jobMuxingCompleted(job);
 			} else {
-				this.listener.jobMuxingFailed(task);
+				this.listener.jobMuxingFailed(job);
 			}
+			this.job = null;
 		}
+	}
+
+	@Override
+	public ThirdParty getMuxingThirdParty() {
+		return this.mkvMerge;
 	}
 }
