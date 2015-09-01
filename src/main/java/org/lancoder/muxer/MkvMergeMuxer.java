@@ -51,71 +51,62 @@ public class MkvMergeMuxer extends Muxer {
 		args.add("-o");
 		args.add(muxOutputFile.getPath());
 
-		for (int i = 0; i < job.getStreams().size(); i++) {
-			if (job.getStreams().get(i).getStrategy().isCopy()) {
+		ArrayList<Stream> sortedStreams = new ArrayList<>(job.getStreams());
+		Collections.sort(sortedStreams);
 
-				if (job.getStreams().get(i) instanceof AudioStream) {
-					audioCopyStreams.add(job.getStreams().get(i));
-				} else if (job.getStreams().get(i) instanceof VideoStream) {
-					videoCopyStreams.add(job.getStreams().get(i));
+		for (Stream stream : sortedStreams) {
+			if (stream.getStrategy().isCopy()) {
+				if (stream instanceof AudioStream) {
+					audioCopyStreams.add(stream);
+				} else if (stream instanceof VideoStream) {
+					videoCopyStreams.add(stream);
 				}
 			} else {
-				args.addAll(buildArgs(job.getStreams().get(i)));
+				args.addAll(buildArgsForEncodedStream(stream));
 			}
 		}
-		addArgs(audioCopyStreams, args);
-		addArgs(videoCopyStreams, args);
+
+		args.addAll(buildArgsForCopyStreams(audioCopyStreams));
+		args.addAll(buildArgsForCopyStreams(videoCopyStreams));
 
 		return args;
 	}
 
-	private void addArgs(ArrayList<Stream> streams, ArrayList<String> args) {
+	private ArrayList<String> buildArgsForCopyStreams(ArrayList<Stream> streams) {
+		ArrayList<String> args = new ArrayList<>();
+
+		// Build copy streams args '-a|v 1,2,3 original.mkv'
 		if (streams.size() > 0) {
-			args.add("-" + getMkvMergeStreamTypeArg(streams.get(0)));
+			args.add("-" + streams.get(0).getMkvMergeStreamTypeArg());
+
 			StringBuilder sb = new StringBuilder();
-			// Build copy streams args '-a 1,2,3 original.mkv'
-			Collections.sort(streams);
 			for (Iterator<Stream> iterator = streams.iterator(); iterator.hasNext();) {
 				sb.append(iterator.next().getIndex());
+
 				if (iterator.hasNext()) {
 					sb.append(',');
 				}
 			}
+
 			args.add(sb.toString());
 			args.add(filePathManager.getSharedSourceFile(job).getAbsolutePath());
 		}
+
+		return args;
 	}
 
-	private String getMkvMergeStreamTypeArg(Stream stream) {
-		if (stream instanceof AudioStream) {
-			return "a";
-		}
-
-		if (stream instanceof VideoStream) {
-			return "v";
-		}
-		return null;
-	}
-
-	private ArrayList<String> buildArgs(Stream stream) {
+	private ArrayList<String> buildArgsForEncodedStream(Stream stream) {
 		ArrayList<String> args = new ArrayList<>();
 
-		if (stream.getStrategy().isCopy()) { // TODO move input file to strategy
-			// Use original source file and stream id
-			args.add("-" + getMkvMergeStreamTypeArg(stream));
-			args.add(String.valueOf(stream.getIndex() - 1));
-			args.add(filePathManager.getSharedSourceFile(job).getAbsolutePath());
-		} else {
-			// Iterate through tasks of the stream and concatenate if necessary
-			ArrayList<ClientTask> tasks = job.getTasksForStream(stream);
+		// Iterate through tasks of the stream and concatenate if necessary
+		ArrayList<ClientTask> tasks = job.getTasksForStream(stream);
 
-			Iterator<ClientTask> it = tasks.iterator();
-			while (it.hasNext()) {
-				args.add(filePathManager.getSharedFinalFile(it.next()).getAbsolutePath());
+		Iterator<ClientTask> it = tasks.iterator();
+		while (it.hasNext()) {
+			args.add(filePathManager.getSharedFinalFile(it.next()).getAbsolutePath());
 
-				if (it.hasNext()) {
-					args.add("+");
-				}
+			if (it.hasNext()) {
+				args.add("+");
 			}
 		}
 

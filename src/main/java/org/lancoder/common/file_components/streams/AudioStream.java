@@ -11,4 +11,9 @@ public class AudioStream extends Stream {
 		super(strategy, originalStream, index);
 	}
 
+	@Override
+	public String getMkvMergeStreamTypeArg() {
+		return "a";
+	}
+
 }

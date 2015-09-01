@@ -18,6 +18,8 @@ public abstract class Stream extends BaseStream implements Comparable<Stream> {
 		this.codec = strategy.getCodec();
 	}
 
+	public abstract String getMkvMergeStreamTypeArg();
+
 	public StreamHandlingStrategy getStrategy() {
 		return strategy;
 	}

@@ -11,4 +11,9 @@ public class VideoStream extends Stream {
 		super(strategy, originalStream, index);
 	}
 
+	@Override
+	public String getMkvMergeStreamTypeArg() {
+		return "v";
+	}
+
 }
