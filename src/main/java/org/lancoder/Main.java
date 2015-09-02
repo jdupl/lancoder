@@ -1,18 +1,11 @@
 package org.lancoder;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import javax.servlet.UnavailableException;
-
-import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.impl.Arguments;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
-import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
-import net.sourceforge.argparse4j.inf.Namespace;
 
 import org.lancoder.common.Container;
 import org.lancoder.common.config.Config;
@@ -23,9 +16,15 @@ import org.lancoder.common.logging.LogFormatter;
 import org.lancoder.master.Master;
 import org.lancoder.worker.Worker;
 
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
+import net.sourceforge.argparse4j.inf.Namespace;
+
 public class Main {
 
-	private final static String LANCODER_VERSION = "0.2.0-beta-2";
+	private final static String LANCODER_VERSION = "0.3.0-alpha";
 	private final static Logger logger = Logger.getLogger("lancoder");
 
 	/**
@@ -44,6 +43,48 @@ public class Main {
 		}
 	}
 
+	private static void buildLoggers(int verbosity) {
+		Level loggingLevel = Level.SEVERE;
+
+		if (verbosity > 6) {
+			verbosity = 6;
+		}
+
+		switch (verbosity) {
+		case 1:
+			loggingLevel = Level.SEVERE;
+			break;
+		case 2:
+			loggingLevel = Level.WARNING;
+			break;
+		case 3:
+			loggingLevel = Level.INFO;
+			break;
+		case 4:
+			loggingLevel = Level.FINE;
+			break;
+		case 5:
+			loggingLevel = Level.FINER;
+			break;
+		case 6:
+			loggingLevel = Level.FINEST;
+			break;
+		default:
+			loggingLevel = Level.INFO;
+		}
+
+		LogManager manager = LogManager.getLogManager();
+		manager.reset();
+
+		logger.setLevel(loggingLevel);
+		ConsoleHandler handler = new ConsoleHandler();
+		handler.setLevel(loggingLevel);
+
+		handler.setFormatter(new LogFormatter());
+		logger.addHandler(handler);
+		manager.addLogger(logger);
+	}
+
 	/**
 	 * Instantiates configuration and core from args.
 	 *
@@ -54,16 +95,7 @@ public class Main {
 	 * @throws UnavailableException
 	 */
 	private static void run(Namespace argsNamespace) throws InvalidConfigurationException {
-		LogManager manager = LogManager.getLogManager();
-		manager.reset();
-
-		logger.setLevel(Level.FINEST);
-		ConsoleHandler handler = new ConsoleHandler();
-		handler.setLevel(Level.FINEST);
-
-		handler.setFormatter(new LogFormatter());
-		logger.addHandler(handler);
-		manager.addLogger(logger);
+		buildLoggers(argsNamespace.getInt("verbose"));
 
 		logger.info(String.format("Runnning lancoder %s%n", LANCODER_VERSION));
 
@@ -109,8 +141,7 @@ public class Main {
 			manager.load();
 
 			return container;
-		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException e) {
+		} catch (Exception e) {
 			// java pls
 			e.printStackTrace();
 			throw new UnsupportedClassVersionError(e.getMessage());
@@ -138,9 +169,13 @@ public class Main {
 		ArgumentParser parser = ArgumentParsers.newArgumentParser("lancoder")
 				.defaultHelp(false)
 				.version("${prog} " + LANCODER_VERSION);
-		parser.addArgument("--version", "-v")
+		parser.addArgument("--version", "-V")
 				.action(Arguments.version())
 				.help("show the current version and exit");
+		parser.addArgument("--verbose", "-v")
+				.action(Arguments.count())
+				.help("Increase verbosity. Default is level 3. '-vvvvvv' will be the most verbose,"
+						+ " '-v' will be the less verbose.");
 
 		MutuallyExclusiveGroup group = parser.addMutuallyExclusiveGroup()
 				.required(true)

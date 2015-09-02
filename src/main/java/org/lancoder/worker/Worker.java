@@ -322,7 +322,7 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 					protocol, masterInetAddress.getHostAddress(), port));
 			updateStatus(NodeState.FREE);
 		} else {
-			logger.severe("Received empty or invalid UNID from master.%n");
+			logger.severe("Received empty or invalid UNID from master.\n");
 		}
 	}
 
