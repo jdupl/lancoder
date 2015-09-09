@@ -350,8 +350,8 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	@Override
 	public void jobMuxingCompleted(Job job) {
-		logger.fine(String.format("Job %s finished muxing !\n", job.getJobName()));
 		job.complete();
+		logger.fine(String.format("Job %s finished muxing !\n", job.getJobName()));
 	}
 
 	@Override

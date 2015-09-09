@@ -70,9 +70,6 @@ public class Job implements Comparable<Job>, Serializable {
 	@NoWebUI
 	private HashMap<Stream, ArrayList<ClientTask>> streamTaskMapping = new HashMap<>();
 
-	@NoWebUI
-	private FileInfo fileinfo;
-
 	public Job(String jobName, String sourceFile, int lengthOfTasks, FileInfo fileInfo, File outputFolder,
 			String outputFileName) {
 		this.jobId = generateId(sourceFile, jobName);
@@ -80,7 +77,6 @@ public class Job implements Comparable<Job>, Serializable {
 		this.lengthOfTasks = lengthOfTasks;
 		this.lengthOfJob = fileInfo.getDuration();
 		this.timeAdded = System.currentTimeMillis();
-		this.fileinfo = fileInfo;
 
 		OriginalVideoStream mainVideoStream = fileInfo.getMainVideoStream();
 		if (mainVideoStream != null) {
@@ -91,7 +87,6 @@ public class Job implements Comparable<Job>, Serializable {
 
 		this.relaiveSourceFile = sourceFile;
 		this.relativeFinalOutputFile = outputFileName;
-
 
 		// Set output's filename
 		this.relativeOutputFolder = outputFolder.getPath();
@@ -202,29 +197,29 @@ public class Job implements Comparable<Job>, Serializable {
 		return tasks.isEmpty() ? null : tasks.get(0);
 	}
 
-	/**
-	 * Returns all tasks to do for this job. Changes Job status if job is not started yet.
-	 *
-	 * @return The list of task
-	 */
-	public synchronized ArrayList<ClientVideoTask> getTodoVideoTask() {
-		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
-		for (ClientVideoTask task : this.getClientVideoTasks()) {
-			if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
-				tasks.add(task);
+	@SuppressWarnings("unchecked") // it is checked Java is just dumb
+	private <T extends ClientTask> ArrayList<T> getTasksByStatusAndType(Class<T> clazz, TaskState state) {
+		ArrayList<T> tasks = new ArrayList<>();
+
+		for (ClientTask task : getClientTasksByType(clazz)) {
+			if (task.getProgress().getTaskState() == state) {
+				tasks.add((T) task);
 			}
 		}
 		return tasks;
 	}
 
 	public ArrayList<ClientAudioTask> getTodoAudioTask() {
-		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
-		for (ClientAudioTask task : this.getClientAudioTasks()) {
-			if (task.getProgress().getTaskState() == TaskState.TASK_TODO) {
-				tasks.add(task);
-			}
-		}
-		return tasks;
+		return getTasksByStatusAndType(ClientAudioTask.class, TaskState.TASK_TODO);
+	}
+
+	/**
+	 * Returns all tasks to do for this job. Changes Job status if job is not started yet.
+	 *
+	 * @return The list of task
+	 */
+	public synchronized ArrayList<ClientVideoTask> getTodoVideoTask() {
+		return getTasksByStatusAndType(ClientVideoTask.class, TaskState.TASK_TODO);
 	}
 
 	/**
@@ -244,10 +239,7 @@ public class Job implements Comparable<Job>, Serializable {
 	}
 
 	public synchronized ArrayList<ClientTask> getTodoTasks() {
-		ArrayList<ClientTask> todoTasks = new ArrayList<>();
-		todoTasks.addAll(getTodoAudioTask());
-		todoTasks.addAll(getTodoVideoTask());
-		return todoTasks;
+		return getTasksByStatusAndType(ClientTask.class, TaskState.TASK_TODO);
 	}
 
 	/**
@@ -273,22 +265,23 @@ public class Job implements Comparable<Job>, Serializable {
 	}
 
 	public ArrayList<ClientAudioTask> getClientAudioTasks() {
-		ArrayList<ClientAudioTask> tasks = new ArrayList<>();
-		for (ClientTask task : this.clientTasks) {
-			if (task instanceof ClientAudioTask) {
-				tasks.add((ClientAudioTask) task);
-			}
-		}
-		return tasks;
+		return getClientTasksByType(ClientAudioTask.class);
 	}
 
 	public ArrayList<ClientVideoTask> getClientVideoTasks() {
-		ArrayList<ClientVideoTask> tasks = new ArrayList<>();
+		return getClientTasksByType(ClientVideoTask.class);
+	}
+
+	@SuppressWarnings("unchecked") // it is checked Java is just dumb
+	private <T> ArrayList<T> getClientTasksByType(Class<T> clazz) {
+		ArrayList<T> tasks = new ArrayList<>();
+
 		for (ClientTask task : this.clientTasks) {
-			if (task instanceof ClientVideoTask) {
-				tasks.add((ClientVideoTask) task);
+			if (clazz.isInstance(task)) {
+				tasks.add((T) task);
 			}
 		}
+
 		return tasks;
 	}
 
@@ -415,7 +408,4 @@ public class Job implements Comparable<Job>, Serializable {
 		return getJobStatus() == JobState.JOB_COMPLETED;
 	}
 
-	public FileInfo getFileinfo() {
-		return fileinfo;
-	}
 }
