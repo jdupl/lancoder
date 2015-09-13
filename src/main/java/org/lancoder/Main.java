@@ -13,7 +13,7 @@ import org.lancoder.common.config.ConfigFactory;
 import org.lancoder.common.config.ConfigManager;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
 import org.lancoder.common.logging.LogFormatter;
-import org.lancoder.master.Master;
+import org.lancoder.master.impl.Master;
 import org.lancoder.worker.Worker;
 
 import net.sourceforge.argparse4j.ArgumentParsers;

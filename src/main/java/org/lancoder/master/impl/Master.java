@@ -1,4 +1,4 @@
-package org.lancoder.master;
+package org.lancoder.master.impl;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -10,13 +10,13 @@ import org.lancoder.common.Node;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.config.ConfigManager;
 import org.lancoder.common.events.Event;
+import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.network.MessageSender;
 import org.lancoder.common.network.cluster.messages.AuthMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
-import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
@@ -26,14 +26,18 @@ import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
 import org.lancoder.common.third_parties.MkvMerge;
 import org.lancoder.common.utils.FileUtils;
+import org.lancoder.master.JobInitiator;
+import org.lancoder.master.JobManager;
+import org.lancoder.master.MasterConfig;
+import org.lancoder.master.MasterSavedInstance;
+import org.lancoder.master.NodeManager;
 import org.lancoder.master.api.node.MasterServer;
 import org.lancoder.master.api.web.ApiServer;
 import org.lancoder.master.checker.NodeCheckerService;
 import org.lancoder.master.dispatcher.DispatcherPool;
-import org.lancoder.muxer.MuxerListener;
 import org.lancoder.muxer.MuxerPool;
 
-public class Master extends Container implements MuxerListener, JobInitiatorListener, EventListener {
+public class Master extends Container implements EventListener {
 
 	public static final String ALGORITHM = "SHA-256";
 
@@ -53,6 +57,13 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	private LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
 
+	private MasterAdapter eventListener;
+
+	@Override
+	public void handle(Event event) {
+		this.eventQueue.add(event);
+	}
+
 	@Override
 	public void setConfigManager(ConfigManager<? extends Config> config) {
 		@SuppressWarnings("unchecked")
@@ -67,6 +78,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 	@Override
 	public void bootstrap() {
+		eventListener = new MasterAdapter(this);
 		loadLastInstance();
 		super.bootstrap();
 	}
@@ -81,28 +93,28 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 
 		filePathManager = new FilePathManager(getConfig());
 
-		nodeManager = new NodeManager(this, getConfig(), savedInstance);
+		nodeManager = new NodeManager(eventListener, getConfig(), savedInstance);
 		eventListeners.add(nodeManager);
 
-		jobInitiator = new JobInitiator(this, getConfig());
+		jobInitiator = new JobInitiator(eventListener, getConfig());
 		services.add(jobInitiator);
 
-		nodeServer = new MasterServer(getConfig().getNodeServerPort(), this, nodeManager);
+		nodeServer = new MasterServer(getConfig().getNodeServerPort(), eventListener, nodeManager);
 		services.add(nodeServer);
 
-		nodeChecker = new NodeCheckerService(this, nodeManager);
+		nodeChecker = new NodeCheckerService(eventListener, nodeManager);
 		services.add(nodeChecker);
 
 		apiServer = new ApiServer(this);
 		services.add(apiServer);
 
-		dispatcherPool = new DispatcherPool(this);
+		dispatcherPool = new DispatcherPool(eventListener);
 		services.add(dispatcherPool);
 
-		muxerPool = new MuxerPool(this, filePathManager, getFFmpeg(), getMkvMerge());
+		muxerPool = new MuxerPool(eventListener, filePathManager, getFFmpeg(), getMkvMerge());
 		services.add(muxerPool);
 
-		jobManager = new JobManager(this, nodeManager, dispatcherPool, savedInstance);
+		jobManager = new JobManager(eventListener, nodeManager, dispatcherPool, savedInstance, jobInitiator);
 		eventListeners.add(jobManager);
 	}
 
@@ -140,18 +152,6 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		MasterSavedInstance.save(file, current);
 	}
 
-	public MasterConfig getConfig() {
-		return configManager.getConfig();
-	}
-
-	public NodeManager getNodeManager() {
-		return nodeManager;
-	}
-
-	public JobManager getJobManager() {
-		return jobManager;
-	}
-
 	/**
 	 * Sends a disconnect request to a node, removes the node from the node list and updates the task of the node if it
 	 * had any.
@@ -159,7 +159,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 * @param n
 	 *            The node to remove
 	 */
-	public void disconnectNode(Node n) {
+	protected void disconnectNode(Node n) {
 		// remove node from list
 		jobManager.unassingAll(n);
 		nodeManager.removeNode(n);
@@ -169,21 +169,11 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		logger.fine(String.format("Disconnected node %s.%n", n.getName()));
 	}
 
-	public void disconnectNode(String unid) {
+	protected void disconnectNode(String unid) {
 		disconnectNode(nodeManager.identifySender(unid));
 	}
 
-	public boolean addJob(ApiJobRequest j) {
-		boolean success = false;
-
-		if (new File(this.getConfig().getAbsoluteSharedFolder(), j.getInputFile()).exists()) {
-			success = true;
-			this.jobInitiator.process(j);
-		}
-		return success;
-	}
-
-	public ApiResponse apiDeleteJob(String jobId) {
+	protected ApiResponse apiDeleteJob(String jobId) {
 		ApiResponse response = new ApiResponse(true);
 		Job j = jobManager.getJob(jobId);
 
@@ -246,7 +236,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 *            The report to be read
 	 * @return true if update could be sent, false otherwise
 	 */
-	public boolean readStatusReport(StatusReport report) {
+	protected boolean readStatusReport(StatusReport report) {
 		NodeState newNodeState = report.status;
 		String nodeUnid = report.getUnid();
 
@@ -271,7 +261,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		}
 
 		jobManager.removeInvalidAssigments(sender, reportTasks);
-		jobManager.updateNodesWork();
+		this.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 
 		return true;
 	}
@@ -282,7 +272,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 	 * @param reports
 	 *            The reports to read
 	 */
-	public void readTaskReports(ArrayList<TaskReport> reports) {
+	protected void readTaskReports(ArrayList<TaskReport> reports) {
 		for (TaskReport report : reports) {
 			ClientTask reportTaskInstance = report.getTask();
 
@@ -319,6 +309,7 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		}
 	}
 
+
 	private void processEvent(Event event) {
 		switch (event.getCode()) {
 		case STATUS_REPORT:
@@ -330,6 +321,9 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		case CONFIG_UPDATED:
 			configManager.dump();
 			break;
+		case WORK_NEEDS_UPDATE:
+			this.jobManager.updateNodesWork();
+			break;
 		default:
 			for (EventListener eventListener : eventListeners) {
 				eventListener.handle(event);
@@ -338,34 +332,24 @@ public class Master extends Container implements MuxerListener, JobInitiatorList
 		}
 	}
 
-	@Override
-	public void newJob(Job job) {
-		this.jobManager.addJob(job);
-	}
-
-	@Override
-	public void jobMuxingStarted(Job job) {
-		job.muxing();
-	}
-
-	@Override
-	public void jobMuxingCompleted(Job job) {
-		job.complete();
-		logger.fine(String.format("Job %s finished muxing !\n", job.getJobName()));
-	}
-
-	@Override
-	public void jobMuxingFailed(Job job) {
-		job.fail();
-		logger.fine(String.format("Muxing failed for job %s\n", job.getJobName()));
-	}
-
-	@Override
-	public void handle(Event event) {
-		this.eventQueue.add(event);
-	}
-
 	public void cleanJobs() {
 		jobManager.cleanJobs();
 	}
+
+	public MasterAdapter getMasterEventCatcher() {
+		return eventListener;
+	}
+
+	public MasterConfig getConfig() {
+		return configManager.getConfig();
+	}
+
+	public NodeManager getNodeManager() {
+		return nodeManager;
+	}
+
+	public JobManager getJobManager() {
+		return jobManager;
+	}
+
 }

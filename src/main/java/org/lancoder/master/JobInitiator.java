@@ -47,8 +47,14 @@ public class JobInitiator extends RunnableServiceAdapter {
 		this.config = config;
 	}
 
-	public void process(ApiJobRequest request) {
-		this.requests.add(request);
+	public boolean process(ApiJobRequest request) {
+		boolean success = false;
+
+		if (new File(config.getAbsoluteSharedFolder(), request.getInputFile()).exists()) {
+			success = true;
+			this.requests.add(request);
+		}
+		return success;
 	}
 
 	private Job createJob(ApiJobRequest req, String jobName, File sourceFile, File outputFolder) {

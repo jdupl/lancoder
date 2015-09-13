@@ -17,6 +17,7 @@ import org.lancoder.common.network.cluster.messages.ConnectResponse;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.video.ClientVideoTask;
+import org.lancoder.master.impl.Master;
 
 public class NodeManager implements EventListener {
 

@@ -10,7 +10,7 @@ import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.log.StdErrLog;
 import org.lancoder.common.RunnableServiceAdapter;
-import org.lancoder.master.Master;
+import org.lancoder.master.impl.Master;
 
 public class ApiServer extends RunnableServiceAdapter {
 
@@ -44,7 +44,7 @@ public class ApiServer extends RunnableServiceAdapter {
 		ctxStatic.setHandler(staticHandler);
 
 		// api handler
-		ApiHandler apiHandler = new ApiHandler(master);
+		ApiHandler apiHandler = new ApiHandler(master, master.getMasterEventCatcher());
 		ctxApi.setHandler(apiHandler);
 
 		ContextHandlerCollection contexts = new ContextHandlerCollection();

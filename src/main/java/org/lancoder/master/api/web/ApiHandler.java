@@ -14,7 +14,7 @@ import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.codecs.CodecTypeAdapter;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
-import org.lancoder.master.Master;
+import org.lancoder.master.impl.Master;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -24,9 +24,11 @@ import com.google.gson.GsonBuilder;
 public class ApiHandler extends AbstractHandler {
 
 	private Master master;
+	private ApiHandlerListener eventListener;
 
-	public ApiHandler(Master master) {
+	public ApiHandler(Master master, ApiHandlerListener eventListener) {
 		this.master = master;
+		this.eventListener = eventListener;
 	}
 
 	@Override
@@ -60,7 +62,7 @@ public class ApiHandler extends AbstractHandler {
 			br = request.getReader();
 			String unid = br.readLine();
 			if (unid != null) {
-				master.disconnectNode(unid);
+				eventListener.disconnectNode(unid);
 			}
 			break;
 		case "/jobs":
@@ -69,7 +71,7 @@ public class ApiHandler extends AbstractHandler {
 		case "/jobs/add":
 			br = request.getReader();
 			ApiJobRequest req = gson.fromJson(br, ApiJobRequest.class);
-			if (master.addJob(req)) {
+			if (eventListener.addJob(req)) {
 				res = new ApiResponse(true);
 			} else {
 				res = new ApiResponse(false, "The file or directory does not exist.");
@@ -79,7 +81,7 @@ public class ApiHandler extends AbstractHandler {
 		case "/jobs/delete":
 			br = request.getReader();
 			String id = br.readLine();
-			res = master.apiDeleteJob(id);
+			res = eventListener.apiDeleteJob(id);
 			response.getWriter().println(gson.toJson(res));
 			break;
 		case "/jobs/clean":

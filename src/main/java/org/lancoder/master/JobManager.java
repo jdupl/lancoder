@@ -17,6 +17,7 @@ import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.network.cluster.messages.TaskRequestMessage;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
+import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.status.JobState;
 import org.lancoder.common.status.TaskState;
 import org.lancoder.common.strategies.stream.EncodeStrategy;
@@ -32,6 +33,7 @@ public class JobManager implements EventListener {
 	private EventListener listener;
 	private NodeManager nodeManager;
 	private DispatcherPool dispatcherPool;
+	private JobInitiator jobInitiator;
 	/**
 	 * HashMap of the jobs. Key is the job's id for fast access.
 	 */
@@ -42,16 +44,17 @@ public class JobManager implements EventListener {
 	private ConcurrentHashMap<ClientTask, Assignment> assignments = new ConcurrentHashMap<>();
 
 	public JobManager(EventListener listener, NodeManager nodeManager, DispatcherPool dispatcherPool,
-			MasterSavedInstance savedInstance) {
+			MasterSavedInstance savedInstance, JobInitiator jobInitiator) {
 		this.listener = listener;
 		this.nodeManager = nodeManager;
 		this.dispatcherPool = dispatcherPool;
+		this.jobInitiator = jobInitiator;
+
 		if (savedInstance != null) {
 			this.jobs.putAll(savedInstance.getJobs());
 		}
 
 		this.removeLastInstanceInProgressTasks();
-
 	}
 
 	public HashMap<String, Job> getJobHashMap() {
@@ -65,7 +68,7 @@ public class JobManager implements EventListener {
 		Logger logger = Logger.getLogger("lancoder");
 
 		logger.fine(String.format("Job %s added.%n", j.getJobName()));
-		updateNodesWork();
+		this.listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 		return true;
 	}
 
@@ -90,8 +93,8 @@ public class JobManager implements EventListener {
 			return false;
 		}
 
-		this.listener.handle(new Event(EventEnum.CONFIG_UPDATED));
-		updateNodesWork();
+//		this.listener.handle(new Event(EventEnum.CONFIG_UPDATED));
+		this.listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
 
 		return true;
 	}
@@ -193,7 +196,7 @@ public class JobManager implements EventListener {
 				break;
 			}
 		}
-		this.listener.handle(new Event(EventEnum.CONFIG_UPDATED));
+//		this.listener.handle(new Event(EventEnum.CONFIG_UPDATED));
 	}
 
 	public void dispatch(ClientTask task, Node node) {
@@ -434,6 +437,10 @@ public class JobManager implements EventListener {
 				}
 			}
 		}
+	}
+
+	public boolean handleJobRequest(ApiJobRequest req) {
+		return jobInitiator.process(req);
 	}
 
 }

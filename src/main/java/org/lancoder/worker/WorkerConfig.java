@@ -54,10 +54,10 @@ public class WorkerConfig extends Config implements Serializable {
 	public void setNameFromHostName() {
 		Logger logger = Logger.getLogger("lancoder");
 		try {
-			logger.info("Trying to resolve local hostname.%n");
+			logger.info("Trying to resolve local hostname.\n");
 			this.name = InetAddress.getLocalHost().getHostName();
 		} catch (UnknownHostException e) {
-			logger.warning("Could not resolve local hostname.%n");
+			logger.warning("Could not resolve local hostname.\n");
 		}
 	}
 
