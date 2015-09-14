@@ -36,4 +36,10 @@ public class TaskRequestMessage extends Message {
 		}
 		return super.equals(o);
 	}
+
+	@Override
+	public String toString() {
+		return "TaskRequestMessage [task=" + task + "]";
+	}
+
 }

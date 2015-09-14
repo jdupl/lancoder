@@ -136,27 +136,6 @@ public class JobManager implements EventListener {
 		return jobs;
 	}
 
-	private ClientAudioTask getNextAudioTask(ArrayList<Codec> codecs) {
-		ClientAudioTask task = null;
-		ArrayList<Job> jobList = getAvailableJobs();
-		Collections.sort(jobList);
-
-		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
-			Job job = itJob.next();
-			ArrayList<ClientAudioTask> tasks = job.getTodoAudioTasks();
-
-			for (Iterator<ClientAudioTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
-				ClientAudioTask clientTask = itTask.next();
-				EncodeStrategy strategy = (EncodeStrategy) clientTask.getStreamConfig().getOutStream().getStrategy();
-
-				if (codecs.contains(strategy.getCodec())) {
-					task = clientTask;
-				}
-			}
-		}
-		return task;
-	}
-
 	private ClientVideoTask getNextVideoTask(ArrayList<Codec> codecs) {
 		ClientVideoTask task = null;
 		ArrayList<Job> jobList = getAvailableJobs();
@@ -223,10 +202,11 @@ public class JobManager implements EventListener {
 		if (!priorityAudioTasks.isEmpty() && !freeNodes.isEmpty()
 				&& (freeAudioNodes.isEmpty() && totalAudioWorkersCount < priorityAudioTasks.size())) {
 			freeAudioNodes.add(nodeManager.getFreeNodes().get(0));
+			audioNodes.add(nodeManager.getFreeNodes().get(0));
 		}
 
 		Iterator<ClientAudioTask> taskIt = priorityAudioTasks.iterator();
-		for (Node node : audioNodes) {
+		for (Node node : freeAudioNodes) {
 			if (!taskIt.hasNext()) {
 				break;
 			}
@@ -242,16 +222,8 @@ public class JobManager implements EventListener {
 		}
 
 		for (Node node : nodeManager.getFreeNodes()) {
-			ClientAudioTask task = getNextAudioTask(node.getCodecs());
-			if (task != null) {
-				dispatch(task, node);
-				break;
-			}
-		}
-
-		for (Node node : nodeManager.getFreeNodes()) {
 			ClientVideoTask task = getNextVideoTask(node.getCodecs());
-			if (task != null) {
+			if (task != null && node.getAllTasks().size() == 0) {
 				dispatch(task, node);
 				break;
 			}
