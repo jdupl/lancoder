@@ -2,7 +2,7 @@ package org.lancoder.common.file_components.streams.original;
 
 import java.io.Serializable;
 
-import org.lancoder.common.codecs.base.AbstractCodec;
+import org.lancoder.common.codecs.base.Codec;
 import org.lancoder.common.task.Unit;
 
 public abstract class BaseStream implements Serializable {
@@ -11,7 +11,7 @@ public abstract class BaseStream implements Serializable {
 
 	protected String relativeFile;
 	protected int index;
-	protected AbstractCodec codec;
+	protected Codec codec;
 	protected String title = "";
 	protected String language = "und";
 	protected boolean isDefault = false;
@@ -21,7 +21,7 @@ public abstract class BaseStream implements Serializable {
 	protected BaseStream() {
 	}
 
-	public BaseStream(String relativeFile, int index, AbstractCodec codec, long unitCount, Unit unit) {
+	public BaseStream(String relativeFile, int index, Codec codec, long unitCount, Unit unit) {
 		this.relativeFile = relativeFile;
 		this.index = index;
 		this.codec = codec;
@@ -37,7 +37,7 @@ public abstract class BaseStream implements Serializable {
 		return index;
 	}
 
-	public AbstractCodec getCodec() {
+	public Codec getCodec() {
 		return codec;
 	}
 

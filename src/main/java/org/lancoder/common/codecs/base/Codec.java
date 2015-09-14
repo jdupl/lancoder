@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import org.lancoder.common.codecs.CodecEnum;
 
-public abstract class AbstractCodec implements Serializable {
+public abstract class Codec implements Serializable {
 
 	private static final long serialVersionUID = -3632642598335400603L;
 	private String prettyName;
@@ -14,13 +14,13 @@ public abstract class AbstractCodec implements Serializable {
 	private boolean lossless;
 	private CodecEnum codecEnum;
 
-	protected AbstractCodec(CodecEnum codecEnum) {
+	protected Codec(CodecEnum codecEnum) {
 		this(codecEnum.getPrettyName(), codecEnum.getFFMpegName(), codecEnum.getEncoder(), codecEnum.getContainer(),
 				codecEnum.isLossless());
 		this.codecEnum = codecEnum;
 	}
 
-	private AbstractCodec(String name, String ffMpegName, String encoder, String container, boolean lossless) {
+	private Codec(String name, String ffMpegName, String encoder, String container, boolean lossless) {
 		this.prettyName = name;
 		this.ffMpegName = ffMpegName;
 		this.encoder = encoder;
@@ -63,8 +63,8 @@ public abstract class AbstractCodec implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof AbstractCodec) {
-			AbstractCodec other = (AbstractCodec) obj;
+		if (obj instanceof Codec) {
+			Codec other = (Codec) obj;
 			return other.ffMpegName.equals(this.ffMpegName);
 		}
 		return false;

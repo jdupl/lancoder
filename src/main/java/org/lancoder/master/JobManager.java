@@ -1,16 +1,18 @@
 package org.lancoder.master;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import org.lancoder.common.Node;
-import org.lancoder.common.codecs.base.AbstractCodec;
+import org.lancoder.common.codecs.base.Codec;
 import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
@@ -43,6 +45,8 @@ public class JobManager implements EventListener {
 	 */
 	private ConcurrentHashMap<ClientTask, Assignment> assignments = new ConcurrentHashMap<>();
 
+	private Logger logger = Logger.getLogger("lancoder");
+
 	public JobManager(EventListener listener, NodeManager nodeManager, DispatcherPool dispatcherPool,
 			MasterSavedInstance savedInstance, JobInitiator jobInitiator) {
 		this.listener = listener;
@@ -65,7 +69,6 @@ public class JobManager implements EventListener {
 		if (this.jobs.put(j.getJobId(), j) != null) {
 			return false;
 		}
-		Logger logger = Logger.getLogger("lancoder");
 
 		logger.fine(String.format("Job %s added.%n", j.getJobName()));
 		this.listener.handle(new Event(EventEnum.WORK_NEEDS_UPDATE));
@@ -133,14 +136,14 @@ public class JobManager implements EventListener {
 		return jobs;
 	}
 
-	private ClientAudioTask getNextAudioTask(ArrayList<AbstractCodec> codecs) {
+	private ClientAudioTask getNextAudioTask(ArrayList<Codec> codecs) {
 		ClientAudioTask task = null;
 		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
 
 		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
 			Job job = itJob.next();
-			ArrayList<ClientAudioTask> tasks = job.getTodoAudioTask();
+			ArrayList<ClientAudioTask> tasks = job.getTodoAudioTasks();
 
 			for (Iterator<ClientAudioTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
 				ClientAudioTask clientTask = itTask.next();
@@ -154,14 +157,14 @@ public class JobManager implements EventListener {
 		return task;
 	}
 
-	private ClientVideoTask getNextVideoTask(ArrayList<AbstractCodec> codecs) {
+	private ClientVideoTask getNextVideoTask(ArrayList<Codec> codecs) {
 		ClientVideoTask task = null;
 		ArrayList<Job> jobList = getAvailableJobs();
 		Collections.sort(jobList);
 
 		for (Iterator<Job> itJob = jobList.iterator(); itJob.hasNext() && task == null;) {
 			Job job = itJob.next();
-			ArrayList<ClientVideoTask> tasks = job.getTodoVideoTask();
+			ArrayList<ClientVideoTask> tasks = job.getTodoVideoTasks();
 
 			for (Iterator<ClientVideoTask> itTask = tasks.iterator(); itTask.hasNext() && task == null;) {
 				ClientVideoTask clientTask = itTask.next();
@@ -176,12 +179,69 @@ public class JobManager implements EventListener {
 		return task;
 	}
 
+
 	/**
 	 * Checks if any task and nodes are available and dispatch until possible. Will only dispatch tasks to nodes that
 	 * are capable of encoding with the desired library. Always put audio tasks in priority.
 	 */
 	public synchronized void updateNodesWork() {
-		for (Node node : nodeManager.getFreeAudioNodes()) {
+		Queue<ClientAudioTask> priorityAudioTasks= new ArrayDeque<>();
+		ArrayList<Node> audioNodes = new ArrayList<>();
+		ArrayList<Node> freeAudioNodes = new ArrayList<>();
+		int totalAudioWorkersCount = 0;
+
+		for (Job job : getJobs()) {
+			if (job.getJobStatus() == JobState.JOB_COMPUTING || job.getJobStatus() == JobState.JOB_TODO) {
+				ArrayList<ClientAudioTask> tasks = job.getTodoAudioTasks();
+				for (ClientAudioTask task: tasks) {
+					if (!task.getStreamConfig().getOutStream().getStrategy().isCopy())
+						priorityAudioTasks.add(task);
+				}
+			}
+		}
+
+		for (Node node : nodeManager.getOnlineNodes()) {
+			int nodeAudioWorkersCount = 0;
+
+			for (ClientTask task : node.getAllTasks()) {
+				if (task instanceof ClientAudioTask) {
+					nodeAudioWorkersCount++;
+				}
+			}
+
+			if (nodeAudioWorkersCount > 0) {
+				totalAudioWorkersCount += nodeAudioWorkersCount;
+				audioNodes.add(node);
+				if (nodeManager.isAvailable(node))
+					freeAudioNodes.add(node);
+			}
+		}
+
+		ArrayList<Node> freeNodes = nodeManager.getFreeNodes();
+
+		// Check if it should add an audio worker
+		if (!priorityAudioTasks.isEmpty() && !freeNodes.isEmpty()
+				&& (freeAudioNodes.isEmpty() && totalAudioWorkersCount < priorityAudioTasks.size())) {
+			freeAudioNodes.add(nodeManager.getFreeNodes().get(0));
+		}
+
+		Iterator<ClientAudioTask> taskIt = priorityAudioTasks.iterator();
+		for (Node node : audioNodes) {
+			if (!taskIt.hasNext()) {
+				break;
+			}
+			ClientAudioTask next = taskIt.next();
+			Codec taskCodec = next.getStreamConfig().getOutStream().getStrategy().getCodec();
+
+			if (node.getCodecs().contains(taskCodec)) {
+				dispatch(next, node);
+				taskIt.remove();
+			} else {
+
+			}
+		}
+
+		for (Node node : nodeManager.getFreeNodes()) {
 			ClientAudioTask task = getNextAudioTask(node.getCodecs());
 			if (task != null) {
 				dispatch(task, node);
@@ -189,22 +249,17 @@ public class JobManager implements EventListener {
 			}
 		}
 
-		for (Node node : nodeManager.getFreeVideoNodes()) {
+		for (Node node : nodeManager.getFreeNodes()) {
 			ClientVideoTask task = getNextVideoTask(node.getCodecs());
 			if (task != null) {
 				dispatch(task, node);
 				break;
 			}
 		}
-//		this.listener.handle(new Event(EventEnum.CONFIG_UPDATED));
 	}
 
-	public void dispatch(ClientTask task, Node node) {
+	private void dispatch(ClientTask task, Node node) {
 		if (assign(task, node)) {
-			task.assign();
-			node.addPendingTask(task);
-			node.lock();
-
 			dispatcherPool.add(new DispatchItem(new TaskRequestMessage(task), node));
 		}
 	}
@@ -219,18 +274,21 @@ public class JobManager implements EventListener {
 	 * @return True if task was assigned. False if task is already mapped.
 	 */
 	private synchronized boolean assign(ClientTask task, Node node) {
-		Logger logger = Logger.getLogger("lancoder");
 		boolean assigned = false;
 
 		if (!assignments.containsKey(task)) {
 			Assignment assignment = new Assignment(task, node);
-			assignments.put(task, assignment);
-			assigned = true;
 
+			assignments.put(task, assignment);
+			task.assign();
+			node.addPendingTask(task);
+			node.lock();
+			assigned = true;
 			logger.fine(String.format("Assigned %s to node %s.%n", task, node.getName()));
 		} else {
 			logger.warning(String.format("Could not assign %s to node %s.%n", task, node.getName()));
 		}
+
 		return assigned;
 	}
 
@@ -249,8 +307,6 @@ public class JobManager implements EventListener {
 	 */
 	private synchronized boolean unassign(ClientTask task) {
 		boolean unassigned = false;
-		Logger logger = Logger.getLogger("lancoder");
-
 		Assignment assignment = this.assignments.remove(task);
 
 		if (assignment != null && assignment.getAssignee() != null) {
@@ -264,7 +320,6 @@ public class JobManager implements EventListener {
 	}
 
 	public boolean taskUpdated(ClientTask task, Node node) {
-		Logger logger = Logger.getLogger("lancoder");
 		TaskState updateStatus = task.getProgress().getTaskState();
 
 		switch (updateStatus) {
@@ -275,7 +330,7 @@ public class JobManager implements EventListener {
 			task.completed();
 
 			if (job.getTaskDoneCount() == job.getTaskCount()) {
-				logger.fine(String.format("job " + job.getJobId() + " completed%n"));
+				logger.fine(String.format("Job %s completed.%n", job.getJobId()));
 				listener.handle(new Event(EventEnum.JOB_ENCODING_COMPLETED, job));
 			}
 
@@ -355,8 +410,6 @@ public class JobManager implements EventListener {
 	}
 
 	private void taskRefused(ClientTask task) {
-		Logger logger = Logger.getLogger("lancoder");
-
 		logger.fine(String.format("A worker refused %s !%n", task));
 
 		task.reset();
@@ -411,8 +464,6 @@ public class JobManager implements EventListener {
 	}
 
 	public synchronized void removeInvalidAssigments(Node sender, ArrayList<ClientTask> reportTasks) {
-		Logger logger = Logger.getLogger("lancoder");
-
 		for (Assignment assignment : getAssignments(sender)) {
 			if (!reportTasks.contains(assignment.getTask()) && isInDelay(assignment)) {
 

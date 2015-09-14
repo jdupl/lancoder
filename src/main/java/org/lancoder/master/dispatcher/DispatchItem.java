@@ -38,4 +38,9 @@ public class DispatchItem {
 		return super.equals(obj);
 	}
 
+	@Override
+	public String toString() {
+		return "DispatchItem [message=" + message + ", node=" + node + "]";
+	}
+
 }

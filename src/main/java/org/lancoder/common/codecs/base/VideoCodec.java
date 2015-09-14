@@ -2,7 +2,7 @@ package org.lancoder.common.codecs.base;
 
 import org.lancoder.common.codecs.CodecEnum;
 
-public class VideoCodec extends AbstractCodec {
+public class VideoCodec extends Codec {
 
 	private static final long serialVersionUID = -1517396854687235753L;
 

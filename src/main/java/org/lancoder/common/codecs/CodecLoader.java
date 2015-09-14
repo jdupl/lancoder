@@ -4,7 +4,7 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
-import org.lancoder.common.codecs.base.AbstractCodec;
+import org.lancoder.common.codecs.base.Codec;
 import org.lancoder.common.codecs.impl.AAC;
 import org.lancoder.common.codecs.impl.Ape;
 import org.lancoder.common.codecs.impl.DTS;
@@ -22,8 +22,8 @@ import org.lancoder.common.codecs.impl.Wavpack;
 
 public class CodecLoader {
 
-	private static HashMap<CodecEnum, Class<? extends AbstractCodec>> codecClasses = new HashMap<>();
-	private static HashMap<CodecEnum, AbstractCodec> codecInstances = new HashMap<>();
+	private static HashMap<CodecEnum, Class<? extends Codec>> codecClasses = new HashMap<>();
+	private static HashMap<CodecEnum, Codec> codecInstances = new HashMap<>();
 
 	static {
 		codecClasses.put(CodecEnum.AAC, AAC.class);
@@ -42,8 +42,8 @@ public class CodecLoader {
 		codecClasses.put(CodecEnum.WAVPACK, Wavpack.class);
 	}
 
-	public static AbstractCodec fromCodec(CodecEnum codecEnum) {
-		AbstractCodec codec = codecInstances.get(codecEnum);
+	public static Codec fromCodec(CodecEnum codecEnum) {
+		Codec codec = codecInstances.get(codecEnum);
 		if (codec == null) {
 			codec = getInstance(codecEnum);
 		}
@@ -57,15 +57,15 @@ public class CodecLoader {
 	 *            The codec to instantiate
 	 * @return The codec object or null if not found
 	 */
-	private static AbstractCodec getInstance(CodecEnum codecEnum) {
-		AbstractCodec codecInstance = null;
+	private static Codec getInstance(CodecEnum codecEnum) {
+		Codec codecInstance = null;
 		try {
-			Class<? extends AbstractCodec> clazz = codecClasses.get(codecEnum);
+			Class<? extends Codec> clazz = codecClasses.get(codecEnum);
 			if (clazz == null) {
 				Logger logger = Logger.getLogger("lancoder");
 				logger.warning("Unsupported codec: " + codecEnum.getPrettyName() + "\n");
 			} else {
-				Constructor<? extends AbstractCodec> cons = clazz.getDeclaredConstructor();
+				Constructor<? extends Codec> cons = clazz.getDeclaredConstructor();
 				cons.setAccessible(true); // Constructor is protected
 				codecInstance = cons.newInstance();
 				codecInstances.put(codecEnum, codecInstance);

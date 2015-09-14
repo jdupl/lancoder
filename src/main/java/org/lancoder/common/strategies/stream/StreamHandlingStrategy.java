@@ -3,7 +3,7 @@ package org.lancoder.common.strategies.stream;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import org.lancoder.common.codecs.base.AbstractCodec;
+import org.lancoder.common.codecs.base.Codec;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.task.ClientTask;
 import org.lancoder.common.task.StreamConfig;
@@ -18,7 +18,7 @@ public abstract class StreamHandlingStrategy implements Serializable {
 		return false;
 	}
 
-	public abstract AbstractCodec getCodec();
+	public abstract Codec getCodec();
 
 	public abstract ArrayList<ClientTask> createTasks(Job job, StreamConfig config);
 

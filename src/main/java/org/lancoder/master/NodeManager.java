@@ -73,38 +73,18 @@ public class NodeManager implements EventListener {
 		ArrayList<Node> nodes = new ArrayList<>();
 		for (Entry<String, Node> e : this.nodes.entrySet()) {
 			Node n = e.getValue();
-			if (n.getStatus() != NodeState.PAUSED && n.getStatus() != NodeState.NOT_CONNECTED && !n.isLocked()) {
+			if (n.getStatus() != NodeState.PAUSED && n.getStatus() != NodeState.NOT_CONNECTED) {
 				nodes.add(n);
 			}
 		}
 		return nodes;
 	}
 
-	/**
-	 * Get a list of nodes currently completely free. Video tasks will use all threads.
-	 *
-	 * @return A list of nodes that can accept a video task
-	 */
-	public synchronized ArrayList<Node> getFreeVideoNodes() {
-		ArrayList<Node> nodes = new ArrayList<>();
-		for (Node node : this.getOnlineNodes()) {
-			if (node.getCurrentTasks().size() == 0) {
-				nodes.add(node);
-			}
-		}
-		return nodes;
-	}
-
-	/**
-	 * Get a list of nodes that can encode audio. Audio tasks only need one thread.
-	 *
-	 * @return A list of nodes that can accept an audio task
-	 */
-	public synchronized ArrayList<Node> getFreeAudioNodes() {
+	public synchronized ArrayList<Node> getFreeNodes() {
 		ArrayList<Node> nodes = new ArrayList<>();
 
 		for (Node node : this.getOnlineNodes()) {
-			if (isAvailable(node)) {
+			if (!node.isLocked() && isAvailable(node)) {
 				nodes.add(node);
 			}
 		}
@@ -117,20 +97,23 @@ public class NodeManager implements EventListener {
 	 * @param node
 	 * @return
 	 */
-	private boolean isAvailable(Node node) {
+	public <T extends ClientTask> boolean isAvailable(Node node) {
 		// TODO allow dynamic failure threshold
-		boolean nodeAvailable = node.getFailureCount() < FAILURE_THRESHOLD
+		boolean available = node.getFailureCount() < FAILURE_THRESHOLD
 				&& node.getAllTasks().size() < node.getThreadCount();
 
-		if (nodeAvailable) {
-			for (ClientTask task : node.getCurrentTasks()) {
-				if (task instanceof ClientVideoTask) {
-					nodeAvailable = false;
-					break;
-				}
+		if (!available) {
+			return false;
+		}
+
+		for (ClientTask task : node.getCurrentTasks()) {
+			if (task instanceof ClientVideoTask) {
+				available = false;
+				break;
 			}
 		}
-		return nodeAvailable;
+
+		return available;
 	}
 
 	/**

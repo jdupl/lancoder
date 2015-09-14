@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.codecs.CodecLoader;
-import org.lancoder.common.codecs.base.AbstractCodec;
+import org.lancoder.common.codecs.base.Codec;
 import org.lancoder.common.status.NodeState;
 import org.lancoder.common.task.ClientTask;
 
@@ -21,7 +21,7 @@ public class Node implements Serializable {
 	private int threadCount;
 	private ArrayList<ClientTask> currentTasks = new ArrayList<>();
 	private ArrayList<ClientTask> pendingTasks = new ArrayList<>();
-	private ArrayList<AbstractCodec> codecs = new ArrayList<>();
+	private ArrayList<Codec> codecs = new ArrayList<>();
 	private boolean locked = false;
 	private int failureCount;
 
@@ -91,7 +91,7 @@ public class Node implements Serializable {
 	 * @return True if node can handle the task
 	 */
 	public boolean canHandle(ClientTask task) {
-		AbstractCodec taskCodec = task.getStreamConfig().getOutStream().getCodec();
+		Codec taskCodec = task.getStreamConfig().getOutStream().getCodec();
 		return this.codecs.contains(taskCodec);
 	}
 
@@ -136,7 +136,7 @@ public class Node implements Serializable {
 		return threadCount;
 	}
 
-	public ArrayList<AbstractCodec> getCodecs() {
+	public ArrayList<Codec> getCodecs() {
 		return codecs;
 	}
 

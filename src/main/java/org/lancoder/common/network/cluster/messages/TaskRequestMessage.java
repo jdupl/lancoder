@@ -11,7 +11,7 @@ public class TaskRequestMessage extends Message {
 
 	/**
 	 * Sent from master to workers
-	 * 
+	 *
 	 * @param task
 	 *            The task to request to the worker
 	 */
@@ -26,5 +26,14 @@ public class TaskRequestMessage extends Message {
 
 	public ClientTask getTask() {
 		return task;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof TaskRequestMessage) {
+			TaskRequestMessage other = (TaskRequestMessage) o;
+			return this.task.equals(other.task);
+		}
+		return super.equals(o);
 	}
 }

@@ -193,7 +193,7 @@ public class Job implements Comparable<Job>, Serializable {
 	 * @return The task or null if no task is available
 	 */
 	public synchronized ClientVideoTask getNextVideoTask() {
-		ArrayList<ClientVideoTask> tasks = getTodoVideoTask();
+		ArrayList<ClientVideoTask> tasks = getTodoVideoTasks();
 		return tasks.isEmpty() ? null : tasks.get(0);
 	}
 
@@ -209,7 +209,7 @@ public class Job implements Comparable<Job>, Serializable {
 		return tasks;
 	}
 
-	public ArrayList<ClientAudioTask> getTodoAudioTask() {
+	public ArrayList<ClientAudioTask> getTodoAudioTasks() {
 		return getTasksByStatusAndType(ClientAudioTask.class, TaskState.TASK_TODO);
 	}
 
@@ -218,7 +218,7 @@ public class Job implements Comparable<Job>, Serializable {
 	 *
 	 * @return The list of task
 	 */
-	public synchronized ArrayList<ClientVideoTask> getTodoVideoTask() {
+	public synchronized ArrayList<ClientVideoTask> getTodoVideoTasks() {
 		return getTasksByStatusAndType(ClientVideoTask.class, TaskState.TASK_TODO);
 	}
 

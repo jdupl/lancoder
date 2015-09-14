@@ -2,7 +2,7 @@ package org.lancoder.common.strategies.stream;
 
 import java.util.ArrayList;
 
-import org.lancoder.common.codecs.base.AbstractCodec;
+import org.lancoder.common.codecs.base.Codec;
 import org.lancoder.common.file_components.streams.original.OriginalVideoStream;
 import org.lancoder.common.job.FFmpegPreset;
 import org.lancoder.common.job.Job;
@@ -23,7 +23,7 @@ public class VideoEncodeStrategy extends EncodeStrategy {
 	private int height = 0;
 	private int stepCount = 1;
 
-	public VideoEncodeStrategy(AbstractCodec codec, RateControlType rateControlType, int rate, double frameRate,
+	public VideoEncodeStrategy(Codec codec, RateControlType rateControlType, int rate, double frameRate,
 			FFmpegPreset preset, int width, int height, int stepCount) {
 		super(codec, rateControlType, rate);
 		this.frameRate = frameRate;

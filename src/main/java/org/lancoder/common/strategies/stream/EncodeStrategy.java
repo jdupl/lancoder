@@ -3,7 +3,7 @@ package org.lancoder.common.strategies.stream;
 import java.io.File;
 import java.util.ArrayList;
 
-import org.lancoder.common.codecs.base.AbstractCodec;
+import org.lancoder.common.codecs.base.Codec;
 import org.lancoder.common.job.Job;
 import org.lancoder.common.job.RateControlType;
 import org.lancoder.common.utils.FileUtils;
@@ -11,11 +11,11 @@ import org.lancoder.common.utils.FileUtils;
 public abstract class EncodeStrategy extends StreamHandlingStrategy {
 
 	private static final long serialVersionUID = -7078509107858295060L;
-	protected AbstractCodec codec;
+	protected Codec codec;
 	protected RateControlType rateControlType;
 	protected int rate;
 
-	public EncodeStrategy(AbstractCodec codec, RateControlType rateControlType, int rate) {
+	public EncodeStrategy(Codec codec, RateControlType rateControlType, int rate) {
 		this.codec = codec;
 		this.rateControlType = rateControlType;
 		this.rate = rate;
@@ -47,7 +47,7 @@ public abstract class EncodeStrategy extends StreamHandlingStrategy {
 	}
 
 	@Override
-	public AbstractCodec getCodec() {
+	public Codec getCodec() {
 		return codec;
 	}
 
