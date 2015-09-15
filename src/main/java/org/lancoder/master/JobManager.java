@@ -122,6 +122,7 @@ public class JobManager implements EventListener {
 		for (Entry<String, Job> e : this.jobs.entrySet()) {
 			jobs.add(e.getValue());
 		}
+		Collections.sort(jobs);
 		return jobs;
 	}
 

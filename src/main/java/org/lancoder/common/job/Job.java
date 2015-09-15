@@ -294,11 +294,8 @@ public class Job implements Comparable<Job>, Serializable {
 	public int compareTo(Job other) {
 		if (this.priority != other.priority) {
 			return Integer.compare(this.priority, other.priority);
-		} else if (this.getTodoTaskCount() != other.getTodoTaskCount()) {
-			return Integer.compare(this.getTodoTaskCount(), other.getTodoTaskCount());
-		} else {
-			return Long.compare(this.getLengthOfJob(), other.getLengthOfJob());
 		}
+		return Long.compare(this.getTimeAdded(), other.getTimeAdded());
 	}
 
 	@Override

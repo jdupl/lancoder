@@ -15,7 +15,7 @@ import com.google.gson.JsonParser;
 
 public class FakeInfo {
 
-	public static ApiJobRequest fakeAudioEncodeRequest() {
+	public static ApiJobRequest fakeAudioEncodeRequest(String jobName) {
 		String json = "{" +
 				"    \"rateControlType\":\"VBR\"," +
 				"    \"passes\":1," +
@@ -38,7 +38,7 @@ public class FakeInfo {
 				"        \"lossless\":false," +
 				"        \"library\":\"libx264\"" +
 				"    }," +
-				"    \"name\":\"testJob\"," +
+				"    \"name\":\"" + jobName + "\"," +
 				"    \"inputFile\":\"testInput.mkv\"" +
 				"}";
 		Gson gson = new GsonBuilder().registerTypeAdapter(CodecEnum.class, new CodecTypeAdapter<>())
@@ -55,6 +55,10 @@ public class FakeInfo {
 				}).serializeSpecialFloatingPointValues().create();
 
 		return gson.fromJson(json, ApiJobRequest.class);
+	}
+
+	public static ApiJobRequest fakeAudioEncodeRequest() {
+		return fakeAudioEncodeRequest("jobName");
 	}
 
 	public static ApiJobRequest fakeAudioCopyRequest() {
