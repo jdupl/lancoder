@@ -1,18 +1,22 @@
 lancoder
 ============
 
-Lancoder allows video and audio encoding over multiple machines in a local network, controlled by a simple web interface.
+Lancoder provides video and audio encoding distributed across multiple machines in a local network, controlled by a simple web interface.
 
 Currently under development but releases are mostly stable (still in alpha/beta stage).
 
-### Features
+### Encoding codecs
 * x264, x265, VP8, VP9, Theora video encoding
-* Opus, Vorbis, Speex, AAC, MP3, DTS, FLAC (and [more](https://github.com/jdupl/lancoder/tree/master/src/main/java/org/lancoder/common/codecs/impl)) audio processing
-* 2 pass and 1 pass VBR encoding or CRF encoding
-* Batch processing of directories
-* Multiple track audio processing
-* Stream copy
+* Opus, Vorbis, Speex, AAC, MP3, DTS, FLAC 
+* And [more](https://github.com/jdupl/lancoder/tree/master/src/main/java/org/lancoder/common/codecs/impl) 
 
+
+### Features
+* 1 or 2 pass VBR encoding or CRF encoding
+* Batch processing of directories
+* Multiple audio tracks
+* Stream copy
+ 
 
 ### Development
 * Allow output in other containers than MKV
