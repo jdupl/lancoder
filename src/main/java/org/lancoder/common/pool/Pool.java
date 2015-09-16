@@ -166,7 +166,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 		if (canSpawn()) {
 			poolWorker = getPoolWorkerInstance(this, threadLock);
 
-			Thread thread = new Thread(threads, poolWorker, this.getClass().getSimpleName());
+			Thread thread = new Thread(threads, poolWorker, poolWorker.getClass().getSimpleName());
 			poolWorker.setThread(thread);
 			thread.start();
 
@@ -248,7 +248,7 @@ public abstract class Pool<T> extends SchedulableService implements PoolWorkerLi
 			// Wait for pool refresh to complete as new resources may take time to load
 			synchronized (refreshWaitLock) {
 				try {
-					refreshWaitLock.wait();
+					refreshWaitLock.wait(1000);
 				} catch (InterruptedException e) {
 				}
 			}

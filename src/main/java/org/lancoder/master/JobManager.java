@@ -279,17 +279,15 @@ public class JobManager implements EventListener {
 	 * @return True if task could be unassigned
 	 */
 	private synchronized boolean unassign(ClientTask task) {
-		boolean unassigned = false;
 		Assignment assignment = this.assignments.remove(task);
 
 		if (assignment != null && assignment.getAssignee() != null) {
 			Node previousAssignee = assignment.getAssignee();
-			unassigned = true;
 			previousAssignee.removeTask(task);
-
 			logger.fine(String.format("Node %s  was unassigned from %s.%n", previousAssignee.getName(), task.toString()));
+			return true;
 		}
-		return unassigned;
+		return false;
 	}
 
 	public boolean taskUpdated(ClientTask task, Node node) {

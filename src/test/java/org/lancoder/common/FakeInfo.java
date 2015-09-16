@@ -58,7 +58,7 @@ public class FakeInfo {
 	}
 
 	public static ApiJobRequest fakeAudioEncodeRequest() {
-		return fakeAudioEncodeRequest("jobName");
+		return fakeAudioEncodeRequest("testJob");
 	}
 
 	public static ApiJobRequest fakeAudioCopyRequest() {

@@ -1,6 +1,7 @@
 package org.lancoder.common;
 
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.argThat;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -353,13 +354,27 @@ public class JobDispatchingTest {
 		jobManager.updateNodesWork();
 		Mockito.verify(dispatcherPool).add(new DispatchItem(new TaskRequestMessage(job1.getClientAudioTasks().get(0)), node1));
 		Mockito.verify(dispatcherPool).add(new DispatchItem(new TaskRequestMessage(job1.getClientVideoTasks().get(0)), node2));
-		Mockito.verify(dispatcherPool, new Times(1)).add(Mockito.argThat(new DispatchItemNodeMatcher(node1)));
-		Mockito.verify(dispatcherPool, new Times(1)).add(Mockito.argThat(new DispatchItemNodeMatcher(node2)));
+		Mockito.verify(dispatcherPool, new Times(1)).add(argThat(new DispatchItemNodeMatcher(node1)));
+		Mockito.verify(dispatcherPool, new Times(1)).add(argThat(new DispatchItemNodeMatcher(node2)));
 
 		jobManager.updateNodesWork();
 		Mockito.verify(dispatcherPool).add(new DispatchItem(new TaskRequestMessage(job1.getClientAudioTasks().get(1)), node1));
-		Mockito.verify(dispatcherPool, new Times(2)).add(Mockito.argThat(new DispatchItemNodeMatcher(node1)));
-		Mockito.verify(dispatcherPool, new Times(1)).add(Mockito.argThat(new DispatchItemNodeMatcher(node2)));
+		Mockito.verify(dispatcherPool, new Times(2)).add(argThat(new DispatchItemNodeMatcher(node1)));
+		Mockito.verify(dispatcherPool, new Times(1)).add(argThat(new DispatchItemNodeMatcher(node2)));
+
+		jobManager.updateNodesWork();
+		Mockito.verify(dispatcherPool).add(new DispatchItem(new TaskRequestMessage(job2.getClientAudioTasks().get(0)), node1));
+		Mockito.verify(dispatcherPool, new Times(3)).add(argThat(new DispatchItemNodeMatcher(node1)));
+		Mockito.verify(dispatcherPool, new Times(1)).add(argThat(new DispatchItemNodeMatcher(node2)));
+
+		jobManager.updateNodesWork();
+		Mockito.verify(dispatcherPool).add(new DispatchItem(new TaskRequestMessage(job2.getClientAudioTasks().get(1)), node1));
+		Mockito.verify(dispatcherPool, new Times(4)).add(argThat(new DispatchItemNodeMatcher(node1)));
+		Mockito.verify(dispatcherPool, new Times(1)).add(argThat(new DispatchItemNodeMatcher(node2)));
+
+		jobManager.updateNodesWork();
+		Mockito.verify(dispatcherPool, new Times(4)).add(argThat(new DispatchItemNodeMatcher(node1)));
+		Mockito.verify(dispatcherPool, new Times(1)).add(argThat(new DispatchItemNodeMatcher(node2)));
 	}
 
 	class DispatchItemNodeMatcher extends ArgumentMatcher<DispatchItem> {
