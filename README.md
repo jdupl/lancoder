@@ -26,7 +26,7 @@ Currently under development but releases are mostly stable (still in alpha/beta 
 
 ---
 
-### Dependencies
+## Dependencies
 
 #### MkvMerge
 MkvMerge from [MkvToolNix](https://www.bunkus.org/videotools/mkvtoolnix/) is required only for x265 encodings. 
@@ -40,7 +40,7 @@ This project uses [FFmpeg](http://ffmpeg.org) as the media encoder. It must be i
 Instructions to install the real ffmpeg for Linux are below.
 
 
-### How to get the [real ffmpeg](http://ffmpeg.org/)
+## How to get the [real ffmpeg](http://ffmpeg.org/)
 
 #### ArchLinux
 * Install directly from official packages
@@ -61,7 +61,7 @@ Instructions to install the real ffmpeg for Linux are below.
 #### Other distro/OS
 * Refer to [official website](http://ffmpeg.org/download.html)
 
-#### Bugs
+## Bugs
 Please report bugs in the [issues](https://github.com/jdupl/lancoder/issues) section of the GitHub repository.
 
 Keep in mind, current builds are not production ready.
