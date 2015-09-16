@@ -26,23 +26,40 @@ Currently under development but releases are mostly stable (still in alpha/beta 
 
 ---
 
-### Dependency
+### Dependencies
 
-This project uses [FFmpeg](http://ffmpeg.org) as the media encoder. It must be installed on every node.
+#### MkvMerge
+MkvMerge from [MkvToolNix](https://www.bunkus.org/videotools/mkvtoolnix/) is required only for x265 encodings. 
 
-It is important to install FFmpeg and NOT libav.
+#### ffmpeg (not libav)
 
-Technically, libav would work, but it's filled with bugs ! Libav will not be supported.
+This project uses [FFmpeg](http://ffmpeg.org) as the media encoder. It must be installed on every node. 
 
-Ubuntu and Debian users will need to add a [ppa](https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media) or a [debian source](http://deb-multimedia.org/).
+**Libav will not be supported.**
+
+Instructions to install the real ffmpeg for Linux are below.
 
 
-#### Test environment
-Currently tested on 6 workers nodes and 1 master including 
-* Debian Wheezy and Jessie servers with FFmpeg from [Deb Multimedia](http://www.deb-multimedia.org/)
-* Ubuntu family distros with [Jon Severinsson's FFmpeg PPA](https://launchpad.net/~jon-severinsson/+archive/ubuntu/ffmpeg)
-* Linux custom compiled versions of FFmpeg 2.2 to 2.5
-* Windows 8 with FFmpeg 2.3
+### How to get the [real ffmpeg](http://ffmpeg.org/)
+
+#### ArchLinux
+* Install directly from official packages
+
+#### Debian Wheezy, Jessie
+* Add source [Deb Multimedia](http://www.deb-multimedia.org/)
+
+#### Fedora, CentOS
+* Install from RPM Fusion
+
+#### Ubuntu Trusty (14.04)
+* Use this [PPA](https://launchpad.net/~mc3man/+archive/ubuntu/trusty-media)
+
+#### Ubuntu Vivid (15.04)
+* Install directly from official packages
+* Universe must be sourced
+
+#### Other distro/OS
+* Refer to [official website](http://ffmpeg.org/download.html)
 
 #### Bugs
 Please report bugs in the [issues](https://github.com/jdupl/lancoder/issues) section of the GitHub repository.
