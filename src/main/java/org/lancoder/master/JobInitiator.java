@@ -217,14 +217,17 @@ public class JobInitiator extends RunnableServiceAdapter {
 	private void prepareFileSystem(Job j) {
 		// Create base folders
 		File absoluteOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getOutputFolder());
-		// TODO replace with file path manager
-		File absolutePartsOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getPartsFolderName());
+
 		if (!absoluteOutput.exists()) {
 			absoluteOutput.mkdirs();
-			FileUtils.givePerms(absoluteOutput, false);
 		}
-		absolutePartsOutput.mkdirs();
-		FileUtils.givePerms(absoluteOutput, true);
+		FileUtils.givePerms(absoluteOutput, false);
+
+		File absolutePartsOutput = FileUtils.getFile(config.getAbsoluteSharedFolder(), j.getPartsFolderName());
+		if (!absolutePartsOutput.exists()) {
+			absolutePartsOutput.mkdirs();
+		}
+		FileUtils.givePerms(absolutePartsOutput, false);
 	}
 
 	@Override
