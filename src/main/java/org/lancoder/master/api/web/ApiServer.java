@@ -38,7 +38,7 @@ public class ApiServer extends RunnableServiceAdapter {
 			server = new Server(master.getConfig().getApiServerPort());
 
 			ContextHandler ctxStatic = new ContextHandler("/");
-			ContextHandler ctxApi = ApiServer.buildServletContextHandler();
+			ContextHandler ctxApi = buildServletContextHandler();
 			ctxApi.setContextPath("/api");
 
 			// static resources handler
@@ -65,10 +65,11 @@ public class ApiServer extends RunnableServiceAdapter {
 		}
 	}
 
-	private static ContextHandler buildServletContextHandler() throws Exception {
+	private ContextHandler buildServletContextHandler() throws Exception {
+		WebApi webapp = new WebApi(master, null);
 		final ResourceConfig app = new ResourceConfig()
                 .packages("jersey.jetty.embedded")
-                .register(WebApi.class);
+                .register(webapp);
 
         ServletHolder servletHolder = new ServletHolder(new ServletContainer(app));
 		ServletContextHandler servletContextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
