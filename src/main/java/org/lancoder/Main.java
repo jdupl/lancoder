@@ -24,7 +24,7 @@ import net.sourceforge.argparse4j.inf.Namespace;
 
 public class Main {
 
-	private final static String LANCODER_VERSION = "0.3.0-rc-1";
+	private final static String LANCODER_VERSION = "0.4.0";
 	private final static Logger logger = Logger.getLogger("lancoder");
 
 	/**
