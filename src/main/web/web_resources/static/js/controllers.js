@@ -98,34 +98,26 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
   };
 
   $scope.addjob = function(newjob) {
-    $http({method: 'POST', url: '/api/jobs/add', data: newjob})
+    $http({method: 'POST', url: '/api/jobs/', data: newjob})
         .success(function(data) {
-          if (data.success) {
             $scope.refresh();
             $scope.showAddJobPanel = false;
-          } else {
-            alert(data.message);
-          }
-        }).error(function() {
-      alert('Network failure');
-    });
+        }).error(function(data, status) {
+          alert(data.message);
+        });
   };
 
   $scope.deletejob = function(oldjob) {
-    $http({method: 'POST', url: '/api/jobs/delete', data: oldjob})
+    $http({method: 'DELETE', url: '/api/jobs/' + oldjob})
         .success(function(data) {
-          if (data.success) {
             $scope.refresh();
-          } else {
-            alert(data.message);
-          }
-        }).error(function() {
-      alert('Network failure');
-    });
+        }).error(function(data, status, err) {
+          alert(data.message);
+        });
   };
 
   $scope.cleanJobs = function() {
-    $http({method: 'POST', url: '/api/jobs/clean'})
+    $http({method: 'GET', url: '/api/jobs/clean'})
     .success(function(data) {
         $scope.refresh();
     });

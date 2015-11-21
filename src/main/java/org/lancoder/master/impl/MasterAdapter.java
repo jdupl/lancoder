@@ -10,10 +10,10 @@ import org.lancoder.common.job.Job;
 import org.lancoder.common.network.messages.web.ApiJobRequest;
 import org.lancoder.common.network.messages.web.ApiResponse;
 import org.lancoder.master.JobInitiatorListener;
-import org.lancoder.master.api.web.ApiHandlerListener;
+import org.lancoder.master.api.web.WebApiListener;
 import org.lancoder.muxer.MuxerListener;
 
-public class MasterAdapter implements MuxerListener, JobInitiatorListener, EventListener, ApiHandlerListener {
+public class MasterAdapter implements MuxerListener, JobInitiatorListener, EventListener, WebApiListener {
 
 	private Master master;
 	private Logger logger = Logger.getLogger("lancoder");
