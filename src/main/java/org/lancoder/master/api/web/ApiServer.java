@@ -43,18 +43,13 @@ public class ApiServer extends RunnableServiceAdapter {
 
 			// static resources handler
 			ResourceHandler staticHandler = new ResourceHandler();
-
 			staticHandler.setResourceBase(this.getClass().getClassLoader().getResource(WEB_DIR).toExternalForm());
 			// staticHandler.setResourceBase("src/main/web/web_resources");
 			staticHandler.setDirectoriesListed(true);
 			ctxStatic.setHandler(staticHandler);
 
-			// api handler
-			// ApiHandler apiHandler = new ApiHandler(master, master.getMasterEventCatcher());
-			// ctxApi.setHandler(apiHandler);
 			ContextHandlerCollection contexts = new ContextHandlerCollection();
 			contexts.setHandlers(new Handler[] { ctxStatic, ctxApi });
-
 			server.setHandler(contexts);
 
 			server.start();
