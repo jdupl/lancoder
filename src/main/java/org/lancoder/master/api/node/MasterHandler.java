@@ -9,6 +9,7 @@ import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
+import org.lancoder.common.network.cluster.messages.LogRecordMessage;
 import org.lancoder.common.network.cluster.messages.Message;
 import org.lancoder.common.network.cluster.messages.PingMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
@@ -77,6 +78,12 @@ public class MasterHandler extends PoolWorker<Socket> {
 					break;
 				case PING:
 					out.writeObject(PingMessage.getPong());
+					break;
+				case LOG_RECORD:
+					if (requestMessage instanceof LogRecordMessage) {
+						listener.handle(new Event(EventEnum.WORKER_LOG, requestMessage));
+					}
+					out.writeObject(new Message(ClusterProtocol.BYE));
 					break;
 				default:
 					out.writeObject(new Message(ClusterProtocol.BAD_REQUEST));

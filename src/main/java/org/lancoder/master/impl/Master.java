@@ -3,6 +3,7 @@ package org.lancoder.master.impl;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
 
 import org.lancoder.common.Container;
 import org.lancoder.common.FilePathManager;
@@ -13,8 +14,10 @@ import org.lancoder.common.events.Event;
 import org.lancoder.common.events.EventEnum;
 import org.lancoder.common.events.EventListener;
 import org.lancoder.common.job.Job;
+import org.lancoder.common.logging.LogCollectorHandler;
 import org.lancoder.common.network.MessageSender;
 import org.lancoder.common.network.cluster.messages.AuthMessage;
+import org.lancoder.common.network.cluster.messages.LogRecordMessage;
 import org.lancoder.common.network.cluster.messages.StatusReport;
 import org.lancoder.common.network.cluster.protocol.ClusterProtocol;
 import org.lancoder.common.network.messages.web.ApiResponse;
@@ -26,6 +29,7 @@ import org.lancoder.common.third_parties.FFmpeg;
 import org.lancoder.common.third_parties.FFprobe;
 import org.lancoder.common.third_parties.MkvMerge;
 import org.lancoder.common.utils.FileUtils;
+import org.lancoder.master.ClusterLogCollector;
 import org.lancoder.master.JobInitiator;
 import org.lancoder.master.JobManager;
 import org.lancoder.master.MasterConfig;
@@ -50,14 +54,13 @@ public class Master extends Container implements EventListener {
 	private NodeManager nodeManager;
 	private JobManager jobManager;
 	private ConfigManager<MasterConfig> configManager;
-
-	private ArrayList<EventListener> eventListeners = new ArrayList<>();
-
 	private MasterSavedInstance savedInstance;
-
 	private LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
 
+	private ArrayList<EventListener> eventListeners = new ArrayList<>();
 	private MasterAdapter eventListener;
+	private LogCollectorHandler webUIHandler;
+	private ClusterLogCollector clusterLogCollector;
 
 	@Override
 	public void handle(Event event) {
@@ -78,6 +81,11 @@ public class Master extends Container implements EventListener {
 
 	@Override
 	public void bootstrap() {
+		clusterLogCollector = new ClusterLogCollector();
+		webUIHandler = new LogCollectorHandler(clusterLogCollector);
+		webUIHandler.setLevel(Level.ALL);
+		logger.addHandler(webUIHandler);
+
 		eventListener = new MasterAdapter(this);
 		loadLastInstance();
 		super.bootstrap();
@@ -323,6 +331,10 @@ public class Master extends Container implements EventListener {
 			break;
 		case WORK_NEEDS_UPDATE:
 			this.jobManager.updateNodesWork();
+			break;
+		case WORKER_LOG:
+			LogRecordMessage logRecordMessage = (LogRecordMessage) event.getObject();
+			clusterLogCollector.add(logRecordMessage.getLogRecord(), logRecordMessage.getUnid());
 			break;
 		default:
 			for (EventListener eventListener : eventListeners) {

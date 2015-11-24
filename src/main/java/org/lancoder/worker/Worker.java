@@ -12,6 +12,7 @@ import org.lancoder.common.codecs.CodecEnum;
 import org.lancoder.common.config.Config;
 import org.lancoder.common.config.ConfigManager;
 import org.lancoder.common.exceptions.InvalidConfigurationException;
+import org.lancoder.common.logging.ClusterLogStagingHandler;
 import org.lancoder.common.network.MessageSender;
 import org.lancoder.common.network.cluster.messages.ConnectRequest;
 import org.lancoder.common.network.cluster.messages.ConnectResponse;
@@ -31,6 +32,7 @@ import org.lancoder.worker.contacter.MasterContacterListener;
 import org.lancoder.worker.converter.ConverterListener;
 import org.lancoder.worker.converter.audio.AudioConverterPool;
 import org.lancoder.worker.converter.video.VideoConverterPool;
+import org.lancoder.worker.logging.LogSenderPool;
 import org.lancoder.worker.server.WorkerServer;
 import org.lancoder.worker.server.WorkerServerListener;
 
@@ -77,7 +79,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 					+ "\nOriginal exception: '%s'", getConfig().getMasterIpAddress(), e.getMessage()));
 		}
 		super.bootstrap();
-
 		// Get codecs
 		ArrayList<CodecEnum> codecs = FFmpegWrapper.getAvailableCodecs(getFFmpeg());
 		node = new Node(null, getConfig().getListenPort(), getConfig().getName(), codecs, threadLimit, getConfig()
@@ -110,6 +111,10 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 		masterContacter = new MasterContacter(getMasterInetAddress(), getMasterPort(), this);
 		services.add(masterContacter);
+
+		LogSenderPool logRecordSender = new LogSenderPool(this);
+		services.add(logRecordSender);
+		logger.addHandler(new ClusterLogStagingHandler(logRecordSender));
 	}
 
 	@Override
@@ -303,7 +308,6 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 	@Override
 	public void shutdownWorker() {
 		Logger logger = Logger.getLogger("lancoder");
-
 		logger.info("Received shutdown request from api !\n");
 		this.shutdown();
 	}

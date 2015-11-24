@@ -68,5 +68,9 @@ public enum ClusterProtocol {
 	/**
 	 * Message to notify node a task has been cancelled
 	 */
-	UNASSIGN_TASK
+	UNASSIGN_TASK,
+	/**
+	 * Message to send a log record
+	 */
+	LOG_RECORD
 }

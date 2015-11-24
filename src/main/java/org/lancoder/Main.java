@@ -77,11 +77,12 @@ public class Main {
 		manager.reset();
 
 		logger.setLevel(loggingLevel);
+
 		ConsoleHandler handler = new ConsoleHandler();
 		handler.setLevel(loggingLevel);
-
 		handler.setFormatter(new LogFormatter());
 		logger.addHandler(handler);
+
 		manager.addLogger(logger);
 	}
 

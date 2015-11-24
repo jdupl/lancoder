@@ -6,7 +6,7 @@ import java.util.logging.LogRecord;
 
 /**
  * Custom logging formatter for lancoder without throwing support
- * 
+ *
  * @author justin
  *
  */
@@ -24,4 +24,5 @@ public  class LogFormatter extends Formatter {
 
         return sb.toString();
     }
+
 }
