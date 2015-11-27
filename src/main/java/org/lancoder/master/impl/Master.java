@@ -364,4 +364,9 @@ public class Master extends Container implements EventListener {
 		return jobManager;
 	}
 
+	public ClusterLogCollector getClusterLogCollector() {
+		return this.clusterLogCollector;
+	}
+
+
 }
