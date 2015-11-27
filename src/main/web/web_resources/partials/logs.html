@@ -1,0 +1,16 @@
+<div ng-if="nodes.error" class="row">
+    <div class="alert alert-danger alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        {{nodes.error}}
+    </div>
+</div>
+
+<div class="animate-repeat" ng-if="logs" ng-repeat="log in logs">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">{{log.originalRecord.message}}</h3>
+        </div>
+        <div class="panel-body">
+        </div>
+    </div>
+</div>

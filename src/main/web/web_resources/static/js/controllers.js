@@ -141,4 +141,16 @@ controllers.controller('jobs', function($scope, $http, $interval, apiService) {
   $scope.isActive = function(viewLocation) {
     return viewLocation === $location.path();
   };
+}).controller('logs', function($scope, $http) {
+  $scope.logs = [];
+
+  $scope.refresh = function() {
+    console.log('ref');
+    $http({method: 'GET', url: '/api/logs'})
+    .success(function(data) {
+        console.log(data);
+        $scope.logs = data;
+    });
+  };
+  $scope.refresh();
 });
