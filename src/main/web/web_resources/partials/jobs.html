@@ -88,6 +88,12 @@
                                     <select class="form-control" ng-model="newJob.preset" ng-init="newJob.preset = 'MEDIUM'" ng-options="preset for preset in presets"></select>
                                 </div>
                             </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Extra Arguments</label>
+									<input type="text" class="form-control" placeholder="Extra Arguments" ng-model="newJob.extraEncoderArgs">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

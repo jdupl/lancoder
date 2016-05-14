@@ -21,6 +21,7 @@ public class FakeInfo {
 				"    \"passes\":1," +
 				"    \"rate\":1500," +
 				"    \"preset\":\"MEDIUM\"," +
+				"    \"extraEncoderArgs\":\"\"," +
 				"    \"audioConfig\":\"AUTO\"," +
 				"    \"audioRateControlType\":\"CRF\"," +
 				"    \"audioRate\":5," +
@@ -67,6 +68,7 @@ public class FakeInfo {
 				"    \"passes\":1," +
 				"    \"rate\":1500," +
 				"    \"preset\":\"MEDIUM\"," +
+				"    \"extraEncoderArgs\":\"\"," +
 				"    \"audioConfig\":\"COPY\"," +
 				"    \"audioRateControlType\":\"CRF\"," +
 				"    \"audioRate\":5," +
