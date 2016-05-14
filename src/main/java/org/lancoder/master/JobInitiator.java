@@ -1,6 +1,5 @@
 package org.lancoder.master;
 
-import java.io.Console;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
