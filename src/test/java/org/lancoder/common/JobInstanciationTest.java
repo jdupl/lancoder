@@ -24,6 +24,10 @@ import org.powermock.reflect.Whitebox;
 @PrepareForTest({FFmpegWrapper.class, Job.class})
 public class JobInstanciationTest {
 
+	public String normalizePath(String path) {
+		   return path.replace("/", File.separator);
+		}
+	
 	@Test
 	public void testJobRelativePaths() {
 		MasterConfig config = new MasterConfig();
@@ -42,8 +46,8 @@ public class JobInstanciationTest {
 
 		assertNotEquals("", job.getJobId());
 		assertEquals("output.mkv", job.getOutputFileName());
-		assertEquals("encodes/testJob", job.getOutputFolder());
-		assertEquals("encodes/testJob/parts", job.getPartsFolderName());
+		assertEquals(normalizePath("encodes/testJob"), job.getOutputFolder());
+		assertEquals(normalizePath("encodes/testJob/parts"), job.getPartsFolderName());
 	}
 
 	@Test
@@ -96,21 +100,21 @@ public class JobInstanciationTest {
 			fail();
 		}
 
-		assertEquals("encodes/testJob/parts/0/part-0.mkv", j.getClientTasks().get(0).getFinalFile().getPath());
-		assertEquals("encodes/testJob/parts/1/part-1.mkv", j.getClientTasks().get(1).getFinalFile().getPath());
-		assertEquals("encodes/testJob/parts/2/part-2.ogg", j.getClientTasks().get(2).getFinalFile().getPath());
+		assertEquals(normalizePath("encodes/testJob/parts/0/part-0.mkv"), j.getClientTasks().get(0).getFinalFile().getPath());
+		assertEquals(normalizePath("encodes/testJob/parts/1/part-1.mkv"), j.getClientTasks().get(1).getFinalFile().getPath());
+		assertEquals(normalizePath("encodes/testJob/parts/2/part-2.ogg"), j.getClientTasks().get(2).getFinalFile().getPath());
 
 
-		assertEquals("testJobId/0/part-0.mkv", j.getClientTasks().get(0).getTempFile().getPath());
-		assertEquals("testJobId/1/part-1.mkv", j.getClientTasks().get(1).getTempFile().getPath());
-		assertEquals("testJobId/2/part-2.ogg", j.getClientTasks().get(2).getTempFile().getPath());
+		assertEquals(normalizePath("testJobId/0/part-0.mkv"), j.getClientTasks().get(0).getTempFile().getPath());
+		assertEquals(normalizePath("testJobId/1/part-1.mkv"), j.getClientTasks().get(1).getTempFile().getPath());
+		assertEquals(normalizePath("testJobId/2/part-2.ogg"), j.getClientTasks().get(2).getTempFile().getPath());
 	}
 
 	@Test
 	public void testAbsolutePaths() {
 		MasterConfig config = new MasterConfig();
-		config.setAbsoluteSharedFolder("/shared");
-		config.setTempEncodingFolder("/tmp");
+		config.setAbsoluteSharedFolder(normalizePath("/shared"));
+		config.setTempEncodingFolder(normalizePath("/tmp"));
 
 		FilePathManager manager = new FilePathManager(config);
 
@@ -134,8 +138,8 @@ public class JobInstanciationTest {
 			fail();
 		}
 
-		assertEquals("/shared/encodes/testJob/parts/0/part-0.mkv", manager.getSharedFinalFile(j.getClientTasks().get(0)).getPath());
-		assertEquals("/tmp/testJobId/0/part-0.mkv", manager.getLocalTempFile(j.getClientTasks().get(0)).getPath());
+		assertEquals(normalizePath("/shared/encodes/testJob/parts/0/part-0.mkv"), manager.getSharedFinalFile(j.getClientTasks().get(0)).getPath());
+		assertEquals(normalizePath("/tmp/testJobId/0/part-0.mkv"), manager.getLocalTempFile(j.getClientTasks().get(0)).getPath());
 	}
 
 }
