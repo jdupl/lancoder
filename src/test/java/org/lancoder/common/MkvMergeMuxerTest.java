@@ -27,11 +27,18 @@ import org.powermock.reflect.Whitebox;
 @PrepareForTest({ FFmpegWrapper.class, Job.class })
 public class MkvMergeMuxerTest {
 
+	public String normalizePath(String path) {
+		if (File.separatorChar == '\\' && path.startsWith("/"))
+			/* Noob workaround, I am not able to use SystemUtils.IS_OS_WINDOWS because of being a noob. */
+			path = "C:" + path;
+		   return path.replace("/", File.separator);
+		}
+	
 	@Test
 	public void testMuxConcatVideoTrackAndOneAudioTrack() throws Exception {
 		MasterConfig config = new MasterConfig();
-		config.setAbsoluteSharedFolder("/shared");
-		config.setTempEncodingFolder("/tmp");
+		config.setAbsoluteSharedFolder(normalizePath("/shared"));
+		config.setTempEncodingFolder(normalizePath("/tmp"));
 
 		FilePathManager filePathManager = new FilePathManager(config);
 		JobInitiator jobInitiator = new JobInitiator(null, config);
@@ -57,8 +64,8 @@ public class MkvMergeMuxerTest {
 		field.set(muxer, job);
 
 		ArrayList<String> expected = new ArrayList<>(Arrays.asList(new String[] { "mkvmerge", "-o",
-				"/shared/encodes/testJob/testSource.mkv",
-				"/shared/encodes/testJob/parts/0/part-0.mkv", "+", "/shared/encodes/testJob/parts/1/part-1.mkv", "/shared/encodes/testJob/parts/2/part-2.ogg" }));
+				normalizePath("/shared/encodes/testJob/testSource.mkv"),
+				normalizePath("/shared/encodes/testJob/parts/0/part-0.mkv"), "+", normalizePath("/shared/encodes/testJob/parts/1/part-1.mkv"), normalizePath("/shared/encodes/testJob/parts/2/part-2.ogg") }));
 
 
 		assertEquals(expected, muxer.getArgs());
@@ -67,8 +74,8 @@ public class MkvMergeMuxerTest {
 	@Test
 	public void testMuxConcatVideoTrackAndOneAudioCopyTrack() throws Exception {
 		MasterConfig config = new MasterConfig();
-		config.setAbsoluteSharedFolder("/shared");
-		config.setTempEncodingFolder("/tmp");
+		config.setAbsoluteSharedFolder(normalizePath("/shared"));
+		config.setTempEncodingFolder(normalizePath("/tmp"));
 
 		FilePathManager filePathManager = new FilePathManager(config);
 		JobInitiator jobInitiator = new JobInitiator(null, config);
@@ -94,8 +101,8 @@ public class MkvMergeMuxerTest {
 		field.set(muxer, job);
 
 		ArrayList<String> expected = new ArrayList<>(Arrays.asList(new String[] { "mkvmerge", "-o",
-				"/shared/encodes/testJob/testSource.mkv", "/shared/encodes/testJob/parts/0/part-0.mkv", "+",
-				"/shared/encodes/testJob/parts/1/part-1.mkv", "-a", "2", "/shared/testSource.mkv" }));
+				normalizePath("/shared/encodes/testJob/testSource.mkv"), normalizePath("/shared/encodes/testJob/parts/0/part-0.mkv"), "+",
+						normalizePath("/shared/encodes/testJob/parts/1/part-1.mkv"), "-a", "2", normalizePath("/shared/testSource.mkv") }));
 
 		assertEquals(expected, muxer.getArgs());
 	}
@@ -103,8 +110,8 @@ public class MkvMergeMuxerTest {
 	@Test
 	public void testMuxConcatVideoTrackAndManyAudioCopyTrack() throws Exception {
 		MasterConfig config = new MasterConfig();
-		config.setAbsoluteSharedFolder("/shared");
-		config.setTempEncodingFolder("/tmp");
+		config.setAbsoluteSharedFolder(normalizePath("/shared"));
+		config.setTempEncodingFolder(normalizePath("/tmp"));
 
 		FilePathManager filePathManager = new FilePathManager(config);
 		JobInitiator jobInitiator = new JobInitiator(null, config);
@@ -131,8 +138,8 @@ public class MkvMergeMuxerTest {
 		field.set(muxer, job);
 
 		ArrayList<String> expected = new ArrayList<>(Arrays.asList(new String[] { "mkvmerge", "-o",
-				"/shared/encodes/testJob/testSource.mkv", "/shared/encodes/testJob/parts/0/part-0.mkv", "+",
-				"/shared/encodes/testJob/parts/1/part-1.mkv", "-a", "2,3", "/shared/testSource.mkv" }));
+				normalizePath("/shared/encodes/testJob/testSource.mkv"), normalizePath("/shared/encodes/testJob/parts/0/part-0.mkv"), "+",
+						normalizePath("/shared/encodes/testJob/parts/1/part-1.mkv"), "-a", "2,3", normalizePath("/shared/testSource.mkv") }));
 
 		assertEquals(expected, muxer.getArgs());
 	}

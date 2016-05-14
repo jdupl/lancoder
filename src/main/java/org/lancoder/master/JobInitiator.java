@@ -3,6 +3,7 @@ package org.lancoder.master;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -49,7 +50,6 @@ public class JobInitiator extends RunnableServiceAdapter {
 
 	public boolean process(ApiJobRequest request) {
 		boolean success = false;
-
 		if (new File(config.getAbsoluteSharedFolder(), request.getInputFile()).exists()) {
 			success = true;
 			this.requests.add(request);
@@ -71,7 +71,9 @@ public class JobInitiator extends RunnableServiceAdapter {
 		int height = 0;
 		int videoRate = req.getRate();
 
-		ArrayList<String> extraEncoderArgs = new ArrayList<>();
+		ArrayList<String> extraEncoderArgs = new ArrayList<String>();
+		if (req.getExtraEncoderArgs() != null && !req.getExtraEncoderArgs().isEmpty())
+			extraEncoderArgs.addAll(Arrays.asList(req.getExtraEncoderArgs().split(" ", 0)));
 
 		// Limit to max pass from the rate control
 		int passes = (req.getPasses() <= videoRateControlType.getMaxPass() ? req.getPasses() : videoRateControlType

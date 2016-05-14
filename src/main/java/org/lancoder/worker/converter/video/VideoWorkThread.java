@@ -84,6 +84,7 @@ public class VideoWorkThread extends Converter<ClientVideoTask> {
 		}
 
 		ffmpegArgs.addAll(task.getPresetArg());
+		ffmpegArgs.addAll(task.getStreamConfig().getExtraEncoderArgs());
 
 		ffmpegArgs.add(outFileStr);
 

@@ -15,6 +15,7 @@ public class ApiJobRequest {
 	private CodecEnum videoCodec;
 	private FFmpegPreset preset;
 	private RateControlType rateControlType;
+	private String  extraEncoderArgs;
 	// Audio
 	private UserAudioPreset audioConfig;
 	private CodecEnum audioCodec;
@@ -97,6 +98,14 @@ public class ApiJobRequest {
 
 	public void setRateControlType(RateControlType rateControlType) {
 		this.rateControlType = rateControlType;
+	}
+
+	public String getExtraEncoderArgs() {
+		return extraEncoderArgs;
+	}
+
+	public void setExtraEncoderArgs(String extraEncoderArgs) {
+		this.extraEncoderArgs = extraEncoderArgs;
 	}
 
 	public String getInputFile() {
