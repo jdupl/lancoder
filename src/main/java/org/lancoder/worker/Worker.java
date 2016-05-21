@@ -255,6 +255,9 @@ public class Worker extends Container implements WorkerServerListener, MasterCon
 
 	@Override
 	public NodeState getStatus() {
+		if (this.node == null) {
+			return NodeState.NOT_CONNECTED;
+		}
 		return this.node.getStatus();
 	}
 
